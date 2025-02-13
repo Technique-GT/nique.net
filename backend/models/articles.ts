@@ -4,7 +4,7 @@ import mongoose, { Document, Schema, Model } from "mongoose";
 interface IArticle extends Document {
   title: string;
   content: string;
-  author: mongoose.Types.ObjectId; 
+  authors: mongoose.Types.ObjectId[]; 
   categories: string[]; 
   publishedDate: Date;
   isPublished: boolean; 
@@ -19,11 +19,13 @@ const articleSchema = new Schema<IArticle>({
     type: String,
     required: true,
   },
-  author: {
-    type: Schema.Types.ObjectId,
-    ref: "User", // user model /users.ts
-    required: true,
-  },
+  authors: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "User", // user model /users.ts
+      required: true,
+    },
+  ],
   categories: {
     type: [String],
     required: true,
