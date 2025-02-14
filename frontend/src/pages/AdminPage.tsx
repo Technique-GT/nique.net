@@ -23,10 +23,7 @@ export default function AdminPage() {
   }, []);
 
   return (
-    <div className="">
-      <title>Admin Page</title>
-      <h1>Admin Page</h1>
-      <p>Defualt Admin page for now</p>
+    <div className="flex justify-center mt-40">
       <div className="w-80 flex flex-col border-1 rounded p-4 bg-gray-300 justify-center">
         <p>Username</p>
         <input
