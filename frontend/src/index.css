@@ -1,10 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Oswald:wght@200..700&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
 
+@theme {
+    --color-nique-blue: oklch(0.3037 0.08476 249.4532)
+}
+
 h3 {
     font-family: 'Times New Roman', Times, serif;
 }
 
+h4 {
+    font-family: 'Oswald', sans-serif;
+}
+
 h6 {
     font-family: "Roboto Condensed", sans-serif;
+}
+
+p {
+    font-family: 'EB Garamond', Times, serif;
 }
