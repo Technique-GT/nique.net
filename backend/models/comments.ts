@@ -1,5 +1,4 @@
 import mongoose, { Document, Schema, Model } from "mongoose";
-
 interface IComment extends Document {
     article: mongoose.Types.ObjectId; // article schema /articles.ts
     user: mongoose.Types.ObjectId; // user schema /users.ts
