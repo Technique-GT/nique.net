@@ -35,7 +35,7 @@ export default function Navbar({ transparent }: { transparent?: boolean }) {
       <div>
         {/* section for social media icons */}
         <div className="masthead-section">
-          <img src={masthead} alt="Masthead" className="w-[500px] m-auto" />
+          <a href ='/'><img src={masthead} alt="Masthead" className="w-[500px] m-auto" /></a>
           <p className="mt-4 flex gap-2 w-full justify-center items-center">
             <FaFacebook />
             <FaXTwitter />
