@@ -64,7 +64,7 @@ export default function AdminPage() {
                   navigate("/dashboard");
                 },
                 (reason) => {
-                  setMessage("Error: Username or password is incorrect.\n"+reason);
+                  setMessage("Error: Username or password is incorrect.\n" + reason);
                 }
               );
           }}

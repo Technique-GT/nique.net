@@ -1,29 +1,27 @@
 import axios from "axios";
 import cookie from "js-cookie";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 
 export default function Dashboard() {
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [message, setMessage] = useState("");
-    const navigate = useNavigate();
-   useEffect(() => {
+  const navigate = useNavigate();
+  useEffect(() => {
     const jwt_token = cookie.get("jwt");
     if (cookie.get("jwt") === undefined) {
-      setMessage("Error");
+      // Not logged in
+      navigate('/admin');
     } else {
       axios.get("http://127.0.0.1:5050/auth/test_token", {
         headers: { Authorization: `Bearer ${jwt_token}` }
       }).then(() => {
-        setMessage("Welcome back!");
+        // User logged in
       }, () => {
-        setMessage("Login session expired, please log in again");
+        // Login session expired
         navigate('/admin');
       })
     }
   }, []);
 
-    return (<div>testing testing</div>);
+  return (<div>testing testing</div>);
 }
