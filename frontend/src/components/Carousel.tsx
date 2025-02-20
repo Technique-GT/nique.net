@@ -1,28 +1,25 @@
-import * as React from 'react';
-
-import { EffectCoverflow, Pagination } from 'swiper/modules';
+import { useNavigate } from 'react-router-dom';
+import { EffectCoverflow, Pagination, Navigation } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 
-const photos = [
-  'https://images.pexels.com/photos/7469387/pexels-photo-7469387.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-  'https://images.pexels.com/photos/7469289/pexels-photo-7469289.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-  'https://images.pexels.com/photos/6213729/pexels-photo-6213729.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-  'https://images.pexels.com/photos/6213739/pexels-photo-6213739.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-];
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import '../index.css';
+import { ArticleListProps } from '../types/article';
 
-export default function Carousel() {
+export default function Carousel( {posts}: ArticleListProps ) {
+  const navigate=useNavigate();
+  
   return (
-    <section className="pt-[7rem] pb-[2rem] bg-teal-100">
+    <section className="pt-[7rem] pb-[2rem]">
       <div className="lg:mx-auto max-w-5xl mx-[1.5rem]">
-        <h1 className="text-[3rem] font-bold underline mb-[2rem] text-center">
-          Cover Flow
-        </h1>
         <Swiper
-          modules={[EffectCoverflow, Pagination]}
+          modules={[EffectCoverflow, Pagination, Navigation]}
           effect={'coverflow'}
           loop={true}
           spaceBetween={30}
-          slidesPerView={3}
+          slidesPerView={1}
           pagination={{
             clickable: true,
           }}
@@ -34,10 +31,10 @@ export default function Carousel() {
           }}
           className="coverflow"
         >
-          {photos.map((p, index) => {
+          {posts.map((p, index) => {
             return (
-              <SwiperSlide key={index}>
-                <img src={p} alt="" />
+              <SwiperSlide key={index} onClick={()=>navigate('news/'+p.id)} className='cursor-pointer'>
+                <img src={p.coverImage} alt="" className='rounded-lg'/>
               </SwiperSlide>
             );
           })}

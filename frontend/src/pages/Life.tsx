@@ -39,8 +39,8 @@ function Life() {
             <div className='max-w-[1470px] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div className='w-full'>
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Most Recent</h4>
-                    <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
-                        <div className='col-span-2 '>
+                    <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 grid-rows-3 md:grid-rows-4'>
+                        <div className='col-span-4 md:col-span-2 '>
                             <ArticleBlock post={post[0]} height='460px' />
                         </div>
                         <ArticleBlock post={post[1]} height='460px' />
@@ -48,8 +48,10 @@ function Life() {
                             <ArticleBlock post={post[2]} height='222px' />
                             <ArticleBlock post={post[3]} height='222px' />
                         </div>
+                        <div className='row-span-2 col-span-4'>
+                            <Carousel posts={[post[1], post[2], post[3], post[4]]}/>
+                        </div>
                     </div>
-                    <Carousel />
 
                     <hr className='my-4' />
 
