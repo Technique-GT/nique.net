@@ -11,7 +11,7 @@ function ArticleBlock({ post, height }: ArticleBlockProps) {
             height: `${height}`
         }}>
             <div>
-                <h3 className="text-white font-bold text-2xl/7 mb-2">{post.title}</h3>
+                <h3 className="title text-white font-bold text-2xl/7 mb-2">{post.title}</h3>
                 <h6 className="text-[#BAC0FF] text-sm"><span className="uppercase">{post.category}</span> &#8226; {post.author}</h6>
             </div>
         </div>

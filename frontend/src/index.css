@@ -2,7 +2,8 @@
 @import "tailwindcss";
 
 @theme {
-    --color-nique-blue: oklch(0.3037 0.08476 249.4532)
+    --color-nique-blue: #003057;
+    --color-nique-blue-hover: #0E3682;
 }
 
 h3 {
@@ -19,4 +20,20 @@ h6 {
 
 p {
     font-family: 'EB Garamond', Times, serif;
+}
+
+a {
+    transition: all 0.3s ease;
+}
+
+button {
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+.title:hover {
+    opacity: 0.7;
 }

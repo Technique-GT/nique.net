@@ -12,12 +12,13 @@ export default function AdminPage() {
   useEffect(() => {
     const jwt_token = cookie.get("jwt");
     if (cookie.get("jwt") === undefined) {
-      setMessage("Error");
+      setMessage("");
     } else {
       axios.get("http://127.0.0.1:5050/auth/test_token", {
         headers: { Authorization: `Bearer ${jwt_token}` }
       }).then(() => {
         setMessage("Welcome back!");
+        navigate("/dashboard");
       }, () => {
         setMessage("Login session expired, please log in again");
       })
@@ -63,7 +64,7 @@ export default function AdminPage() {
                   navigate("/dashboard");
                 },
                 (reason) => {
-                  alert(reason);
+                  setMessage("Error: Username or password is incorrect.\n" + reason);
                 }
               );
           }}
