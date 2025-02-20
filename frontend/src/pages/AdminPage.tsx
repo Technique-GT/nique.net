@@ -1,16 +1,18 @@
 import axios from "axios";
 import cookie from "js-cookie";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const jwt_token = cookie.get("jwt");
     if (cookie.get("jwt") === undefined) {
-      setMessage("");
+      setMessage("Error");
     } else {
       axios.get("http://127.0.0.1:5050/auth/test_token", {
         headers: { Authorization: `Bearer ${jwt_token}` }
@@ -57,8 +59,8 @@ export default function AdminPage() {
               })
               .then(
                 (res) => {
-                  alert(res.data);
                   cookie.set("jwt", res.data);
+                  navigate("/dashboard");
                 },
                 (reason) => {
                   alert(reason);

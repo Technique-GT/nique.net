@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import Article from "./pages/Article";
 import Navbar from "./components/Navbar";
 import AdminPage from './pages/AdminPage';
+import Dashboard from './pages/Dashboard';
 
 function App() {
 
@@ -15,6 +16,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/news/:id" element={<Article />} />
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
         </div>
       </div>
