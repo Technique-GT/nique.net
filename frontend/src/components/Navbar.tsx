@@ -140,7 +140,7 @@ export default function Navbar() {
         <h4 className='block md:hidden border-b border-gray-400 bg-white px-4 py-1'>{formattedDate}</h4>
         {/* mobile navlinks */}
         {isOpen && (
-          <div className='md:hidden h-screen pt-[5vh]'>
+          <div className='md:hidden h-screen pt-[5vh] bg-white'>
             <NavLinks />
           </div>
         )}
