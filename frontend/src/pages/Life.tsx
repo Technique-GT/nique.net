@@ -49,7 +49,7 @@ function Life() {
                             <ArticleBlock post={post[3]} height='222px' />
                         </div>
                     </div>
-                    {/* <Carousel slides={post.map(p => <ArticleBlock key={p.id} post={p} height='460px' />)}/> */}
+                    <Carousel />
 
                     <hr className='my-4' />
 

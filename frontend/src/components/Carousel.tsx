@@ -1,35 +1,48 @@
-import React from 'react';
+import * as React from 'react';
+
+import { EffectCoverflow, Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
-// import 'swiper/swiper-bundle.css';
-import { Navigation, Pagination, A11y } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
 
-interface CarouselProps {
-    slides: Array<React.ReactNode>;
-}
+const photos = [
+  'https://images.pexels.com/photos/7469387/pexels-photo-7469387.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+  'https://images.pexels.com/photos/7469289/pexels-photo-7469289.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+  'https://images.pexels.com/photos/6213729/pexels-photo-6213729.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+  'https://images.pexels.com/photos/6213739/pexels-photo-6213739.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+];
 
-const Carousel: React.FC<CarouselProps> = ({ slides }) => {
-    return (
+export default function Carousel() {
+  return (
+    <section className="pt-[7rem] pb-[2rem] bg-teal-100">
+      <div className="lg:mx-auto max-w-5xl mx-[1.5rem]">
+        <h1 className="text-[3rem] font-bold underline mb-[2rem] text-center">
+          Cover Flow
+        </h1>
         <Swiper
-            modules={[Navigation, Pagination, A11y]}
-            spaceBetween={50}
-            slidesPerView={1}
-            navigation
-            pagination={{ clickable: true }}
-            a11y={{
-                prevSlideMessage: 'Previous slide',
-                nextSlideMessage: 'Next slide',
-            }}
+          modules={[EffectCoverflow, Pagination]}
+          effect={'coverflow'}
+          loop={true}
+          spaceBetween={30}
+          slidesPerView={3}
+          pagination={{
+            clickable: true,
+          }}
+          centeredSlides={true}
+          grabCursor={true}
+          coverflowEffect={{
+            rotate: 0,
+            slideShadows: false,
+          }}
+          className="coverflow"
         >
-            {slides.map((slideContent, index) => (
-                <SwiperSlide key={index}>
-                    {slideContent}
-                </SwiperSlide>
-            ))}
+          {photos.map((p, index) => {
+            return (
+              <SwiperSlide key={index}>
+                <img src={p} alt="" />
+              </SwiperSlide>
+            );
+          })}
         </Swiper>
-    );
-};
-
-export default Carousel;
+      </div>
+    </section>
+  );
+}
