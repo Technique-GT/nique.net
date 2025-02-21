@@ -4,6 +4,7 @@ import Article from "./pages/Article";
 import Navbar from "./components/Navbar";
 import AdminPage from './pages/AdminPage';
 import Dashboard from './pages/Dashboard';
+import Sports from "./pages/Sports";
 
 function App() {
 
@@ -17,6 +18,7 @@ function App() {
             <Route path="/news/:id" element={<Article />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/sports" element={<Sports />} />
           </Routes>
         </div>
       </div>
