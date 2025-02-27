@@ -49,7 +49,7 @@ function Life() {
                             <ArticleBlock post={post[3]} height='222px' />
                         </div>
                         <div className='lg:col-span-4 m-0'>
-                            <Carousel posts={[post[1], post[2], post[3], post[4]]} width='90%'/>
+                            <Carousel posts={[post[1], post[2], post[3], post[4]]} width='80%'/>
                         </div>
                     </div>
 
