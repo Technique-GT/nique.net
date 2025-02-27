@@ -8,7 +8,7 @@ import 'swiper/css/pagination';
 import '../index.css';
 import { ArticleListProps } from '../types/article';
 
-export default function Carousel( {posts}: ArticleListProps ) {
+export default function Carousel( {posts, width}: ArticleListProps ) {
   const navigate=useNavigate();
   
   return (
@@ -30,6 +30,7 @@ export default function Carousel( {posts}: ArticleListProps ) {
             rotate: 0,
             slideShadows: false,
           }}
+          style={{ width: `${width}` }}
           className="coverflow"
         >
           {posts.map((p, index) => {
@@ -38,11 +39,12 @@ export default function Carousel( {posts}: ArticleListProps ) {
                 key={index} 
                 onClick={()=>navigate('news/'+p.id)} 
                 style={{
-                  backgroundImage: `linear-gradient(to bottom, rgba(26, 30, 71, 0.15), rgba(26, 30, 71, 1) 75%), url(${p.coverImage})`,
+                  backgroundImage: `linear-gradient(to bottom, rgba(26, 30, 71, 0), rgba(255, 255, 255, 1) 99%), url(${p.coverImage})`,
                 }}
                 className='cursor-pointer rounded-lg'
               >
-                <img src={p.coverImage} alt="" className='rounded-lg'/>
+                <img src="" alt="" className='min-h-screen rounded-lg'/>
+                <h1>{ p.title }</h1>
               </SwiperSlide>
             );
           })}
