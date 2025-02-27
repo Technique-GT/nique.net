@@ -91,7 +91,7 @@ function Home() {
 
                 <div className='flex flex-col gap-4'>
                     <SideWidget />
-                    <SideArticle posts={[post[6], post[7], post[16]]} />
+                    <SideArticle posts={[post[6], post[7], post[16]]} width='28%' />
                     <iframe className="rounded-md w-full h-[550px]" src="https://open.spotify.com/embed/playlist/3ySGGWEXxBBYvn2cYxEDEx?utm_source=generator&theme=0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
                 </div>
             </div>

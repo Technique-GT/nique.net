@@ -49,7 +49,7 @@ function Life() {
                             <ArticleBlock post={post[3]} height='222px' />
                         </div>
                         <div className='lg:col-span-4 m-0'>
-                            <Carousel posts={[post[1], post[2], post[3], post[4]]}/>
+                            <Carousel posts={[post[1], post[2], post[3], post[4]]} />
                         </div>
                     </div>
 
@@ -68,7 +68,7 @@ function Life() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">More Stories</h4>
                     <div className='grid gap-4 grid-cols-1 lg:grid-rows-3 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='row-span-2 col-span-2'>
-                            <ArticleBlock post={post[8]} height='460px' />
+                            <SideArticle posts={[post[6], post[7], post[8], post[16]]} width='18%' />
                         </div>
                         <div className='grid row-span-2 col-span-2 gap-4 lg:gap-y-0'>
                             <div className='col-span-2'>
@@ -88,7 +88,7 @@ function Life() {
 
                 <div className='flex flex-col gap-4'>
                     <SideWidget />
-                    <SideArticle posts={[post[6], post[7], post[16]]} />
+                    <SideArticle posts={[post[6], post[7], post[16]]} width='28%'/>
                     <iframe className="rounded-md w-full h-[550px]" src="https://open.spotify.com/embed/playlist/3ySGGWEXxBBYvn2cYxEDEx?utm_source=generator&theme=0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
                 </div>
             </div>
