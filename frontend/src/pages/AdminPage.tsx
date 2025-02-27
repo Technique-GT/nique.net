@@ -1,11 +1,13 @@
 import axios from "axios";
 import cookie from "js-cookie";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const jwt_token = cookie.get("jwt");
@@ -16,6 +18,7 @@ export default function AdminPage() {
         headers: { Authorization: `Bearer ${jwt_token}` }
       }).then(() => {
         setMessage("Welcome back!");
+        navigate("/dashboard");
       }, () => {
         setMessage("Login session expired, please log in again");
       })
@@ -57,11 +60,11 @@ export default function AdminPage() {
               })
               .then(
                 (res) => {
-                  alert(res.data);
                   cookie.set("jwt", res.data);
+                  navigate("/dashboard");
                 },
                 (reason) => {
-                  alert(reason);
+                  setMessage("Error: Username or password is incorrect.\n" + reason);
                 }
               );
           }}
