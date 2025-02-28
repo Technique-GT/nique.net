@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { ArticleListProps } from '../types/article'
 
-function SideArticle({ posts }: ArticleListProps) {
+function SideArticle({ posts, width }: ArticleListProps) {
     const navigate = useNavigate();
     return (
         <div>
@@ -12,7 +12,10 @@ function SideArticle({ posts }: ArticleListProps) {
                             <h3 className="title text-[#1A1E47] font-bold text-xl/6 mb-2">{post.title}</h3>
                             <h6 className="text-nique-blue text-sm">{post.author}</h6>
                         </div>
-                        <img src={post.coverImage} className='w-[28%] aspect-square rounded-md object-cover' />
+                        <img 
+                            src={post.coverImage} 
+                            style = {{ width: `${width}` }}
+                            className='aspect-square rounded-md object-cover' />
                     </div>
                     <hr className='my-3' />
                 </div>
