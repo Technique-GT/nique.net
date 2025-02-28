@@ -1,0 +1,71 @@
+import { useNavigate } from 'react-router-dom';
+import { EffectCoverflow, Pagination, Navigation } from 'swiper/modules';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import '../index.css';
+import { ArticleListProps } from '../types/article';
+
+export default function Carousel( {posts, width}: ArticleListProps ) {
+  const navigate=useNavigate();
+  
+  return (
+      <div className="relative lg:mx-auto max-w-5xl mx-[1.5rem]">
+        <Swiper
+          modules={[EffectCoverflow, Pagination, Navigation]}
+          navigation={{
+            nextEl: '.my-swiper-button-next',
+            prevEl: '.my-swiper-button-prev',
+          }}
+          effect={'coverflow'}
+          loop={true}
+          spaceBetween={50}
+          slidesPerView={1}
+          pagination={{
+            clickable: true,
+            dynamicBullets: true,
+          }}
+          centeredSlides={true}
+          grabCursor={true}
+          coverflowEffect={{
+            rotate: 0,
+            slideShadows: false,
+          }}
+          style={{ width: `${width}` }}
+          className="coverflow h-96"
+        >
+          {posts.map((p, index) => {
+            return (
+              <SwiperSlide 
+                key={index} 
+                onClick={()=>navigate('news/'+p.id)} 
+                style={{
+                  backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0) 80%, rgba(255, 255, 255, 1)), url(${p.coverImage})`,
+                }}
+                className='cursor-pointer rounded-lg'
+              >
+                <h6 className="text-[#1A1E47] text-sm absolute bottom-0 left-0 m-6">{ p.desc }</h6>
+              </SwiperSlide>
+            );
+          })}
+        </Swiper>
+
+        {/* custom navigation buttons */}
+        <div
+          className="my-swiper-button-prev absolute top-1/2 left-4 -translate-y-1/2 
+                    z-10 cursor-pointer bg-white p-2"
+        >
+          <ArrowLeft size={32} />
+        </div>
+        <div
+          className="my-swiper-button-next absolute top-1/2 right-4 -translate-y-1/2 
+                    z-10 cursor-pointer bg-white p-2"
+        >
+          <ArrowRight size={32} />
+        </div>
+      </div>
+  );
+}

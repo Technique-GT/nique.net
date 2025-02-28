@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
+import Life from "./pages/Life";
 import Article from "./pages/Article";
 import Navbar from "./components/Navbar";
 import AdminPage from './pages/AdminPage';
@@ -16,6 +17,7 @@ function App() {
           <Navbar />
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/life" element={<Life />} />
             <Route path="/news/:id" element={<Article />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
