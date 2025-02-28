@@ -4,6 +4,7 @@ import { FaFacebook, FaXTwitter, FaInstagram, FaTiktok, FaLinkedin } from "react
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { IoMenuSharp, IoCloseSharp } from "react-icons/io5";
+import Search from './Search';
 
 // Styling for each individual link in navbar
 const ReactiveLink = ({ name, path }: { name: string, path: string }) => {
@@ -31,6 +32,7 @@ const NavLinks = () => {
       <ReactiveLink name="About" path="/about" />
       <ReactiveLink name="Submit an Ad" path="/submit-ad" />
       <ReactiveLink name="Contact Us" path="/contact" />
+      <Search />
     </>
   );
 };
@@ -107,6 +109,7 @@ export default function Navbar() {
           {/* date on medium screens */}
           <h4 className='text-sm text-nique-blue'><span className="inline lg:hidden">{formattedDate}</span></h4>
         </div>
+
 
         {/* right of masthead */}
         <h4 className='text-right text-sm text-nique-blue'>
