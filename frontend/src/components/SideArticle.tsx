@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { ArticleListProps } from '../types/article'
 
-function SideArticle({ posts, width }: ArticleListProps) {
+function SideArticle({ posts, width = '28%' }: ArticleListProps) {
     const navigate = useNavigate();
     return (
         <div>

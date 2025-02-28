@@ -18,5 +18,5 @@ export interface ArticleProps {
 
 export interface ArticleListProps {
     posts: Post[];
-    width: string;
+    width?: string;
 }
