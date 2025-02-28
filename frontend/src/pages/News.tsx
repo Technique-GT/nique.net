@@ -6,6 +6,7 @@ import FeaturedStory from '../components/FeaturedStory';
 import JustInBlock from '../components/JustIn';
 import SideWidget from '../components/SideWidget';
 import SideArticle from '../components/SideArticle';
+import SmallArticle from '../components/SmallArticle';
 import { Categories } from '../types/categories';
 
 function Home() {
@@ -59,10 +60,10 @@ function Home() {
                             </div>
                         </div>
                         <div className='col-span-2'>
-                            <SideArticle posts={[post[12], post[13]]}/>
+                            <SmallArticle posts={[post[12], post[13]]} direction='left'/>
                         </div>
                         <div className='col-span-2'>
-                            <SideArticle posts={[post[14], post[15]]}/>
+                            <SmallArticle posts={[post[14], post[15]]} direction='left'/>
                         </div>
                     </div>
 
@@ -77,7 +78,7 @@ function Home() {
                             <ArticleBlock post={post[4]} height='222px' />
                         </div>
                         <div className='grid col-span-2 gap-4'>
-                            <SideArticle posts={[post[5], post[6], post[7], post[8]]}/>
+                            <SideArticle posts={[post[5], post[6], post[7], post[8]]} width='18%'/>
                         </div>
                     </div>
 
@@ -96,7 +97,7 @@ function Home() {
 
                 <div className='flex flex-col gap-4'>
                     <SideWidget />
-                    <SideArticle posts={[post[6], post[7], post[16]]} />
+                    <SideArticle posts={[post[6], post[7], post[16]]} width='28%'/>
                     <iframe className="rounded-md w-full h-[550px]" src="https://open.spotify.com/embed/playlist/3ySGGWEXxBBYvn2cYxEDEx?utm_source=generator&theme=0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
                 </div>
             </div>
