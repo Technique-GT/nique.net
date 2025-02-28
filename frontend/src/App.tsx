@@ -7,6 +7,7 @@ import AdminPage from './pages/AdminPage';
 import Dashboard from './pages/Dashboard';
 import Sports from "./pages/Sports";
 import News from "./pages/News";
+import Entertainment from "./pages/Entertainment";
 
 function App() {
 
@@ -23,6 +24,8 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/sports" element={<Sports />} />
             <Route path="/news" element={<News />} />
+            <Route path="/entertainment" element={<Entertainment />}/>
+
           </Routes>
         </div>
       </div>
