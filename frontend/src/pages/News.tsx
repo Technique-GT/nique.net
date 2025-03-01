@@ -6,6 +6,7 @@ import FeaturedStory from '../components/FeaturedStory';
 import JustInBlock from '../components/JustIn';
 import SideWidget from '../components/SideWidget';
 import SideArticle from '../components/SideArticle';
+import SmallArticle from '../components/SmallArticle';
 import { Categories } from '../types/categories';
 
 function Home() {
@@ -39,59 +40,64 @@ function Home() {
         <>
             <div className='max-w-[1470px] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div className='w-full'>
-                    <div className='grid gap-5 grid-cols-1 lg:grid-cols-[30%_auto] w-full'>
-                        <div className='flex flex-col gap-4 order-last lg:order-first'>
-                            <ArticleBlock post={post[3]} height='200px' />
-                            <ArticleBlock post={post[4]} height='200px' />
-                            <ArticleBlock post={post[5]} height='200px' />
-                            <ArticleBlock post={post[9]} height='200px' />
+                    <div className='flex flex-col gap-4'>
+                        <JustInBlock post={post[0]} />
+                        <FeaturedStory post={post[12]} height='695px' />
+                    </div>
+
+                    <hr className='my-4' />
+
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">Atlanta News</h4>
+                    <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
+                        <div className='col-span-2'>
+                            <ArticleBlock post={post[9]} height='460px' />
                         </div>
-                        <div className='flex flex-col gap-4'>
-                            <JustInBlock post={post[0]} />
-                            <FeaturedStory post={post[12]} height='695px' />
+                        <div className='grid col-span-2 gap-4'>
+                            <ArticleBlock post={post[10]} height='222px' />
+                            <ArticleBlock post={post[11]} height='222px' />
+                            <div className='col-span-2'>
+                                <ArticleBlock post={post[9]} height='222px' />
+                            </div>
+                        </div>
+                        <div className='col-span-2'>
+                            <SmallArticle posts={[post[12], post[13]]} direction='left'/>
+                        </div>
+                        <div className='col-span-2'>
+                            <SmallArticle posts={[post[14], post[15]]} direction='left'/>
                         </div>
                     </div>
 
                     <hr className='my-4' />
 
-                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.LIFE}</h4>
-                    <div className='grid grid-cols-1 md:grid-cols-[48%_auto] gap-4'>
-                        <div className='w-full'>
-                            <ArticleBlock post={post[8]} height='396px' />
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">U.S. News</h4>
+                    <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
+                        <div className='grid grid-cols-2 gap-4 col-span-2'>
+                            <ArticleBlock post={post[1]} height='222px' />
+                            <ArticleBlock post={post[2]} height='222px' />
+                            <ArticleBlock post={post[3]} height='222px' />
+                            <ArticleBlock post={post[4]} height='222px' />
                         </div>
-                        <div className='flex flex-col gap-4 w-full'>
-                            <ArticleBlock post={post[10]} height='190px' />
-                            <ArticleBlock post={post[11]} height='190px' />
+                        <div className='grid col-span-2 gap-4'>
+                            <SideArticle posts={[post[5], post[6], post[7], post[8]]} width='18%'/>
                         </div>
-                    </div>
-
-                    <hr className='my-4' />
-
-                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.NEWS}</h4>
-                    <div className='flex flex-col sm:flex-row gap-4'>
-                        <ArticleBlock post={post[13]} height='200px' />
-                        <ArticleBlock post={post[14]} height='200px' />
-                        <ArticleBlock post={post[15]} height='200px' />
                     </div>
 
                     <hr className='my-4' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.ENTERTAINMENT}</h4>
-                    <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
+                    <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
                         <ArticleBlock post={post[16]} height='230px' />
                         <ArticleBlock post={post[17]} height='230px' />
                         <ArticleBlock post={post[18]} height='230px' />
                         <ArticleBlock post={post[19]} height='230px' />
                         <ArticleBlock post={post[20]} height='230px' />
                         <ArticleBlock post={post[21]} height='230px' />
-                        <ArticleBlock post={post[22]} height='230px' />
-                        <ArticleBlock post={post[23]} height='230px' />
                     </div>
                 </div>
 
                 <div className='flex flex-col gap-4'>
                     <SideWidget />
-                    <SideArticle posts={[post[6], post[7], post[16]]}/>
+                    <SideArticle posts={[post[6], post[7], post[16]]} width='28%'/>
                     <iframe className="rounded-md w-full h-[550px]" src="https://open.spotify.com/embed/playlist/3ySGGWEXxBBYvn2cYxEDEx?utm_source=generator&theme=0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
                 </div>
             </div>
