@@ -3,10 +3,12 @@ import MockAPI from '../services/MockAPI'
 import ArticleBlock from "../components/ArticleBlock"
 import { Post } from '../types/article'
 import FeaturedStory from '../components/FeaturedStory';
+import MockAd from '../assets/mock_advertisement.jpg';
 import JustInBlock from '../components/JustIn';
 import SideWidget from '../components/SideWidget';
 import SideArticle from '../components/SideArticle';
 import SmallArticle from '../components/SmallArticle';
+import VerticalAd from '../components/VerticalAd';
 import { Categories } from '../types/categories';
 
 function Home() {
@@ -96,9 +98,9 @@ function Home() {
                 </div>
 
                 <div className='flex flex-col gap-4'>
-                    <SideWidget />
-                    <SideArticle posts={[post[6], post[7], post[16]]} width='28%'/>
-                    <iframe className="rounded-md w-full h-[550px]" src="https://open.spotify.com/embed/playlist/3ySGGWEXxBBYvn2cYxEDEx?utm_source=generator&theme=0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                    <hr className="mt-15" />
+                    <SideArticle posts={[post[6], post[7], post[16]]} width='28px' hasDesc = { true }/>
+                    <VerticalAd ad={MockAd} />
                 </div>
             </div>
         </>

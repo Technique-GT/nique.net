@@ -1,7 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { ArticleListProps } from '../types/article'
 
-function SideArticle({ posts, width = '28%' }: ArticleListProps) {
+interface SideArticleProps extends ArticleListProps {
+    hasBreak?: boolean;
+    hasDesc?: boolean;
+}
+
+function SideArticle({ posts, width = '28%', hasBreak = true, hasDesc = false }: SideArticleProps ) {
     const navigate = useNavigate();
     return (
         <div>
@@ -11,13 +16,14 @@ function SideArticle({ posts, width = '28%' }: ArticleListProps) {
                         <div>
                             <h3 className="title text-[#1A1E47] font-bold text-xl/6 mb-2">{post.title}</h3>
                             <h6 className="text-nique-blue text-sm">{post.author}</h6>
+                            {hasDesc && <p className="text-[#1A1E47] text-sm">{post.desc}</p>}
                         </div>
                         <img 
                             src={post.coverImage} 
                             style = {{ width: `${width}` }}
-                            className='aspect-square rounded-md object-cover' />
+                            className='aspect-square h-auto rounded-md object-cover' />
                     </div>
-                    <hr className='my-3' />
+                    {hasBreak ? <hr className='my-3' /> : <div className='my-3' />}
                 </div>
             ))}
         </div>

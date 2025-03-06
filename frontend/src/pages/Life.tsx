@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
-import MockAPI from '../services/MockAPI'
-import ArticleBlock from "../components/ArticleBlock"
-import { Post } from '../types/article'
-import SideWidget from '../components/SideWidget';
+import { useEffect, useState } from 'react';
+import MockAPI from '../services/MockAPI';
+import ArticleBlock from "../components/ArticleBlock";
+import { Post } from '../types/article';
+import MockAd from '../assets/mock_advertisement.jpg';
 import SideArticle from '../components/SideArticle';
 import Carousel from '../components/Carousel';
+import VerticalAd from '../components/VerticalAd';
+import InstaEmbed from '../components/InstaEmbed';
 
 
 function Life() {
@@ -87,9 +89,28 @@ function Life() {
                 </div>
 
                 <div className='flex flex-col gap-4'>
-                    <SideWidget />
-                    <SideArticle posts={[post[6], post[7], post[16]]} width='28%'/>
-                    <iframe className="rounded-md w-full h-[550px]" src="https://open.spotify.com/embed/playlist/3ySGGWEXxBBYvn2cYxEDEx?utm_source=generator&theme=0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                    <h4 className="font-bold text-2xl">Buzz Around Campus</h4>
+
+                    <hr />
+
+                    <h4 className="font-bold text-2xl text-nique-blue">What are you most excited for this Homecoming?</h4> 
+                    <SideArticle posts={[post[0], post[1], post[2] ]} width='28%' hasBreak={false} />
+                
+                    <hr />
+
+                    <InstaEmbed username='gtathletics' />
+
+                    <hr />
+
+                    <VerticalAd ad={MockAd} />
+
+                    <hr />
+
+                    <h4 className="font-bold text-2xl text-nique-blue">Alumni Spotlight</h4>   
+                    
+                    <hr />
+
+                    <SideArticle posts={[post[6], post[7], post[16], post[17], post[18]]} width='28%'/>
                 </div>
             </div>
         </>
