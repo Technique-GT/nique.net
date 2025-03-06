@@ -23,5 +23,9 @@ export default function Dashboard() {
     }
   }, []);
 
-  return (<div>testing testing</div>);
+  return (
+    <div className="bg-nique-blue">
+      testing testing
+    </div>
+  );
 }
