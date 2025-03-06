@@ -12,17 +12,18 @@ function SideArticle({ posts, width = '28%', hasBreak = true, hasDesc = false }:
         <div>
             {posts.map((post) => (
                 <div key={post.id}>
-                    <div className='cursor-pointer w-full flex justify-between gap-5' onClick={() => navigate('news/' + post.id)}>
+                    <div className='cursor-pointer w-full flex justify-between gap-1' onClick={() => navigate('news/' + post.id)}>
                         <div>
                             <h3 className="title text-[#1A1E47] font-bold text-xl/6 mb-2">{post.title}</h3>
                             <h6 className="text-nique-blue text-sm">{post.author}</h6>
-                            {hasDesc && <p className="text-[#1A1E47] text-sm">{post.desc}</p>}
+                            
                         </div>
                         <img 
                             src={post.coverImage} 
                             style = {{ width: `${width}` }}
                             className='aspect-square h-auto rounded-md object-cover' />
                     </div>
+                    {hasDesc && <p className="text-[#1A1E47] text-sm">{post.desc}</p>}
                     {hasBreak ? <hr className='my-3' /> : <div className='my-3' />}
                 </div>
             ))}

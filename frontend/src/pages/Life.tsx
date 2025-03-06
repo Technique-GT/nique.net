@@ -46,11 +46,11 @@ function Life() {
                             <ArticleBlock post={post[0]} height='460px' />
                         </div>
                         <ArticleBlock post={post[1]} height='460px' />
-                        <div className='grid gap-4 grid-rows-2'>
+                        <div className='grid gap-4 grid-rows-2 col-span-2 lg:col-span-1'>
                             <ArticleBlock post={post[2]} height='222px' />
                             <ArticleBlock post={post[3]} height='222px' />
                         </div>
-                        <div className='lg:col-span-4 m-0'>
+                        <div className='col-span-2 lg:col-span-4 m-0'>
                             <Carousel posts={[post[1], post[2], post[3], post[4]]} width='80%'/>
                         </div>
                     </div>
@@ -94,7 +94,7 @@ function Life() {
                     <hr />
 
                     <h4 className="font-bold text-2xl text-nique-blue">What are you most excited for this Homecoming?</h4> 
-                    <SideArticle posts={[post[0], post[1], post[2] ]} width='28%' hasBreak={false} />
+                    <SideArticle posts={[post[0], post[1], post[2] ]} width='80px' hasBreak={false} />
                 
                     <hr />
 
@@ -110,7 +110,7 @@ function Life() {
                     
                     <hr />
 
-                    <SideArticle posts={[post[6], post[7], post[16], post[17], post[18]]} width='28%'/>
+                    <SideArticle posts={[post[6], post[7], post[16], post[17], post[18]]} width='80px'/>
                 </div>
             </div>
         </>
