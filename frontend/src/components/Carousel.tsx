@@ -56,13 +56,13 @@ export default function Carousel( {posts, width}: ArticleListProps ) {
         {/* custom navigation buttons */}
         <div
           className="my-swiper-button-prev absolute top-1/2 left-4 -translate-y-1/2 
-                    z-10 cursor-pointer bg-white p-2"
+                    z-10 cursor-pointer bg-transparent p-2"
         >
           <ArrowLeft size={32} />
         </div>
         <div
           className="my-swiper-button-next absolute top-1/2 right-4 -translate-y-1/2 
-                    z-10 cursor-pointer bg-white p-2"
+                    z-10 cursor-pointer bg-transparent p-2"
         >
           <ArrowRight size={32} />
         </div>
