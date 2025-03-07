@@ -5,7 +5,7 @@ const router = express.Router();
 
 // followed instructions from https://www.digitalocean.com/community/tutorials/nodejs-jwt-expressjs
 function generateAccessToken(username: string) {
-  return jwt.sign({name: username}, process.env.JWT_SECRET!, { expiresIn: 30 });
+  return jwt.sign({name: username}, process.env.JWT_SECRET!, { expiresIn: 30 * 60 });
 }
 
 // middleware for verifying JWT

@@ -5,6 +5,7 @@ import { Post } from '../types/article';
 import MockAd from '../assets/mock_advertisement.jpg';
 import SideArticle from '../components/SideArticle';
 import Carousel from '../components/Carousel';
+import Navbar from '../components/Navbar';
 import VerticalAd from '../components/VerticalAd';
 import InstaEmbed from '../components/InstaEmbed';
 
@@ -38,6 +39,7 @@ function Life() {
 
     return (
         <>
+            <Navbar />
             <div className='max-w-[1470px] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div className='w-full'>
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Most Recent</h4>
