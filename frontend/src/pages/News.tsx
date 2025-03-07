@@ -8,6 +8,7 @@ import SideWidget from '../components/SideWidget';
 import SideArticle from '../components/SideArticle';
 import SmallArticle from '../components/SmallArticle';
 import { Categories } from '../types/categories';
+import Navbar from '../components/Navbar';
 
 function Home() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -38,6 +39,7 @@ function Home() {
 
     return (
         <>
+            <Navbar />
             <div className='max-w-[1470px] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div className='w-full'>
                     <div className='flex flex-col gap-4'>
