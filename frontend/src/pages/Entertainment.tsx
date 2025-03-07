@@ -33,7 +33,11 @@ function HomePage() {
     }
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-1 border-t-transparent border-nique-blue"></div>
+            </div>
+        );
     }
 
     return (

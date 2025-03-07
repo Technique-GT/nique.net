@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Sports from "./pages/Sports";
 import News from "./pages/News";
 import Entertainment from "./pages/Entertainment";
+import SubmitAd from "./pages/SubmitAd";
 
 function App() {
 
@@ -23,7 +24,7 @@ function App() {
             <Route path="/sports" element={<Sports />} />
             <Route path="/news" element={<News />} />
             <Route path="/entertainment" element={<Entertainment />}/>
-
+            <Route path="/submit-ad" element={<SubmitAd />} />
           </Routes>
         </div>
       </div>
