@@ -25,6 +25,7 @@ function App() {
             <Route path="/news" element={<News />} />
             <Route path="/entertainment" element={<Entertainment />}/>
             <Route path="/submit-ad" element={<SubmitAd />} />
+            {/* <Route path="/contact" element={<Contact />} /> */}
           </Routes>
         </div>
       </div>
