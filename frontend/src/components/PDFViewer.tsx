@@ -1,6 +1,7 @@
 import { pdfjs, Document, Page } from 'react-pdf';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Spinner from './Spinner';
+import { X, ChevronRight, ChevronLeft, Download } from 'lucide-react';
 
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
@@ -11,9 +12,34 @@ interface PDFViewerProps {
   title: string;
 }
 
+function downloadPDF() {
+  const link = document.createElement('a');
+  link.href = '../assets/media-kit-2024.pdf';
+  link.download = 'media-kit-2024.pdf';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 const PDFViewer = ({ isOpen, onClose, pdfFile, title }: PDFViewerProps) => {
   const [numPages, setNumPages] = useState<number>();
   const [pageNumber, setPageNumber] = useState<number>(1);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [pageWidth, setPageWidth] = useState<number>(450);
+
+  // dynamically resize width of pdf page
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setPageWidth(Math.min(containerRef.current.offsetWidth * 0.8, 450)); // max of 450px width
+      }
+    };
+
+    updateWidth();
+
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
     setNumPages(numPages);
@@ -23,26 +49,36 @@ const PDFViewer = ({ isOpen, onClose, pdfFile, title }: PDFViewerProps) => {
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xs p-4"
       onClick={onClose}
     >
       <div 
         className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center p-4">
-          <h4 className="text-3xl font-bold text-nique-blue">{title}</h4>
+        <div className="flex flex-row justify-between items-center p-4">
+            <div className="flex flex-row items-center">
+              <h4 className="text-2xl font-bold text-nique-blue mr-2">{title}</h4>
+              <button
+                onClick={downloadPDF}
+                title="Download a copy here"
+                className="hover:bg-gray-100 p-2 rounded-md"
+              >
+                <Download className="text-nique-blue hover:text-nique-blue-hover" />
+              </button>
+            </div>
           <button 
             onClick={onClose}
             className="text-gray-500 hover:text-nique-blue"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X />
           </button>
         </div>
         
-        <div className="flex-1 overflow-auto flex justify-center p-4">
+        <div 
+          ref={containerRef}
+          className="h-full overflow-auto flex justify-center p-4"
+        >
           <Document 
             file={pdfFile} 
             onLoadSuccess={onDocumentLoadSuccess} 
@@ -51,20 +87,22 @@ const PDFViewer = ({ isOpen, onClose, pdfFile, title }: PDFViewerProps) => {
           >
             <Page 
               pageNumber={pageNumber} 
-              className="shadow-md relative absolute top-0 left-0 z-10 pointer-events-none" 
+              width={pageWidth}
+              className="shadow-md absolute top-0 left-0 z-10 pointer-events-none" 
               renderTextLayer={false}
               renderAnnotationLayer={false}
             />
           </Document>
         </div>
 
-        <div className="p-4 flex justify-between items-center bg-gray-50">
+        {/* footer */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex justify-between items-center space-x-4 bg-white/70 px-2 py-1 rounded-md z-20 pointer-events-auto">
           <button 
             onClick={() => setPageNumber(Math.max(1, pageNumber - 1))}
             disabled={pageNumber <= 1}
-            className="px-3 py-1 bg-nique-blue text-white rounded-md disabled:opacity-50 hover:bg-nique-blue-hover"
+            className="p-1 bg-nique-blue text-white rounded-md disabled:opacity-50 hover:bg-nique-blue-hover"
           >
-            <h6>Previous</h6>
+            <ChevronLeft />
           </button>
           
           <h6 className="text-sm text-gray-600">
@@ -74,9 +112,9 @@ const PDFViewer = ({ isOpen, onClose, pdfFile, title }: PDFViewerProps) => {
           <button 
             onClick={() => setPageNumber(Math.min(numPages || pageNumber, pageNumber + 1))}
             disabled={pageNumber >= (numPages || 1)}
-            className="px-3 py-1 bg-nique-blue text-white rounded-md disabled:opacity-50 hover:bg-nique-blue-hover"
+            className="p-1 bg-nique-blue text-white rounded-md disabled:opacity-50 hover:bg-nique-blue-hover"
           >
-            <h6>Next</h6>
+            <ChevronRight />
           </button>
         </div>
       </div>
