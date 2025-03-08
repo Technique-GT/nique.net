@@ -37,8 +37,8 @@ function SubmitAd() {
         <>
             <Navbar />
             <div className="max-w-5xl mx-auto p-5">
-                <div className="my-12">
-                    <h4 className="text-4xl font-bold mb-2 text-nique-blue">Submit an Ad</h4>
+                <div className="my-4">
+                    <h4 className="text-2xl font-bold mb-2 text-nique-blue">Submit an Ad</h4>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 justify-between radius-md">
                         <div className="border rounded-md border-nique-blue py-12 px-20">
@@ -66,8 +66,8 @@ function SubmitAd() {
                   title="Media Kit 2024"
                 />
 
-                <div className="my-12">
-                    <h4 className="text-3xl font-bold mb-2 text-nique-blue mt-6">Price Plans</h4>
+                <div className="my-4">
+                    <h4 className="text-2xl font-bold mb-2 text-nique-blue mt-6">Price Plans</h4>
 
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 justify-between radius-md">
                             {adPricePlans.map((ad) => (
@@ -82,8 +82,8 @@ function SubmitAd() {
                         </div>
                     </div>
 
-                    <div className="my-12">
-                        <h4 className="text-xl font-bold mb-2 text-nique-blue mt-6">Need help?</h4>
+                    <div className="my-4">
+                        <h4 className="text-2xl font-bold mb-2 text-nique-blue mt-6">Need help?</h4>
                         <a href="/contact" className="block">
                             <h6 className="hover:text-nique-blue-hover">
                                 <u>Contact Us.</u>
