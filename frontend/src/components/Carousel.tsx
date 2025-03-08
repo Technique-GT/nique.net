@@ -41,7 +41,7 @@ export default function Carousel( {posts, width}: ArticleListProps ) {
             return (
               <SwiperSlide 
                 key={index} 
-                onClick={()=>navigate(`/news/${p.id}`)} 
+                onClick={()=>navigate('news/'+post.id)} 
                 style={{
                   backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0) 80%, rgba(255, 255, 255, 1)), url(${p.coverImage})`,
                 }}
