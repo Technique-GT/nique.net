@@ -8,6 +8,7 @@ import SideWidget from '../components/SideWidget';
 import SideArticle from '../components/SideArticle';
 import { Categories } from '../types/categories';
 import Navbar from '../components/Navbar';
+import Spinner from '../components/Spinner';
 
 function Home() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -35,7 +36,7 @@ function Home() {
     if (isLoading) {
         return (
             <div className="flex justify-center items-center h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-1 border-t-transparent border-nique-blue"></div>
+                <Spinner/>
             </div>
         );
     }

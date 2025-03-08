@@ -8,6 +8,7 @@ import Carousel from '../components/Carousel';
 import SmallArticle from '../components/SmallArticle';
 import Comic from '../components/Comic';
 import Navbar from '../components/Navbar';
+import Spinner from '../components/Spinner';
 
 function HomePage() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -35,7 +36,7 @@ function HomePage() {
     if (isLoading) {
         return (
             <div className="flex justify-center items-center h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-1 border-t-transparent border-nique-blue"></div>
+                <Spinner />
             </div>
         );
     }

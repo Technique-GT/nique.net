@@ -1,4 +1,7 @@
 import Navbar from '../components/Navbar';
+import { useState } from 'react';
+import MediaKit from '../assets/media-kit-2024.pdf';
+import PDFViewer from '../components/PDFViewer';
 
 const adPricePlans = [
     {
@@ -23,8 +26,13 @@ const adPricePlans = [
     }
 ]    
 
-
 function SubmitAd() {
+    const [showPDF, setShowPDF] = useState(false);
+
+    const onClick = () => {
+        setShowPDF(!showPDF);
+    }
+
     return (
         <>
             <Navbar />
@@ -37,9 +45,7 @@ function SubmitAd() {
                             <h4 className="text-4xl font-bold mb-4 text-nique-blue">1.</h4>
                             <h4 className="text-xl font-bold text-nique-blue">Check out our media kit!</h4>
                             <h6 className="mb-4">Take time to review the rules of entry to ensure your campaign qualifies.</h6>
-                            <a href="/">
-                                <button className='bg-nique-blue hover:bg-nique-blue-hover rounded-md text-white px-2 py-1'><h4>Read the rules</h4></button>
-                            </a>
+                            <button className='bg-nique-blue hover:bg-nique-blue-hover rounded-md text-white px-2 py-1' onClick={onClick}><h4>Read the rules</h4></button>
                         </div>
                         
                         <div className="border rounded-md border-nique-blue py-12 px-20">
@@ -53,33 +59,40 @@ function SubmitAd() {
                     </div>
                 </div>
 
+                <PDFViewer 
+                  isOpen={showPDF}
+                  onClose={() => setShowPDF(false)}
+                  pdfFile={MediaKit}
+                  title="Media Kit 2024"
+                />
+
                 <div className="my-12">
                     <h4 className="text-3xl font-bold mb-2 text-nique-blue mt-6">Price Plans</h4>
 
                     <div className="grid grid-cols-4 gap-4 justify-between radius-md">
-                        {adPricePlans.map((ad) => (
-                            <a href={ad.link} target="_blank" rel="noopener noreferrer">
-                            <div className="border rounded-md border-nique-blue aspect-square p-6 flex flex-col justify-center hover:shadow-xl hover:bg-nique-blue-hover/2 transition duration-300">
-                                <h4 className="text-4xl font-bold text-nique-blue text-center">{ad.price}</h4>
-                                <h6 className="text-sm mb-4 text-nique-blue text-center">(price depends on color & size)</h6>
-                                <h6 className="text-center">{ad.type}</h6>
-                            </div>
-                            </a>
-                        ))}
+                            {adPricePlans.map((ad) => (
+                                <a href={ad.link} target="_blank" rel="noopener noreferrer">
+                                <div className="border rounded-md border-nique-blue aspect-square p-6 flex flex-col justify-center hover:shadow-xl hover:bg-nique-blue-hover/2 transition duration-300">
+                                    <h4 className="text-4xl font-bold text-nique-blue text-center">{ad.price}</h4>
+                                    <h6 className="text-sm mb-4 text-nique-blue text-center">(price depends on color & size)</h6>
+                                    <h6 className="text-center">{ad.type}</h6>
+                                </div>
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="my-12">
+                        <h4 className="text-xl font-bold mb-2 text-nique-blue mt-6">Need help?</h4>
+                        <a href="/contact" className="block">
+                            <h6 className="hover:text-nique-blue-hover">
+                                <u>Contact Us.</u>
+                            </h6>
+                        </a>
                     </div>
                 </div>
+            </>
+        );
+    };
 
-                <div className="my-12">
-                    <h4 className="text-xl font-bold mb-2 text-nique-blue mt-6">Need help?</h4>
-                    <a href="/contact" className="block">
-                        <h6 className="hover:text-nique-blue-hover">
-                            <u>Contact Us.</u>
-                        </h6>
-                    </a>
-                </div>
-            </div>
-        </>
-    );
-};
-
-export default SubmitAd;
+    export default SubmitAd;
