@@ -6,7 +6,7 @@ function FeaturedStory({ post, height }: ArticleBlockProps) {
     return (
         <div>
             <div className='cursor-pointer rounded-md bg-cover bg-center h-[200px] w-full flex p-4'
-                onClick={() => navigate('news/'+post.id)}
+                onClick={() => navigate('news/' + post.id)}
                 style={{
                     backgroundImage: `linear-gradient(to top, transparent 70%, rgba(229, 229, 229) 90%), url(${post.coverImage})`,
                     height: `${height}`
