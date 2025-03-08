@@ -36,11 +36,11 @@ function SubmitAd() {
     return (
         <>
             <Navbar />
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-5xl mx-auto p-5">
                 <div className="my-12">
                     <h4 className="text-4xl font-bold mb-2 text-nique-blue">Submit an Ad</h4>
 
-                    <div className="grid grid-cols-2 gap-4 justify-between radius-md">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 justify-between radius-md">
                         <div className="border rounded-md border-nique-blue py-12 px-20">
                             <h4 className="text-4xl font-bold mb-4 text-nique-blue">1.</h4>
                             <h4 className="text-xl font-bold text-nique-blue">Check out our media kit!</h4>
@@ -69,10 +69,10 @@ function SubmitAd() {
                 <div className="my-12">
                     <h4 className="text-3xl font-bold mb-2 text-nique-blue mt-6">Price Plans</h4>
 
-                    <div className="grid grid-cols-4 gap-4 justify-between radius-md">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 justify-between radius-md">
                             {adPricePlans.map((ad) => (
                                 <a href={ad.link} target="_blank" rel="noopener noreferrer">
-                                <div className="border rounded-md border-nique-blue aspect-square p-6 flex flex-col justify-center hover:shadow-xl hover:bg-nique-blue-hover/2 transition duration-300">
+                                <div className="border rounded-md border-nique-blue aspect-square p-4 lg:p-6 flex flex-col justify-center hover:shadow-xl hover:bg-nique-blue-hover/2 transition duration-300">
                                     <h4 className="text-4xl font-bold text-nique-blue text-center">{ad.price}</h4>
                                     <h6 className="text-sm mb-4 text-nique-blue text-center">(price depends on color & size)</h6>
                                     <h6 className="text-center">{ad.type}</h6>

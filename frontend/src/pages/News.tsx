@@ -5,7 +5,6 @@ import { Post } from '../types/article'
 import FeaturedStory from '../components/FeaturedStory';
 import MockAd from '../assets/mock_advertisement.jpg';
 import JustInBlock from '../components/JustIn';
-import SideWidget from '../components/SideWidget';
 import SideArticle from '../components/SideArticle';
 import SmallArticle from '../components/SmallArticle';
 import VerticalAd from '../components/VerticalAd';
