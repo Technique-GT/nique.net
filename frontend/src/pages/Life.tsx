@@ -8,7 +8,7 @@ import Carousel from '../components/Carousel';
 import Navbar from '../components/Navbar';
 import VerticalAd from '../components/VerticalAd';
 import InstaEmbed from '../components/InstaEmbed';
-
+import Spinner from '../components/Spinner';
 
 function Life() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -34,7 +34,11 @@ function Life() {
     }
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <Spinner />
+            </div>
+        );
     }
 
     return (

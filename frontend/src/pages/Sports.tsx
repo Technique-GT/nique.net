@@ -8,6 +8,7 @@ import SideArticle from '../components/SideArticle';
 import InstagramEmbed from '../components/InstaEmbed';
 import SmallArticle from '../components/SmallArticle';
 import Navbar from '../components/Navbar';
+import Spinner from '../components/Spinner';
 
 function Sports() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -33,7 +34,11 @@ function Sports() {
     }
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <Spinner />
+            </div>
+        );
     }
 
     return (
