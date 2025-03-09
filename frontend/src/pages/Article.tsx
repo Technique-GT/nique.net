@@ -19,7 +19,7 @@ export default function Article() {
                     This is an article! Article id: {id}. Someone set up an actual db lol.
                 </h1> */}
                 <header className="flex justify-between items-center border-b pb-4 mb-6">
-                    <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onClick={() => navigate('/')}>
+                    <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onClick={() => navigate(-1)}>
                         Go back
                     </button>
                 </header>
