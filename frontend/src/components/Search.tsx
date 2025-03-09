@@ -15,11 +15,15 @@ function Search() {
 
     const handleCloseSearch = () => {
         setIsSearchOn(false)
+        setText("")
     }
 
     const handleSearch = () => {
-        navigate('/search')
-        setIsSearchOn(false)
+        if (text.trim()) {
+            navigate(`/search?query=${encodeURIComponent(text)}`)
+            setIsSearchOn(false)
+            setText("")
+        }
     }
 
     return (
