@@ -7,10 +7,14 @@ import Article from "./pages/Article";
 import AdminPage from './pages/AdminPage';
 import Dashboard from './pages/Dashboard';
 import Sports from "./pages/Sports";
+
+import SearchPage from "./pages/SearchPage"
+
 import News from "./pages/News";
 import Entertainment from "./pages/Entertainment";
 import SubmitAd from "./pages/SubmitAd";
 import About from "./pages/About";
+
 
 function App() {
 
@@ -25,6 +29,9 @@ function App() {
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/sports" element={<Sports />} />
+
+            <Route path="/search" element={<SearchPage />} />
+
             <Route path="/news" element={<News />} />
             <Route path="/entertainment" element={<Entertainment />}/>
             <Route path="/submit-ad" element={<SubmitAd />} />
