@@ -5,12 +5,12 @@ import { Post } from '../types/article'
 import FeaturedStory from '../components/FeaturedStory';
 import MockAd from '../assets/mock_advertisement.jpg';
 import JustInBlock from '../components/JustIn';
-import SideWidget from '../components/SideWidget';
 import SideArticle from '../components/SideArticle';
 import SmallArticle from '../components/SmallArticle';
 import VerticalAd from '../components/VerticalAd';
 import { Categories } from '../types/categories';
 import Navbar from '../components/Navbar';
+import Spinner from '../components/Spinner';
 
 function Home() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -36,7 +36,11 @@ function Home() {
     }
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <Spinner/>
+            </div>
+        );
     }
 
     return (

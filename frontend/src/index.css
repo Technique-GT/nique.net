@@ -20,7 +20,7 @@ h6 {
     font-family: "Roboto Condensed", sans-serif;
 }
 
-p {
+p, li {
     font-family: 'EB Garamond', Times, serif;
 }
 
@@ -42,4 +42,30 @@ button:hover {
 
 h5, th, td {
     font-family: 'DM Sans', sans-serif;
+}
+
+@keyframes scroll {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+.scroll-container {
+  overflow: hidden;
+  width: 100%;
+}
+
+.scroll-content {
+    display: flex;
+    animation: scroll 120s linear infinite;
+    width: calc(400%);
+}
+
+@media (min-width: 768px) {
+    .scroll-content {
+        width: calc(250%);
+    }
 }

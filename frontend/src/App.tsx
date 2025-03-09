@@ -1,3 +1,5 @@
+// app.tsx
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Life from "./pages/Life";
@@ -10,6 +12,8 @@ import SearchPage from "./pages/SearchPage"
 
 import News from "./pages/News";
 import Entertainment from "./pages/Entertainment";
+import SubmitAd from "./pages/SubmitAd";
+import About from "./pages/About";
 
 
 function App() {
@@ -21,7 +25,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/life" element={<Life />} />
-            <Route path="/news/:id" element={<Article />} />
+            <Route path="/:id" element={<Article />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/sports" element={<Sports />} />
@@ -30,8 +34,9 @@ function App() {
 
             <Route path="/news" element={<News />} />
             <Route path="/entertainment" element={<Entertainment />}/>
-
-
+            <Route path="/submit-ad" element={<SubmitAd />} />
+            <Route path="/about" element={<About />} />
+            {/* <Route path="/contact" element={<Contact />} /> */}
           </Routes>
         </div>
       </div>

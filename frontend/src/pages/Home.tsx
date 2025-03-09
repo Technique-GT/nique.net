@@ -8,6 +8,7 @@ import SideWidget from '../components/SideWidget';
 import SideArticle from '../components/SideArticle';
 import { Categories } from '../types/categories';
 import Navbar from '../components/Navbar';
+import Spinner from '../components/Spinner';
 
 function Home() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -33,7 +34,11 @@ function Home() {
     }
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <Spinner/>
+            </div>
+        );
     }
 
     return (

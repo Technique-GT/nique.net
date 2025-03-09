@@ -12,7 +12,7 @@ function SideArticle({ posts, width = '28%', hasBreak = true, hasDesc = false }:
         <div>
             {posts.map((post) => (
                 <div key={post.id}>
-                    <div className='cursor-pointer w-full flex justify-between gap-1' onClick={() => navigate('news/' + post.id)}>
+                    <div className='cursor-pointer w-full flex justify-between gap-1' onClick={() => navigate('/' + post.id)}>
                         <div>
                             <h3 className="title text-[#1A1E47] font-bold text-xl/6 mb-2">{post.title}</h3>
                             <h6 className="text-nique-blue text-sm">{post.author}</h6>
