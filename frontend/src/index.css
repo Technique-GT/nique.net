@@ -1,9 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Oswald:wght@200..700&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
 @import "tailwindcss";
 
 @theme {
     --color-nique-blue: #003057;
     --color-nique-blue-hover: #0E3682;
+    --color-nique-light-blue: #5C8EB7;
 }
 
 h3 {
@@ -36,4 +38,8 @@ button:hover {
 
 .title:hover {
     opacity: 0.7;
+}
+
+h5, th, td {
+    font-family: 'DM Sans', sans-serif;
 }

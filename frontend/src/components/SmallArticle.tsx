@@ -18,7 +18,7 @@ function SmallArticle({ posts, direction }: SmallArticleProps) {
                             <h3 className="title text-[#1A1E47] font-bold text-xl/6 mb-2">{post.title}</h3>
                             <h6 className="text-nique-blue text-sm">{post.author}</h6>
                         </div>
-                        <img src={post.coverImage} className={`${direction === "right" ? "" : "order-first"} w-[28%] aspect-3/2 rounded-md object-cover`} />
+                        <img src={post.coverImage} className={`${direction === "right" ? "" : "order-first"} w-[128px] aspect-3/2 rounded-md object-cover`} />
                     </div>
                     {/* Show <hr /> only if it's not the last post */}
                     {index !== posts.length - 1 && <hr className='my-3' />}

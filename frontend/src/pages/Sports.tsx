@@ -7,6 +7,7 @@ import MockAd from '../assets/mock_advertisement.jpg';
 import SideArticle from '../components/SideArticle';
 import InstagramEmbed from '../components/InstaEmbed';
 import SmallArticle from '../components/SmallArticle';
+import Navbar from '../components/Navbar';
 
 function Sports() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -37,6 +38,7 @@ function Sports() {
 
     return (
         <>
+            <Navbar />
             <div className='max-w-[1470px] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div className='w-full'>
                     <div className='grid gap-5 grid-cols-1 lg:grid-cols-[auto_35%] w-full'>
