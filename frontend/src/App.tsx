@@ -9,7 +9,7 @@ import Dashboard from './pages/Dashboard';
 import Sports from "./pages/Sports";
 
 import SearchPage from "./pages/SearchPage"
-
+import Contact from "./pages/Contact";
 import News from "./pages/News";
 import Entertainment from "./pages/Entertainment";
 import SubmitAd from "./pages/SubmitAd";
@@ -36,7 +36,7 @@ function App() {
             <Route path="/entertainment" element={<Entertainment />}/>
             <Route path="/submit-ad" element={<SubmitAd />} />
             <Route path="/about" element={<About />} />
-            {/* <Route path="/contact" element={<Contact />} /> */}
+            <Route path="/contact" element={<Contact />} />
           </Routes>
         </div>
       </div>
