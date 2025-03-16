@@ -13,7 +13,7 @@ function Contact() {
             <div>
             <h4 className="font-bold mb-2 text-2xl text-nique-blue">Contact The Technique</h4>
             <p> 
-                If you're trying to get in touch with a member of the Technique staff, please see below. 
+                If you're trying to get in touch with a member of the <i>Technique</i> staff, please see below. 
                 If you're unsure whom to contact, email <a href={`mailto:${staff[0].email}`} className="hover:text-nique-light-blue"><u>{staff[0].name}</u></a> or call (678) 713-1980.
             </p>
 
