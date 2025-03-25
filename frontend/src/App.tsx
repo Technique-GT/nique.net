@@ -1,6 +1,8 @@
 // app.tsx
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React, { useEffect } from "react";
+import ReactGA from 'react-ga4';
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import Life from "./pages/Life";
 import Article from "./pages/Article";
@@ -15,12 +17,26 @@ import Entertainment from "./pages/Entertainment";
 import SubmitAd from "./pages/SubmitAd";
 import About from "./pages/About";
 
+const TRACKING_ID = "G-Q3NL210D85"; // replace with Technique staff tracking ID
+
+function PageTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    ReactGA.send({ hitType: "pageview", page: location.pathname + location.search });
+  }, [location]);
+
+  return null;
+}
 
 function App() {
+  useEffect(() => {
+    ReactGA.initialize(TRACKING_ID);
+  }, []);
 
   return (
     <Router>
-      <div>
+        <PageTracker />
         <div className="App">
           <Routes>
             <Route path="/" element={<Home />} />
@@ -39,7 +55,6 @@ function App() {
             {/* <Route path="/contact" element={<Contact />} /> */}
           </Routes>
         </div>
-      </div>
     </Router>
   )
 }
