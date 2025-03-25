@@ -17,7 +17,7 @@ import Entertainment from "./pages/Entertainment";
 import SubmitAd from "./pages/SubmitAd";
 import About from "./pages/About";
 
-const TRACKING_ID = "G-Q3NL210D85"; // replace with Technique staff tracking ID
+const TRACKING_ID = "G-Q3NL210D85"; // replace with Technique staff tracking ID. probably want to put in .env file
 
 function PageTracker() {
   const location = useLocation();
