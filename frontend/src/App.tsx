@@ -17,7 +17,8 @@ import Entertainment from "./pages/Entertainment";
 import SubmitAd from "./pages/SubmitAd";
 import About from "./pages/About";
 
-const TRACKING_ID = "G-Q3NL210D85"; // replace with Technique staff tracking ID. probably want to put in .env file
+const PROD_TRACKING_ID = "G-Q3NL210D85"; // replace with Technique staff tracking ID. probably want to put in .env file
+const DEV_TRACKING_ID = "G-Q3NL210D85"; // replace with personal tracking ID to not mess with real user data
 
 function PageTracker() {
   const location = useLocation();
@@ -31,7 +32,7 @@ function PageTracker() {
 
 function App() {
   useEffect(() => {
-    ReactGA.initialize(TRACKING_ID);
+    ReactGA.initialize(PROD_TRACKING_ID);
   }, []);
 
   return (
