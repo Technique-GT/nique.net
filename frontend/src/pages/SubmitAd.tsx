@@ -44,7 +44,7 @@ function SubmitAd() {
                         <div className="border rounded-md border-nique-blue py-12 px-20">
                             <h4 className="text-4xl font-bold mb-4 text-nique-blue">1.</h4>
                             <h4 className="text-xl font-bold text-nique-blue">Check out our media kit!</h4>
-                            <h6 className="mb-4">Take time to review the rules of entry to ensure your campaign qualifies.</h6>
+                            <p className="mb-4">Take time to review the rules of entry to ensure your campaign qualifies.</p>
                             <button className='bg-nique-blue hover:bg-nique-blue-hover rounded-md text-white px-2 py-1' onClick={onClick}>
                                 <h4>Read the rules</h4>
                             </button>
@@ -53,7 +53,7 @@ function SubmitAd() {
                         <div className="border rounded-md border-nique-blue py-12 px-20">
                             <h4 className="text-4xl font-bold mb-4 text-nique-blue">2.</h4>
                             <h4 className="text-xl font-bold text-nique-blue">Submit online</h4>
-                            <h6 className="mb-4">View the price plans below and place an order for your ad.</h6> 
+                            <p className="mb-4">View the price plans below and place an order for your ad.</p> 
                             <a href="https://epay.gatech.edu/C20793_ustores/web/store_main.jsp?STOREID=13&FROMQRCODE=true" 
                                 target="_blank" 
                                 rel="noopener noreferrer"
@@ -82,7 +82,7 @@ function SubmitAd() {
                             <div className="border rounded-md border-nique-blue aspect-square p-4 lg:p-6 flex flex-col justify-center hover:shadow-xl hover:bg-nique-blue-hover/4 transition duration-300">
                                 <h4 className="text-4xl font-bold text-nique-blue text-center">{ad.price}</h4>
                                 <h6 className="text-sm mb-4 text-nique-blue text-center">(price depends on color & size)</h6>
-                                <h6 className="text-center">{ad.type}</h6>
+                                <p className="text-center">{ad.type}</p>
                              </div>
                             </a>
                         ))}
@@ -92,9 +92,9 @@ function SubmitAd() {
                 <div className="my-4">
                     <h4 className="text-2xl font-bold mb-2 text-nique-blue mt-6">Need help?</h4>
                     <a href="/contact" className="block">
-                        <h6 className="hover:text-nique-blue-hover">
+                        <p className="hover:text-nique-blue-hover">
                             <u>Contact Us.</u>
-                        </h6>
+                        </p>
                     </a>
                 </div>
             </div>
