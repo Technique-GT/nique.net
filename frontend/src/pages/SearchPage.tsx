@@ -23,6 +23,12 @@ const SearchPage = () => {
     setSearchedText(queryText);
   }, [queryText]);
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+        handleSearch();
+    }
+};
+
   return (
     <>
       <Navbar />
@@ -33,6 +39,7 @@ const SearchPage = () => {
             value={text}
             className="flex-grow mx-2 outline-none bg-transparent"
             onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Search Article"
           />
           <button>
