@@ -14,6 +14,7 @@ import News from "./pages/News";
 import Entertainment from "./pages/Entertainment";
 import SubmitAd from "./pages/SubmitAd";
 import About from "./pages/About";
+import EditArticle from "./pages/dashboard/EditArticle";
 
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
             <Route path="/:id" element={<Article />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/edit-article" element={<EditArticle />} />
             <Route path="/sports" element={<Sports />} />
 
             <Route path="/search" element={<SearchPage />} />
