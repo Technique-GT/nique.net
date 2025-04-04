@@ -7,11 +7,15 @@ import SettingsTab from "./dashboard/Settings";
 import Permissions from "./dashboard/Permissions";
 import Subscribers from "./dashboard/Subscriber";
 import Staff from "./dashboard/Staff";
+import Articles from "./dashboard/Articles";
+import Categories from "./dashboard/Categories";
+import Tags from "./dashboard/Tags";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("UserRoles");
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [articlesDropdownOpen, setArticlesDropdownOpen] = useState(false);
 
   useEffect(() => {
     const jwt_token = cookie.get("jwt");
@@ -32,21 +36,19 @@ export default function Dashboard() {
   const renderTabContent = () => {
     switch (activeTab) {
       case "UserRoles":
-        return <Permissions />; // Now using the Permissions component
+        return <Permissions />;
       case "Subscribers":
-        return <Subscribers />; // Now using the Subscribers component
+        return <Subscribers />;
       case "Staff":
-        return <Staff />; // Now using the Staff component
-      case "Subscribers":
-        return <div>Subscribers Management</div>;
-      case "Staff":
-        return <div>Staff Management</div>;
-      case "Articles":
-        return <div>Article System Management</div>;
+        return <Staff />;
+      case "ManageArticles":
+        return <Articles />;
+      case "ManageCategories":
+        return <Categories />;
+      case "ManageTags":
+        return <Tags />;
       case "DashboardFeatures":
         return <div>Dashboard Features & Metrics</div>;
-      case "CategoriesTags":
-        return <div>Categories & Tags Management</div>;
       case "Comments":
         return <div>Comment Moderation</div>;
       case "Media":
@@ -68,6 +70,12 @@ export default function Dashboard() {
 
   const toggleUserDropdown = () => {
     setUserDropdownOpen(!userDropdownOpen);
+    if (articlesDropdownOpen) setArticlesDropdownOpen(false);
+  };
+
+  const toggleArticlesDropdown = () => {
+    setArticlesDropdownOpen(!articlesDropdownOpen);
+    if (userDropdownOpen) setUserDropdownOpen(false);
   };
 
   return (
@@ -109,7 +117,6 @@ export default function Dashboard() {
             {userDropdownOpen && (
               <div className="ml-8 mt-1 space-y-1">
                 <SidebarButton
-                  icon={<Users size={16} />}
                   label="User Roles"
                   onClick={() => {
                     setActiveTab("UserRoles");
@@ -119,7 +126,6 @@ export default function Dashboard() {
                   indent
                 />
                 <SidebarButton
-                  icon={<Users size={16} />}
                   label="Subscribers"
                   onClick={() => {
                     setActiveTab("Subscribers");
@@ -129,7 +135,6 @@ export default function Dashboard() {
                   indent
                 />
                 <SidebarButton
-                  icon={<Users size={16} />}
                   label="Staff"
                   onClick={() => {
                     setActiveTab("Staff");
@@ -142,23 +147,66 @@ export default function Dashboard() {
             )}
           </div>
 
-          <SidebarButton
-            icon={<FileText />}
-            label="Articles"
-            onClick={() => setActiveTab("Articles")}
-            isActive={activeTab === "Articles"}
-          />
+          {/* Articles Dropdown */}
+          <div className="mb-2">
+            <div
+              className={`
+                group flex flex-row items-center text-lg p-3 rounded-lg 
+                cursor-pointer transition-all duration-300
+                hover:bg-blue-600 hover:shadow-lg
+                active:bg-blue-700
+                relative overflow-hidden
+                ${activeTab.startsWith('Manage') ? 'bg-blue-800 text-white' : 'text-gray-200 hover:text-white'}
+              `}
+              onClick={toggleArticlesDropdown}
+            >
+              <FileText className={`transition-transform duration-300 ${activeTab.startsWith('Manage') ? 'scale-110 text-white' : 'group-hover:scale-110'}`} />
+              <span className={`ml-3 transition-all duration-300 ${activeTab.startsWith('Manage') ? 'font-bold' : 'group-hover:font-semibold'}`}>
+                Articles
+              </span>
+              <div className="ml-auto">
+                {articlesDropdownOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+              </div>
+            </div>
+            
+            {articlesDropdownOpen && (
+              <div className="ml-8 mt-1 space-y-1">
+                <SidebarButton
+                  label="Manage Articles"
+                  onClick={() => {
+                    setActiveTab("ManageArticles");
+                    setArticlesDropdownOpen(false);
+                  }}
+                  isActive={activeTab === "ManageArticles"}
+                  indent
+                />
+                <SidebarButton
+                  label="Manage Categories"
+                  onClick={() => {
+                    setActiveTab("ManageCategories");
+                    setArticlesDropdownOpen(false);
+                  }}
+                  isActive={activeTab === "ManageCategories"}
+                  indent
+                />
+                <SidebarButton
+                  label="Manage Tags"
+                  onClick={() => {
+                    setActiveTab("ManageTags");
+                    setArticlesDropdownOpen(false);
+                  }}
+                  isActive={activeTab === "ManageTags"}
+                  indent
+                />
+              </div>
+            )}
+          </div>
+
           <SidebarButton
             icon={<BarChart />}
             label="Dashboard Features"
             onClick={() => setActiveTab("DashboardFeatures")}
             isActive={activeTab === "DashboardFeatures"}
-          />
-          <SidebarButton
-            icon={<Folder />}
-            label="Categories & Tags"
-            onClick={() => setActiveTab("CategoriesTags")}
-            isActive={activeTab === "CategoriesTags"}
           />
           <SidebarButton
             icon={<MessageSquare />}
@@ -202,7 +250,7 @@ export default function Dashboard() {
       {/* Main Dashboard Content */}
       <div className="flex-1 bg-gray-200 p-10">
         <h4 className="text-4xl tracking-wider border-b-2 mb-5 border-b-gray-300">
-          {activeTab.replace(/([A-Z])/g, " $1").trim()} {/* Convert camelCase to Title */}
+          {activeTab.replace(/([A-Z])/g, " $1").trim()}
         </h4>
         {renderTabContent()}
       </div>
@@ -217,7 +265,7 @@ function SidebarButton({
   isActive,
   indent = false
 }: {
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   label: string;
   onClick: () => void;
   isActive?: boolean;
@@ -236,17 +284,15 @@ function SidebarButton({
       `}
       onClick={onClick}
     >
-      {/* Animated background effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
-      
-      <div className={`transition-transform duration-300 ${isActive ? 'scale-110 text-white' : 'group-hover:scale-110'}`}>
-        {icon}
-      </div>
-      <span className={`ml-3 transition-all duration-300 ${isActive ? 'font-bold' : 'group-hover:font-semibold'}`}>
+      {icon && (
+        <div className={`transition-transform duration-300 ${isActive ? 'scale-110 text-white' : 'group-hover:scale-110'}`}>
+          {icon}
+        </div>
+      )}
+      <span className={`${icon ? 'ml-3' : ''} transition-all duration-300 ${isActive ? 'font-bold' : 'group-hover:font-semibold'}`}>
         {label}
       </span>
       
-      {/* Active state indicator */}
       {isActive && (
         <div className="absolute right-0 top-0 bottom-0 w-1 bg-yellow-400 rounded-l-full"></div>
       )}
