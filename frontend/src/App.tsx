@@ -7,6 +7,7 @@ import Article from "./pages/Article";
 import AdminPage from './pages/AdminPage';
 import Dashboard from './pages/Dashboard';
 import Sports from "./pages/Sports";
+import Settings from "./pages/dashboard/Settings";
 
 import SearchPage from "./pages/SearchPage"
 import Contact from "./pages/Contact";
@@ -29,6 +30,8 @@ function App() {
             <Route path="/:id" element={<Article />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/settings" element={<Settings />} />
+
             <Route path="/dashboard/edit-article" element={<EditArticle />} />
             <Route path="/sports" element={<Sports />} />
 
