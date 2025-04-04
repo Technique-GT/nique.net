@@ -4,6 +4,9 @@ import { Home, Users, FileText, BarChart, Folder, MessageSquare, Image, Shield, 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SettingsTab from "./dashboard/Settings";
+import Permissions from "./dashboard/Permissions";
+import Subscribers from "./dashboard/Subscriber";
+import Staff from "./dashboard/Staff";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -29,7 +32,11 @@ export default function Dashboard() {
   const renderTabContent = () => {
     switch (activeTab) {
       case "UserRoles":
-        return <div>User Roles & Permissions Section</div>;
+        return <Permissions />; // Now using the Permissions component
+      case "Subscribers":
+        return <Subscribers />; // Now using the Subscribers component
+      case "Staff":
+        return <Staff />; // Now using the Staff component
       case "Subscribers":
         return <div>Subscribers Management</div>;
       case "Staff":
