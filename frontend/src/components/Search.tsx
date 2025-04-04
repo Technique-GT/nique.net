@@ -27,18 +27,23 @@ function Search() {
     }
 
     return (
-        <div className="flex items-center justify-between border border-gray-300 rounded-full p-2 bg-white">
-            {!isSearchOn && <button><FaSearch onClick={handleOpenSearch} className="text-blue-950 hover:text-blue-900" size='20'/></button>}
-            {isSearchOn && <button><FaTimes onClick={handleCloseSearch} className="text-blue-950 hover:text-blue-900" size='15'/></button>}
+        <div className="flex items-center justify-between border border-gray-300 rounded-full p-1.5 bg-white">
+            {!isSearchOn && <button><FaSearch onClick={handleOpenSearch} className="text-blue-950 hover:text-blue-900" size='25'/></button>}
+            {isSearchOn && <button><FaTimes onClick={handleCloseSearch} className="text-blue-950 hover:text-blue-900" size='20'/></button>}
             {isSearchOn && <div>
                 <input
                 type="text"
                 value={text}
-                className="flex-grow mx-2 outline-none bg-transparent"
+                className="flex-grow mx-2 outline-none bg-transparent text-2xl"
                 onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        handleSearch()
+                    }
+                }}
                 placeholder="Search Article"
             />
-            {<button><FaSearch onClick={handleSearch} className="text-blue-950 hover:text-blue-900" size='20'/></button>}
+            {<button><FaSearch onClick={handleSearch} className="text-blue-950 hover:text-blue-900" size='25'/></button>}
             </div>}
             
         </div>
