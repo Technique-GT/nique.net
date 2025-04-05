@@ -19,12 +19,14 @@ import DashboardHome from "./pages/dashboard/DashboardHome";
 import AllPosts from "./pages/dashboard/AllPosts";
 import Categories from "./pages/dashboard/Categories";
 import Tags from "./pages/dashboard/Tags";
-import AllAuthors from "./pages/dashboard/AllAuthors";
-import AddNewAuthor from "./pages/dashboard/AddNewAuthor";
+import AddNewAuthor from "./pages/dashboard/AddNewUser";
 import Profile from "./pages/dashboard/Profile";
 import UserRoleEditor from "./pages/dashboard/UserRoleEditor";
 import Library from "./pages/dashboard/Library";
 import AddNewMediaFile from "./pages/dashboard/AddNewMediaFile";
+import Subscribers from "./pages/dashboard/Subscribers";
+import Staff from "./pages/dashboard/Staff";
+import Settings from "./pages/dashboard/Settings";
 
 
 function App() {
@@ -44,12 +46,14 @@ function App() {
               <Route path="/dashboard/edit-article" element={<EditArticle />} />
               <Route path="/dashboard/categories" element={<Categories />} />
               <Route path="/dashboard/tags" element={<Tags />} />
-              <Route path="/dashboard/all-authors" element={<AllAuthors />} />
-              <Route path="/dashboard/add-new-author" element={<AddNewAuthor />} />
+              <Route path="/dashboard/subscribers" element={<Subscribers />} />
+              <Route path="/dashboard/staff" element={<Staff />} />
+              <Route path="/dashboard/add-new-user" element={<AddNewAuthor />} />
               <Route path="/dashboard/profile" element={<Profile />} />
               <Route path="/dashboard/user-role-editor" element={<UserRoleEditor />} />
               <Route path="/dashboard/library" element={<Library />} />
               <Route path="/dashboard/add-new-media-file" element={<AddNewMediaFile />} />
+              <Route path="/dashboard/settings" element={<Settings />} />
             </Route>
             <Route path="/sports" element={<Sports />} />
 
