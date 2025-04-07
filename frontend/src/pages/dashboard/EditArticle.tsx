@@ -10,7 +10,7 @@ export default function EditArticle() {
 
   return (
     <div className="p-5">
-      <h1 className="text-2xl font-bold mb-4">Edit Article</h1>
+      {/* <h1 className="text-2xl font-bold mb-4">Edit Article</h1> */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="gap-4 w-full md:w-3/4">
           <input className="section p-2 mb-4" placeholder="Article Title"></input>
