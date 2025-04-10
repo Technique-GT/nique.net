@@ -1,11 +1,9 @@
 {
-  "type": "module",
   "name": "backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npx tsx --env-file=config.env server.ts"
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -16,12 +14,13 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.13.0",
-    "mongoose": "^8.11.0"
+    "mongoose": "^8.11.0",
+    "dotenv": "^16.4.5",
+    "cookie-parser": "^1.4.6"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
-    "@types/jsonwebtoken": "^9.0.8",
-    "tsx": "^4.19.2"
+    "@types/jsonwebtoken": "^9.0.8"
   }
 }
