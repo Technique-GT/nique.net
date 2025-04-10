@@ -1,7 +1,10 @@
 import axios from "axios";
 import cookie from "js-cookie";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api';
+axios.defaults.withCredentials = true;
 
 declare const process: {
   env: {
@@ -25,6 +28,24 @@ export default function AdminPage() {
   const [message, setMessage] = useState({ text: "", type: "" });
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      const jwt_token = cookie.get("jwt");
+      if (!jwt_token) return;
+
+      try {
+        await axios.get("/auth/test_token", {
+          headers: { Authorization: `Bearer ${jwt_token}` }
+        });
+        navigate("/dashboard", { replace: true });  // Redirect to dashboard if authenticated
+      } catch (error) {
+        cookie.remove("jwt"); // Remove invalid cookie
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -47,13 +68,14 @@ export default function AdminPage() {
     e.preventDefault();
     setMessage({ text: "", type: "" });
 
+    // Validation
     if (!isLogin && formData.password !== formData.confirmPassword) {
       setMessage({ text: "Passwords do not match", type: "error" });
       return;
     }
 
     try {
-      const endpoint = isLogin ? "login" : "register";
+      const endpoint = isLogin ? "/auth/login" : "/auth/register";
       const payload = isLogin 
         ? { username: formData.username, password: formData.password }
         : {
@@ -65,26 +87,39 @@ export default function AdminPage() {
             bio: formData.bio
           };
 
-      const res = await axios.post(`http://localhost:5050/api/auth/${endpoint}`, payload);
-
-      cookie.set("jwt", res.data.token, { 
-        expires: 7,
-        secure: window.location.protocol === "https:",
-        sameSite: "strict"
+      const res = await axios.post(endpoint, payload, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
-      setMessage({ 
-        text: isLogin ? "Login successful!" : "Registration successful!", 
-        type: "success" 
+      // Set cookie - matching backend settings
+      cookie.set("jwt", res.data.token, {
+        expires: 0.5 / 24, // days
+        secure: import.meta.env.PROD, // secure in production
+        sameSite: import.meta.env.PROD ? 'none' : 'lax', // adjusted for cross-origin 
+        path: "/",
       });
-      navigate("/dashboard");
-    } catch (error) {
-      const errorMessage = isLogin 
-        ? "Login failed. Check your credentials." 
-        : "Registration failed. Username or email may be taken.";
-      setMessage({ 
-        text: `${errorMessage}`,
-        type: "error" 
+
+      // Update state before navigation
+      setMessage({
+        text: isLogin ? "Login successful!" : "Registration successful!",
+        type: "success"
+      });
+
+      // Add slight delay to ensure state updates and cookie is set
+      setTimeout(() => {
+        navigate("/dashboard", { replace: true });  // Ensure user is redirected to dashboard after login
+      }, 200);  // Slight delay to make sure everything is updated
+    } catch (error: any) {
+      console.error("Auth error:", error);
+      const errorMessage = error.response?.data?.message ||
+        (isLogin
+          ? "Login failed. Check your credentials."
+          : "Registration failed. Please try again.");
+      setMessage({
+        text: errorMessage,
+        type: "error"
       });
     }
   };
@@ -96,7 +131,7 @@ export default function AdminPage() {
           <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
             {isLogin ? "Staff Login" : "Register New Staff"}
           </h2>
-          
+
           {!isLogin && !showRegisterForm ? (
             <form onSubmit={verifyStaffKey} className="space-y-4">
               <div>
@@ -227,9 +262,7 @@ export default function AdminPage() {
               )}
 
               {message.text && (
-                <div className={`p-3 rounded-md ${
-                  message.type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
-                }`}>
+                <div className={`p-3 rounded-md ${message.type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
                   {message.text}
                 </div>
               )}
