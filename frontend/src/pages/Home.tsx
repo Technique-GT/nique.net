@@ -7,6 +7,8 @@ import JustInBlock from '../components/JustIn';
 import SideWidget from '../components/SideWidget';
 import SideArticle from '../components/SideArticle';
 import { Categories } from '../types/categories';
+import Navbar from '../components/Navbar';
+import Spinner from '../components/Spinner';
 
 function Home() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -32,11 +34,16 @@ function Home() {
     }
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <Spinner/>
+            </div>
+        );
     }
 
     return (
         <>
+            <Navbar />
             <div className='max-w-[1470px] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div className='w-full'>
                     <div className='grid gap-5 grid-cols-1 lg:grid-cols-[30%_auto] w-full'>
@@ -91,7 +98,7 @@ function Home() {
 
                 <div className='flex flex-col gap-4'>
                     <SideWidget />
-                    <SideArticle posts={[post[6], post[7], post[16]]} />
+                    <SideArticle posts={[post[6], post[7], post[16]]}/>
                     <iframe className="rounded-md w-full h-[550px]" src="https://open.spotify.com/embed/playlist/3ySGGWEXxBBYvn2cYxEDEx?utm_source=generator&theme=0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
                 </div>
             </div>

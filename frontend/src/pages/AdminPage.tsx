@@ -12,12 +12,13 @@ export default function AdminPage() {
   useEffect(() => {
     const jwt_token = cookie.get("jwt");
     if (cookie.get("jwt") === undefined) {
-      setMessage("Error");
+      setMessage("");
     } else {
       axios.get("http://127.0.0.1:5050/auth/test_token", {
         headers: { Authorization: `Bearer ${jwt_token}` }
       }).then(() => {
         setMessage("Welcome back!");
+        navigate("/dashboard");
       }, () => {
         setMessage("Login session expired, please log in again");
       })
@@ -53,7 +54,7 @@ export default function AdminPage() {
           className="self-end rounded bg-sky-700 hover:bg-sky-800 hover:cursor-pointer text-white px-4 py-1 mt-2"
           onClick={() => {
             axios
-              .post("http://127.0.0.1:5050/auth/login", {
+              .post("http://127.0.0.1:5051/auth/login", {
                 username: username,
                 password: password,
               })
@@ -63,7 +64,7 @@ export default function AdminPage() {
                   navigate("/dashboard");
                 },
                 (reason) => {
-                  alert(reason);
+                  setMessage("Error: Username or password is incorrect.\n" + reason);
                 }
               );
           }}

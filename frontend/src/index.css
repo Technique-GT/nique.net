@@ -1,8 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Oswald:wght@200..700&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
 @import "tailwindcss";
 
 @theme {
-    --color-nique-blue: oklch(0.3037 0.08476 249.4532)
+    --color-nique-blue: #003057;
+    --color-nique-blue-hover: #0E3682;
+    --color-nique-light-blue: #5C8EB7;
 }
 
 h3 {
@@ -17,6 +20,52 @@ h6 {
     font-family: "Roboto Condensed", sans-serif;
 }
 
-p {
+p, li, blockquote {
     font-family: 'EB Garamond', Times, serif;
+}
+
+a {
+    transition: all 0.3s ease;
+}
+
+button {
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+.title:hover {
+    opacity: 0.7;
+}
+
+h5, th, td {
+    font-family: 'DM Sans', sans-serif;
+}
+
+@keyframes scroll {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+.scroll-container {
+  overflow: hidden;
+  width: 100%;
+}
+
+.scroll-content {
+    display: flex;
+    animation: scroll 120s linear infinite;
+    width: calc(400%);
+}
+
+@media (min-width: 768px) {
+    .scroll-content {
+        width: calc(250%);
+    }
 }
