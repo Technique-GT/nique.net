@@ -22,7 +22,6 @@ const SearchPage = () => {
   useEffect(() => {
     setSearchedText(queryText);
   }, [queryText]);
-};
 
   return (
     <>

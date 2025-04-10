@@ -40,7 +40,7 @@ function App() {
             <Route path="/life" element={<Life />} />
             <Route path="/:id" element={<Article />} />
             <Route path="/admin" element={<AdminPage />} />
-            <Route element={<ProtectedRoute />}>
+            {/* <Route element={<ProtectedRoute />}> */}
               <Route path="/dashboard" element={<DashboardHome />} />
               <Route path="/dashboard/all-posts" element={<AllPosts />} />
               <Route path="/dashboard/edit-article" element={<EditArticle />} />
@@ -54,7 +54,7 @@ function App() {
               <Route path="/dashboard/library" element={<Library />} />
               <Route path="/dashboard/add-new-media-file" element={<AddNewMediaFile />} />
               <Route path="/dashboard/settings" element={<Settings />} />
-            </Route>
+            {/* </Route> */}
             <Route path="/sports" element={<Sports />} />
 
             <Route path="/search" element={<SearchPage />} />
