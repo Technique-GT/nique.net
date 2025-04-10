@@ -7,15 +7,16 @@ import {
   Settings,
   Users,
 } from "lucide-react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function DashboardBaseLayout(props: { children: any }) {
   const { children } = props;
 
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("Dashboard");
-  const postsNames = ["All Posts", "Add New Posts", "Categories", "Tags"];
+  const postsNames = ["All Posts", "Edit Article", "Categories", "Tags"];
   const usersNames = [
     "Subscribers",
     "Staff",
@@ -46,6 +47,17 @@ export default function DashboardBaseLayout(props: { children: any }) {
     if (userDropdownOpen) setUserDropdownOpen(false);
     if (articlesDropdownOpen) setArticlesDropdownOpen(false);
   };
+
+  useEffect(() => {
+    const split_loc = location.pathname.split("/");
+    let slug = split_loc[split_loc.length - 1];
+    slug = slug[0].toUpperCase() + slug.slice(1);
+    let pos = -1;
+    while ((pos = slug.indexOf("-")) != -1) {
+      slug = slug.slice(0, pos) + " " + slug[pos+1].toUpperCase() + slug.slice(pos+2);
+    }
+    setActiveTab(slug);
+  }, [children]);
 
   return (
     <div className="flex flex-row min-h-screen h-full">
@@ -126,13 +138,13 @@ export default function DashboardBaseLayout(props: { children: any }) {
                   indent
                 />
                 <SidebarButton
-                  label="Add New Posts"
+                  label="Edit Article"
                   onClick={() => {
-                    setActiveTab("Add New Posts");
+                    setActiveTab("Edit Article");
                     // setArticlesDropdownOpen(false);
                     navigate("/dashboard/edit-article");
                   }}
-                  isActive={activeTab === "Add New Posts"}
+                  isActive={activeTab === "Edit Article"}
                   indent
                 />
                 <SidebarButton
@@ -311,7 +323,7 @@ export default function DashboardBaseLayout(props: { children: any }) {
                   onClick={() => {
                     setActiveTab("New Media");
                     // setUserDropdownOpen(false);
-                    navigate("/dashboard/add-new-media-file");
+                    navigate("/dashboard/new-media");
                   }}
                   isActive={activeTab === "New Media"}
                   indent

@@ -54,7 +54,7 @@ export default function AdminPage() {
           className="self-end rounded bg-sky-700 hover:bg-sky-800 hover:cursor-pointer text-white px-4 py-1 mt-2"
           onClick={() => {
             axios
-              .post("http://127.0.0.1:5050/auth/login", {
+              .post("http://127.0.0.1:5051/auth/login", {
                 username: username,
                 password: password,
               })

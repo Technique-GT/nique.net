@@ -52,7 +52,7 @@ function App() {
               <Route path="/dashboard/profile" element={<Profile />} />
               <Route path="/dashboard/user-role-editor" element={<UserRoleEditor />} />
               <Route path="/dashboard/library" element={<Library />} />
-              <Route path="/dashboard/add-new-media-file" element={<AddNewMediaFile />} />
+              <Route path="/dashboard/new-media" element={<AddNewMediaFile />} />
               <Route path="/dashboard/settings" element={<Settings />} />
             </Route>
             <Route path="/sports" element={<Sports />} />
