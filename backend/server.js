@@ -19,7 +19,10 @@ if (!MONGO_URI) {
 }
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  credentials: true // Allow cookies to be sent
+}));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -31,10 +34,16 @@ mongoose.connect(MONGO_URI)
   process.exit(1);
 });
 
+// Routes
+const authRoutes = require('./routes/auth.routes'); // Add this line
+
 // Test route
 app.get('/', (req, res) => {
   res.send('🎉 MERN backend is running!');
 });
+
+// Use auth routes
+app.use('/api/auth', authRoutes); // Add this line
 
 // Start server
 app.listen(PORT, () => {

@@ -1,84 +1,165 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const User = require('../models/User.model');
+const User = require('../models/users.model');
+const { validationResult } = require('express-validator');
 
+// Helper function to generate JWT token
 const generateToken = (user) => {
   return jwt.sign(
-    { id: user._id, email: user.email, role: user.role },
-    process.env.JWT_TOKEN,
+    {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role
+    },
+    process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
 };
 
-exports.register = async (req, res) => {
+// @desc    Register a new user
+// @route   POST /api/auth/register
+// @access  Public
+const register = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { username, email, password, firstName, lastName, bio } = req.body;
+
   try {
-    const { username, email, password, role = 'subscriber' } = req.body;
-
-    // Validate role assignment (only admin can assign higher roles)
-    if (req.user?.role !== 'admin' && ['editor', 'manager', 'admin'].includes(role)) {
-      return res.status(403).json({ message: 'Unauthorized role assignment' });
+    // Check if user exists
+    let user = await User.findOne({ $or: [{ username }, { email }] });
+    if (user) {
+      return res.status(400).json({ 
+        message: 'User already exists with this username or email' 
+      });
     }
 
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
+    // Create new user with editor role and additional fields
+    user = new User({
+      username,
+      email,
+      password,
+      firstName,
+      lastName,
+      bio,
+      role: 'editor' // Set default role to editor
+    });
 
-    const user = new User({ username, email, password, role });
+    // Save user (password will be hashed by pre-save middleware)
     await user.save();
 
+    // Generate JWT token
     const token = generateToken(user);
-    res.cookie('jwt', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+
+    // Set cookie
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    // Return user data (without password)
+    const userData = user.toObject();
+    delete userData.password;
 
     res.status(201).json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
+      message: 'User registered successfully',
+      user: userData,
       token
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error during registration' });
   }
 };
 
-exports.login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
+// @desc    Login user
+// @route   POST /api/auth/login
+// @access  Public
+const login = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
-    if (!user || !(await user.comparePassword(password))) {
+  const { username, password } = req.body;
+
+  try {
+    // Check if user exists
+    const user = await User.findOne({ username });
+    if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = generateToken(user);
-    res.cookie('jwt', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+    // Check if password matches
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
 
-    res.json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    // Generate JWT token
+    const token = generateToken(user);
+
+    // Set cookie
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    // Return user data (without password)
+    const userData = user.toObject();
+    delete userData.password;
+
+    res.status(200).json({
+      message: 'Login successful',
+      user: userData,
       token
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error during login' });
   }
 };
 
-exports.logout = (req, res) => {
+// @desc    Logout user
+// @route   POST /api/auth/logout
+// @access  Private
+const logout = (req, res) => {
   res.clearCookie('jwt');
-  res.json({ message: 'Logged out successfully' });
+  res.status(200).json({ message: 'Logout successful' });
 };
 
-exports.getCurrentUser = async (req, res) => {
+// @desc    Get current user data
+// @route   GET /api/auth/me
+// @access  Private
+const getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(200).json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
+};
+
+module.exports = {
+  register,
+  login,
+  logout,
+  getCurrentUser
 };
