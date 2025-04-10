@@ -136,7 +136,7 @@ const Tags: React.FC = () => {
   }
 
   return (
-    <div className="tags-container">
+    <div className="px-20">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Tag Management</h2>
         <button 
@@ -317,12 +317,6 @@ const Tags: React.FC = () => {
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .tags-container {
-          padding: 20px;
-        }
-      `}</style>
     </div>
   );
 };

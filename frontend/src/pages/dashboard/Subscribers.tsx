@@ -1,33 +1,37 @@
 import React, { useState, useEffect } from 'react';
 
-interface StaffMember {
+interface Subscriber {
   id: string;
   profilePicture: string;
   name: string;
   email: string;
-  role: 'editor' | 'manager' | 'admin';
+  canComment: boolean;
   joinDate: string;
   lastActive: string;
 }
 
-const Staff: React.FC = () => {
-  const [staff, setStaff] = useState<StaffMember[]>([]);
+const Subscribers: React.FC = () => {
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     // Simulate API fetch
-    const fetchStaff = async () => {
+    const fetchSubscribers = async () => {
       try {
+        // In a real app, you would fetch from your API
+        // const response = await fetch('/api/subscribers');
+        // const data = await response.json();
+        
         // Mock data
-        const mockStaff: StaffMember[] = [
+        const mockSubscribers: Subscriber[] = [
           {
             id: '1',
             profilePicture: 'https://randomuser.me/api/portraits/women/44.jpg',
             name: 'Jane Smith',
             email: 'jane.smith@example.com',
-            role: 'admin',
-            joinDate: '2022-01-15',
+            canComment: true,
+            joinDate: '2023-01-15',
             lastActive: '2023-06-20'
           },
           {
@@ -35,8 +39,8 @@ const Staff: React.FC = () => {
             profilePicture: 'https://randomuser.me/api/portraits/men/32.jpg',
             name: 'John Doe',
             email: 'john.doe@example.com',
-            role: 'manager',
-            joinDate: '2022-02-10',
+            canComment: false,
+            joinDate: '2023-02-10',
             lastActive: '2023-06-18'
           },
           {
@@ -44,8 +48,8 @@ const Staff: React.FC = () => {
             profilePicture: 'https://randomuser.me/api/portraits/women/68.jpg',
             name: 'Alice Johnson',
             email: 'alice.j@example.com',
-            role: 'editor',
-            joinDate: '2022-03-05',
+            canComment: true,
+            joinDate: '2023-03-05',
             lastActive: '2023-06-19'
           },
           {
@@ -53,52 +57,43 @@ const Staff: React.FC = () => {
             profilePicture: 'https://randomuser.me/api/portraits/men/75.jpg',
             name: 'Bob Williams',
             email: 'bob.w@example.com',
-            role: 'editor',
-            joinDate: '2022-04-22',
+            canComment: true,
+            joinDate: '2023-04-22',
             lastActive: '2023-06-15'
           },
         ];
         
-        setStaff(mockStaff);
+        setSubscribers(mockSubscribers);
         setIsLoading(false);
       } catch (error) {
-        console.error('Failed to fetch staff:', error);
+        console.error('Failed to fetch subscribers:', error);
         setIsLoading(false);
       }
     };
 
-    fetchStaff();
+    fetchSubscribers();
   }, []);
 
-  const updateStaffRole = (id: string, newRole: 'editor' | 'manager' | 'admin') => {
-    setStaff(prev => 
-      prev.map(member => 
-        member.id === id ? { ...member, role: newRole } : member
+  const toggleCommentPermission = (id: string) => {
+    setSubscribers(prev => 
+      prev.map(sub => 
+        sub.id === id ? { ...sub, canComment: !sub.canComment } : sub
       )
     );
   };
 
-  const filteredStaff = staff.filter(member => 
-    member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSubscribers = subscribers.filter(sub => 
+    sub.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sub.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getRoleColor = (role: string) => {
-    switch(role) {
-      case 'admin': return '#f44336'; // Red
-      case 'manager': return '#2196F3'; // Blue
-      case 'editor': return '#4CAF50'; // Green
-      default: return '#9E9E9E'; // Gray
-    }
-  };
-
   if (isLoading) {
-    return <div className="loading">Loading staff...</div>;
+    return <div className="loading">Loading subscribers...</div>;
   }
 
   return (
-    <div className="staff-container">
-      <h1>Staff Management</h1>
+    <div className="subscribers-container">
+      <h1>Subscribers</h1>
       
       <div className="controls">
         <div className="search-box">
@@ -110,56 +105,48 @@ const Staff: React.FC = () => {
           />
           <span className="search-icon">🔍</span>
         </div>
-        <div className="staff-count">
-          {filteredStaff.length} {filteredStaff.length === 1 ? 'staff member' : 'staff members'}
+        <div className="subscriber-count">
+          {filteredSubscribers.length} {filteredSubscribers.length === 1 ? 'subscriber' : 'subscribers'}
         </div>
       </div>
 
       <div className="table-responsive">
-        <table className="staff-table">
+        <table className="subscribers-table">
           <thead>
             <tr>
               <th className="profile-pic-header"></th>
               <th>Name</th>
               <th>Email</th>
-              <th>Role</th>
+              <th>Comment Permissions</th>
               <th>Joined</th>
               <th>Last Active</th>
             </tr>
           </thead>
           <tbody>
-            {filteredStaff.map(member => (
-              <tr key={member.id}>
+            {filteredSubscribers.map(subscriber => (
+              <tr key={subscriber.id}>
                 <td className="profile-pic">
                   <img 
-                    src={member.profilePicture} 
-                    alt={member.name} 
+                    src={subscriber.profilePicture} 
+                    alt={subscriber.name} 
                     className="avatar"
                   />
                 </td>
-                <td className="name">{member.name}</td>
-                <td className="email">{member.email}</td>
-                <td className="role">
-                  <select
-                    value={member.role}
-                    onChange={(e) => updateStaffRole(member.id, e.target.value as 'editor' | 'manager' | 'admin')}
-                    className="role-select"
-                    style={{ 
-                      backgroundColor: `${getRoleColor(member.role)}20`,
-                      borderColor: getRoleColor(member.role),
-                      color: getRoleColor(member.role)
-                    }}
+                <td className="name">{subscriber.name}</td>
+                <td className="email">{subscriber.email}</td>
+                <td className="comment-permission">
+                  <button
+                    onClick={() => toggleCommentPermission(subscriber.id)}
+                    className={`toggle-btn ${subscriber.canComment ? 'allowed' : 'denied'}`}
                   >
-                    <option value="editor">Editor</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
-                  </select>
+                    {subscriber.canComment ? 'Allowed' : 'Denied'}
+                  </button>
                 </td>
                 <td className="join-date">
-                  {new Date(member.joinDate).toLocaleDateString()}
+                  {new Date(subscriber.joinDate).toLocaleDateString()}
                 </td>
                 <td className="last-active">
-                  {new Date(member.lastActive).toLocaleDateString()}
+                  {new Date(subscriber.lastActive).toLocaleDateString()}
                 </td>
               </tr>
             ))}
@@ -168,7 +155,7 @@ const Staff: React.FC = () => {
       </div>
 
       <style>{`
-        .staff-container {
+        .subscribers-container {
           padding: 20px;
           max-width: 1200px;
           margin: 0 auto;
@@ -201,7 +188,7 @@ const Staff: React.FC = () => {
           transform: translateY(-50%);
           color: #777;
         }
-        .staff-count {
+        .subscriber-count {
           font-size: 14px;
           color: #666;
         }
@@ -211,21 +198,21 @@ const Staff: React.FC = () => {
           border-radius: 8px;
           box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .staff-table {
+        .subscribers-table {
           width: 100%;
           border-collapse: collapse;
         }
-        .staff-table th, .staff-table td {
+        .subscribers-table th, .subscribers-table td {
           padding: 12px 15px;
           text-align: left;
           border-bottom: 1px solid #e0e0e0;
         }
-        .staff-table th {
+        .subscribers-table th {
           background-color: #f5f5f5;
           font-weight: 600;
           border-right: 1px solid #e0e0e0;
         }
-        .staff-table th:last-child {
+        .subscribers-table th:last-child {
           border-right: none;
         }
         .profile-pic-header {
@@ -247,22 +234,33 @@ const Staff: React.FC = () => {
           color: #666;
           font-size: 14px;
         }
-        .role {
+        .comment-permission {
           text-align: center;
         }
-        .role-select {
+        .toggle-btn {
           padding: 6px 12px;
+          border: none;
           border-radius: 4px;
           cursor: pointer;
           font-size: 13px;
           transition: all 0.3s;
-          font-weight: 500;
+        }
+        .toggle-btn.allowed {
+          background-color: #e8f5e9;
+          color: #2e7d32;
+        }
+        .toggle-btn.denied {
+          background-color: #ffebee;
+          color: #c62828;
+        }
+        .toggle-btn:hover {
+          opacity: 0.8;
         }
         .join-date, .last-active {
           font-size: 13px;
           color: #666;
         }
-        .staff-table tr:hover {
+        .subscribers-table tr:hover {
           background-color: #f9f9f9;
         }
         .loading {
@@ -275,4 +273,4 @@ const Staff: React.FC = () => {
   );
 };
 
-export default Staff;
+export default Subscribers;

@@ -126,7 +126,7 @@ const Categories: React.FC = () => {
   }
 
   return (
-    <div className="categories-container">
+    <div className="px-20">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Category Management</h2>
         <button 
@@ -305,12 +305,6 @@ const Categories: React.FC = () => {
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .categories-container {
-          padding: 20px;
-        }
-      `}</style>
     </div>
   );
 };

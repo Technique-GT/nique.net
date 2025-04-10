@@ -32,7 +32,6 @@ const NavLinks = () => {
       <ReactiveLink name="About" path="/about" />
       <ReactiveLink name="Submit an Ad" path="/submit-ad" />
       <ReactiveLink name="Contact Us" path="/contact" />
-      <Search />
     </>
   );
 };
@@ -114,6 +113,9 @@ export default function Navbar() {
         {/* right of masthead */}
         <h4 className='text-right text-sm text-nique-blue'>
           {/* date and volume on large screens, date on medium screens */}
+          <div className="hidden lg:flex gap-2 justify-end items-center">
+            <Search />
+          </div>
           <span className="hidden lg:inline">{formattedDate}</span>
           <span className="hidden xl:inline"> &bull; </span>
           <span className="inline xl:inline-block"><br></br></span>Volume {currentVolume}</h4>
