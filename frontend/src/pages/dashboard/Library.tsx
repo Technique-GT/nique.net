@@ -195,11 +195,11 @@ const Library: React.FC = () => {
       <div className='flex flex-row mb-4 items-center'>
         <div className="relative group">
           <ArrowUpDown 
-        size={20}
-        className={`text-nique-blue transition-all cursor-pointer ${ascending ? '' : 'rotate-180'}`} 
-        onClick={handleSort}
+            size={20}
+            className={`text-nique-blue transition-all cursor-pointer ${ascending ? '' : 'rotate-180'}`} 
+            onClick={handleSort}
           />
-          <div className="absolute left-1/2 -translate-x-1/8 bottom-full mb-2 px-2 py-1 bg-nique-blue text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute left-1/2 -translate-x-1/8 bottom-full mb-2 px-2 py-1 bg-nique-blue text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
             Sort by: {ascending ? 'Oldest first' : 'Newest first'}
           </div>
         </div>

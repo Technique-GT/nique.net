@@ -14,7 +14,7 @@ import Entertainment from "./pages/Entertainment";
 import SubmitAd from "./pages/SubmitAd";
 import About from "./pages/About";
 import EditArticle from "./pages/dashboard/EditArticle";
-import ProtectedRoute from "./components/DashboardRoute";
+// import ProtectedRoute from "./components/DashboardRoute";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import AllPosts from "./pages/dashboard/AllPosts";
 import Categories from "./pages/dashboard/Categories";
