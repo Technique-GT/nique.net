@@ -31,18 +31,22 @@ export default function AdminPage() {
   useEffect(() => {
     const checkAuth = async () => {
       const jwt_token = cookie.get("jwt");
+      console.log("Auth check - token:", jwt_token); // Debug
+  
       if (!jwt_token) return;
-
+  
       try {
         await axios.get("/auth/test_token", {
-          headers: { Authorization: `Bearer ${jwt_token}` }
+          headers: { Authorization: `Bearer ${jwt_token}` },
         });
-        navigate("/dashboard", { replace: true });  // Redirect to dashboard if authenticated
+        console.log("Token valid - redirecting to /dashboard");
+        navigate("/dashboard", { replace: true });
       } catch (error) {
-        cookie.remove("jwt"); // Remove invalid cookie
+        console.error("Token invalid:", error);
+        cookie.remove("jwt");
       }
     };
-
+  
     checkAuth();
   }, [navigate]);
 
@@ -95,9 +99,9 @@ export default function AdminPage() {
 
       // Set cookie - matching backend settings
       cookie.set("jwt", res.data.token, {
-        expires: 0.5 / 24, // days
-        secure: import.meta.env.PROD, // secure in production
-        sameSite: import.meta.env.PROD ? 'none' : 'lax', // adjusted for cross-origin 
+        expires: 0.5 / 24, // 30 minutes
+        secure: window.location.protocol === "https:", // secure only in HTTPS
+        sameSite: "strict", // stricter policy to avoid CSRF
         path: "/",
       });
 
@@ -108,18 +112,14 @@ export default function AdminPage() {
       });
 
       // Add slight delay to ensure state updates and cookie is set
-      setTimeout(() => {
-        navigate("/dashboard", { replace: true });  // Ensure user is redirected to dashboard after login
-      }, 200);  // Slight delay to make sure everything is updated
-    } catch (error: any) {
+      console.log("JWT after set:", cookie.get("jwt")); 
+      navigate("/dashboard", { replace: true }); // Immediate redirect
+
+    } catch (error) {
       console.error("Auth error:", error);
-      const errorMessage = error.response?.data?.message ||
-        (isLogin
-          ? "Login failed. Check your credentials."
-          : "Registration failed. Please try again.");
-      setMessage({
-        text: errorMessage,
-        type: "error"
+      setMessage({ 
+        text: (error as any)?.message || "Authentication failed",
+        type: "error",
       });
     }
   };

@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
 
 const authMiddleware = (req, res, next) => {
+    // Add this at the top of your auth middleware
+    if (req.path === '/api/auth/logout') {
+        return next(); // Skip token validation for logout
+    }
     // Assuming your JWT token is stored in a cookie named 'jwt'
     const token = req.headers.authorization?.split(' ')[1] || req.cookies.jwt;
 

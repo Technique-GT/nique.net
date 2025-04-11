@@ -110,11 +110,13 @@ const login = async (req, res) => {
     const token = generateToken(user);
 
     // Set cookie
+    // In your login method, update the cookie settings to:
     res.cookie('jwt', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      sameSite: 'strict', // Changed from 'none' to match logout
+      maxAge: 30 * 60 * 1000, // 7 days
+      path: '/' // Added to match logout
     });
 
     // Return user data (without password)
@@ -133,12 +135,31 @@ const login = async (req, res) => {
   }
 };
 
-// @desc    Logout user
+// @desc    Logout user / clear cookie
 // @route   POST /api/auth/logout
 // @access  Private
 const logout = (req, res) => {
-  res.clearCookie('jwt');
-  res.status(200).json({ message: 'Logout successful' });
+  try {
+    // Clear the JWT cookie
+    res.clearCookie('jwt', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/'
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Logged out successfully' 
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error during logout',
+      error: err.message 
+    });
+  }
 };
 
 // @desc    Get current user data

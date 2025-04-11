@@ -6,9 +6,12 @@ import {
   Home,
   Settings,
   Users,
+  LogOut,
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import cookie from "js-cookie";
 
 export default function DashboardBaseLayout(props: { children: any }) {
   const { children } = props;
@@ -45,6 +48,32 @@ export default function DashboardBaseLayout(props: { children: any }) {
     setMediaDropdownOpen(!mediaDropdownOpen);
     if (userDropdownOpen) setUserDropdownOpen(false);
     if (articlesDropdownOpen) setArticlesDropdownOpen(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api'}/auth/logout`,
+        {},
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${cookie.get("jwt")}`,
+          },
+        }
+      );
+      
+      // Clear client-side authentication
+      cookie.remove("jwt");
+      
+      // Redirect to admin/login page
+      navigate("/admin");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Fallback cleanup if API fails
+      cookie.remove("jwt");
+      navigate("/admin");
+    }
   };
 
   return (
@@ -328,6 +357,14 @@ export default function DashboardBaseLayout(props: { children: any }) {
             }}
             isActive={activeTab === "Settings"}
           />
+          <div className="mt-auto"> {/* mt-auto pushes it to the bottom */}
+          <SidebarButton
+            icon={<LogOut />} // Make sure to import LogOut from lucide-react
+            label="Logout"
+            onClick={handleLogout}
+            isActive={false}
+          />
+        </div>
         </nav>
       </div>
       <div className="flex-6 bg-gray-100 pb-20">
