@@ -6,6 +6,7 @@ import Life from "./pages/Life";
 import Article from "./pages/Article";
 import AdminPage from './pages/AdminPage';
 import Sports from "./pages/Sports";
+import Opinions from "./pages/Opinions";
 
 import SearchPage from "./pages/SearchPage"
 import Contact from "./pages/Contact";
@@ -56,6 +57,7 @@ function App() {
               <Route path="/dashboard/settings" element={<Settings />} />
             </Route>
             <Route path="/sports" element={<Sports />} />
+            <Route path="/opinions" element={<Opinions />} />
 
             <Route path="/search" element={<SearchPage />} />
 
