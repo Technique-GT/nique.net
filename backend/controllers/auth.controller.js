@@ -42,7 +42,7 @@ const register = async (req, res) => {
       firstName,
       lastName,
       bio,
-      role: 'editor'
+      role: 'admin'
     });
 
     await user.save();

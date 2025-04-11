@@ -1,87 +1,47 @@
+// server.js
+
 const express = require('express');
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');  // Import dotenv to load environment variables
 const cors = require('cors');
-const dotenv = require('dotenv');
-const cookieParser = require('cookie-parser');
+const authRoutes = require('./routes/auth.routes');
+const staffRoutes = require('./routes/staff.routes');
 
-// Load environment variables from config.env file
-dotenv.config({ path: './config.env' });
+// Load environment variables from config.env
+dotenv.config({ path: './config.env' });  // Specify the correct path to your config.env file
 
+// Initialize express
 const app = express();
-const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.ATLAS_URI;
-
-if (!MONGO_URI) {
-  console.error("❌ MongoDB URI is missing from .env file.");
-  process.exit(1);
-}
-
-// Enhanced CORS configuration for Vite (port 5173)
-const corsOptions = {
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  optionsSuccessStatus: 200,
-  preflightContinue: false
-};
-
-// Apply CORS with the above options
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
 
 // Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(cors({
+  origin: process.env.CLIENT_URL,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+}));
 
 // Connect to MongoDB
-mongoose.connect(MONGO_URI)
-  .then(() => console.log('✅ MongoDB connected'))
-  .catch((err) => {
-    console.error('❌ MongoDB connection error:', err.message);
-    process.exit(1);
-  });
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.log('Error connecting to MongoDB:', err));
 
-// Routes
-const authRoutes = require('./routes/auth.routes');
+// Use authentication routes
+app.use('/api/auth', authRoutes);  // Prefix routes with /api/auth
 
-// Test route
-app.get('/', (req, res) => {
-  res.send('🎉 MERN backend is running!');
+// Use staff routes
+app.use('/api/staff', staffRoutes);  // Prefix routes with /api/staff
+
+// Example protected route
+app.get('/api', (req, res) => {
+  res.send('Hello, this is your API!');
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Use auth routes
-app.use('/api/auth', authRoutes);
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: 'Internal Server Error',
-    message: err.message
-  });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    error: 'Not Found',
-    message: `Route ${req.originalUrl} not found`
-  });
-});
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
-  console.log(`🔒 CORS configured for: ${corsOptions.origin}`);
+// Start the server
+const port = process.env.PORT || 5050;
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
