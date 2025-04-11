@@ -45,6 +45,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
 
+
           {/* Dashboard routes with BaseLayout */}
           <Route path="/dashboard" element={
             <DashboardBaseLayout>
