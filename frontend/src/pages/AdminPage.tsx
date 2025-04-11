@@ -14,7 +14,9 @@ declare const process: {
 
 export default function AdminPage() {
   const [isLogin, setIsLogin] = useState(true);
-  const [staffKey, setStaffKey] = useState("");
+  const [initialStaffKey, setInitialStaffKey] = useState("");
+  const [registrationStaffKey, setRegistrationStaffKey] = useState("");
+  const [showInitialForm, setShowInitialForm] = useState(true);
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -58,9 +60,19 @@ export default function AdminPage() {
     }));
   };
 
-  const verifyStaffKey = (e: React.FormEvent) => {
+  const verifyInitialStaffKey = (e: React.FormEvent) => {
     e.preventDefault();
-    if (staffKey === "TechniqueRemember") {
+    if (initialStaffKey === "TechUnique") {
+      setShowInitialForm(false);
+      setMessage({ text: "Access granted. Please login or register.", type: "success" });
+    } else {
+      setMessage({ text: "Invalid access key. Try again.", type: "error" });
+    }
+  };
+
+  const verifyRegistrationStaffKey = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (registrationStaffKey === "TechniqueRemember") {
       setShowRegisterForm(true);
       setMessage({ text: "Staff key verified. Please complete registration.", type: "success" });
     } else {
@@ -124,6 +136,46 @@ export default function AdminPage() {
     }
   };
 
+  if (showInitialForm) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+        <div className="w-full max-w-md bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="p-6">
+            <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+              Staff Portal Access
+            </h2>
+            <form onSubmit={verifyInitialStaffKey} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Access Key
+                </label>
+                <input
+                  type="password"
+                  value={initialStaffKey}
+                  onChange={(e) => setInitialStaffKey(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter access key"
+                  required
+                />
+              </div>
+              {message.text && (
+                <div className={`p-3 rounded-md ${message.type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                  {message.text}
+                </div>
+              )}
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition duration-200"
+              >
+                Continue to Portal
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="w-full max-w-md bg-white rounded-lg shadow-md overflow-hidden">
@@ -133,20 +185,25 @@ export default function AdminPage() {
           </h2>
 
           {!isLogin && !showRegisterForm ? (
-            <form onSubmit={verifyStaffKey} className="space-y-4">
+            <form onSubmit={verifyRegistrationStaffKey} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Staff Key
                 </label>
                 <input
                   type="password"
-                  value={staffKey}
-                  onChange={(e) => setStaffKey(e.target.value)}
+                  value={registrationStaffKey}
+                  onChange={(e) => setRegistrationStaffKey(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter staff key"
                   required
                 />
               </div>
+              {message.text && (
+                <div className={`p-3 rounded-md ${message.type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                  {message.text}
+                </div>
+              )}
               <button
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition duration-200"
