@@ -17,9 +17,6 @@ const generateToken = (user) => {
   );
 };
 
-// @desc    Register a new user
-// @route   POST /api/auth/register
-// @access  Public
 const register = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -37,7 +34,7 @@ const register = async (req, res) => {
       });
     }
 
-    // Create new user with editor role and additional fields
+    // Create new user
     user = new User({
       username,
       email,
@@ -45,36 +42,36 @@ const register = async (req, res) => {
       firstName,
       lastName,
       bio,
-      role: 'editor' // Set default role to editor
+      role: 'editor'
     });
 
-    // Save user (password will be hashed by pre-save middleware)
     await user.save();
-
-    // Generate JWT token
     const token = generateToken(user);
 
-    // Set cookie
+    // Set cookie (30 minutes)
     res.cookie('jwt', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'none',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      maxAge: 30 * 60 * 1000
     });
 
-    // Return user data (without password)
+    // Return response without password
     const userData = user.toObject();
     delete userData.password;
 
     res.status(201).json({
       message: 'User registered successfully',
       user: userData,
-      token
+      token // Make sure to include token in response
     });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error during registration' });
+    console.error('Registration error:', err);
+    res.status(500).json({ 
+      message: 'Server error during registration',
+      error: err.message // Include error details for debugging
+    });
   }
 };
 
@@ -114,7 +111,7 @@ const login = async (req, res) => {
     res.cookie('jwt', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict', // Changed from 'none' to match logout
+      sameSite: 'lax', // Changed from 'none' to match logout
       maxAge: 30 * 60 * 1000, // 7 days
       path: '/' // Added to match logout
     });
@@ -137,14 +134,14 @@ const login = async (req, res) => {
 
 // @desc    Logout user / clear cookie
 // @route   POST /api/auth/logout
-// @access  Private
+// @access  Public
 const logout = (req, res) => {
   try {
     // Clear the JWT cookie
     res.clearCookie('jwt', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       path: '/'
     });
 

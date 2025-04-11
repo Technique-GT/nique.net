@@ -1,11 +1,12 @@
 const jwt = require('jsonwebtoken');
 
 const authMiddleware = (req, res, next) => {
-    // Add this at the top of your auth middleware
-    if (req.path === '/api/auth/logout') {
-        return next(); // Skip token validation for logout
+    const skipPaths = ['/api/auth/logout', '/logout'];
+    if (skipPaths.includes(req.originalUrl) || skipPaths.includes(req.path)) {
+        console.log('[AuthMiddleware] Skipping auth for:', req.originalUrl);
+        return next(); // ⛔ Skip token validation for logout
     }
-    // Assuming your JWT token is stored in a cookie named 'jwt'
+
     const token = req.headers.authorization?.split(' ')[1] || req.cookies.jwt;
 
     if (!token) {
@@ -13,9 +14,8 @@ const authMiddleware = (req, res, next) => {
     }
 
     try {
-        // Replace 'your_jwt_secret' with your real JWT secret
-        const decoded = jwt.verify(token, process.env.JWT_TOKEN);
-        req.user = decoded; // Attach the decoded payload (e.g. user _id, email) to req.user
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); // ✅ Match your sign function
+        req.user = decoded;
         next();
     } catch (err) {
         res.status(401).json({ message: 'Token is not valid' });
