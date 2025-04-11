@@ -42,7 +42,7 @@ const DashboardTable = ({
                           : index == arr.length - 1
                           ? "rounded-r-lg border-r-2"
                           : ""
-                      } content-center min-h-18 p-2 border-y-2 border-gray-300 mb-1
+                      } content-center min-h-18 p-2 border-y-2 border-gray-300 mb-1 truncate
                       ${rowIndex % 2 == 0 ? "bg-white" : "bg-gray-100"}`}
                     >
                       {value}
