@@ -4,6 +4,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');  // Import dotenv to load environment variables
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
+
 const authRoutes = require('./routes/auth.routes');
 const staffRoutes = require('./routes/staff.routes');
 
@@ -20,6 +22,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
+app.use(cookieParser());
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
