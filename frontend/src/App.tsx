@@ -103,7 +103,7 @@ function App() {
               <Library />
             </DashboardBaseLayout>
           } />
-          <Route path="/dashboard/add-new-media-file" element={
+          <Route path="/dashboard/new-media" element={
             <DashboardBaseLayout>
               <AddNewMediaFile />
             </DashboardBaseLayout>
