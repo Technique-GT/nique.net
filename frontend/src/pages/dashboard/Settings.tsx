@@ -20,7 +20,7 @@ interface UserSettings {
   newPassword: string;
   confirmPassword: string;
   role: string;
-
+}
 
 interface SettingsProps {
   initialUser?: Partial<UserSettings>;
