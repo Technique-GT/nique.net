@@ -6,15 +6,19 @@ import {
   Home,
   Settings,
   Users,
+  LogOut,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import cookie from "js-cookie";
+
 
 export default function DashboardBaseLayout(props: { children: any }) {
   const { children } = props;
 
   const navigate = useNavigate();
-  const location = useLocation();
   const [activeTab, setActiveTab] = useState("Dashboard");
   const postsNames = ["All Posts", "Edit Article", "Categories", "Tags"];
   const usersNames = [
@@ -48,16 +52,33 @@ export default function DashboardBaseLayout(props: { children: any }) {
     if (articlesDropdownOpen) setArticlesDropdownOpen(false);
   };
 
-  useEffect(() => {
-    const split_loc = location.pathname.split("/");
-    let slug = split_loc[split_loc.length - 1];
-    slug = slug[0].toUpperCase() + slug.slice(1);
-    let pos = -1;
-    while ((pos = slug.indexOf("-")) != -1) {
-      slug = slug.slice(0, pos) + " " + slug[pos+1].toUpperCase() + slug.slice(pos+2);
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api'}/auth/logout`,
+        {},
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${cookie.get("jwt")}`,
+          },
+        }
+      );
+      
+      // Clear client-side authentication
+      cookie.remove("jwt");
+      
+      // Redirect to admin/login page
+      navigate("/admin");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Fallback cleanup if API fails
+      cookie.remove("jwt");
+      navigate("/admin");
     }
-    setActiveTab(slug);
-  }, [children]);
+  };
+
 
   return (
     <div className="flex flex-row min-h-screen h-full">
@@ -340,6 +361,14 @@ export default function DashboardBaseLayout(props: { children: any }) {
             }}
             isActive={activeTab === "Settings"}
           />
+          <div className="mt-auto"> {/* mt-auto pushes it to the bottom */}
+          <SidebarButton
+            icon={<LogOut />} // Make sure to import LogOut from lucide-react
+            label="Logout"
+            onClick={handleLogout}
+            isActive={false}
+          />
+        </div>
         </nav>
       </div>
       <div className="flex-6 bg-gray-100 pb-20">

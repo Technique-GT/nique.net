@@ -1,7 +1,7 @@
 const Article = require('../models/article.model');
-const SavedArticle = require('../models/SavedArticle.model');
+const SavedArticle = require('../models/saved.model');
 const Media = require('../models/media.model');
-const { checkPermission } = require('../utils/permissions');
+const { checkPermission } = require('../middlewares/permissions.util');
 
 // Helper function to validate article authors
 const validateAuthors = (authors, user) => {
