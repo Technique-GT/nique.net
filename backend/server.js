@@ -28,10 +28,7 @@ app.use(cors({
 app.use(cookieParser());
 
 // Connect to MongoDB
-mongoose.connect(process.env.ATLAS_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(process.env.ATLAS_URI)
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.log('Error connecting to MongoDB:', err));
 

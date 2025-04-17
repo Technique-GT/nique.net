@@ -19,7 +19,6 @@ export default function DashboardBaseLayout(props: { children: any }) {
   const { children } = props;
 
   const navigate = useNavigate();
-  const location = useLocation();
   const [activeTab, setActiveTab] = useState("Dashboard");
   const postsNames = ["All Posts", "Edit Article", "Categories", "Tags"];
   const usersNames = [
