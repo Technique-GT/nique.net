@@ -2,8 +2,9 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Life from "./pages/Life";
 import Article from "./pages/Article";
-import AdminPage from './pages/AdminPage';
+import AdminPage from "./pages/AdminPage";
 import Sports from "./pages/Sports";
+import Opinions from "./pages/Opinions";
 import SearchPage from "./pages/SearchPage";
 import Contact from "./pages/Contact";
 import News from "./pages/News";
@@ -44,24 +45,33 @@ function App() {
           <Route path="/submit-ad" element={<SubmitAd />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
-
+          <Route path="/opinions" element={<Opinions />} />
 
           {/* Dashboard routes with BaseLayout */}
-          <Route path="/dashboard" element={
-            <DashboardBaseLayout>
-              <DashboardHome />
-            </DashboardBaseLayout>
-          } />
-          <Route path="/dashboard/all-posts" element={
-            <DashboardBaseLayout>
-              <AllPosts />
-            </DashboardBaseLayout>
-          } />
-          <Route path="/dashboard/edit-article" element={
-            <DashboardBaseLayout>
-              <EditArticle />
-            </DashboardBaseLayout>
-          } />
+          <Route
+            path="/dashboard"
+            element={
+              <DashboardBaseLayout>
+                <DashboardHome />
+              </DashboardBaseLayout>
+            }
+          />
+          <Route
+            path="/dashboard/all-posts"
+            element={
+              <DashboardBaseLayout>
+                <AllPosts />
+              </DashboardBaseLayout>
+            }
+          />
+          <Route
+            path="/dashboard/edit-article"
+            element={
+              <DashboardBaseLayout>
+                <EditArticle />
+              </DashboardBaseLayout>
+            }
+          />
           {/* Add all other dashboard routes in the same pattern */}
           <Route path="/dashboard/categories" element={
             <DashboardBaseLayout>
