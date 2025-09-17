@@ -4,6 +4,9 @@ import Life from "./pages/Life";
 import Article from "./pages/Article";
 import AdminPage from "./pages/AdminPage";
 import Sports from "./pages/Sports";
+
+import Settings from "./pages/dashboard/Settings";
+
 import Opinions from "./pages/Opinions";
 import SearchPage from "./pages/SearchPage";
 import Contact from "./pages/Contact";

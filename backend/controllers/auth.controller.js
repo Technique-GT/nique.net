@@ -1,183 +1,88 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const User = require('../models/users.model');
-const { validationResult } = require('express-validator');
 
-// Helper function to generate JWT token
+const User = require('../models/User.model');
+
 const generateToken = (user) => {
   return jwt.sign(
-    {
-      id: user._id,
-      username: user.username,
-      email: user.email,
-      role: user.role
-    },
-    process.env.JWT_SECRET,
+    { id: user._id, email: user.email, role: user.role },
+
     { expiresIn: '7d' }
   );
 };
 
-const register = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
 
-  const { username, email, password, firstName, lastName, bio } = req.body;
-
+exports.register = async (req, res) => {
   try {
-    // Check if user exists
-    let user = await User.findOne({ $or: [{ username }, { email }] });
-    if (user) {
-      return res.status(400).json({ 
-        message: 'User already exists with this username or email' 
-      });
+    const { username, email, password, role = 'subscriber' } = req.body;
+
+    // Validate role assignment (only admin can assign higher roles)
+    if (req.user?.role !== 'admin' && ['editor', 'manager', 'admin'].includes(role)) {
+      return res.status(403).json({ message: 'Unauthorized role assignment' });
     }
 
-    // Create new user
-    user = new User({
-      username,
-      email,
-      password,
-      firstName,
-      lastName,
-      bio,
-      role: 'editor'
-    });
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
 
+    const user = new User({ username, email, password, role });
     await user.save();
+
     const token = generateToken(user);
-
-    // Set cookie (30 minutes)
-    res.cookie('jwt', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      maxAge: 30 * 60 * 1000
-    });
-
-    // Return response without password
-    const userData = user.toObject();
-    delete userData.password;
+    res.cookie('jwt', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
 
     res.status(201).json({
-      message: 'User registered successfully',
-      user: userData,
-      token // Make sure to include token in response
-    });
-
-  } catch (err) {
-    console.error('Registration error:', err);
-    res.status(500).json({ 
-      message: 'Server error during registration',
-      error: err.message // Include error details for debugging
-    });
-  }
-};
-
-// @desc    Login user
-// @route   POST /api/auth/login
-// @access  Public
-const login = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const { username, password } = req.body;
-
-  try {
-    // Check if user exists
-    const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // Check if password matches
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
-
-    // Generate JWT token
-    const token = generateToken(user);
-
-    // Set cookie
-    // In your login method, update the cookie settings to:
-    res.cookie('jwt', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax', // Changed from 'none' to match logout
-      maxAge: 30 * 60 * 1000, // 7 days
-      path: '/' // Added to match logout
-    });
-
-    // Return user data (without password)
-    const userData = user.toObject();
-    delete userData.password;
-
-    res.status(200).json({
-      message: 'Login successful',
-      user: userData,
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
       token
     });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error during login' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Logout user / clear cookie
-// @route   POST /api/auth/logout
-// @access  Public
-const logout = (req, res) => {
+exports.login = async (req, res) => {
   try {
-    // Clear the JWT cookie
-    res.clearCookie('jwt', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/'
-    });
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
 
-    res.status(200).json({ 
-      success: true, 
-      message: 'Logged out successfully' 
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const token = generateToken(user);
+    res.cookie('jwt', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+
+    res.json({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      token
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ 
-      success: false,
-      message: 'Server error during logout',
-      error: err.message 
-    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Get current user data
-// @route   GET /api/auth/me
-// @access  Private
-const getCurrentUser = async (req, res) => {
+exports.logout = (req, res) => {
+  res.clearCookie('jwt');
+  res.json({ message: 'Logged out successfully' });
+};
+
+exports.getCurrentUser = async (req, res) => {
+
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.status(200).json(user);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    AdminBack
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-};
-
-module.exports = {
-  register,
-  login,
-  logout,
-  getCurrentUser
 };
