@@ -48,8 +48,11 @@ export default function Article() {
         <>
             <Navbar />
             <div className="max-w-6xl mx-auto p-6 space-y-2">
-                <h3 className="text-4xl font-bold mt-2 mb-1">{id}</h3>
-                <h4 className="text-lg mb-2 text-nique-blue">Madison Winston • November 27, 2024 • Featured Story</h4>
+                <h3 className="text-4xl font-bold mt-2 mb-1">{post[0].title}</h3>
+                <div className="flex flex-wrap mb-2 gap-x-4">
+                    <h4 className="flex-auto text-lg text-nique-blue">{post[0].author} • November 27, 20asdfasdfasdfadsfasdfasdfdsafdsfadsfdsafdssaf24 • {post[0].category}</h4>
+                    <p className="text-xs text-nique-blue mt-auto">tag1 • tag2 • tag3</p>
+                </div>
                 <hr className="opacity-50"/>
                 <div className="my-3 max-w-3xl w-full m-auto text-sm">
                     <img className="w-full aspect-3/2 object-cover" src="https://picsum.photos/900/600" />
