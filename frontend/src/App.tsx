@@ -1,4 +1,10 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
+// app.tsx
+
+import React, { useEffect } from "react";
+import ReactGA from 'react-ga4';
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+
 import Home from "./pages/Home";
 import Life from "./pages/Life";
 import Article from "./pages/Article";
@@ -30,6 +36,22 @@ import Subscribers from "./pages/dashboard/Subscribers";
 import Staff from "./pages/dashboard/Staff";
 import Settings from "./pages/dashboard/Settings";
 import EditArticle from "./pages/dashboard/EditArticle";
+
+
+const PROD_TRACKING_ID = "G-Q3NL210D85"; // replace with Technique staff tracking ID. probably want to put in .env file
+const DEV_TRACKING_ID = "G-Q3NL210D85"; // replace with personal tracking ID to not mess with real user data
+
+function PageTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    ReactGA.send({ hitType: "pageview", page: location.pathname + location.search });
+  }, [location]);
+
+  return null;
+}
+
+
 
 function App() {
   return (
