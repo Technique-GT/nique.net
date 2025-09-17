@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-import User from '../models/users.models.js';
 
 const authMiddleware = (req, res, next) => {
     // Assuming your JWT token is stored in a cookie named 'jwt'

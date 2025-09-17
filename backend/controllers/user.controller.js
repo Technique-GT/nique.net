@@ -1,6 +1,6 @@
-const User = require('../models/User.model');
+const User = require('../models/users.model');
 const Article = require('../models/article.model');
-const SavedArticle = require('../models/SavedArticle.model');
+const SavedArticle = require('../models/saved.model');
 
 exports.getAllUsers = async (req, res) => {
   try {
