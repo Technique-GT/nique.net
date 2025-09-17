@@ -3,6 +3,7 @@ import User from '../models/users.models.js';
 
 const authMiddleware = (req, res, next) => {
     // Assuming your JWT token is stored in a cookie named 'jwt'
+
     const token = req.headers.authorization?.split(' ')[1] || req.cookies.jwt;
 
     if (!token) {
@@ -20,3 +21,4 @@ const authMiddleware = (req, res, next) => {
 };
 
 module.exports = authMiddleware;
+

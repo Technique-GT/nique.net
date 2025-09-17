@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { User, Mail, Lock, Eye, EyeOff, Save, X, Edit } from "lucide-react";
+import { User, Mail, Lock, Eye, EyeOff, Save, X, Edit, Globe, Link, Twitter, Instagram, Linkedin } from "lucide-react";
+
 
 interface UserSettings {
   id: string;
-  name: string;
+  username: string;
   email: string;
-  avatar: string;
+  profilePicture: string;
+  firstName: string;
+  lastName: string;
+  bio: string;
+  website: string;
+  socialMedia: {
+    twitter: string;
+    instagram: string;
+    linkedin: string;
+  };
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
+  role: string;
 }
 
 interface SettingsProps {
@@ -19,24 +30,36 @@ interface SettingsProps {
 
 const Settings: React.FC<SettingsProps> = ({
   initialUser = {},
-  onSave = () => {
+  onSave = async () => {
     alert("not implemented");
   },
-  onAvatarUpload = () => {
+  onAvatarUpload = async () => {
     alert("not implemented");
     return "dummy";
   },
 }) => {
   const [user, setUser] = useState<UserSettings>({
     id: "",
-    name: "",
+    username: "",
     email: "",
-    avatar: "",
+    profilePicture: "",
+    firstName: "",
+    lastName: "",
+    bio: "",
+    website: "",
+    socialMedia: {
+      twitter: "",
+      instagram: "",
+      linkedin: ""
+    },
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
+    role: "",
+
     ...initialUser,
   });
+
   const [isLoading, setIsLoading] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -45,7 +68,31 @@ const Settings: React.FC<SettingsProps> = ({
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    
+    if (name.startsWith('socialMedia.')) {
+      const socialMediaField = name.split('.')[1];
+      setUser(prev => ({
+        ...prev,
+        socialMedia: {
+          ...prev.socialMedia,
+          [socialMediaField]: value
+        }
+      }));
+    } else {
+      setUser(prev => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setUser((prev) => ({
       ...prev,
@@ -59,8 +106,7 @@ const Settings: React.FC<SettingsProps> = ({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!user.name.trim()) newErrors.name = "Name is required";
-
+    if (!user.username.trim()) newErrors.username = "Username is required";
     if (!user.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
@@ -91,7 +137,7 @@ const Settings: React.FC<SettingsProps> = ({
     try {
       await onSave(user);
       // Reset password fields after successful save
-      setUser((prev) => ({
+      setUser(prev => ({
         ...prev,
         currentPassword: "",
         newPassword: "",
@@ -99,7 +145,7 @@ const Settings: React.FC<SettingsProps> = ({
       }));
     } catch (error) {
       console.error("Failed to save settings:", error);
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
         form: "Failed to save settings. Please try again.",
       }));
@@ -113,12 +159,12 @@ const Settings: React.FC<SettingsProps> = ({
       try {
         setIsLoading(true);
         const newAvatarUrl = await onAvatarUpload(e.target.files[0]);
-        setUser((prev) => ({ ...prev, avatar: newAvatarUrl }));
+        setUser(prev => ({ ...prev, profilePicture: newAvatarUrl }));
       } catch (error) {
         console.error("Failed to upload avatar:", error);
-        setErrors((prev) => ({
+        setErrors(prev => ({
           ...prev,
-          avatar: "Failed to upload avatar. Please try again.",
+          profilePicture: "Failed to upload avatar. Please try again.",
         }));
       } finally {
         setIsLoading(false);
@@ -127,13 +173,13 @@ const Settings: React.FC<SettingsProps> = ({
   };
 
   const resetPasswordFields = () => {
-    setUser((prev) => ({
+    setUser(prev => ({
       ...prev,
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
     }));
-    setErrors((prev) => ({
+    setErrors(prev => ({
       ...prev,
       currentPassword: "",
       newPassword: "",
@@ -163,7 +209,7 @@ const Settings: React.FC<SettingsProps> = ({
             <div className="flex flex-col items-center md:w-1/4">
               <div className="relative mb-4">
                 <img
-                  src={user.avatar || "/default-avatar.png"}
+                  src={user.profilePicture || "/default-avatar.png"}
                   alt="Profile"
                   className="w-24 h-24 rounded-full object-cover cursor-pointer"
                   onClick={() => setIsAvatarModalOpen(true)}
@@ -182,59 +228,196 @@ const Settings: React.FC<SettingsProps> = ({
             </div>
 
             <div className="flex-1 space-y-4">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={user.name}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${
-                    errors.name
-                      ? "border-red-500 focus:ring-red-200"
-                      : "border-gray-300 focus:ring-blue-200"
-                  }`}
-                  disabled={isLoading}
-                />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Email Address
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail size={16} className="text-gray-400" />
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                    Username
+                  </label>
                   <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={user.email}
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={user.username}
                     onChange={handleInputChange}
-                    className={`w-full pl-10 pr-3 py-2 border rounded focus:outline-none focus:ring-2 ${
-                      errors.email
+                    className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${
+                      errors.username
                         ? "border-red-500 focus:ring-red-200"
                         : "border-gray-300 focus:ring-blue-200"
                     }`}
                     disabled={isLoading}
                   />
+                  {errors.username && (
+                    <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+                  )}
                 </div>
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                )}
+
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Mail size={16} className="text-gray-400" />
+                    </div>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={user.email}
+                      onChange={handleInputChange}
+                      className={`w-full pl-10 pr-3 py-2 border rounded focus:outline-none focus:ring-2 ${
+                        errors.email
+                          ? "border-red-500 focus:ring-red-200"
+                          : "border-gray-300 focus:ring-blue-200"
+                      }`}
+                      disabled={isLoading}
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    value={user.firstName}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    value={user.lastName}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
+                  Bio
+                </label>
+                <textarea
+                  id="bio"
+                  name="bio"
+                  value={user.bio}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-1">
+                  Website
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Globe size={16} className="text-gray-400" />
+                  </div>
+                  <input
+                    type="url"
+                    id="website"
+                    name="website"
+                    value={user.website}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    disabled={isLoading}
+                    placeholder="https://example.com"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Social Media Section */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium mb-4">Social Media</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="socialMedia.twitter" className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <Twitter className="mr-2" size={16} />
+                Twitter
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Link size={16} className="text-gray-400" />
+                </div>
+                <input
+                  type="url"
+                  id="socialMedia.twitter"
+                  name="socialMedia.twitter"
+                  value={user.socialMedia.twitter}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  disabled={isLoading}
+                  placeholder="https://twitter.com/username"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="socialMedia.instagram" className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <Instagram className="mr-2" size={16} />
+                Instagram
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Link size={16} className="text-gray-400" />
+                </div>
+                <input
+                  type="url"
+                  id="socialMedia.instagram"
+                  name="socialMedia.instagram"
+                  value={user.socialMedia.instagram}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  disabled={isLoading}
+                  placeholder="https://instagram.com/username"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="socialMedia.linkedin" className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <Linkedin className="mr-2" size={16} />
+                LinkedIn
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Link size={16} className="text-gray-400" />
+                </div>
+                <input
+                  type="url"
+                  id="socialMedia.linkedin"
+                  name="socialMedia.linkedin"
+                  value={user.socialMedia.linkedin}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  disabled={isLoading}
+                  placeholder="https://linkedin.com/in/username"
+                />
               </div>
             </div>
           </div>
@@ -249,10 +432,7 @@ const Settings: React.FC<SettingsProps> = ({
 
           <div className="space-y-4">
             <div>
-              <label
-                htmlFor="currentPassword"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 Current Password
               </label>
               <div className="relative">
@@ -278,25 +458,16 @@ const Settings: React.FC<SettingsProps> = ({
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   disabled={isLoading}
                 >
-                  {showCurrentPassword ? (
-                    <EyeOff size={16} />
-                  ) : (
-                    <Eye size={16} />
-                  )}
+                  {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {errors.currentPassword && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.currentPassword}
-                </p>
+                <p className="mt-1 text-sm text-red-600">{errors.currentPassword}</p>
               )}
             </div>
 
             <div>
-              <label
-                htmlFor="newPassword"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 New Password
               </label>
               <div className="relative">
@@ -326,17 +497,12 @@ const Settings: React.FC<SettingsProps> = ({
                 </button>
               </div>
               {errors.newPassword && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.newPassword}
-                </p>
+                <p className="mt-1 text-sm text-red-600">{errors.newPassword}</p>
               )}
             </div>
 
             <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 Confirm New Password
               </label>
               <div className="relative">
@@ -362,23 +528,15 @@ const Settings: React.FC<SettingsProps> = ({
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   disabled={isLoading}
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff size={16} />
-                  ) : (
-                    <Eye size={16} />
-                  )}
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.confirmPassword}
-                </p>
+                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
               )}
             </div>
 
-            {(user.currentPassword ||
-              user.newPassword ||
-              user.confirmPassword) && (
+            {(user.currentPassword || user.newPassword || user.confirmPassword) && (
               <div className="flex justify-end">
                 <button
                   type="button"
@@ -390,6 +548,55 @@ const Settings: React.FC<SettingsProps> = ({
                 </button>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Password Section */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium mb-4 flex items-center">
+            <ScrollText className="mr-2" size={18} />
+            Bio
+          </h3>
+
+          <div className="space-y-4">
+            <div>
+              <label
+                htmlFor="bio"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Bio
+              </label>
+              <div className="relative">
+                <textarea
+                  aria-multiline="true"
+                  id="bio"
+                  name="bio"
+                  value={user.bio}
+                  onChange={handleBioChange}
+                  className={`w-full h-40 px-3 py-2 border rounded focus:outline-none focus:ring-2 overflow-auto border-gray-300 focus:ring-blue-200`}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="website"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Website Link
+              </label>
+              <div className="relative">
+                <input
+                  id="website"
+                  name="website"
+                  value={user.website}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 border-gray-300 focus:ring-blue-200`}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -449,7 +656,7 @@ const Settings: React.FC<SettingsProps> = ({
             </div>
             <div className="flex flex-col items-center">
               <img
-                src={user.avatar || "/default-avatar.png"}
+                src={user.profilePicture || "/default-avatar.png"}
                 alt="Profile Preview"
                 className="w-32 h-32 rounded-full object-cover mb-4"
               />
@@ -466,15 +673,13 @@ const Settings: React.FC<SettingsProps> = ({
                 className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mb-2 ${
                   isLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
-                onClick={() =>
-                  document.getElementById("avatar-upload")?.click()
-                }
+                onClick={() => document.getElementById("avatar-upload")?.click()}
                 disabled={isLoading}
               >
                 {isLoading ? "Uploading..." : "Upload New Image"}
               </button>
-              {errors.avatar && (
-                <p className="mt-1 text-sm text-red-600">{errors.avatar}</p>
+              {errors.profilePicture && (
+                <p className="mt-1 text-sm text-red-600">{errors.profilePicture}</p>
               )}
             </div>
           </div>

@@ -11,7 +11,7 @@ const ReactiveLink = ({ name, path }: { name: string, path: string }) => {
   return (
     <Link
       to={path}
-      className="navbar-link text-black text-[16px] font-normal leading-[23.71px] tracking-[0%] px-4 py-2 hover:text-nique-blue-hover font-oswald text-center flex items-center justify-center"
+      className="navbar-link text-black text-[16px] font-normal leading-[23.71px] tracking-[0%] px-4 py-2 hover:text-nique-blue-hover font-oswald text-left flex items-center justify-start"
       style={{ fontFamily: 'Oswald' }}
     >
       {name}
@@ -118,7 +118,11 @@ export default function Navbar() {
           </div>
           <span className="hidden lg:inline">{formattedDate}</span>
           <span className="hidden xl:inline"> &bull; </span>
-          <span className="inline xl:inline-block"><br></br></span>Volume {currentVolume}</h4>
+          <span className="inline xl:inline-block"><br></br></span>Volume {currentVolume}
+          
+        </h4>
+
+        
       </div>
 
       {/* navbar section */}
@@ -145,7 +149,10 @@ export default function Navbar() {
         <h4 className='block md:hidden border-b border-gray-400 bg-white px-4 py-1'>{formattedDate}</h4>
         {/* mobile navlinks */}
         {isOpen && (
-          <div className='md:hidden h-screen pt-[5vh] bg-white'>
+          <div className='md:hidden h-screen bg-white'>
+            <div className='items-center px-4 pt-4'>
+              <Search searchOn={true}/>
+            </div>
             <NavLinks />
           </div>
         )}

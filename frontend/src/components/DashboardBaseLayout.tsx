@@ -6,16 +6,21 @@ import {
   Home,
   Settings,
   Users,
+  LogOut,
 } from "lucide-react";
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
+import cookie from "js-cookie";
+
 
 export default function DashboardBaseLayout(props: { children: any }) {
   const { children } = props;
 
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Dashboard");
-  const postsNames = ["All Posts", "Add New Posts", "Categories", "Tags"];
+  const postsNames = ["All Posts", "Edit Article", "Categories", "Tags"];
   const usersNames = [
     "Subscribers",
     "Staff",
@@ -46,6 +51,34 @@ export default function DashboardBaseLayout(props: { children: any }) {
     if (userDropdownOpen) setUserDropdownOpen(false);
     if (articlesDropdownOpen) setArticlesDropdownOpen(false);
   };
+
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api'}/auth/logout`,
+        {},
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${cookie.get("jwt")}`,
+          },
+        }
+      );
+      
+      // Clear client-side authentication
+      cookie.remove("jwt");
+      
+      // Redirect to admin/login page
+      navigate("/admin");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Fallback cleanup if API fails
+      cookie.remove("jwt");
+      navigate("/admin");
+    }
+  };
+
 
   return (
     <div className="flex flex-row min-h-screen h-full">
@@ -126,13 +159,13 @@ export default function DashboardBaseLayout(props: { children: any }) {
                   indent
                 />
                 <SidebarButton
-                  label="Add New Posts"
+                  label="Edit Article"
                   onClick={() => {
-                    setActiveTab("Add New Posts");
+                    setActiveTab("Edit Article");
                     // setArticlesDropdownOpen(false);
                     navigate("/dashboard/edit-article");
                   }}
-                  isActive={activeTab === "Add New Posts"}
+                  isActive={activeTab === "Edit Article"}
                   indent
                 />
                 <SidebarButton
@@ -311,7 +344,7 @@ export default function DashboardBaseLayout(props: { children: any }) {
                   onClick={() => {
                     setActiveTab("New Media");
                     // setUserDropdownOpen(false);
-                    navigate("/dashboard/add-new-media-file");
+                    navigate("/dashboard/new-media");
                   }}
                   isActive={activeTab === "New Media"}
                   indent
@@ -328,6 +361,14 @@ export default function DashboardBaseLayout(props: { children: any }) {
             }}
             isActive={activeTab === "Settings"}
           />
+          <div className="mt-auto"> {/* mt-auto pushes it to the bottom */}
+          <SidebarButton
+            icon={<LogOut />} // Make sure to import LogOut from lucide-react
+            label="Logout"
+            onClick={handleLogout}
+            isActive={false}
+          />
+        </div>
         </nav>
       </div>
       <div className="flex-6 bg-gray-100 pb-20">

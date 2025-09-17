@@ -1,85 +1,85 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 interface StaffMember {
-  id: string;
-  profilePicture: string;
-  name: string;
+  _id: string;
+  firstName: string;
+  lastName: string;
   email: string;
   role: 'editor' | 'manager' | 'admin';
-  joinDate: string;
-  lastActive: string;
+  profileImage?: string;
+  lastLogin?: string;
+  isActive: boolean;
+  bio?: string;
 }
 
-const Staff: React.FC = () => {
+// Create an axios instance with the correct base URL
+const api = axios.create({
+  baseURL: 'http://localhost:5050/api',
+  withCredentials: true
+});
+
+const StaffPage: React.FC = () => {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
 
   useEffect(() => {
-    // Simulate API fetch
-    const fetchStaff = async () => {
-      try {
-        // Mock data
-        const mockStaff: StaffMember[] = [
-          {
-            id: '1',
-            profilePicture: 'https://randomuser.me/api/portraits/women/44.jpg',
-            name: 'Jane Smith',
-            email: 'jane.smith@example.com',
-            role: 'admin',
-            joinDate: '2022-01-15',
-            lastActive: '2023-06-20'
-          },
-          {
-            id: '2',
-            profilePicture: 'https://randomuser.me/api/portraits/men/32.jpg',
-            name: 'John Doe',
-            email: 'john.doe@example.com',
-            role: 'manager',
-            joinDate: '2022-02-10',
-            lastActive: '2023-06-18'
-          },
-          {
-            id: '3',
-            profilePicture: 'https://randomuser.me/api/portraits/women/68.jpg',
-            name: 'Alice Johnson',
-            email: 'alice.j@example.com',
-            role: 'editor',
-            joinDate: '2022-03-05',
-            lastActive: '2023-06-19'
-          },
-          {
-            id: '4',
-            profilePicture: 'https://randomuser.me/api/portraits/men/75.jpg',
-            name: 'Bob Williams',
-            email: 'bob.w@example.com',
-            role: 'editor',
-            joinDate: '2022-04-22',
-            lastActive: '2023-06-15'
-          },
-        ];
-        
-        setStaff(mockStaff);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Failed to fetch staff:', error);
-        setIsLoading(false);
-      }
-    };
-
     fetchStaff();
   }, []);
 
-  const updateStaffRole = (id: string, newRole: 'editor' | 'manager' | 'admin') => {
-    setStaff(prev => 
-      prev.map(member => 
-        member.id === id ? { ...member, role: newRole } : member
-      )
-    );
+  const fetchStaff = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      console.log('Fetching staff data...');
+      // Use /staff instead of /api/staff since the base URL already includes /api
+      const response = await api.get('/staff');
+      
+      console.log('API Response:', response);
+      
+      // Check if response has the expected structure
+      if (response.data && response.data.staff && Array.isArray(response.data.staff)) {
+        setStaff(response.data.staff);
+        setDebugInfo(null);
+      } else {
+        // Save the response for debugging
+        setDebugInfo(response.data);
+        setError('Invalid response format from API');
+      }
+      
+      setIsLoading(false);
+    } catch (err: any) {
+      console.error('Error fetching staff:', err);
+      setError(`Failed to load staff members: ${err.message || 'Unknown error'}`);
+      setDebugInfo(err);
+      setIsLoading(false);
+    }
+  };
+
+  const updateStaffRole = async (id: string, newRole: 'editor' | 'manager' | 'admin') => {
+    try {
+      // Use /staff/:id instead of /api/staff/:id
+      const response = await api.put(`/staff/${id}`, { role: newRole });
+      console.log('Update response:', response);
+      
+      // Update local state
+      setStaff(prev => 
+        prev.map(member => 
+          member._id === id ? { ...member, role: newRole } : member
+        )
+      );
+    } catch (err: any) {
+      console.error('Error updating staff role:', err);
+      setError(`Failed to update staff role: ${err.message || 'Unknown error'}`);
+    }
   };
 
   const filteredStaff = staff.filter(member => 
-    member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    `${member.firstName} ${member.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -92,6 +92,29 @@ const Staff: React.FC = () => {
     }
   };
 
+  const formatDate = (dateString?: string): string => {
+    if (!dateString) return 'Never logged in';
+    
+    const date = new Date(dateString);
+    
+    if (isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    
+    return date.toLocaleDateString();
+  };
+
+  const renderDebugInfo = () => {
+    if (!debugInfo) return null;
+    
+    return (
+      <div className="debug-info">
+        <h3>Debug Information:</h3>
+        <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+      </div>
+    );
+  };
+
   if (isLoading) {
     return <div className="loading">Loading staff...</div>;
   }
@@ -99,6 +122,20 @@ const Staff: React.FC = () => {
   return (
     <div className="staff-container">
       <h1>Staff Management</h1>
+      
+      {error && (
+        <div className="error-message">
+          {error}
+          <button 
+            onClick={fetchStaff} 
+            className="retry-button"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+      
+      {debugInfo && renderDebugInfo()}
       
       <div className="controls">
         <div className="search-box">
@@ -115,57 +152,70 @@ const Staff: React.FC = () => {
         </div>
       </div>
 
-      <div className="table-responsive">
-        <table className="staff-table">
-          <thead>
-            <tr>
-              <th className="profile-pic-header"></th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Joined</th>
-              <th>Last Active</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredStaff.map(member => (
-              <tr key={member.id}>
-                <td className="profile-pic">
-                  <img 
-                    src={member.profilePicture} 
-                    alt={member.name} 
-                    className="avatar"
-                  />
-                </td>
-                <td className="name">{member.name}</td>
-                <td className="email">{member.email}</td>
-                <td className="role">
-                  <select
-                    value={member.role}
-                    onChange={(e) => updateStaffRole(member.id, e.target.value as 'editor' | 'manager' | 'admin')}
-                    className="role-select"
-                    style={{ 
-                      backgroundColor: `${getRoleColor(member.role)}20`,
-                      borderColor: getRoleColor(member.role),
-                      color: getRoleColor(member.role)
-                    }}
-                  >
-                    <option value="editor">Editor</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </td>
-                <td className="join-date">
-                  {new Date(member.joinDate).toLocaleDateString()}
-                </td>
-                <td className="last-active">
-                  {new Date(member.lastActive).toLocaleDateString()}
-                </td>
+      {filteredStaff.length === 0 && !error ? (
+        <div className="no-results">No staff members found</div>
+      ) : (
+        <div className="table-responsive">
+          <table className="staff-table">
+            <thead>
+              <tr>
+                <th className="profile-pic-header"></th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Last Login</th>
+                <th>Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {filteredStaff.map(member => (
+                <tr key={member._id}>
+                  <td className="profile-pic">
+                    {member.profileImage ? (
+                      <img 
+                        src={member.profileImage} 
+                        alt={`${member.firstName} ${member.lastName}`} 
+                        className="avatar"
+                      />
+                    ) : (
+                      <div className="avatar-placeholder">
+                        {member.firstName.charAt(0)}
+                        {member.lastName.charAt(0)}
+                      </div>
+                    )}
+                  </td>
+                  <td className="name">{member.firstName} {member.lastName}</td>
+                  <td className="email">{member.email}</td>
+                  <td className="role">
+                    <select
+                      value={member.role}
+                      onChange={(e) => updateStaffRole(member._id, e.target.value as 'editor' | 'manager' | 'admin')}
+                      className="role-select"
+                      style={{ 
+                        backgroundColor: `${getRoleColor(member.role)}20`,
+                        borderColor: getRoleColor(member.role),
+                        color: getRoleColor(member.role)
+                      }}
+                    >
+                      <option value="editor">Editor</option>
+                      <option value="manager">Manager</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </td>
+                  <td className="last-active">
+                    {formatDate(member.lastLogin)}
+                  </td>
+                  <td className="status">
+                    <span className={`status-indicator ${member.isActive ? 'active' : 'inactive'}`}>
+                      {member.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <style>{`
         .staff-container {
@@ -240,6 +290,18 @@ const Staff: React.FC = () => {
           border-radius: 50%;
           object-fit: cover;
         }
+        .avatar-placeholder {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background-color: #e0e0e0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          color: #666;
+          font-size: 14px;
+        }
         .name {
           font-weight: 500;
         }
@@ -258,9 +320,24 @@ const Staff: React.FC = () => {
           transition: all 0.3s;
           font-weight: 500;
         }
-        .join-date, .last-active {
+        .last-active {
           font-size: 13px;
           color: #666;
+        }
+        .status-indicator {
+          display: inline-block;
+          padding: 4px 8px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 500;
+        }
+        .status-indicator.active {
+          background-color: #e8f5e9;
+          color: #4CAF50;
+        }
+        .status-indicator.inactive {
+          background-color: #f5f5f5;
+          color: #9E9E9E;
         }
         .staff-table tr:hover {
           background-color: #f9f9f9;
@@ -270,9 +347,49 @@ const Staff: React.FC = () => {
           text-align: center;
           color: #666;
         }
+        .error-message {
+          padding: 15px;
+          background-color: #ffebee;
+          color: #f44336;
+          border-radius: 4px;
+          margin-bottom: 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .retry-button {
+          background-color: #f44336;
+          color: white;
+          border: none;
+          padding: 5px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        .retry-button:hover {
+          background-color: #d32f2f;
+        }
+        .no-results {
+          padding: 30px;
+          text-align: center;
+          background-color: #f5f5f5;
+          border-radius: 8px;
+          color: #666;
+        }
+        .debug-info {
+          background-color: #f8f9fa;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          padding: 10px;
+          margin-bottom: 20px;
+          overflow: auto;
+        }
+        .debug-info pre {
+          margin: 0;
+          font-size: 12px;
+        }
       `}</style>
     </div>
   );
 };
 
-export default Staff;
+export default StaffPage;

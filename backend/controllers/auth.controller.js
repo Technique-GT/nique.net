@@ -1,14 +1,16 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+
 const User = require('../models/User.model');
 
 const generateToken = (user) => {
   return jwt.sign(
     { id: user._id, email: user.email, role: user.role },
-    process.env.JWT_TOKEN,
+
     { expiresIn: '7d' }
   );
 };
+
 
 exports.register = async (req, res) => {
   try {
@@ -72,11 +74,13 @@ exports.logout = (req, res) => {
 };
 
 exports.getCurrentUser = async (req, res) => {
+
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    AdminBack
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: error.message });
