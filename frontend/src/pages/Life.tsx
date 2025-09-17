@@ -48,10 +48,12 @@ function Life() {
                 <div className='w-full'>
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Most Recent</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
-                        <div className='lg:col-span-2 '>
+                        <div className='col-span-2'>
                             <ArticleBlock post={post[0]} height='460px' />
                         </div>
+                        <div className='col-span-2 lg:col-span-1'>
                         <ArticleBlock post={post[1]} height='460px' />
+                        </div>
                         <div className='grid gap-4 grid-rows-2 col-span-2 lg:col-span-1'>
                             <ArticleBlock post={post[2]} height='222px' />
                             <ArticleBlock post={post[3]} height='222px' />

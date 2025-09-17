@@ -1,0 +1,45 @@
+div.ql-editor p img {
+    max-height: 300px;
+    max-width: 100%;
+    margin: auto;
+}
+
+.ql-editor p {
+    margin-bottom: 15px;
+}
+
+.ql-editor ol {
+    margin-bottom: 15px;
+}
+
+.ql-snow .ql-editor blockquote {
+    margin-bottom: 15px;
+}
+
+.ql-toolbar {
+    white-space: nowrap;
+    overflow: auto;
+}
+
+.section {
+    border: solid 1px #ccc;
+    width: 100%;
+}
+
+input::file-selector-button {
+    transition: 0.3s all;
+    padding: 3px 10px;
+    border: thin solid grey;
+    border-radius: 3px;
+    margin-right: 10px;
+    cursor: pointer;
+    background: white;
+}
+
+input::file-selector-button:hover {
+    filter: brightness(95%);
+}
+
+input[type='checkbox']:hover {
+    cursor: pointer;
+}

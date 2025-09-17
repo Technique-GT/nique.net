@@ -42,7 +42,7 @@ function About() {
             <Navbar />
 
             <div className='max-w-[1470px] m-auto p-5'>
-                <h4 className='text-3xl font-bold text-nique-blue md:my-6'>About Us</h4>
+                <h4 className="font-bold mb-2 text-2xl text-nique-blue">About Us</h4>
             </div>
 
             <Collage posts={[post[0], post[1], post[2], post[3], post[4]]} /> {/* collection of best pictures you may want to feature */}
