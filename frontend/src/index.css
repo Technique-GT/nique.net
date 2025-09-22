@@ -20,7 +20,7 @@ h6 {
     font-family: "Roboto Condensed", sans-serif;
 }
 
-p, li, blockquote {
+p, li, blockquote, input, textarea {
     font-family: 'EB Garamond', Times, serif;
 }
 
