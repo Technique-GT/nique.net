@@ -1,7 +1,8 @@
 const Article = require('../models/article.model');
 const SavedArticle = require('../models/saved.model');
 const Media = require('../models/media.model');
-const { checkPermission } = require('../middlewares/permissions.util');
+// const { checkPermission } = require('../utils/permissions');
+
 
 // Helper function to validate article authors
 const validateAuthors = (authors, user) => {
@@ -14,9 +15,9 @@ const validateAuthors = (authors, user) => {
 exports.createArticle = async (req, res) => {
   try {
     // Check if user has permission to create articles
-    if (!checkPermission(req.user.role, 'createArticle')) {
+    /*if (!checkPermission(req.user.role, 'createArticle')) {
       return res.status(403).json({ message: 'Unauthorized' });
-    }
+    }*/
 
     const { title, content, authors, categories, tags, featuredImage, allowComments } = req.body;
     
@@ -118,12 +119,15 @@ exports.updateArticle = async (req, res) => {
 
     // Check edit permissions
     const isAuthor = article.authors.some(a => a.user.equals(req.user.id));
+
+    /*
     const canEditAny = checkPermission(req.user.role, 'editAnyArticle');
     const canEditOwn = checkPermission(req.user.role, 'editOwnArticle');
 
     if (!canEditAny && !(isAuthor && canEditOwn)) {
       return res.status(403).json({ message: 'Unauthorized' });
     }
+      */
 
     // Managers can only edit articles in their categories
     if (req.user.role === 'manager' && !canEditAny) {
@@ -160,12 +164,15 @@ exports.deleteArticle = async (req, res) => {
 
     // Check delete permissions
     const isAuthor = article.authors.some(a => a.user.equals(req.user.id));
+
+    /*
     const canDeleteAny = checkPermission(req.user.role, 'deleteAnyArticle');
     const canDeleteOwn = checkPermission(req.user.role, 'deleteOwnArticle');
 
     if (!canDeleteAny && !(isAuthor && canDeleteOwn)) {
       return res.status(403).json({ message: 'Unauthorized' });
     }
+      */
 
     // Managers can only delete articles in their categories
     if (req.user.role === 'manager' && !canDeleteAny) {
@@ -222,9 +229,11 @@ exports.publishArticle = async (req, res) => {
     }
 
     // Check publish permissions
+    /*
     if (!checkPermission(req.user.role, 'publishArticle')) {
       return res.status(403).json({ message: 'Unauthorized' });
     }
+      */
 
     article.status = 'published';
     article.publishedAt = new Date();
