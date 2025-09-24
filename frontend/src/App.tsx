@@ -34,7 +34,7 @@ import Library from "./pages/dashboard/Library";
 import AddNewMediaFile from "./pages/dashboard/AddNewMediaFile";
 import Subscribers from "./pages/dashboard/Subscribers";
 import Staff from "./pages/dashboard/Staff";
-import Settings from "./pages/dashboard/Settings";
+// import Settings from "./pages/dashboard/Settings";
 import EditArticle from "./pages/dashboard/EditArticle";
 
 
