@@ -12,54 +12,54 @@ import InstaEmbed from '../components/InstaEmbed';
 import Spinner from '../components/Spinner';
 
 const mapArticleToPost = (article: any): Post => {
-  const primaryAuthor = article.authors?.[0]?.user;
+    const primaryAuthor = article.authors?.[0]?.user;
 
-  let authorName = 'Technique Staff';
-  if (primaryAuthor) {
-    if (typeof primaryAuthor === 'string') {
-      authorName = primaryAuthor;
-    } else {
-      const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
-        .filter(Boolean)
-        .join(' ');
+    let authorName = 'Technique Staff';
+    if (primaryAuthor) {
+        if (typeof primaryAuthor === 'string') {
+        authorName = primaryAuthor;
+        } else {
+        const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
+            .filter(Boolean)
+            .join(' ');
 
-      authorName =
-        primaryAuthor.username ||
-        firstAndLast ||
-        primaryAuthor.email ||
-        authorName;
+        authorName =
+            primaryAuthor.username ||
+            firstAndLast ||
+            primaryAuthor.email ||
+            authorName;
+        }
     }
-  }
 
-  const descriptionSource = article.excerpt || article.content || '';
-  const normalizedDescription =
-    typeof descriptionSource === 'string'
-      ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
-      : '';
+    const descriptionSource = article.excerpt || article.content || '';
+    const normalizedDescription =
+        typeof descriptionSource === 'string'
+        ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
+        : '';
 
-  return {
-    id: article._id,
-    title: article.title,
-    slug: article.slug,
-    content: article.content,
-    excerpt: article.excerpt,
-    authors: article.authors || [],
-    categories: article.categories || [],
-    tags: article.tags || [],
-    featuredImage: article.featuredImage,
-    status: article.status,
-    isSticky: article.isSticky,
-    allowComments: article.allowComments,
-    viewCount: article.viewCount,
-    publishedAt: article.publishedAt,
-    updatedBy: article.updatedBy,
-    createdAt: article.createdAt,
-    updatedAt: article.updatedAt,
-    desc: normalizedDescription,
-    author: authorName,
-    category: article.categories?.[0]?.name || '',
-    coverImage: article.featuredImage?.url || '',
-  };
+    return {
+        id: article._id,
+        title: article.title,
+        slug: article.slug,
+        content: article.content,
+        excerpt: article.excerpt,
+        authors: article.authors || [],
+        categories: article.categories || [],
+        tags: article.tags || [],
+        featuredImage: article.featuredImage,
+        status: article.status,
+        isSticky: article.isSticky,
+        allowComments: article.allowComments,
+        viewCount: article.viewCount,
+        publishedAt: article.publishedAt,
+        updatedBy: article.updatedBy,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        desc: normalizedDescription,
+        author: authorName,
+        category: article.categories?.[0]?.name || '',
+        coverImage: article.featuredImage?.url || '',
+    };
 };
 
 function Life() {
@@ -67,59 +67,59 @@ function Life() {
     const [lifeArticles, setLifeArticles] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
 
-        useEffect(() => {
-            let isMounted = true;
-            const controller = new AbortController();
+    useEffect(() => {
+        let isMounted = true;
+        const controller = new AbortController();
     
-            const loadArticles = async () => {
-                setIsLoading(true);
-                setError(null);
-    
-                try {
-                    const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
-                    const categories = categoriesResponse.data || [];
+        const loadArticles = async () => {
+            setIsLoading(true);
+            setError(null);
 
-                    const lifeCategory = categories.find((category: any) =>
-                        category.name?.toLowerCase() === Categories.LIFE.toLowerCase()
-                    );
+            try {
+                const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
+                const categories = categoriesResponse.data || [];
 
-                    if (!lifeCategory?._id) {
-                        if (!isMounted) return;
-                        setLifeArticles([]);
-                        setError('Life category not found.');
-                        return;
-                    }
+                const lifeCategory = categories.find((category: any) =>
+                    category.name?.toLowerCase() === Categories.LIFE.toLowerCase()
+                );
 
-                    const lifeResponse = await articleService.fetchArticlesByCategory(
-                        lifeCategory._id,
-                        undefined,
-                        controller.signal
-                    );
-
-                    if (!isMounted) {
-                        return;
-                    }
-
-                    setLifeArticles((lifeResponse.data || []).map(mapArticleToPost));
-                } catch (err) {
-                    if (!isMounted) {
-                        return;
-                    }
-                    setError('Unable to load articles. Please try again later.');
-                } finally {
-                    if (isMounted) {
-                        setIsLoading(false);
-                    }
+                if (!lifeCategory?._id) {
+                    if (!isMounted) return;
+                    setLifeArticles([]);
+                    setError('Life category not found.');
+                    return;
                 }
-            };
+
+                const lifeResponse = await articleService.fetchArticlesByCategory(
+                    lifeCategory._id,
+                    undefined,
+                    controller.signal
+                );
+
+                if (!isMounted) {
+                    return;
+                }
+
+                setLifeArticles((lifeResponse.data || []).map(mapArticleToPost));
+            } catch (err) {
+                if (!isMounted) {
+                    return;
+                }
+                setError('Unable to load articles. Please try again later.');
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                }
+            }
+        };
     
-            loadArticles();
+        loadArticles();
     
-            return () => {
-                isMounted = false;
-                controller.abort();
-            };
-        }, []);
+        return () => {
+            isMounted = false;
+            controller.abort();
+        };
+    }, []);
     
     if (isLoading) {
         return (
@@ -179,23 +179,23 @@ function Life() {
                     <div className='grid gap-4 grid-cols-1 lg:grid-rows-3 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='row-span-2 col-span-2'>
                             {(() => {
-                                const posts = [lifeArticles[6], lifeArticles[7], lifeArticles[8], lifeArticles[2]]
+                                const posts = [lifeArticles[6], lifeArticles[7], lifeArticles[8], lifeArticles[9]]
                                     .filter(Boolean) as Post[];
                                 return posts.length ? <SideArticle posts={posts} width='18%' /> : null;
                             })()}
                         </div>
                         <div className='grid row-span-2 col-span-2 gap-4 lg:gap-y-0'>
                             <div className='col-span-2'>
-                                {lifeArticles[8] && <ArticleBlock post={lifeArticles[8]} height='222px' />}
+                                {lifeArticles[9] && <ArticleBlock post={lifeArticles[9]} height='222px' />}
                             </div>
-                            {lifeArticles[7] && <ArticleBlock post={lifeArticles[7]} height='222px' />}
-                            {lifeArticles[7] && <ArticleBlock post={lifeArticles[7]} height='222px' />}
+                            {lifeArticles[10] && <ArticleBlock post={lifeArticles[10]} height='222px' />}
+                            {lifeArticles[11] && <ArticleBlock post={lifeArticles[11]} height='222px' />}
                         </div>
                         <div className='col-span-2'>
-                            {lifeArticles[8] && <ArticleBlock post={lifeArticles[8]} height='230px' />}
+                            {lifeArticles[12] && <ArticleBlock post={lifeArticles[12]} height='230px' />}
                         </div>
-                        {lifeArticles[8] && <ArticleBlock post={lifeArticles[8]} height='230px' />}
-                        {lifeArticles[8] && <ArticleBlock post={lifeArticles[8]} height='230px' />}
+                        {lifeArticles[13] && <ArticleBlock post={lifeArticles[13]} height='230px' />}
+                        {lifeArticles[14] && <ArticleBlock post={lifeArticles[14]} height='230px' />}
                     </div>
 
                 </div>
@@ -229,7 +229,7 @@ function Life() {
                     <hr />
 
                     {(() => {
-                        const posts = [lifeArticles[6], lifeArticles[7], lifeArticles[16], lifeArticles[17], lifeArticles[18]]
+                        const posts = [lifeArticles[14], lifeArticles[15], lifeArticles[16], lifeArticles[17], lifeArticles[18]]
                             .filter(Boolean) as Post[];
                         return posts.length ? <SideArticle posts={posts} width='80px'/> : null;
                     })()}

@@ -17,8 +17,9 @@ function FeaturedStory({ post, height }: ArticleBlockProps) {
                     <h6 className="text-[#1A1E47] text-sm"><span className="uppercase">{post.category}</span> &#8226; {post.author}</h6>
                 </div>
             </div>
+            {/* TODO add caption field to article model*/}
             <h6 className="text-nique-blue text-xs mt-1">Player Ashlyn Goolsby dives in for a save in a tension filled game. Longer captions for cover stories because hopefully they&rsquo;ll be Technique taken photos. Photo by: Student Publications</h6>
-            <p className="mt-2">After the sweep against Florida at McCamish Pavilion, the Jackets went on the road to Athens, GA to face the u[sic]GA. Senior setter Ashlyn Goolsby reflects on the season thus far and the team&rsquo;s dynamics with the Technique.
+            <p className="mt-2">{post.desc}
                 &nbsp;<a className='text-nique-blue-hover underline cursor-pointer' onClick={() => navigate('/' + post.id)}>[Read more...]</a>
             </p>
         </div>
