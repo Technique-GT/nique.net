@@ -220,6 +220,7 @@ export default function Article() {
     <>
       <Navbar />
       <div className="max-w-6xl mx-auto p-6 space-y-6">
+        {/* Title */}
         <header className="space-y-2">
           <h3 className="text-4xl font-bold mt-2 mb-1">{article.title}</h3>
           <h4 className="flex flex-wrap mb-2 gap-x-4 text-nique-blue text-lg justify-between">
@@ -241,6 +242,7 @@ export default function Article() {
           <hr className="opacity-50" />
         </header>
 
+        {/* Featured Image */}
         <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
           <img
             className="w-full aspect-3/2 object-cover rounded-md"
@@ -255,6 +257,7 @@ export default function Article() {
           )}
         </figure>
 
+        {/* Article Content */}
         <section className="prose prose-lg max-w-3xl mx-auto text-[#1A1E47]">
           {typeof article.content === "string" ? (
             <div dangerouslySetInnerHTML={{ __html: article.content }} />
@@ -263,6 +266,7 @@ export default function Article() {
           )}
         </section>
 
+        {/* Related Articles */}
         {relatedArticles.length > 0 && (
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-nique-blue">Related Articles</h2>
@@ -274,6 +278,7 @@ export default function Article() {
           </section>
         )}
 
+        {/* Comments */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold text-nique-blue">

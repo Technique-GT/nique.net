@@ -6,15 +6,25 @@ const apiClient = axios.create({
 });
 
 const fetchRecentArticles = (limit = 5, status = 'published', signal?: AbortSignal) => {
+  const params: Record<string, string | number> = { status };
+  if (limit !== undefined) {
+    params.limit = limit;
+  }
+
   return apiClient.get('/articles', {
-    params: { limit, status },
+    params,
     signal,
   });
 };
 
 const fetchArticlesByCategory = (categoryId: string, limit?: number, signal?: AbortSignal) => {
+  const params: Record<string, number> = {};
+  if (limit !== undefined) {
+    params.limit = limit;
+  }
+
   return apiClient.get(`/articles/category/${categoryId}`, {
-    params: { limit },
+    params,
     signal,
   });
 };
