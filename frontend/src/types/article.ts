@@ -1,6 +1,52 @@
-export interface Post {
-    id: string,
-    title: string;
+export type ArticleStatus = 'draft' | 'pending' | 'published' | 'private' | 'trash';
+
+export interface ArticleReference {
+    _id?: string;
+    name?: string;
+    slug?: string;
+    firstName?: string;
+    lastName?: string;
+    username?: string;
+    email?: string;
+}
+
+export interface ArticleAuthor {
+    user: ArticleReference | string;
+    position: number;
+}
+
+export interface ArticleTag extends ArticleReference {}
+
+export interface ArticleMedia {
+    id: string;
+    url?: string;
+    title?: string;
+    caption?: string;
+    altText?: string;
+}
+
+export interface ArticleDocument {
+    id?: string;
+    title?: string;
+    slug?: string;
+    content?: string;
+    excerpt?: string;
+    authors?: ArticleAuthor[];
+    categories?: ArticleReference[];
+    tags?: ArticleTag[];
+    featuredImage?: ArticleMedia;
+    status?: ArticleStatus;
+    isSticky?: boolean;
+    allowComments?: boolean;
+    viewCount?: number;
+    publishedAt?: string | Date;
+    updatedBy?: string;
+    createdAt?: string | Date;
+    updatedAt?: string | Date;
+}
+
+export interface Post extends ArticleDocument {
+    id: string;
     desc: string;
     author: string;
     category: string;

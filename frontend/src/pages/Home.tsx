@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
-import MockAPI from '../services/MockAPI'
-import ArticleBlock from "../components/ArticleBlock"
-import { Post } from '../types/article'
+import { useEffect, useMemo, useState } from 'react';
+import articleService from '../services/articleService';
+import ArticleBlock from "../components/ArticleBlock";
+import { Post } from '../types/article';
 import FeaturedStory from '../components/FeaturedStory';
 import JustInBlock from '../components/JustIn';
 import SideWidget from '../components/SideWidget';
@@ -10,34 +10,158 @@ import { Categories } from '../types/categories';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 
+const mapArticleToPost = (article: any): Post => {
+  const primaryAuthor = article.authors?.[0]?.user;
+
+  let authorName = 'Technique Staff';
+  if (primaryAuthor) {
+    if (typeof primaryAuthor === 'string') {
+      authorName = primaryAuthor;
+    } else {
+      const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
+        .filter(Boolean)
+        .join(' ');
+
+      authorName =
+        primaryAuthor.username ||
+        firstAndLast ||
+        primaryAuthor.email ||
+        authorName;
+    }
+  }
+
+  const descriptionSource = article.excerpt || article.content || '';
+  const normalizedDescription =
+    typeof descriptionSource === 'string'
+      ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
+      : '';
+
+  return {
+    id: article._id,
+    title: article.title,
+    slug: article.slug,
+    content: article.content,
+    excerpt: article.excerpt,
+    authors: article.authors || [],
+    categories: article.categories || [],
+    tags: article.tags || [],
+    featuredImage: article.featuredImage,
+    status: article.status,
+    isSticky: article.isSticky,
+    allowComments: article.allowComments,
+    viewCount: article.viewCount,
+    publishedAt: article.publishedAt,
+    updatedBy: article.updatedBy,
+    createdAt: article.createdAt,
+    updatedAt: article.updatedAt,
+    desc: normalizedDescription,
+    author: authorName,
+    category: article.categories?.[0]?.name || '',
+    coverImage: article.featuredImage?.url || '',
+  };
+};
+
 function Home() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [post, setPost] = useState<Post[]>([]);
+    const [recentArticles, setRecentArticles] = useState<Post[]>([]);
+    const [lifeArticles, setLifeArticles] = useState<Post[]>([]);
+    const [newsArticles, setNewsArticles] = useState<Post[]>([]);
+    const [entertainmentArticles, setEntertainmentArticles] = useState<Post[]>([]);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        getPost();
-    }, [])
+        let isMounted = true;
+        const controller = new AbortController();
 
-    const getPost = () => {
-        MockAPI.getPost.then(resp => {
-            const result = resp.data.slice(0, 25).map((item: any) => ({
-                id: item.id,
-                title: item.title,
-                desc: item.summary,
-                author: item.user.first_name + " " + item.user.last_name,
-                category: item.category,
-                coverImage: item.featured_image
-            }));
-            setPost(result);
-            setIsLoading(false);
-        })
-    }
+        const loadArticles = async () => {
+            setIsLoading(true);
+            setError(null);
+
+            try {
+                const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
+                const categories = categoriesResponse.data || [];
+
+                const findCategoryId = (name: string) => {
+                    const match = categories.find((category: any) => category.name?.toLowerCase() === name.toLowerCase());
+                    return match?._id || null;
+                };
+
+                const lifeCategoryId = findCategoryId(Categories.LIFE);
+                const newsCategoryId = findCategoryId(Categories.NEWS);
+                const entertainmentCategoryId = findCategoryId(Categories.ENTERTAINMENT);
+
+                const [
+                    recentResponse,
+                    lifeResponse,
+                    newsResponse,
+                    entertainmentResponse,
+                ] = await Promise.all([
+                    articleService.fetchRecentArticles(5, 'published', controller.signal),
+                    lifeCategoryId
+                        ? articleService.fetchArticlesByCategory(lifeCategoryId, 3, controller.signal)
+                        : Promise.resolve({ data: [] }),
+                    newsCategoryId
+                        ? articleService.fetchArticlesByCategory(newsCategoryId, 3, controller.signal)
+                        : Promise.resolve({ data: [] }),
+                    entertainmentCategoryId
+                        ? articleService.fetchArticlesByCategory(entertainmentCategoryId, 8, controller.signal)
+                        : Promise.resolve({ data: [] }),
+                ]);
+
+                if (!isMounted) {
+                    return;
+                }
+
+                setRecentArticles((recentResponse.data || []).map(mapArticleToPost));
+                setLifeArticles((lifeResponse.data || []).map(mapArticleToPost));
+                setNewsArticles((newsResponse.data || []).map(mapArticleToPost));
+                setEntertainmentArticles((entertainmentResponse.data || []).map(mapArticleToPost));
+            } catch (err) {
+                if (!isMounted) {
+                    return;
+                }
+                setError('Unable to load articles. Please try again later.');
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        loadArticles();
+
+        return () => {
+            isMounted = false;
+            controller.abort();
+        };
+    }, []);
+
+    const sideArticles = useMemo(() => {
+        const candidates = [
+            recentArticles[2],
+            lifeArticles[1],
+            entertainmentArticles[0],
+        ].filter(Boolean) as Post[];
+
+        return candidates.slice(0, 3);
+    }, [recentArticles, lifeArticles, entertainmentArticles]);
 
     if (isLoading) {
         return (
             <div className="flex justify-center items-center h-screen">
                 <Spinner/>
             </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <>
+                <Navbar />
+                <div className="flex justify-center items-center h-screen">
+                    <p className="text-center text-lg text-red-600">{error}</p>
+                </div>
+            </>
         );
     }
 
@@ -48,14 +172,13 @@ function Home() {
                 <div className='w-full'>
                     <div className='grid gap-5 grid-cols-1 lg:grid-cols-[30%_auto] w-full'>
                         <div className='flex flex-col gap-4 order-last lg:order-first'>
-                            <ArticleBlock post={post[3]} height='200px' />
-                            <ArticleBlock post={post[4]} height='200px' />
-                            <ArticleBlock post={post[5]} height='200px' />
-                            <ArticleBlock post={post[9]} height='200px' />
+                            {recentArticles.slice(1, 5).map((article) => (
+                                <ArticleBlock key={article.id} post={article} height='200px' />
+                            ))}
                         </div>
                         <div className='flex flex-col gap-4'>
-                            <JustInBlock post={post[0]} />
-                            <FeaturedStory post={post[12]} height='695px' />
+                            {recentArticles[0] && <JustInBlock post={recentArticles[0]} />}
+                            {recentArticles[1] && <FeaturedStory post={recentArticles[1]} height='695px' />}
                         </div>
                     </div>
 
@@ -64,11 +187,12 @@ function Home() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.LIFE}</h4>
                     <div className='grid grid-cols-1 md:grid-cols-[48%_auto] gap-4'>
                         <div className='w-full'>
-                            <ArticleBlock post={post[8]} height='396px' />
+                            {lifeArticles[0] && <ArticleBlock post={lifeArticles[0]} height='396px' />}
                         </div>
                         <div className='flex flex-col gap-4 w-full'>
-                            <ArticleBlock post={post[10]} height='190px' />
-                            <ArticleBlock post={post[11]} height='190px' />
+                            {lifeArticles.slice(1).map((article) => (
+                                <ArticleBlock key={article.id} post={article} height='190px' />
+                            ))}
                         </div>
                     </div>
 
@@ -76,29 +200,24 @@ function Home() {
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.NEWS}</h4>
                     <div className='flex flex-col sm:flex-row gap-4'>
-                        <ArticleBlock post={post[13]} height='200px' />
-                        <ArticleBlock post={post[14]} height='200px' />
-                        <ArticleBlock post={post[15]} height='200px' />
+                        {newsArticles.map((article) => (
+                            <ArticleBlock key={article.id} post={article} height='200px' />
+                        ))}
                     </div>
 
                     <hr className='my-4' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.ENTERTAINMENT}</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
-                        <ArticleBlock post={post[16]} height='230px' />
-                        <ArticleBlock post={post[17]} height='230px' />
-                        <ArticleBlock post={post[18]} height='230px' />
-                        <ArticleBlock post={post[19]} height='230px' />
-                        <ArticleBlock post={post[20]} height='230px' />
-                        <ArticleBlock post={post[21]} height='230px' />
-                        <ArticleBlock post={post[22]} height='230px' />
-                        <ArticleBlock post={post[23]} height='230px' />
+                        {entertainmentArticles.map((article) => (
+                            <ArticleBlock key={article.id} post={article} height='230px' />
+                        ))}
                     </div>
                 </div>
 
                 <div className='flex flex-col gap-4'>
                     <SideWidget />
-                    <SideArticle posts={[post[6], post[7], post[16]]}/>
+                    <SideArticle posts={sideArticles}/>
                     <iframe className="rounded-md w-full h-[550px]" src="https://open.spotify.com/embed/playlist/3ySGGWEXxBBYvn2cYxEDEx?utm_source=generator&theme=0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
                 </div>
             </div>

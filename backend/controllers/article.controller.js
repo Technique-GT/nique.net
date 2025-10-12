@@ -47,7 +47,8 @@ exports.createArticle = async (req, res) => {
 exports.getAllArticles = async (req, res) => {
   try {
     let query = {};
-    const { status, category, author, search } = req.query;
+    const { status, category, author, search, limit } = req.query;
+    const user = req.user || { role: 'viewer', id: null };
 
     // Apply filters
     if (status) query.status = status;
@@ -56,19 +57,59 @@ exports.getAllArticles = async (req, res) => {
     if (search) query.title = { $regex: search, $options: 'i' };
 
     // Non-admins can only see published articles or their own
-    if (!['admin', 'manager', 'editor'].includes(req.user.role)) {
-      query.$or = [
-        { status: 'published' },
-        { 'authors.user': req.user.id }
-      ];
+    if (!['admin', 'manager', 'editor'].includes(user.role || '')) {
+      if (user.id) {
+        query.$or = [
+          { status: 'published' },
+          { 'authors.user': user.id }
+        ];
+      } else {
+        query.status = 'published';
+      }
     }
 
-    const articles = await Article.find(query)
+    const parsedLimit = parseInt(limit, 10);
+
+    let articleQuery = Article.find(query)
       .populate('authors.user', 'username profilePicture')
       .populate('categories', 'name')
       .populate('tags', 'name')
       .populate('featuredImage', 'url title')
       .sort({ createdAt: -1 });
+
+    if (!Number.isNaN(parsedLimit) && parsedLimit > 0) {
+      articleQuery = articleQuery.limit(parsedLimit);
+    }
+
+    const articles = await articleQuery;
+
+    res.json(articles);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getArticleByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const { limit } = req.query;
+    const parsedLimit = parseInt(limit, 10);
+
+    let articleQuery = Article.find({ 
+      categories: categoryId, 
+      status: 'published' 
+    })
+    .populate('authors.user', 'username profilePicture')
+    .populate('categories', 'name')
+    .populate('tags', 'name')
+    .populate('featuredImage', 'url title')
+    .sort({ createdAt: -1 });
+
+    if (!Number.isNaN(parsedLimit) && parsedLimit > 0) {
+      articleQuery = articleQuery.limit(parsedLimit);
+    }
+
+    const articles = await articleQuery;
 
     res.json(articles);
   } catch (error) {
