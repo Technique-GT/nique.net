@@ -41,8 +41,7 @@ const mapArticleToPost = (article: ArticleDocument): Post => {
   }
 
   return {
-    id: article._id || "",
-    _id: article._id,
+    id: article._id,
     title: article.title || "",
     slug: article.slug,
     content: article.content,
@@ -62,7 +61,6 @@ const mapArticleToPost = (article: ArticleDocument): Post => {
     desc: normalizedDescription,
     author: authorName,
     category: article.categories?.[0]?.name || "",
-    coverImage: article.featuredImage?.url || "",
   };
 };
 
@@ -246,13 +244,13 @@ export default function Article() {
         <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
           <img
             className="w-full aspect-3/2 object-cover rounded-md"
-            src={article.featuredImage?.url || "https://picsum.photos/900/600"}
-            alt={article.featuredImage?.altText || article.title || "Article featured"}
+            src={article.featuredImage.url || "https://picsum.photos/900/600"}
+            alt={article.featuredImage.altText || article.title || "Article featured"}
           />
-          {(article.featuredImage?.title || article.featuredImage?.caption) && (
+          {(article.featuredImage.title || article.featuredImage.caption) && (
             <figcaption className="w-full flex flex-col sm:flex-row sm:justify-between text-xs text-nique-blue mt-2 space-y-1 sm:space-y-0">
-              <span>{article.featuredImage?.title}</span>
-              <span>{article.featuredImage?.caption}</span>
+              <span>{article.featuredImage.title}</span>
+              <span>{article.featuredImage.caption}</span>
             </figcaption>
           )}
         </figure>

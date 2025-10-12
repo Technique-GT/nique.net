@@ -26,15 +26,15 @@ export interface ArticleMedia {
 }
 
 export interface ArticleDocument {
-    id?: string;
-    title?: string;
-    slug?: string;
-    content?: string;
-    excerpt?: string;
-    authors?: ArticleAuthor[];
-    categories?: ArticleReference[];
-    tags?: ArticleTag[];
-    featuredImage?: ArticleMedia;
+    id: string;
+    title: string;
+    slug: string;
+    content: string;
+    excerpt: string;
+    authors: ArticleAuthor[];
+    categories: ArticleReference[];
+    tags: ArticleTag[];
+    featuredImage: ArticleMedia;
     status?: ArticleStatus;
     isSticky?: boolean;
     allowComments?: boolean;
@@ -50,7 +50,7 @@ export interface Post extends ArticleDocument {
     desc: string;
     author: string;
     category: string;
-    coverImage: string;
+    featuredImage: ArticleMedia;
 }
 
 export interface ArticleBlockProps {

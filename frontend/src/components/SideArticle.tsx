@@ -19,7 +19,7 @@ function SideArticle({ posts, width = '28%', hasBreak = true, hasDesc = false }:
                             
                         </div>
                         <img 
-                            src={post.coverImage} 
+                            src={post.featuredImage.url} 
                             style = {{ width: `${width}` }}
                             className='aspect-square h-auto rounded-md object-cover' />
                     </div>

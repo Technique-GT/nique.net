@@ -56,7 +56,6 @@ const mapArticleToPost = (article: any): Post => {
         desc: normalizedDescription,
         author: authorName,
         category: article.categories?.[0]?.name || '',
-        coverImage: article.featuredImage?.url || '',
     };
 };
 
