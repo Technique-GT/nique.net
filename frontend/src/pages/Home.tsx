@@ -11,54 +11,54 @@ import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 
 const mapArticleToPost = (article: any): Post => {
-  const primaryAuthor = article.authors?.[0]?.user;
+    const primaryAuthor = article.authors?.[0]?.user;
 
-  let authorName = 'Technique Staff';
-  if (primaryAuthor) {
-    if (typeof primaryAuthor === 'string') {
-      authorName = primaryAuthor;
-    } else {
-      const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
-        .filter(Boolean)
-        .join(' ');
+    let authorName = 'Technique Staff';
+    if (primaryAuthor) {
+        if (typeof primaryAuthor === 'string') {
+        authorName = primaryAuthor;
+        } else {
+        const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
+            .filter(Boolean)
+            .join(' ');
 
-      authorName =
-        primaryAuthor.username ||
-        firstAndLast ||
-        primaryAuthor.email ||
-        authorName;
+        authorName =
+            primaryAuthor.username ||
+            firstAndLast ||
+            primaryAuthor.email ||
+            authorName;
+        }
     }
-  }
 
-  const descriptionSource = article.excerpt || article.content || '';
-  const normalizedDescription =
-    typeof descriptionSource === 'string'
-      ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
-      : '';
+    const descriptionSource = article.excerpt || article.content || '';
+    const normalizedDescription =
+        typeof descriptionSource === 'string'
+        ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
+        : '';
 
-  return {
-    id: article._id,
-    title: article.title,
-    slug: article.slug,
-    content: article.content,
-    excerpt: article.excerpt,
-    authors: article.authors || [],
-    categories: article.categories || [],
-    tags: article.tags || [],
-    featuredImage: article.featuredImage,
-    status: article.status,
-    isSticky: article.isSticky,
-    allowComments: article.allowComments,
-    viewCount: article.viewCount,
-    publishedAt: article.publishedAt,
-    updatedBy: article.updatedBy,
-    createdAt: article.createdAt,
-    updatedAt: article.updatedAt,
-    desc: normalizedDescription,
-    author: authorName,
-    category: article.categories?.[0]?.name || '',
-    coverImage: article.featuredImage?.url || '',
-  };
+    return {
+        id: article._id,
+        title: article.title,
+        slug: article.slug,
+        content: article.content,
+        excerpt: article.excerpt,
+        authors: article.authors || [],
+        categories: article.categories || [],
+        tags: article.tags || [],
+        featuredImage: article.featuredImage,
+        status: article.status,
+        isSticky: article.isSticky,
+        allowComments: article.allowComments,
+        viewCount: article.viewCount,
+        publishedAt: article.publishedAt,
+        updatedBy: article.updatedBy,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        desc: normalizedDescription,
+        author: authorName,
+        category: article.categories?.[0]?.name || '',
+        coverImage: article.featuredImage?.url || '',
+    };
 };
 
 function Home() {
@@ -67,6 +67,7 @@ function Home() {
     const [lifeArticles, setLifeArticles] = useState<Post[]>([]);
     const [newsArticles, setNewsArticles] = useState<Post[]>([]);
     const [entertainmentArticles, setEntertainmentArticles] = useState<Post[]>([]);
+    const [opinionArticles, setOpinionArticles] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -89,12 +90,14 @@ function Home() {
                 const lifeCategoryId = findCategoryId(Categories.LIFE);
                 const newsCategoryId = findCategoryId(Categories.NEWS);
                 const entertainmentCategoryId = findCategoryId(Categories.ENTERTAINMENT);
+                const opinionCategoryId = findCategoryId(Categories.OPINION);
 
                 const [
                     recentResponse,
                     lifeResponse,
                     newsResponse,
                     entertainmentResponse,
+                    opinionResponse,
                 ] = await Promise.all([
                     articleService.fetchRecentArticles(5, 'published', controller.signal),
                     lifeCategoryId
@@ -106,6 +109,9 @@ function Home() {
                     entertainmentCategoryId
                         ? articleService.fetchArticlesByCategory(entertainmentCategoryId, 8, controller.signal)
                         : Promise.resolve({ data: [] }),
+                    opinionCategoryId
+                        ? articleService.fetchArticlesByCategory(opinionCategoryId, 5, controller.signal)
+                        : Promise.resolve({ data: [] }),
                 ]);
 
                 if (!isMounted) {
@@ -116,6 +122,7 @@ function Home() {
                 setLifeArticles((lifeResponse.data || []).map(mapArticleToPost));
                 setNewsArticles((newsResponse.data || []).map(mapArticleToPost));
                 setEntertainmentArticles((entertainmentResponse.data || []).map(mapArticleToPost));
+                setOpinionArticles((opinionResponse.data || []).map(mapArticleToPost));
             } catch (err) {
                 if (!isMounted) {
                     return;
@@ -136,15 +143,9 @@ function Home() {
         };
     }, []);
 
-    const sideArticles = useMemo(() => {
-        const candidates = [
-            recentArticles[2],
-            lifeArticles[1],
-            entertainmentArticles[0],
-        ].filter(Boolean) as Post[];
-
-        return candidates.slice(0, 3);
-    }, [recentArticles, lifeArticles, entertainmentArticles]);
+    const sideArticles = useMemo(() => { 
+        return opinionArticles.slice(0, 3);
+    }, [opinionArticles]);
 
     if (isLoading) {
         return (

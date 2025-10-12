@@ -1,33 +1,101 @@
 import { useEffect, useState } from 'react';
+import articleService from '../services/articleService';
 import { Post } from '../types/article';
 import { FaFacebook, FaXTwitter, FaInstagram, FaTiktok, FaLinkedin } from "react-icons/fa6";
 import Navbar from "../components/Navbar";
 import Collage from "../components/Collage";
-import MockAPI from '../services/MockAPI';
 import Spinner from '../components/Spinner';
+
+const mapArticleToPost = (article: any): Post => {
+    const primaryAuthor = article.authors?.[0]?.user;
+
+    let authorName = 'Technique Staff';
+    if (primaryAuthor) {
+        if (typeof primaryAuthor === 'string') {
+        authorName = primaryAuthor;
+        } else {
+        const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
+            .filter(Boolean)
+            .join(' ');
+
+        authorName =
+            primaryAuthor.username ||
+            firstAndLast ||
+            primaryAuthor.email ||
+            authorName;
+        }
+    }
+
+    const descriptionSource = article.excerpt || article.content || '';
+    const normalizedDescription =
+        typeof descriptionSource === 'string'
+        ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
+        : '';
+
+    return {
+        id: article._id,
+        title: article.title,
+        slug: article.slug,
+        content: article.content,
+        excerpt: article.excerpt,
+        authors: article.authors || [],
+        categories: article.categories || [],
+        tags: article.tags || [],
+        featuredImage: article.featuredImage,
+        status: article.status,
+        isSticky: article.isSticky,
+        allowComments: article.allowComments,
+        viewCount: article.viewCount,
+        publishedAt: article.publishedAt,
+        updatedBy: article.updatedBy,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        desc: normalizedDescription,
+        author: authorName,
+        category: article.categories?.[0]?.name || '',
+        coverImage: article.featuredImage?.url || '',
+    };
+};
 
 function About() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [post, setPost] = useState<Post[]>([]);
+    const [recentArticles, setRecentArticles] = useState<Post[]>([]);
 
     useEffect(() => {
-        getPost();
-    }, [])
-
-    const getPost = () => {
-        MockAPI.getPost.then(resp => {
-            const result = resp.data.slice(0, 25).map((item: any) => ({
-                id: item.id,
-                title: item.title,
-                desc: item.summary,
-                author: item.user.first_name + " " + item.user.last_name,
-                category: item.category,
-                coverImage: item.featured_image
-            }));
-            setPost(result);
-            setIsLoading(false);
-        })
-    }
+            let isMounted = true;
+            const controller = new AbortController();
+    
+            const loadArticles = async () => {
+                setIsLoading(true);
+    
+                try {
+                    const [recentResponse] = await Promise.all([
+                        articleService.fetchRecentArticles(5, 'published', controller.signal),
+                    ]);
+    
+                    if (!isMounted) {
+                        return;
+                    }
+    
+                    setRecentArticles((recentResponse.data || []).map(mapArticleToPost));
+                } catch (err) {
+                    if (!isMounted) {
+                        return;
+                    }
+                } finally {
+                    if (isMounted) {
+                        setIsLoading(false);
+                    }
+                }
+            };
+    
+            loadArticles();
+    
+            return () => {
+                isMounted = false;
+                controller.abort();
+            };
+        }, []);
 
     if (isLoading) {
         return (
@@ -45,7 +113,7 @@ function About() {
                 <h4 className="font-bold mb-2 text-2xl text-nique-blue">About Us</h4>
             </div>
 
-            <Collage posts={[post[0], post[1], post[2], post[3], post[4]]} /> {/* collection of best pictures you may want to feature */}
+            <Collage posts={[recentArticles[0], recentArticles[1], recentArticles[2], recentArticles[3], recentArticles[4]]} /> {/* collection of best pictures you may want to feature */}
 
             {/* Mission */}
             <div className='grid grid-cols-1 sm:grid-cols-3 max-w-[1470px] m-auto p-5 gap-x-16'>

@@ -260,7 +260,7 @@ export default function Article() {
         {/* Article Content */}
         <section className="prose prose-lg max-w-3xl mx-auto text-[#1A1E47]">
           {typeof article.content === "string" ? (
-            <div dangerouslySetInnerHTML={{ __html: article.content }} />
+            <p>{ article.content }</p>
           ) : (
             <p>{article.excerpt}</p>
           )}

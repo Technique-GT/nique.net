@@ -1,77 +1,182 @@
-import { useEffect, useState } from 'react'
-import MockAPI from '../services/MockAPI'
-import ArticleBlock from "../components/ArticleBlock"
-import { Post } from '../types/article'
-import VerticalAd from "../components/VerticalAd";
-import MockAd from '../assets/mock_advertisement.jpg';
+import { useEffect, useState } from 'react';
+import articleService from '../services/articleService';
+import ArticleBlock from "../components/ArticleBlock";
+import { Post } from '../types/article';
 import SideArticle from '../components/SideArticle';
-import InstagramEmbed from '../components/InstaEmbed';
-import SmallArticle from '../components/SmallArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import FeaturedStory from '../components/FeaturedStory';
+import SmallArticle from '../components/SmallArticle';
+import { Categories } from '../types/categories';
+
+const mapArticleToPost = (article: any): Post => {
+    const primaryAuthor = article.authors?.[0]?.user;
+
+    let authorName = 'Technique Staff';
+    if (primaryAuthor) {
+        if (typeof primaryAuthor === 'string') {
+        authorName = primaryAuthor;
+        } else {
+        const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
+            .filter(Boolean)
+            .join(' ');
+
+        authorName =
+            primaryAuthor.username ||
+            firstAndLast ||
+            primaryAuthor.email ||
+            authorName;
+        }
+    }
+
+    const descriptionSource = article.excerpt || article.content || '';
+    const normalizedDescription =
+        typeof descriptionSource === 'string'
+        ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
+        : '';
+
+    return {
+        id: article._id || '',
+        title: article.title || '',
+        slug: article.slug,
+        content: article.content,
+        excerpt: article.excerpt,
+        authors: article.authors || [],
+        categories: article.categories || [],
+        tags: article.tags || [],
+        featuredImage: article.featuredImage,
+        status: article.status,
+        isSticky: article.isSticky,
+        allowComments: article.allowComments,
+        viewCount: article.viewCount,
+        publishedAt: article.publishedAt,
+        updatedBy: article.updatedBy,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        desc: normalizedDescription,
+        author: authorName,
+        category: article.categories?.[0]?.name || '',
+        coverImage: article.featuredImage?.url || '',
+    };
+};
 
 function Opinions() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [post, setPost] = useState<Post[]>([]);
+    const [opinionArticles, setOpinionArticles] = useState<Post[]>([]);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        getPost();
-    }, [])
+        let isMounted = true;
+        const controller = new AbortController();
 
-    const getPost = () => {
-        MockAPI.getPost.then(resp => {
-            const result = resp.data.slice(0, 25).map((item: any) => ({
-                id: item.id,
-                title: item.title,
-                desc: item.summary,
-                author: item.user.first_name + " " + item.user.last_name,
-                category: item.category,
-                coverImage: item.featured_image
-            }));
-            setPost(result);
+        const loadArticles = async () => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
+            const categories = categoriesResponse.data || [];
+
+            const opinionCategory = categories.find((category: any) =>
+            category.name?.toLowerCase() === Categories.OPINION.toLowerCase()
+            );
+
+            if (!opinionCategory?._id) {
+            if (!isMounted) return;
+            setOpinionArticles([]);
+            setError('Opinion category not found.');
+            return;
+            }
+
+            const opinionResponse = await articleService.fetchArticlesByCategory(
+            opinionCategory._id,
+            undefined,
+            controller.signal
+            );
+
+            if (!isMounted) {
+            return;
+            }
+
+            setOpinionArticles((opinionResponse.data || []).map(mapArticleToPost));
+        } catch (err) {
+            if (!isMounted) {
+            return;
+            }
+            setError('Unable to load articles. Please try again later.');
+        } finally {
+            if (isMounted) {
             setIsLoading(false);
-        })
-    }
+            }
+        }
+        };
+
+        loadArticles();
+
+        return () => {
+        isMounted = false;
+        controller.abort();
+        };
+    }, []);
 
     if (isLoading) {
         return (
+        <div className="flex justify-center items-center h-screen">
+            <Spinner />
+        </div>
+        );
+    }
+
+    if (error) {
+        return (
+        <>
+            <Navbar />
             <div className="flex justify-center items-center h-screen">
-                <Spinner />
+            <p className="text-center text-lg text-red-600">{error}</p>
             </div>
+        </>
         );
     }
 
     return (
         <>
-            <Navbar />
+        <Navbar />
 
-            <div className='max-w-[1470px] m-auto p-5 flex flex-col gap-8'>
-                <div className='grid grid-cols-1 lg:grid-cols-[70%_30%] gap-4'>
-                        <FeaturedStory post={post[11]} height='670px' />
-                        <div className='flex flex-col gap-4'>
-            
-                        <div className='flex flex-col gap-4'>
-                        <SideArticle posts={[post[3], post[10], post[16], post[2]]} width='80px' hasDesc = { true }/>
-                        </div>
-                     
-                            
-                        </div>
-                    </div>
-                    <hr/>
-                    <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
-                        <ArticleBlock post={post[4]} height='300px' />
-                        <ArticleBlock post={post[5]} height='300px' />
-                        <ArticleBlock post={post[6]} height='300px' />
-                        <ArticleBlock post={post[7]} height='300px' />
-                
-                        
-                    </div>
-                   
-                </div>
-           
+        <div className='max-w-[1470px] m-auto p-5 flex flex-col gap-8'>
+            <div className='grid grid-cols-1 lg:grid-cols-[70%_30%] gap-4'>
+            {opinionArticles[0] && <FeaturedStory post={opinionArticles[0]} height='670px' />}
+            <div className='flex flex-col gap-4'>
+                {(() => {
+                const posts = opinionArticles.slice(1, 5);
+                return posts.length ? (
+                    <SideArticle posts={posts} width='80px' hasDesc={true}/>
+                ) : null;
+                })()}
+            </div>
+            </div>
+            <hr/>
+            <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
+            {opinionArticles.slice(5, 9).map((article) => (
+                <ArticleBlock key={article.id} post={article} height='300px' />
+            ))}
+            </div>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            {(() => {
+                const posts = opinionArticles.slice(9, 11);
+                return posts.length ? (
+                <SmallArticle posts={posts} direction="left" />
+                ) : null;
+            })()}
+            {(() => {
+                const posts = opinionArticles.slice(11, 13);
+                return posts.length ? (
+                <SmallArticle posts={posts} direction="left" />
+                ) : null;
+            })()}
+            </div>
+        </div>
         </>
     )
 }
 
-export default Opinions
+export default Opinions;
