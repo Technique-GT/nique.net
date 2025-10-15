@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import articleService from '../services/articleService';
 import ArticleBlock from "../components/ArticleBlock";
 import { Post } from '../types/article';
@@ -10,115 +10,69 @@ import Navbar from '../components/Navbar';
 import VerticalAd from '../components/VerticalAd';
 import InstaEmbed from '../components/InstaEmbed';
 import Spinner from '../components/Spinner';
+import { mapArticleToPost, RawArticle } from '../utils/articleUtils';
+import { useAsyncData } from '../hooks/useAsyncData';
 
-const mapArticleToPost = (article: any): Post => {
-    const primaryAuthor = article.authors?.[0]?.user;
+interface LifeArticlesData {
+    lifeArticles: Post[];
+    techFashion: Post[];
+}
 
-    let authorName = 'Technique Staff';
-    if (primaryAuthor) {
-        if (typeof primaryAuthor === 'string') {
-        authorName = primaryAuthor;
-        } else {
-        const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
-            .filter(Boolean)
-            .join(' ');
-
-        authorName =
-            primaryAuthor.username ||
-            firstAndLast ||
-            primaryAuthor.email ||
-            authorName;
-        }
-    }
-
-    const descriptionSource = article.excerpt || article.content || '';
-    const normalizedDescription =
-        typeof descriptionSource === 'string'
-        ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
-        : '';
-
-    return {
-        id: article._id,
-        title: article.title,
-        slug: article.slug,
-        content: article.content,
-        excerpt: article.excerpt,
-        authors: article.authors || [],
-        categories: article.categories || [],
-        tags: article.tags || [],
-        featuredImage: article.featuredImage,
-        status: article.status,
-        isSticky: article.isSticky,
-        allowComments: article.allowComments,
-        viewCount: article.viewCount,
-        publishedAt: article.publishedAt,
-        updatedBy: article.updatedBy,
-        createdAt: article.createdAt,
-        updatedAt: article.updatedAt,
-        desc: normalizedDescription,
-        author: authorName,
-        category: article.categories?.[0]?.name || '',
-    };
+const emptyLifeData: LifeArticlesData = {
+    lifeArticles: [],
+    techFashion: [],
 };
 
 function Life() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [lifeArticles, setLifeArticles] = useState<Post[]>([]);
-    const [error, setError] = useState<string | null>(null);
+    const loadLifeArticles = useCallback(async (signal: AbortSignal): Promise<LifeArticlesData> => {
+        const categoriesResponse = await articleService.fetchCategories(50, signal);
+        const categories: Array<{ _id?: string; name?: string }> = categoriesResponse.data || [];
 
-    useEffect(() => {
-        let isMounted = true;
-        const controller = new AbortController();
-    
-        const loadArticles = async () => {
-            setIsLoading(true);
-            setError(null);
+        const lifeCategory = categories.find((category) =>
+            category.name?.toLowerCase() === Categories.LIFE.toLowerCase()
+        );
 
-            try {
-                const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
-                const categories = categoriesResponse.data || [];
+        if (!lifeCategory?._id) {
+            throw new Error('Life category not found.');
+        }
 
-                const lifeCategory = categories.find((category: any) =>
-                    category.name?.toLowerCase() === Categories.LIFE.toLowerCase()
-                );
+        const lifeResponse = await articleService.fetchArticlesByCategory(
+            lifeCategory._id,
+            undefined,
+            signal
+        );
 
-                if (!lifeCategory?._id) {
-                    if (!isMounted) return;
-                    setLifeArticles([]);
-                    setError('Life category not found.');
-                    return;
-                }
+        const articles = (lifeResponse.data || []) as RawArticle[];
 
-                const lifeResponse = await articleService.fetchArticlesByCategory(
-                    lifeCategory._id,
-                    undefined,
-                    controller.signal
-                );
+        const filterBySubcategory = (items: RawArticle[], subcategory: string) =>
+            items.filter((article) =>
+                Array.isArray(article.subcategories) &&
+                article.subcategories.some(
+                    (sub) =>
+                        typeof sub?.value === 'string' &&
+                        sub.value.toLowerCase() === subcategory
+                )
+            );
 
-                if (!isMounted) {
-                    return;
-                }
+        const mapArticles = (items: RawArticle[]) => items.map((article) => mapArticleToPost(article));
 
-                setLifeArticles((lifeResponse.data || []).map(mapArticleToPost));
-            } catch (err) {
-                if (!isMounted) {
-                    return;
-                }
-                setError('Unable to load articles. Please try again later.');
-            } finally {
-                if (isMounted) {
-                    setIsLoading(false);
-                }
-            }
-        };
-    
-        loadArticles();
-    
-        return () => {
-            isMounted = false;
-            controller.abort();
+        return {
+            lifeArticles: mapArticles(articles),
+            techFashion: mapArticles(filterBySubcategory(articles, 'tech fashion')),
         };
     }, []);
+
+    const {
+        data: {
+            lifeArticles,
+            techFashion,
+        },
+        isLoading,
+        error,
+    } = useAsyncData<LifeArticlesData>(loadLifeArticles, {
+        initialData: emptyLifeData,
+        errorMessage: 'Unable to load articles. Please try again later.',
+    });
     
     if (isLoading) {
         return (
@@ -167,7 +121,7 @@ function Life() {
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Tech Fashion</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
-                        {lifeArticles.slice(4, 8).map((article) => (
+                        {techFashion.slice(0, 4).map((article) => (
                             <ArticleBlock key={article.id} post={article} height='230px' />
                         ))}
                     </div>

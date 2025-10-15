@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback } from 'react'
 import articleService from '../services/articleService';
 import { Categories } from '../types/categories';
 import ArticleBlock from "../components/ArticleBlock"
@@ -10,114 +10,76 @@ import InstagramEmbed from '../components/InstaEmbed';
 import SmallArticle from '../components/SmallArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
+import { mapArticleToPost, RawArticle } from '../utils/articleUtils';
+import { useAsyncData } from '../hooks/useAsyncData';
 
-const mapArticleToPost = (article: any): Post => {
-    const primaryAuthor = article.authors?.[0]?.user;
+interface SportsArticlesData {
+    sportsArticles: Post[];
+    techSports: Post[];
+    usSports: Post[];
+    seasonScoreboard: Post[];
+}
 
-    let authorName = 'Technique Staff';
-    if (primaryAuthor) {
-        if (typeof primaryAuthor === 'string') {
-        authorName = primaryAuthor;
-        } else {
-        const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
-            .filter(Boolean)
-            .join(' ');
-
-        authorName =
-            primaryAuthor.username ||
-            firstAndLast ||
-            primaryAuthor.email ||
-            authorName;
-        }
-    }
-
-    const descriptionSource = article.excerpt || article.content || '';
-    const normalizedDescription =
-        typeof descriptionSource === 'string'
-        ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
-        : '';
-
-    return {
-        id: article._id || '',
-        title: article.title || '',
-        slug: article.slug,
-        content: article.content,
-        excerpt: article.excerpt,
-        authors: article.authors || [],
-        categories: article.categories || [],
-        tags: article.tags || [],
-        featuredImage: article.featuredImage,
-        status: article.status,
-        isSticky: article.isSticky,
-        allowComments: article.allowComments,
-        viewCount: article.viewCount,
-        publishedAt: article.publishedAt,
-        updatedBy: article.updatedBy,
-        createdAt: article.createdAt,
-        updatedAt: article.updatedAt,
-        desc: normalizedDescription,
-        author: authorName,
-        category: article.categories?.[0]?.name || '',
-    };
+const emptySportsData: SportsArticlesData = {
+    sportsArticles: [],
+    techSports: [],
+    usSports: [],
+    seasonScoreboard: [],
 };
 
 function Sports() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [sportsArticles, setSportsArticles] = useState<Post[]>([]);
-    const [error, setError] = useState<string | null>(null);
+    const loadSportsArticles = useCallback(async (signal: AbortSignal): Promise<SportsArticlesData> => {
+        const categoriesResponse = await articleService.fetchCategories(50, signal);
+        const categories: Array<{ _id?: string; name?: string }> = categoriesResponse.data || [];
+        const sportsCategory = categories.find((category) =>
+            category.name?.toLowerCase() === Categories.SPORTS.toLowerCase()
+        );
 
-        useEffect(() => {
-        let isMounted = true;
-        const controller = new AbortController();
-    
-        const loadArticles = async () => {
-            setIsLoading(true);
-            setError(null);
+        if (!sportsCategory?._id) {
+            throw new Error('Sports category not found.');
+        }
 
-            try {
-                const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
-                const categories = categoriesResponse.data || [];
-                const sportsCategory = categories.find((category: any) =>
-                    category.name?.toLowerCase() === Categories.SPORTS.toLowerCase()
-                );
+        const sportsResponse = await articleService.fetchArticlesByCategory(
+            sportsCategory._id,
+            undefined,
+            signal
+        );
 
-                if (!sportsCategory?._id) {
-                    if (!isMounted) return;
-                    setSportsArticles([]);
-                    setError('Sports category not found.');
-                    return;
-                }
+        const articles = (sportsResponse.data || []) as RawArticle[];
 
-                const sportsResponse = await articleService.fetchArticlesByCategory(
-                    sportsCategory._id,
-                    undefined,
-                    controller.signal
-                );
+        const filterBySubcategory = (items: RawArticle[], subcategory: string) =>
+            items.filter((article) =>
+                Array.isArray(article.subcategories) &&
+                article.subcategories.some(
+                    (sub) =>
+                        typeof sub?.value === 'string' &&
+                        sub.value.toLowerCase() === subcategory
+                )
+            );
 
-                if (!isMounted) {
-                    return;
-                }
+        const mapArticles = (items: RawArticle[]) => items.map((article) => mapArticleToPost(article));
 
-                setSportsArticles((sportsResponse.data || []).map(mapArticleToPost));
-            } catch (err) {
-                if (!isMounted) {
-                    return;
-                }
-                setError('Unable to load articles. Please try again later.');
-            } finally {
-                if (isMounted) {
-                    setIsLoading(false);
-                }
-            }
-        };
-    
-        loadArticles();
-    
-        return () => {
-            isMounted = false;
-            controller.abort();
+        return {
+            sportsArticles: mapArticles(articles),
+            techSports: mapArticles(filterBySubcategory(articles, 'tech sports')),
+            usSports: mapArticles(filterBySubcategory(articles, 'us sports')),
+            seasonScoreboard: mapArticles(filterBySubcategory(articles, 'season scoreboard')),
         };
     }, []);
+
+    const {
+        data: {
+            sportsArticles,
+            techSports,
+            usSports,
+            seasonScoreboard,
+        },
+        isLoading,
+        error,
+    } = useAsyncData<SportsArticlesData>(loadSportsArticles, {
+        initialData: emptySportsData,
+        errorMessage: 'Unable to load articles. Please try again later.',
+    });
     
     if (isLoading) {
         return (
@@ -161,12 +123,12 @@ function Sports() {
                     <div className='grid grid-cols-1 lg:grid-cols-[48%_auto] gap-4'>
                         <div className='w-full'>
                             {(() => {
-                                const posts = sportsArticles.slice(5, 9);
+                                const posts = techSports.slice(0, 4);
                                 return posts.length ? <SmallArticle posts={posts} direction="left"/> : null;
                             })()}
                         </div>
                         <div className='grid gap-4 grid-cols-1 sm:grid-cols-2'>
-                            {sportsArticles.slice(9, 13).map((article) => (
+                            {techSports.slice(4, 8).map((article) => (
                                 <ArticleBlock key={article.id} post={article} height='190px' />
                             ))}
                         </div>
@@ -176,7 +138,7 @@ function Sports() {
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">U.S. Sports</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
-                        {sportsArticles.slice(13, 19).map((article) => (
+                        {usSports.slice(0, 4).map((article) => (
                             <ArticleBlock key={article.id} post={article} height='180px' />
                         ))}
                     </div>
@@ -189,7 +151,7 @@ function Sports() {
                     <hr className='my-3 border-nique-blue' />
                     <h4 className="text-nique-blue font-bold mb-4 text-2xl">Season Scoreboard</h4>
                     {(() => {
-                        const posts = sportsArticles.slice(19, 24);
+                        const posts = seasonScoreboard.slice(0, 5);
                         return posts.length ? <SideArticle posts={posts} /> : null;
                     })()}
                 </div>

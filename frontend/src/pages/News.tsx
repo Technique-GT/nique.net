@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import articleService from '../services/articleService';
 import ArticleBlock from "../components/ArticleBlock";
 import { Post } from '../types/article';
@@ -11,115 +11,83 @@ import SmallArticle from '../components/SmallArticle';
 import VerticalAd from '../components/VerticalAd';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
+import { mapArticleToPost, RawArticle } from '../utils/articleUtils';
+import { useAsyncData } from '../hooks/useAsyncData';
 
-const mapArticleToPost = (article: any): Post => {
-    const primaryAuthor = article.authors?.[0]?.user;
+interface NewsArticlesData {
+    news: Post[];
+    atlantaNews: Post[];
+    usNews: Post[];
+    entertainmentNews: Post[];
+}
 
-    let authorName = 'Technique Staff';
-    if (primaryAuthor) {
-        if (typeof primaryAuthor === 'string') {
-        authorName = primaryAuthor;
-        } else {
-        const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
-            .filter(Boolean)
-            .join(' ');
-
-        authorName =
-            primaryAuthor.username ||
-            firstAndLast ||
-            primaryAuthor.email ||
-            authorName;
-        }
-    }
-
-    const descriptionSource = article.content || '';
-    const normalizedDescription =
-        typeof descriptionSource === 'string'
-        ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220) + '...'
-        : '';
-
-    return {
-        id: article._id || '',
-        title: article.title || '',
-        slug: article.slug,
-        content: article.content,
-        excerpt: article.excerpt,
-        authors: article.authors || [],
-        categories: article.categories || [],
-        tags: article.tags || [],
-        featuredImage: article.featuredImage,
-        status: article.status,
-        isSticky: article.isSticky,
-        allowComments: article.allowComments,
-        viewCount: article.viewCount,
-        publishedAt: article.publishedAt,
-        updatedBy: article.updatedBy,
-        createdAt: article.createdAt,
-        updatedAt: article.updatedAt,
-        desc: normalizedDescription,
-        author: authorName,
-        category: article.categories?.[0]?.name || '',
-    };
+const emptyNewsArticles: NewsArticlesData = {
+    news: [],
+    atlantaNews: [],
+    usNews: [],
+    entertainmentNews: [],
 };
 
 function News() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [newsArticles, setNewsArticles] = useState<Post[]>([]);
-    const [error, setError] = useState<string | null>(null);
+    const loadNewsArticles = useCallback(async (signal: AbortSignal): Promise<NewsArticlesData> => {
+        const categoriesResponse = await articleService.fetchCategories(50, signal);
+        const categories: Array<{ _id?: string; name?: string }> = categoriesResponse.data || [];
 
-    useEffect(() => {
-        let isMounted = true;
-        const controller = new AbortController();
-    
-        const loadArticles = async () => {
-            setIsLoading(true);
-            setError(null);
+        const newsCategory = categories.find((category) =>
+            category.name?.toLowerCase() === Categories.NEWS.toLowerCase()
+        );
 
-            try {
-                const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
-                const categories = categoriesResponse.data || [];
+        if (!newsCategory?._id) {
+            throw new Error('News category not found.');
+        }
 
-                const newsCategory = categories.find((category: any) =>
-                    category.name?.toLowerCase() === Categories.NEWS.toLowerCase()
-                );
+        const newsResponse = await articleService.fetchArticlesByCategory(
+            newsCategory._id,
+            undefined,
+            signal
+        );
 
-                if (!newsCategory?._id) {
-                    if (!isMounted) return;
-                    setNewsArticles([]);
-                    setError('News category not found.');
-                    return;
-                }
+        const filterBySubcategory = (articles: RawArticle[], subcategory: string) =>
+            articles.filter((article) =>
+                Array.isArray(article.subcategories) &&
+                article.subcategories.some(
+                    (sub) =>
+                        typeof sub?.value === 'string' &&
+                        sub.value.toLowerCase() === subcategory
+                )
+            );
 
-                const newsResponse = await articleService.fetchArticlesByCategory(
-                    newsCategory._id,
-                    undefined,
-                    controller.signal
-                );
+        const allNewsArticles = (newsResponse.data || []) as RawArticle[];
 
-                if (!isMounted) {
-                    return;
-                }
+        const mapWithEllipsis = (items: RawArticle[]) =>
+            items.map((article) =>
+                mapArticleToPost(article, {
+                    descriptionFields: ['content'],
+                    appendEllipsis: true,
+                })
+            );
 
-                setNewsArticles((newsResponse.data || []).map(mapArticleToPost));
-            } catch (err) {
-                if (!isMounted) {
-                    return;
-                }
-                setError('Unable to load articles. Please try again later.');
-            } finally {
-                if (isMounted) {
-                    setIsLoading(false);
-                }
-            }
-        };
-    
-        loadArticles();
-    
-        return () => {
-            isMounted = false;
-            controller.abort();
+        return {
+            news: mapWithEllipsis(allNewsArticles),
+            atlantaNews: mapWithEllipsis(filterBySubcategory(allNewsArticles, 'atlanta news')),
+            usNews: mapWithEllipsis(filterBySubcategory(allNewsArticles, 'us news')),
+            entertainmentNews: mapWithEllipsis(filterBySubcategory(allNewsArticles, 'entertainment')),
         };
     }, []);
+
+    const {
+        data: {
+            news: newsArticles,
+            atlantaNews,
+            usNews,
+            entertainmentNews,
+        },
+        isLoading,
+        error,
+    } = useAsyncData<NewsArticlesData>(loadNewsArticles, {
+        initialData: emptyNewsArticles,
+        errorMessage: 'Unable to load articles. Please try again later.',
+    });
     
     if (isLoading) {
         return (
@@ -155,25 +123,25 @@ function News() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Atlanta News</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='col-span-2'>
-                            {newsArticles[2] && <ArticleBlock post={newsArticles[2]} height='460px' />}
+                            {atlantaNews[0] && <ArticleBlock post={atlantaNews[0]} height='460px' />}
                         </div>
                         <div className='grid col-span-2 gap-4'>
-                            {newsArticles[3] && <ArticleBlock post={newsArticles[3]} height='222px' />}
-                            {newsArticles[4] && <ArticleBlock post={newsArticles[4]} height='222px' />}
+                            {atlantaNews[1] && <ArticleBlock post={atlantaNews[1]} height='222px' />}
+                            {atlantaNews[2] && <ArticleBlock post={atlantaNews[2]} height='222px' />}
                             <div className='col-span-2'>
-                                {newsArticles[5] && <ArticleBlock post={newsArticles[5]} height='222px' />}
+                                {atlantaNews[3] && <ArticleBlock post={atlantaNews[3]} height='222px' />}
                             </div>
                         </div>
                         <div className='col-span-2'>
                             {(() => {
-                                const posts = newsArticles.slice(6, 8);
+                                const posts = atlantaNews.slice(6, 8);
                                 return posts.length ? <SmallArticle posts={posts} direction='left'/> : null;
                             })()}
                         </div>
                         <hr className="block lg:hidden col-span-2" />
                         <div className='col-span-2'>
                             {(() => {
-                                const posts = newsArticles.slice(8, 10);
+                                const posts = atlantaNews.slice(8, 10);
                                 return posts.length ? <SmallArticle posts={posts} direction='left'/> : null;
                             })()}
                         </div>
@@ -184,13 +152,13 @@ function News() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">U.S. News</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='grid grid-cols-2 gap-4 col-span-2'>
-                            {newsArticles.slice(10, 14).map((article) => (
+                            {usNews.slice(0, 4).map((article) => (
                                 <ArticleBlock key={article.id} post={article} height='222px' />
                             ))}
                         </div>
                         <div className='grid col-span-2 gap-4'>
                             {(() => {
-                                const posts = newsArticles.slice(14, 18);
+                                const posts = usNews.slice(14, 18);
                                 return posts.length ? <SideArticle posts={posts} width='18%'/> : null;
                             })()}
                         </div>
@@ -200,7 +168,7 @@ function News() {
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.ENTERTAINMENT}</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
-                        {newsArticles.slice(18, 24).map((article) => (
+                        {entertainmentNews.slice(0, 4).map((article) => (
                             <ArticleBlock key={article.id} post={article} height='230px' />
                         ))}
                     </div>

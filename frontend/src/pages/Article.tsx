@@ -4,7 +4,6 @@ import Navbar from "../components/Navbar";
 import ArticleBlock from "../components/ArticleBlock";
 import Comment from "../components/Comment";
 import Spinner from "../components/Spinner";
-import { FaRegThumbsDown, FaRegThumbsUp } from "react-icons/fa";
 import articleService from "../services/articleService";
 import { ArticleDocument, Post } from "../types/article";
 
@@ -41,7 +40,7 @@ const mapArticleToPost = (article: ArticleDocument): Post => {
   }
 
   return {
-    id: article._id,
+    id: article.id,
     title: article.title || "",
     slug: article.slug,
     content: article.content,
@@ -101,7 +100,7 @@ export default function Article() {
           );
 
           const mappedRelated = (relatedResponse.data as ArticleDocument[])
-            .filter((item) => item._id !== fetchedArticle._id)
+            .filter((item) => item.id !== fetchedArticle.id)
             .map(mapArticleToPost);
 
           setRelatedArticles(mappedRelated);
@@ -293,19 +292,17 @@ export default function Article() {
           {article.allowComments ? (
             <>
               <div className="grid gap-4">
-                {comments.slice(0, numCommentsToView).map((comment) => (
+                {comments.slice(0, numCommentsToView).map((com) => (
                   <Comment
-                    key={comment._id}
-                    name={comment.author?.name || "Reader"}
+                    key={com._id}
+                    name={com.author?.name || "Reader"}
                     imageURL={
-                      comment.author?.avatar || "https://picsum.photos/seed/comment/80"
+                      com.author?.avatar || "https://picsum.photos/seed/comment/80"
                     }
-                    comment={comment.content}
-                    createdAt={new Date(comment.createdAt).toLocaleString()}
-                    thumbsDown={comment.thumbsDown ?? 0}
-                    thumbsUp={comment.thumbsUp ?? 0}
-                    iconUp={<FaRegThumbsUp />}
-                    iconDown={<FaRegThumbsDown />}
+                    content={com.content}
+                    createdAt={new Date(com.createdAt).toLocaleString()}
+                    thumbsDown={com.thumbsDown ?? 0}
+                    thumbsUp={com.thumbsUp ?? 0}
                   />
                 ))}
               </div>
