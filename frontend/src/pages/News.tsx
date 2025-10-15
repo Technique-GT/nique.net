@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
 import ArticleBlock from "../components/ArticleBlock";
 import { Post } from '../types/article';
@@ -11,83 +11,134 @@ import SmallArticle from '../components/SmallArticle';
 import VerticalAd from '../components/VerticalAd';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
-import { mapArticleToPost, RawArticle } from '../utils/articleUtils';
-import { useAsyncData } from '../hooks/useAsyncData';
 
-interface NewsArticlesData {
-    news: Post[];
-    atlantaNews: Post[];
-    usNews: Post[];
-    entertainmentNews: Post[];
-}
+const mapArticleToPost = (article: any): Post => {
+    const primaryAuthor = article.authors?.[0]?.user;
 
-const emptyNewsArticles: NewsArticlesData = {
-    news: [],
-    atlantaNews: [],
-    usNews: [],
-    entertainmentNews: [],
+    let authorName = 'Technique Staff';
+    if (primaryAuthor) {
+        if (typeof primaryAuthor === 'string') {
+        authorName = primaryAuthor;
+        } else {
+        const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
+            .filter(Boolean)
+            .join(' ');
+
+        authorName =
+            primaryAuthor.username ||
+            firstAndLast ||
+            primaryAuthor.email ||
+            authorName;
+        }
+    }
+
+    const descriptionSource = article.content || '';
+    const normalizedDescription =
+        typeof descriptionSource === 'string'
+        ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220) + '...'
+        : '';
+
+    return {
+        id: article._id || '',
+        title: article.title || '',
+        slug: article.slug,
+        content: article.content,
+        excerpt: article.excerpt,
+        authors: article.authors || [],
+        categories: article.categories || [],
+        tags: article.tags || [],
+        featuredImage: article.featuredImage,
+        status: article.status,
+        isSticky: article.isSticky,
+        allowComments: article.allowComments,
+        viewCount: article.viewCount,
+        publishedAt: article.publishedAt,
+        updatedBy: article.updatedBy,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        desc: normalizedDescription,
+        author: authorName,
+        category: article.categories?.[0]?.name || '',
+    };
 };
 
 function News() {
-    const loadNewsArticles = useCallback(async (signal: AbortSignal): Promise<NewsArticlesData> => {
-        const categoriesResponse = await articleService.fetchCategories(50, signal);
-        const categories: Array<{ _id?: string; name?: string }> = categoriesResponse.data || [];
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [newsArticles, setNewsArticles] = useState<Post[]>([]);
+    const [atlantaNews, setAtlantaNews] = useState<Post[]>([]);
+    const [usNews, setUsNews] = useState<Post[]>([]);
+    const [entertainmentNews, setEntertainmentNews] = useState<Post[]>([]);
+    const [error, setError] = useState<string | null>(null);
 
-        const newsCategory = categories.find((category) =>
-            category.name?.toLowerCase() === Categories.NEWS.toLowerCase()
-        );
+    useEffect(() => {
+        let isMounted = true;
+        const controller = new AbortController();
+    
+        const loadArticles = async () => {
+            setIsLoading(true);
+            setError(null);
 
-        if (!newsCategory?._id) {
-            throw new Error('News category not found.');
-        }
+            try {
+                const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
+                const categories = categoriesResponse.data || [];
 
-        const newsResponse = await articleService.fetchArticlesByCategory(
-            newsCategory._id,
-            undefined,
-            signal
-        );
+                const newsCategory = categories.find((category: any) =>
+                    category.name?.toLowerCase() === Categories.NEWS.toLowerCase()
+                );
 
-        const filterBySubcategory = (articles: RawArticle[], subcategory: string) =>
-            articles.filter((article) =>
-                Array.isArray(article.subcategories) &&
-                article.subcategories.some(
-                    (sub) =>
-                        typeof sub?.value === 'string' &&
-                        sub.value.toLowerCase() === subcategory
-                )
-            );
+                if (!newsCategory?._id) {
+                    if (!isMounted) return;
+                    setNewsArticles([]);
+                    setError('News category not found.');
+                    return;
+                }
 
-        const allNewsArticles = (newsResponse.data || []) as RawArticle[];
+                const newsResponse = await articleService.fetchArticlesByCategory(
+                    newsCategory._id,
+                    undefined,
+                    controller.signal
+                );
 
-        const mapWithEllipsis = (items: RawArticle[]) =>
-            items.map((article) =>
-                mapArticleToPost(article, {
-                    descriptionFields: ['content'],
-                    appendEllipsis: true,
-                })
-            );
+                const filterBySubcategory = (articles: any[], subcategory: string) =>
+                    articles.filter((article: any) =>
+                        Array.isArray(article.subcategories) &&
+                        article.subcategories.some(
+                            (sub: any) =>
+                                typeof sub?.value === 'string' &&
+                                sub.value.toLowerCase() === subcategory
+                        )
+                    );
 
-        return {
-            news: mapWithEllipsis(allNewsArticles),
-            atlantaNews: mapWithEllipsis(filterBySubcategory(allNewsArticles, 'atlanta news')),
-            usNews: mapWithEllipsis(filterBySubcategory(allNewsArticles, 'us news')),
-            entertainmentNews: mapWithEllipsis(filterBySubcategory(allNewsArticles, 'entertainment')),
+                const allNewsArticles = newsResponse.data || [];
+
+                setAtlantaNews(filterBySubcategory(allNewsArticles, 'atlanta news').map(mapArticleToPost));
+                setUsNews(filterBySubcategory(allNewsArticles, 'us news').map(mapArticleToPost));
+                setEntertainmentNews(filterBySubcategory(allNewsArticles, 'entertainment').map(mapArticleToPost));
+
+                if (!isMounted) {
+                    return;
+                }
+
+                setNewsArticles(allNewsArticles.map(mapArticleToPost));
+            } catch (err) {
+                if (!isMounted) {
+                    return;
+                }
+                setError('Unable to load articles. Please try again later.');
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                }
+            }
+        };
+    
+        loadArticles();
+    
+        return () => {
+            isMounted = false;
+            controller.abort();
         };
     }, []);
-
-    const {
-        data: {
-            news: newsArticles,
-            atlantaNews,
-            usNews,
-            entertainmentNews,
-        },
-        isLoading,
-        error,
-    } = useAsyncData<NewsArticlesData>(loadNewsArticles, {
-        initialData: emptyNewsArticles,
-        errorMessage: 'Unable to load articles. Please try again later.',
-    });
     
     if (isLoading) {
         return (

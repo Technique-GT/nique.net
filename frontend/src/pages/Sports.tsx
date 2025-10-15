@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import articleService from '../services/articleService';
 import { Categories } from '../types/categories';
 import ArticleBlock from "../components/ArticleBlock"
@@ -10,76 +10,133 @@ import InstagramEmbed from '../components/InstaEmbed';
 import SmallArticle from '../components/SmallArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
-import { mapArticleToPost, RawArticle } from '../utils/articleUtils';
-import { useAsyncData } from '../hooks/useAsyncData';
 
-interface SportsArticlesData {
-    sportsArticles: Post[];
-    techSports: Post[];
-    usSports: Post[];
-    seasonScoreboard: Post[];
-}
+const mapArticleToPost = (article: any): Post => {
+    const primaryAuthor = article.authors?.[0]?.user;
 
-const emptySportsData: SportsArticlesData = {
-    sportsArticles: [],
-    techSports: [],
-    usSports: [],
-    seasonScoreboard: [],
+    let authorName = 'Technique Staff';
+    if (primaryAuthor) {
+        if (typeof primaryAuthor === 'string') {
+        authorName = primaryAuthor;
+        } else {
+        const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
+            .filter(Boolean)
+            .join(' ');
+
+        authorName =
+            primaryAuthor.username ||
+            firstAndLast ||
+            primaryAuthor.email ||
+            authorName;
+        }
+    }
+
+    const descriptionSource = article.excerpt || article.content || '';
+    const normalizedDescription =
+        typeof descriptionSource === 'string'
+        ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
+        : '';
+
+    return {
+        id: article._id || '',
+        title: article.title || '',
+        slug: article.slug,
+        content: article.content,
+        excerpt: article.excerpt,
+        authors: article.authors || [],
+        categories: article.categories || [],
+        tags: article.tags || [],
+        featuredImage: article.featuredImage,
+        status: article.status,
+        isSticky: article.isSticky,
+        allowComments: article.allowComments,
+        viewCount: article.viewCount,
+        publishedAt: article.publishedAt,
+        updatedBy: article.updatedBy,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        desc: normalizedDescription,
+        author: authorName,
+        category: article.categories?.[0]?.name || '',
+    };
 };
 
 function Sports() {
-    const loadSportsArticles = useCallback(async (signal: AbortSignal): Promise<SportsArticlesData> => {
-        const categoriesResponse = await articleService.fetchCategories(50, signal);
-        const categories: Array<{ _id?: string; name?: string }> = categoriesResponse.data || [];
-        const sportsCategory = categories.find((category) =>
-            category.name?.toLowerCase() === Categories.SPORTS.toLowerCase()
-        );
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [sportsArticles, setSportsArticles] = useState<Post[]>([]);
+    const [techSports, setTechSports] = useState<Post[]>([]);
+    const [usSports, setUsSports] = useState<Post[]>([]);
+    const [seasonScoreboard, setSeasonScoreboard] = useState<Post[]>([]);
+    const [error, setError] = useState<string | null>(null);
 
-        if (!sportsCategory?._id) {
-            throw new Error('Sports category not found.');
-        }
+        useEffect(() => {
+        let isMounted = true;
+        const controller = new AbortController();
+    
+        const loadArticles = async () => {
+            setIsLoading(true);
+            setError(null);
 
-        const sportsResponse = await articleService.fetchArticlesByCategory(
-            sportsCategory._id,
-            undefined,
-            signal
-        );
+            try {
+                const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
+                const categories = categoriesResponse.data || [];
+                const sportsCategory = categories.find((category: any) =>
+                    category.name?.toLowerCase() === Categories.SPORTS.toLowerCase()
+                );
 
-        const articles = (sportsResponse.data || []) as RawArticle[];
+                if (!sportsCategory?._id) {
+                    if (!isMounted) return;
+                    setSportsArticles([]);
+                    setError('Sports category not found.');
+                    return;
+                }
 
-        const filterBySubcategory = (items: RawArticle[], subcategory: string) =>
-            items.filter((article) =>
-                Array.isArray(article.subcategories) &&
-                article.subcategories.some(
-                    (sub) =>
-                        typeof sub?.value === 'string' &&
-                        sub.value.toLowerCase() === subcategory
-                )
-            );
+                const sportsResponse = await articleService.fetchArticlesByCategory(
+                    sportsCategory._id,
+                    undefined,
+                    controller.signal
+                );
 
-        const mapArticles = (items: RawArticle[]) => items.map((article) => mapArticleToPost(article));
 
-        return {
-            sportsArticles: mapArticles(articles),
-            techSports: mapArticles(filterBySubcategory(articles, 'tech sports')),
-            usSports: mapArticles(filterBySubcategory(articles, 'us sports')),
-            seasonScoreboard: mapArticles(filterBySubcategory(articles, 'season scoreboard')),
+                const filterBySubcategory = (articles: any[], subcategory: string) =>
+                    articles.filter((article: any) =>
+                        Array.isArray(article.subcategories) &&
+                        article.subcategories.some(
+                            (sub: any) =>
+                                typeof sub?.value === 'string' &&
+                                sub.value.toLowerCase() === subcategory
+                        )
+                    );
+
+                setSportsArticles((sportsResponse.data || []).map(mapArticleToPost));
+                setTechSports(filterBySubcategory(sportsResponse.data || [], 'tech sports').map(mapArticleToPost));
+                setUsSports(filterBySubcategory(sportsResponse.data || [], 'us sports').map(mapArticleToPost));
+                setSeasonScoreboard(filterBySubcategory(sportsResponse.data || [], 'season scoreboard').map(mapArticleToPost));
+
+                if (!isMounted) {
+                    return;
+                }
+
+                setSportsArticles((sportsResponse.data || []).map(mapArticleToPost));
+            } catch (err) {
+                if (!isMounted) {
+                    return;
+                }
+                setError('Unable to load articles. Please try again later.');
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                }
+            }
+        };
+    
+        loadArticles();
+    
+        return () => {
+            isMounted = false;
+            controller.abort();
         };
     }, []);
-
-    const {
-        data: {
-            sportsArticles,
-            techSports,
-            usSports,
-            seasonScoreboard,
-        },
-        isLoading,
-        error,
-    } = useAsyncData<SportsArticlesData>(loadSportsArticles, {
-        initialData: emptySportsData,
-        errorMessage: 'Unable to load articles. Please try again later.',
-    });
     
     if (isLoading) {
         return (

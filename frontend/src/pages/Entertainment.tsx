@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
 import ArticleBlock from "../components/ArticleBlock";
 import { Post } from '../types/article';
@@ -9,81 +9,134 @@ import Comic from '../components/Comic';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import { Categories } from '../types/categories';
-import { mapArticleToPost, RawArticle } from '../utils/articleUtils';
-import { useAsyncData } from '../hooks/useAsyncData';
 
-interface EntertainmentArticlesData {
-    entertainmentArticles: Post[];
-    moviesAndShows: Post[];
-    music: Post[];
-    books: Post[];
-    comics: Post[];
-}
+const mapArticleToPost = (article: any): Post => {
+    const primaryAuthor = article.authors?.[0]?.user;
 
-const emptyEntertainmentData: EntertainmentArticlesData = {
-    entertainmentArticles: [],
-    moviesAndShows: [],
-    music: [],
-    books: [],
-    comics: [],
+    let authorName = 'Technique Staff';
+    if (primaryAuthor) {
+        if (typeof primaryAuthor === 'string') {
+        authorName = primaryAuthor;
+        } else {
+        const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
+            .filter(Boolean)
+            .join(' ');
+
+        authorName =
+            primaryAuthor.username ||
+            firstAndLast ||
+            primaryAuthor.email ||
+            authorName;
+        }
+    }
+
+    const descriptionSource = article.excerpt || article.content || '';
+    const normalizedDescription =
+        typeof descriptionSource === 'string'
+        ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
+        : '';
+
+    return {
+        id: article._id || '',
+        title: article.title || '',
+        slug: article.slug,
+        content: article.content,
+        excerpt: article.excerpt,
+        authors: article.authors || [],
+        categories: article.categories || [],
+        tags: article.tags || [],
+        featuredImage: article.featuredImage,
+        status: article.status,
+        isSticky: article.isSticky,
+        allowComments: article.allowComments,
+        viewCount: article.viewCount,
+        publishedAt: article.publishedAt,
+        updatedBy: article.updatedBy,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        desc: normalizedDescription,
+        author: authorName,
+        category: article.categories?.[0]?.name || '',
+    };
 };
 
 function Entertainment() {
-    const loadEntertainmentArticles = useCallback(async (signal: AbortSignal): Promise<EntertainmentArticlesData> => {
-        const categoriesResponse = await articleService.fetchCategories(50, signal);
-        const categories: Array<{ _id?: string; name?: string }> = categoriesResponse.data || [];
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [entertainmentArticles, setEntertainmentArticles] = useState<Post[]>([]);
+    const [moviesAndShows, setMoviesAndShows] = useState<Post[]>([]);
+    const [music, setMusic] = useState<Post[]>([]);
+    const [books, setBooks] = useState<Post[]>([]);
+    const [comics, setComics] = useState<Post[]>([]);
+    const [error, setError] = useState<string | null>(null);
 
-        const entertainmentCategory = categories.find((category) =>
+    useEffect(() => {
+        let isMounted = true;
+        const controller = new AbortController();
+
+        const loadArticles = async () => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
+            const categories = categoriesResponse.data || [];
+
+            const entertainmentCategory = categories.find((category: any) =>
             category.name?.toLowerCase() === Categories.ENTERTAINMENT.toLowerCase()
-        );
-
-        if (!entertainmentCategory?._id) {
-            throw new Error('Entertainment category not found.');
-        }
-
-        const entertainmentResponse = await articleService.fetchArticlesByCategory(
-            entertainmentCategory._id,
-            undefined,
-            signal
-        );
-
-        const articles = (entertainmentResponse.data || []) as RawArticle[];
-
-        const filterBySubcategory = (items: RawArticle[], subcategory: string) =>
-            items.filter((article) =>
-                Array.isArray(article.subcategories) &&
-                article.subcategories.some(
-                    (sub) =>
-                        typeof sub?.value === 'string' &&
-                        sub.value.toLowerCase() === subcategory
-                )
             );
 
-        const mapArticles = (items: RawArticle[]) => items.map((article) => mapArticleToPost(article));
+            if (!entertainmentCategory?._id) {
+            if (!isMounted) return;
+            setEntertainmentArticles([]);
+            setError('Entertainment category not found.');
+            return;
+            }
 
-        return {
-            entertainmentArticles: mapArticles(articles),
-            moviesAndShows: mapArticles(filterBySubcategory(articles, 'movies and shows')),
-            music: mapArticles(filterBySubcategory(articles, 'music')),
-            books: mapArticles(filterBySubcategory(articles, 'books')),
-            comics: mapArticles(filterBySubcategory(articles, 'comics')),
+            const entertainmentResponse = await articleService.fetchArticlesByCategory(
+                entertainmentCategory._id,
+                undefined,
+                controller.signal
+            );
+
+            const filterBySubcategory = (articles: any[], subcategory: string) =>
+                articles.filter((article: any) =>
+                    Array.isArray(article.subcategories) &&
+                    article.subcategories.some(
+                        (sub: any) =>
+                            typeof sub?.value === 'string' &&
+                            sub.value.toLowerCase() === subcategory
+                    )
+                );
+
+            setEntertainmentArticles((entertainmentResponse.data || []).map(mapArticleToPost));
+            setMoviesAndShows(filterBySubcategory(entertainmentResponse.data || [], 'movies and shows').map(mapArticleToPost));
+            setMusic(filterBySubcategory(entertainmentResponse.data || [], 'music').map(mapArticleToPost));
+            setBooks(filterBySubcategory(entertainmentResponse.data || [], 'books').map(mapArticleToPost));
+            setComics(filterBySubcategory(entertainmentResponse.data || [], 'comics').map(mapArticleToPost));
+
+            if (!isMounted) {
+                return;
+            }
+
+        } catch (err) {
+            if (!isMounted) {
+                return;
+            }
+            setError('Unable to load articles. Please try again later.');
+        } finally {
+            if (isMounted) {
+                setIsLoading(false);
+            }
+        }
+        };
+
+        loadArticles();
+
+        return () => {
+        isMounted = false;
+        controller.abort();
         };
     }, []);
-
-    const {
-        data: {
-            entertainmentArticles,
-            moviesAndShows,
-            music,
-            books,
-            comics,
-        },
-        isLoading,
-        error,
-    } = useAsyncData<EntertainmentArticlesData>(loadEntertainmentArticles, {
-        initialData: emptyEntertainmentData,
-        errorMessage: 'Unable to load articles. Please try again later.',
-    });
 
     if (isLoading) {
         return (

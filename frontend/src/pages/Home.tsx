@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import articleService from '../services/articleService';
 import ArticleBlock from "../components/ArticleBlock";
 import { Post } from '../types/article';
@@ -9,103 +9,145 @@ import SideArticle from '../components/SideArticle';
 import { Categories } from '../types/categories';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
-import { mapArticleToPost, RawArticle } from '../utils/articleUtils';
-import { useAsyncData } from '../hooks/useAsyncData';
 
-interface HomeArticlesData {
-    recent: Post[];
-    life: Post[];
-    news: Post[];
-    entertainment: Post[];
-    opinion: Post[];
-    sports: Post[];
-}
+const mapArticleToPost = (article: any): Post => {
+    const primaryAuthor = article.authors?.[0]?.user;
 
-const emptyHomeArticles: HomeArticlesData = {
-    recent: [],
-    life: [],
-    news: [],
-    entertainment: [],
-    opinion: [],
-    sports: [],
+    let authorName = 'Technique Staff';
+    if (primaryAuthor) {
+        if (typeof primaryAuthor === 'string') {
+        authorName = primaryAuthor;
+        } else {
+        const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
+            .filter(Boolean)
+            .join(' ');
+
+        authorName =
+            primaryAuthor.username ||
+            firstAndLast ||
+            primaryAuthor.email ||
+            authorName;
+        }
+    }
+
+    const descriptionSource = article.excerpt || article.content || '';
+    const normalizedDescription =
+        typeof descriptionSource === 'string'
+        ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
+        : '';
+
+    return {
+        id: article._id,
+        title: article.title,
+        slug: article.slug,
+        content: article.content,
+        excerpt: article.excerpt,
+        authors: article.authors || [],
+        categories: article.categories || [],
+        tags: article.tags || [],
+        featuredImage: article.featuredImage,
+        status: article.status,
+        isSticky: article.isSticky,
+        allowComments: article.allowComments,
+        viewCount: article.viewCount,
+        publishedAt: article.publishedAt,
+        updatedBy: article.updatedBy,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        desc: normalizedDescription,
+        author: authorName,
+        category: article.categories?.[0]?.name || '',
+    };
 };
 
 function Home() {
-    const loadHomeArticles = useCallback(async (signal: AbortSignal): Promise<HomeArticlesData> => {
-        const categoriesResponse = await articleService.fetchCategories(50, signal);
-        const categories: Array<{ _id?: string; name?: string }> = categoriesResponse.data || [];
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentArticles, setRecentArticles] = useState<Post[]>([]);
+    const [lifeArticles, setLifeArticles] = useState<Post[]>([]);
+    const [newsArticles, setNewsArticles] = useState<Post[]>([]);
+    const [entertainmentArticles, setEntertainmentArticles] = useState<Post[]>([]);
+    const [opinionArticles, setOpinionArticles] = useState<Post[]>([]);
+    const [sportsArticles, setSportsArticles] = useState<Post[]>([]);
+    const [error, setError] = useState<string | null>(null);
 
-        const findCategoryId = (name: string) => {
-            const match = categories.find((category) => category.name?.toLowerCase() === name.toLowerCase());
-            return match?._id || null;
+    useEffect(() => {
+        let isMounted = true;
+        const controller = new AbortController();
+
+        const loadArticles = async () => {
+            setIsLoading(true);
+            setError(null);
+
+            try {
+                const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
+                const categories = categoriesResponse.data || [];
+
+                const findCategoryId = (name: string) => {
+                    const match = categories.find((category: any) => category.name?.toLowerCase() === name.toLowerCase());
+                    return match?._id || null;
+                };
+
+                const lifeCategoryId = findCategoryId(Categories.LIFE);
+                const newsCategoryId = findCategoryId(Categories.NEWS);
+                const entertainmentCategoryId = findCategoryId(Categories.ENTERTAINMENT);
+                const opinionCategoryId = findCategoryId(Categories.OPINION);
+                const sportsCategoryId = findCategoryId(Categories.SPORTS);
+
+                const [
+                    recentResponse,
+                    lifeResponse,
+                    newsResponse,
+                    entertainmentResponse,
+                    opinionResponse,
+                    sportsResponse,
+                ] = await Promise.all([
+                    articleService.fetchRecentArticles(5, 'published', controller.signal),
+                    lifeCategoryId
+                        ? articleService.fetchArticlesByCategory(lifeCategoryId, 3, controller.signal)
+                        : Promise.resolve({ data: [] }),
+                    newsCategoryId
+                        ? articleService.fetchArticlesByCategory(newsCategoryId, 3, controller.signal)
+                        : Promise.resolve({ data: [] }),
+                    entertainmentCategoryId
+                        ? articleService.fetchArticlesByCategory(entertainmentCategoryId, 8, controller.signal)
+                        : Promise.resolve({ data: [] }),
+                    opinionCategoryId
+                        ? articleService.fetchArticlesByCategory(opinionCategoryId, 5, controller.signal)
+                        : Promise.resolve({ data: [] }),
+                    sportsCategoryId
+                        ? articleService.fetchArticlesByCategory(sportsCategoryId, 5, controller.signal)
+                        : Promise.resolve({ data: [] }),
+                ]);
+
+                if (!isMounted) {
+                    return;
+                }
+
+                setRecentArticles((recentResponse.data || []).map(mapArticleToPost));
+                setLifeArticles((lifeResponse.data || []).map(mapArticleToPost));
+                setNewsArticles((newsResponse.data || []).map(mapArticleToPost));
+                setEntertainmentArticles((entertainmentResponse.data || []).map(mapArticleToPost));
+                setOpinionArticles((opinionResponse.data || []).map(mapArticleToPost));
+                setSportsArticles((sportsResponse.data || []).map(mapArticleToPost)); 
+            } catch (err) {
+                if (!isMounted) {
+                    return;
+                }
+                setError('Unable to load articles. Please try again later.');
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                }
+            }
         };
 
-        const lifeCategoryId = findCategoryId(Categories.LIFE);
-        const newsCategoryId = findCategoryId(Categories.NEWS);
-        const entertainmentCategoryId = findCategoryId(Categories.ENTERTAINMENT);
-        const opinionCategoryId = findCategoryId(Categories.OPINION);
-        const sportsCategoryId = findCategoryId(Categories.SPORTS);
+        loadArticles();
 
-        const [
-            recentResponse,
-            lifeResponse,
-            newsResponse,
-            entertainmentResponse,
-            opinionResponse,
-            sportsResponse,
-        ] = await Promise.all([
-            articleService.fetchRecentArticles(5, 'published', signal),
-            lifeCategoryId
-                ? articleService.fetchArticlesByCategory(lifeCategoryId, 3, signal)
-                : Promise.resolve<{ data: RawArticle[] }>({ data: [] }),
-            newsCategoryId
-                ? articleService.fetchArticlesByCategory(newsCategoryId, 3, signal)
-                : Promise.resolve<{ data: RawArticle[] }>({ data: [] }),
-            entertainmentCategoryId
-                ? articleService.fetchArticlesByCategory(entertainmentCategoryId, 8, signal)
-                : Promise.resolve<{ data: RawArticle[] }>({ data: [] }),
-            opinionCategoryId
-                ? articleService.fetchArticlesByCategory(opinionCategoryId, 5, signal)
-                : Promise.resolve<{ data: RawArticle[] }>({ data: [] }),
-            sportsCategoryId
-                ? articleService.fetchArticlesByCategory(sportsCategoryId, 5, signal)
-                : Promise.resolve<{ data: RawArticle[] }>({ data: [] }),
-        ]);
-
-        const recentArticles = (recentResponse.data || []) as RawArticle[];
-        const lifeArticles = (lifeResponse.data || []) as RawArticle[];
-        const newsArticles = (newsResponse.data || []) as RawArticle[];
-        const entertainmentArticles = (entertainmentResponse.data || []) as RawArticle[];
-        const opinionArticles = (opinionResponse.data || []) as RawArticle[];
-        const sportsArticles = (sportsResponse.data || []) as RawArticle[];
-
-        const mapArticles = (articles: RawArticle[]) => articles.map((article) => mapArticleToPost(article));
-
-        return {
-            recent: mapArticles(recentArticles),
-            life: mapArticles(lifeArticles),
-            news: mapArticles(newsArticles),
-            entertainment: mapArticles(entertainmentArticles),
-            opinion: mapArticles(opinionArticles),
-            sports: mapArticles(sportsArticles),
+        return () => {
+            isMounted = false;
+            controller.abort();
         };
     }, []);
-
-    const {
-        data: {
-            recent: recentArticles,
-            life: lifeArticles,
-            news: newsArticles,
-            entertainment: entertainmentArticles,
-            opinion: opinionArticles,
-            sports: sportsArticles,
-        },
-        isLoading,
-        error,
-    } = useAsyncData<HomeArticlesData>(loadHomeArticles, {
-        initialData: emptyHomeArticles,
-        errorMessage: 'Unable to load articles. Please try again later.',
-    });
 
     const sideArticles = useMemo(() => { 
         return opinionArticles.slice(0, 3);

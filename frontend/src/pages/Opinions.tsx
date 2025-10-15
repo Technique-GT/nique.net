@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
 import ArticleBlock from "../components/ArticleBlock";
 import { Post } from '../types/article';
@@ -8,53 +8,115 @@ import Spinner from '../components/Spinner';
 import FeaturedStory from '../components/FeaturedStory';
 import SmallArticle from '../components/SmallArticle';
 import { Categories } from '../types/categories';
-import { mapArticleToPost, RawArticle } from '../utils/articleUtils';
-import { useAsyncData } from '../hooks/useAsyncData';
 
-interface OpinionArticlesData {
-    opinionArticles: Post[];
-}
+const mapArticleToPost = (article: any): Post => {
+    const primaryAuthor = article.authors?.[0]?.user;
 
-const emptyOpinionsData: OpinionArticlesData = {
-    opinionArticles: [],
+    let authorName = 'Technique Staff';
+    if (primaryAuthor) {
+        if (typeof primaryAuthor === 'string') {
+        authorName = primaryAuthor;
+        } else {
+        const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
+            .filter(Boolean)
+            .join(' ');
+
+        authorName =
+            primaryAuthor.username ||
+            firstAndLast ||
+            primaryAuthor.email ||
+            authorName;
+        }
+    }
+
+    const descriptionSource = article.excerpt || article.content || '';
+    const normalizedDescription =
+        typeof descriptionSource === 'string'
+        ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
+        : '';
+
+    return {
+        id: article._id || '',
+        title: article.title || '',
+        slug: article.slug,
+        content: article.content,
+        excerpt: article.excerpt,
+        authors: article.authors || [],
+        categories: article.categories || [],
+        tags: article.tags || [],
+        featuredImage: article.featuredImage,
+        status: article.status,
+        isSticky: article.isSticky,
+        allowComments: article.allowComments,
+        viewCount: article.viewCount,
+        publishedAt: article.publishedAt,
+        updatedBy: article.updatedBy,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        desc: normalizedDescription,
+        author: authorName,
+        category: article.categories?.[0]?.name || '',
+    };
 };
 
 function Opinions() {
-    const loadOpinionArticles = useCallback(async (signal: AbortSignal): Promise<OpinionArticlesData> => {
-        const categoriesResponse = await articleService.fetchCategories(50, signal);
-        const categories: Array<{ _id?: string; name?: string }> = categoriesResponse.data || [];
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [opinionArticles, setOpinionArticles] = useState<Post[]>([]);
+    const [error, setError] = useState<string | null>(null);
 
-        const opinionCategory = categories.find((category) =>
+    useEffect(() => {
+        let isMounted = true;
+        const controller = new AbortController();
+
+        const loadArticles = async () => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
+            const categories = categoriesResponse.data || [];
+
+            const opinionCategory = categories.find((category: any) =>
             category.name?.toLowerCase() === Categories.OPINION.toLowerCase()
-        );
+            );
 
-        if (!opinionCategory?._id) {
-            throw new Error('Opinion category not found.');
-        }
+            if (!opinionCategory?._id) {
+            if (!isMounted) return;
+            setOpinionArticles([]);
+            setError('Opinion category not found.');
+            return;
+            }
 
-        const opinionResponse = await articleService.fetchArticlesByCategory(
+            const opinionResponse = await articleService.fetchArticlesByCategory(
             opinionCategory._id,
             undefined,
-            signal
-        );
+            controller.signal
+            );
 
-        const articles = (opinionResponse.data || []) as RawArticle[];
+            if (!isMounted) {
+            return;
+            }
 
-        return {
-            opinionArticles: articles.map((article) => mapArticleToPost(article)),
+            setOpinionArticles((opinionResponse.data || []).map(mapArticleToPost));
+        } catch (err) {
+            if (!isMounted) {
+            return;
+            }
+            setError('Unable to load articles. Please try again later.');
+        } finally {
+            if (isMounted) {
+            setIsLoading(false);
+            }
+        }
+        };
+
+        loadArticles();
+
+        return () => {
+        isMounted = false;
+        controller.abort();
         };
     }, []);
-
-    const {
-        data: {
-            opinionArticles,
-        },
-        isLoading,
-        error,
-    } = useAsyncData<OpinionArticlesData>(loadOpinionArticles, {
-        initialData: emptyOpinionsData,
-        errorMessage: 'Unable to load articles. Please try again later.',
-    });
 
     if (isLoading) {
         return (
