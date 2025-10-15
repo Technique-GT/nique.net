@@ -27,6 +27,7 @@ const requirePermission = (permission) => {
 // CRUD operations with permission checks
 router.post('/', requirePermission('createArticle'), articleController.createArticle);
 router.get('/', articleController.getAllArticles);
+router.get('/category/:categoryId', articleController.getArticleByCategory);
 router.get('/:id', articleController.getArticleById);
 router.put('/:id', requirePermission('editAnyArticle'), articleController.updateArticle);
 router.delete('/:id', requirePermission('deleteAnyArticle'), articleController.deleteArticle);

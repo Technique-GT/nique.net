@@ -43,7 +43,7 @@ export default function Carousel( {posts, width}: ArticleListProps ) {
                 key={index} 
                 onClick={()=>navigate('/'+p.id)} 
                 style={{
-                  backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0) 80%, rgba(255, 255, 255, 1)), url(${p.coverImage})`,
+                  backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0) 80%, rgba(255, 255, 255, 1)), url(${p.featuredImage.url})`,
                 }}
                 className='cursor-pointer rounded-lg'
               >

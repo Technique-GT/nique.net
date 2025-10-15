@@ -8,7 +8,7 @@ function FeaturedStory({ post, height }: ArticleBlockProps) {
             <div className='cursor-pointer rounded-md bg-cover bg-center h-[200px] w-full flex p-4'
                 onClick={() => navigate('/' + post.id)}
                 style={{
-                    backgroundImage: `linear-gradient(to top, transparent 70%, rgba(229, 229, 229) 90%), url(${post.coverImage})`,
+                    backgroundImage: `linear-gradient(to top, transparent 70%, rgba(229, 229, 229) 90%), url(${post.featuredImage.url})`,
                     height: `${height}`
                 }}>
                 <div>
@@ -17,8 +17,9 @@ function FeaturedStory({ post, height }: ArticleBlockProps) {
                     <h6 className="text-[#1A1E47] text-sm"><span className="uppercase">{post.category}</span> &#8226; {post.author}</h6>
                 </div>
             </div>
-            <h6 className="text-nique-blue text-xs mt-1">Player Ashlyn Goolsby dives in for a save in a tension filled game. Longer captions for cover stories because hopefully they&rsquo;ll be Technique taken photos. Photo by: Student Publications</h6>
-            <p className="mt-2">After the sweep against Florida at McCamish Pavilion, the Jackets went on the road to Athens, GA to face the u[sic]GA. Senior setter Ashlyn Goolsby reflects on the season thus far and the team&rsquo;s dynamics with the Technique.
+
+            <h6 className="text-nique-blue text-xs mt-1">{post.featuredImage.caption}</h6>
+            <p className="mt-2">{post.desc}
                 &nbsp;<a className='text-nique-blue-hover underline cursor-pointer' onClick={() => navigate('/' + post.id)}>[Read more...]</a>
             </p>
         </div>
