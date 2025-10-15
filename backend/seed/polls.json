@@ -1,0 +1,21 @@
+[
+  {
+    "_id": { "$oid": "65f0a305095c8b6a12000001" },
+    "question": "Which campus sustainability project should we cover next?",
+    "options": [
+      { "text": "Residence hall composting expansion", "votes": 42 },
+      { "text": "Bike share program relaunch", "votes": 35 },
+      { "text": "Solar canopy pilot", "votes": 28 }
+    ],
+    "isActive": true,
+    "startDate": { "$date": "2024-02-08T12:00:00Z" },
+    "endDate": { "$date": "2024-02-15T12:00:00Z" },
+    "createdBy": { "$oid": "65f0a305095c8b6a0a000001" },
+    "voters": [
+      { "$oid": "65f0a305095c8b6a0a000002" },
+      { "$oid": "65f0a305095c8b6a0a000003" }
+    ],
+    "createdAt": { "$date": "2024-02-08T12:00:00Z" },
+    "updatedAt": { "$date": "2024-02-10T09:30:00Z" }
+  }
+]

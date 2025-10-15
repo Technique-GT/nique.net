@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
 
+const CATEGORY_SUBCATEGORY_MAP = Object.freeze({
+  news: ['Atlanta News', 'US News', 'Entertainment'],
+  life: ['Tech Fashion'],
+  opinion: [],
+  entertainment: ['Movies and Shows', 'Music', 'Books', 'Comics'],
+  sports: ['Tech Sports', 'Season Scoreboard', 'US Sports']
+});
+
 const articleSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -36,6 +44,26 @@ const articleSchema = new mongoose.Schema({
   tags: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Tag'
+  }],
+  subcategories: [{
+    category: {
+      type: String,
+      required: true,
+      enum: Object.keys(CATEGORY_SUBCATEGORY_MAP)
+    },
+    value: {
+      type: String,
+      required: true,
+      validate: {
+        validator: function(subcategory) {
+          const allowedSubcategories = CATEGORY_SUBCATEGORY_MAP[this.category] || [];
+          return allowedSubcategories.includes(subcategory);
+        },
+        message: function(props) {
+          return `Subcategory \"${props.value}\" is not valid for category \"${this.category}\".`;
+        }
+      }
+    }
   }],
   featuredImage: {
     type: mongoose.Schema.Types.ObjectId,

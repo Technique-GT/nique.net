@@ -1,0 +1,37 @@
+[
+  {
+    "_id": { "$oid": "65f0a305095c8b6a0c000001" },
+    "name": "Breaking News",
+    "slug": "breaking-news",
+    "createdAt": { "$date": "2024-02-02T12:00:00Z" },
+    "updatedAt": { "$date": "2024-02-10T08:15:00Z" }
+  },
+  {
+    "_id": { "$oid": "65f0a305095c8b6a0c000002" },
+    "name": "Campus Life",
+    "slug": "campus-life",
+    "createdAt": { "$date": "2024-02-02T12:05:00Z" },
+    "updatedAt": { "$date": "2024-02-10T08:15:00Z" }
+  },
+  {
+    "_id": { "$oid": "65f0a305095c8b6a0c000003" },
+    "name": "Tech Trends",
+    "slug": "tech-trends",
+    "createdAt": { "$date": "2024-02-02T12:10:00Z" },
+    "updatedAt": { "$date": "2024-02-10T08:15:00Z" }
+  },
+  {
+    "_id": { "$oid": "65f0a305095c8b6a0c000004" },
+    "name": "Arts & Culture",
+    "slug": "arts-culture",
+    "createdAt": { "$date": "2024-02-02T12:15:00Z" },
+    "updatedAt": { "$date": "2024-02-10T08:15:00Z" }
+  },
+  {
+    "_id": { "$oid": "65f0a305095c8b6a0c000005" },
+    "name": "Game Day",
+    "slug": "game-day",
+    "createdAt": { "$date": "2024-02-02T12:20:00Z" },
+    "updatedAt": { "$date": "2024-02-10T08:15:00Z" }
+  }
+]

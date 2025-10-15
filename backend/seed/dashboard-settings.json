@@ -1,0 +1,38 @@
+[
+  {
+    "_id": { "$oid": "65f0a305095c8b6a14000001" },
+    "stickyArticles": [
+      {
+        "article": { "$oid": "65f0a305095c8b6a0e100001" },
+        "position": 1,
+        "category": { "$oid": "65f0a305095c8b6a0b100001" }
+      },
+      {
+        "article": { "$oid": "65f0a305095c8b6a0e500003" },
+        "position": 2,
+        "category": { "$oid": "65f0a305095c8b6a0b100005" }
+      }
+    ],
+    "featuredArticles": [
+      { "article": { "$oid": "65f0a305095c8b6a0e200001" }, "position": 1 },
+      { "article": { "$oid": "65f0a305095c8b6a0e400001" }, "position": 2 }
+    ],
+    "publicationSchedule": "Daily updates at 8 a.m. with weekend recaps on Sundays.",
+    "footerContent": "© 2024 Technique Media — Student voices covering campus life.",
+    "spotifyPlaylist": "https://open.spotify.com/playlist/37i9dQZF1DX7J7BbvjK1pf",
+    "gameScores": [
+      {
+        "sport": "basketball",
+        "homeTeam": "Tech Eagles",
+        "awayTeam": "Metro Panthers",
+        "homeScore": 72,
+        "awayScore": 68,
+        "isLive": false,
+        "lastUpdated": { "$date": "2024-02-10T04:30:00Z" }
+      }
+    ],
+    "updatedBy": { "$oid": "65f0a305095c8b6a0a000003" },
+    "createdAt": { "$date": "2024-02-07T11:20:00Z" },
+    "updatedAt": { "$date": "2024-02-10T04:30:00Z" }
+  }
+]

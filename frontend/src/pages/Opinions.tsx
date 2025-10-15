@@ -1,15 +1,23 @@
+<<<<<<< Updated upstream
 import { useEffect, useState } from 'react'
 import MockAPI from '../services/MockAPI'
 import ArticleBlock from "../components/ArticleBlock"
 import { Post } from '../types/article'
 import VerticalAd from "../components/VerticalAd";
 import MockAd from '../assets/mock_advertisement.jpg';
+=======
+import { useCallback } from 'react';
+import articleService from '../services/articleService';
+import ArticleBlock from "../components/ArticleBlock";
+import { Post } from '../types/article';
+>>>>>>> Stashed changes
 import SideArticle from '../components/SideArticle';
 import InstagramEmbed from '../components/InstaEmbed';
 import SmallArticle from '../components/SmallArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import FeaturedStory from '../components/FeaturedStory';
+<<<<<<< Updated upstream
 
 function Opinions() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -33,6 +41,57 @@ function Opinions() {
             setIsLoading(false);
         })
     }
+=======
+import SmallArticle from '../components/SmallArticle';
+import { Categories } from '../types/categories';
+import { mapArticleToPost, RawArticle } from '../utils/articleUtils';
+import { useAsyncData } from '../hooks/useAsyncData';
+
+interface OpinionArticlesData {
+    opinionArticles: Post[];
+}
+
+const emptyOpinionsData: OpinionArticlesData = {
+    opinionArticles: [],
+};
+
+function Opinions() {
+    const loadOpinionArticles = useCallback(async (signal: AbortSignal): Promise<OpinionArticlesData> => {
+        const categoriesResponse = await articleService.fetchCategories(50, signal);
+        const categories: Array<{ _id?: string; name?: string }> = categoriesResponse.data || [];
+
+        const opinionCategory = categories.find((category) =>
+            category.name?.toLowerCase() === Categories.OPINION.toLowerCase()
+        );
+
+        if (!opinionCategory?._id) {
+            throw new Error('Opinion category not found.');
+        }
+
+        const opinionResponse = await articleService.fetchArticlesByCategory(
+            opinionCategory._id,
+            undefined,
+            signal
+        );
+
+        const articles = (opinionResponse.data || []) as RawArticle[];
+
+        return {
+            opinionArticles: articles.map((article) => mapArticleToPost(article)),
+        };
+    }, []);
+>>>>>>> Stashed changes
+
+    const {
+        data: {
+            opinionArticles,
+        },
+        isLoading,
+        error,
+    } = useAsyncData<OpinionArticlesData>(loadOpinionArticles, {
+        initialData: emptyOpinionsData,
+        errorMessage: 'Unable to load articles. Please try again later.',
+    });
 
     if (isLoading) {
         return (
