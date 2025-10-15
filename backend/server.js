@@ -18,18 +18,32 @@ dotenv.config({ path: './config.env' });  // Specify the correct path to your co
 // Initialize express
 const app = express();
 
+const defaultAllowedOrigins = ['http://localhost:5173', 'http://localhost:5050'];
+const envOrigins = [
+  process.env.CLIENT_URL,
+  ...(process.env.CLIENT_URLS ? process.env.CLIENT_URLS.split(',') : [])
+].filter(Boolean);
+const allowedOrigins = Array.from(new Set([...envOrigins, ...defaultAllowedOrigins]));
+
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: process.env.CLIENT_URL,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
 app.use(cookieParser());
 
 // Connect to MongoDB
-mongoose.connect(process.env.ATLAS_URI)
-  .then(() => console.log('MongoDB connected successfully'))
+const dbName = process.env.MONGO_DB_NAME || 'technique';
+
+mongoose.connect(process.env.ATLAS_URI, { dbName })
+  .then(() => console.log(`MongoDB connected successfully to ${dbName} db`))
   .catch(err => console.log('Error connecting to MongoDB:', err));
 
 // Use authentication routes

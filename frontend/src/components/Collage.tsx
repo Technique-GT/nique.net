@@ -8,7 +8,7 @@ function Collage({ posts, width = '500px' }: ArticleListProps) {
           {posts.map((post, index) => (
             <div key={`first-${index}`} onDragStart={(e) => e.preventDefault()}>
               <img
-                src={post.coverImage}
+                src={post.featuredImage.url}
                 alt={post.title}
                 style={{ width, aspectRatio: '3/4'}}
                 className="object-cover md:px-1"
@@ -19,7 +19,7 @@ function Collage({ posts, width = '500px' }: ArticleListProps) {
           {posts.map((post, index) => (
             <div key={`second-${index}`} onDragStart={(e) => e.preventDefault()}>
               <img
-                src={post.coverImage}
+                src={post.featuredImage.url}
                 alt={post.title}
                 style={{ width, aspectRatio: '3/4'}}
                 className="object-cover md:px-1"
