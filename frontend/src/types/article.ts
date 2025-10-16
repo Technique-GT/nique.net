@@ -35,14 +35,14 @@ export interface ArticleDocument {
     categories: ArticleReference[];
     tags: ArticleTag[];
     featuredImage: ArticleMedia;
-    status?: ArticleStatus;
-    isSticky?: boolean;
+    status: ArticleStatus;
+    isSticky: boolean;
     allowComments?: boolean;
     viewCount?: number;
-    publishedAt?: string | Date;
+    publishedAt: Date;
     updatedBy?: string;
-    createdAt?: string | Date;
-    updatedAt?: string | Date;
+    createdAt: string | Date;
+    updatedAt: string | Date;
 }
 
 export interface Post extends ArticleDocument {

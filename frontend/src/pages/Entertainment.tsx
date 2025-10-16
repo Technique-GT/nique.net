@@ -62,6 +62,7 @@ const mapArticleToPost = (article: any): Post => {
 
 function Entertainment() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentEntertainment, setRecentEntertainment] = useState<Post[]>([]);
     const [entertainmentArticles, setEntertainmentArticles] = useState<Post[]>([]);
     const [moviesAndShows, setMoviesAndShows] = useState<Post[]>([]);
     const [music, setMusic] = useState<Post[]>([]);
@@ -98,25 +99,47 @@ function Entertainment() {
                 controller.signal
             );
 
-            const filterBySubcategory = (articles: any[], subcategory: string) =>
-                articles.filter((article: any) =>
-                    Array.isArray(article.subcategories) &&
-                    article.subcategories.some(
-                        (sub: any) =>
-                            typeof sub?.value === 'string' &&
-                            sub.value.toLowerCase() === subcategory
-                    )
-                );
+            const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
+            const allEntertainment = mapResponseData(entertainmentResponse.data);
+            const getTimestamp = (post: Post) => {
+                const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
+                const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
+                return Math.max(published, created);
+            };
+            const sortByPublishedDesc = (a: Post, b: Post) => getTimestamp(b) - getTimestamp(a);
 
-            setEntertainmentArticles((entertainmentResponse.data || []).map(mapArticleToPost));
-            setMoviesAndShows(filterBySubcategory(entertainmentResponse.data || [], 'movies and shows').map(mapArticleToPost));
-            setMusic(filterBySubcategory(entertainmentResponse.data || [], 'music').map(mapArticleToPost));
-            setBooks(filterBySubcategory(entertainmentResponse.data || [], 'books').map(mapArticleToPost));
-            setComics(filterBySubcategory(entertainmentResponse.data || [], 'comics').map(mapArticleToPost));
+            const stickyPosts = allEntertainment.filter((post) => post.isSticky).sort(sortByPublishedDesc);
+            const nonStickyPosts = allEntertainment.filter((post) => !post.isSticky).sort(sortByPublishedDesc);
+            const orderedEntertainment = [...stickyPosts, ...nonStickyPosts];
+            const RECENT_COUNT = Math.max(3, stickyPosts.length);
+            const recentSelection = orderedEntertainment.slice(0, RECENT_COUNT);
+            const remainingEntertainment = orderedEntertainment.slice(RECENT_COUNT);
+            const recentIds = new Set(recentSelection.map((post) => post.id));
+
+            const filterBySubcategory = (articles: any[], subcategory: string) =>
+                articles
+                    .filter((article: any) =>
+                        Array.isArray(article.subcategories) &&
+                        article.subcategories.some(
+                            (sub: any) =>
+                                typeof sub?.value === 'string' &&
+                                sub.value.toLowerCase() === subcategory
+                        )
+                    )
+                    .map(mapArticleToPost)
+                    .filter((post) => !recentIds.has(post.id))
+                    .sort(sortByPublishedDesc);
 
             if (!isMounted) {
                 return;
             }
+
+            setRecentEntertainment(recentSelection);
+            setEntertainmentArticles(remainingEntertainment);
+            setMoviesAndShows(filterBySubcategory(entertainmentResponse.data || [], 'movies and shows'));
+            setMusic(filterBySubcategory(entertainmentResponse.data || [], 'music'));
+            setBooks(filterBySubcategory(entertainmentResponse.data || [], 'books'));
+            setComics(filterBySubcategory(entertainmentResponse.data || [], 'comics'));
 
         } catch (err) {
             if (!isMounted) {
@@ -164,8 +187,8 @@ function Entertainment() {
             <div className='w-full'>
             <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                 <div className='lg:col-span-4 m-0'>
-                {entertainmentArticles.slice(0, 4).length > 0 && (
-                    <Carousel posts={entertainmentArticles.slice(0, 4)} width='70%'/>
+                {recentEntertainment.slice(0, 4).length > 0 && (
+                    <Carousel posts={recentEntertainment.slice(0, 4)} width='70%'/>
                 )}
                 </div>
             </div>
@@ -174,11 +197,11 @@ function Entertainment() {
             <h4 className="font-bold mb-2 text-2xl text-nique-blue">Movies and Shows</h4>
             <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                 <div className='lg:col-span-2 sm:col-span-2'>
-                {moviesAndShows[4] && <ArticleBlock post={moviesAndShows[4]} height='400px'/>}
+                {moviesAndShows[0] && <ArticleBlock post={moviesAndShows[0]} height='400px'/>}
                 </div>
 
                 <div className='grid gap-4 grid-cols-2 lg:col-span-2'>
-                {moviesAndShows.slice(5, 9).map((article) => (
+                {moviesAndShows.slice(1, 5).map((article) => (
                     <ArticleBlock key={article.id} post={article} height='190px' />
                 ))}
                 </div>
@@ -218,17 +241,17 @@ function Entertainment() {
             </div>
 
             <div className='flex flex-col gap-4'>
-            <iframe
-                className="rounded-md w-full h-[550px]"
-                src="https://open.spotify.com/embed/playlist/3ySGGWEXxBBYvn2cYxEDEx?utm_source=generator&theme=0"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"
-            />
-            {(() => {
-                const posts = [entertainmentArticles[6], entertainmentArticles[7], entertainmentArticles[16], entertainmentArticles[22]]
-                .filter(Boolean) as Post[];
-                return posts.length ? <SideArticle posts={posts} width='28%'/> : null;
-            })()}
+                <iframe
+                    className="rounded-md w-full h-[550px]"
+                    src="https://open.spotify.com/embed/playlist/3ySGGWEXxBBYvn2cYxEDEx?utm_source=generator&theme=0"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"
+                />
+                {(() => {
+                    const posts = [entertainmentArticles[6], entertainmentArticles[7], entertainmentArticles[16], entertainmentArticles[22]]
+                    .filter(Boolean) as Post[];
+                    return posts.length ? <SideArticle posts={posts} width='28%'/> : null;
+                })()}
             </div>
         </div>
         </>

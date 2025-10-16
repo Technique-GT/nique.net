@@ -63,6 +63,7 @@ const mapArticleToPost = (article: any): Post => {
 
 function Life() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentLifeArticles, setRecentLifeArticles] = useState<Post[]>([]);
     const [lifeArticles, setLifeArticles] = useState<Post[]>([]);
     const [techFashion, setTechFashion] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -96,22 +97,44 @@ function Life() {
                     controller.signal
                 );
 
-                const filterBySubcategory = (articles: any[], subcategory: string) =>
-                    articles.filter((article: any) =>
-                        Array.isArray(article.subcategories) &&
-                        article.subcategories.some(
-                            (sub: any) =>
-                                typeof sub?.value === 'string' &&
-                                sub.value.toLowerCase() === subcategory
-                        )
-                    );
+                const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
+                const allLifeArticles = mapResponseData(lifeResponse.data);
+                const getTimestamp = (post: Post) => {
+                    const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
+                    const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
+                    return Math.max(published, created);
+                };
+                const sortByPublishedDesc = (a: Post, b: Post) => getTimestamp(b) - getTimestamp(a);
 
-                setLifeArticles((lifeResponse.data || []).map(mapArticleToPost));
-                setTechFashion(filterBySubcategory(lifeResponse.data || [], 'tech fashion').map(mapArticleToPost));
+                const stickyPosts = allLifeArticles.filter((post) => post.isSticky).sort(sortByPublishedDesc);
+                const nonStickyPosts = allLifeArticles.filter((post) => !post.isSticky).sort(sortByPublishedDesc);
+                const orderedLife = [...stickyPosts, ...nonStickyPosts];
+                const RECENT_COUNT = Math.max(5, stickyPosts.length);
+                const recentSelection = orderedLife.slice(0, RECENT_COUNT);
+                const remainingLife = orderedLife.slice(RECENT_COUNT);
+                const recentIds = new Set(recentSelection.map((post) => post.id));
+
+                const filterBySubcategory = (articles: any[], subcategory: string) =>
+                    articles
+                        .filter((article: any) =>
+                            Array.isArray(article.subcategories) &&
+                            article.subcategories.some(
+                                (sub: any) =>
+                                    typeof sub?.value === 'string' &&
+                                    sub.value.toLowerCase() === subcategory
+                            )
+                        )
+                        .map(mapArticleToPost)
+                        .filter((post) => !recentIds.has(post.id))
+                        .sort(sortByPublishedDesc);
 
                 if (!isMounted) {
                     return;
                 }
+
+                setRecentLifeArticles(recentSelection);
+                setLifeArticles(remainingLife);
+                setTechFashion(filterBySubcategory(lifeResponse.data || [], 'tech fashion'));
 
             } catch (err) {
                 if (!isMounted) {
@@ -160,18 +183,18 @@ function Life() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Most Recent</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='col-span-2'>
-                            {lifeArticles[0] && <ArticleBlock post={lifeArticles[0]} height='460px' />}
+                            {recentLifeArticles[0] && <ArticleBlock post={recentLifeArticles[0]} height='460px' />}
                         </div>
                         <div className='col-span-2 lg:col-span-1'>
-                            {lifeArticles[1] && <ArticleBlock post={lifeArticles[1]} height='460px' />}
+                            {recentLifeArticles[1] && <ArticleBlock post={recentLifeArticles[1]} height='460px' />}
                         </div>
                         <div className='grid gap-4 grid-rows-2 col-span-2 lg:col-span-1'>
-                            {lifeArticles[2] && <ArticleBlock post={lifeArticles[2]} height='222px' />}
-                            {lifeArticles[3] && <ArticleBlock post={lifeArticles[3]} height='222px' />}
+                            {recentLifeArticles[2] && <ArticleBlock post={recentLifeArticles[2]} height='222px' />}
+                            {recentLifeArticles[3] && <ArticleBlock post={recentLifeArticles[3]} height='222px' />}
                         </div>
                         <div className='col-span-2 lg:col-span-4 m-0'>
-                            {lifeArticles.slice(1, 5).length > 0 && (
-                                <Carousel posts={lifeArticles.slice(1, 5)} width='80%'/>
+                            {recentLifeArticles.slice(1, 5).length > 0 && (
+                                <Carousel posts={recentLifeArticles.slice(1, 5)} width='80%'/>
                             )}
                         </div>
                     </div>

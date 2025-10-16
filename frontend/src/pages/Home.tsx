@@ -11,6 +11,7 @@ import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 
 const mapArticleToPost = (article: any): Post => {
+    // add primary author
     const primaryAuthor = article.authors?.[0]?.user;
 
     let authorName = 'Technique Staff';
@@ -30,6 +31,7 @@ const mapArticleToPost = (article: any): Post => {
         }
     }
 
+    // add description
     const descriptionSource = article.excerpt || article.content || '';
     const normalizedDescription =
         typeof descriptionSource === 'string'
@@ -94,6 +96,7 @@ function Home() {
                 const sportsCategoryId = findCategoryId(Categories.SPORTS);
 
                 const [
+                    stickyResponse,
                     recentResponse,
                     lifeResponse,
                     newsResponse,
@@ -101,6 +104,7 @@ function Home() {
                     opinionResponse,
                     sportsResponse,
                 ] = await Promise.all([
+                    articleService.fetchStickyArticles(undefined, controller.signal),
                     articleService.fetchRecentArticles(5, 'published', controller.signal),
                     lifeCategoryId
                         ? articleService.fetchArticlesByCategory(lifeCategoryId, 3, controller.signal)
@@ -123,12 +127,43 @@ function Home() {
                     return;
                 }
 
-                setRecentArticles((recentResponse.data || []).map(mapArticleToPost));
-                setLifeArticles((lifeResponse.data || []).map(mapArticleToPost));
-                setNewsArticles((newsResponse.data || []).map(mapArticleToPost));
-                setEntertainmentArticles((entertainmentResponse.data || []).map(mapArticleToPost));
-                setOpinionArticles((opinionResponse.data || []).map(mapArticleToPost));
-                setSportsArticles((sportsResponse.data || []).map(mapArticleToPost)); 
+                const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
+                const stickyPosts = mapResponseData(stickyResponse.data);
+                const recentPosts = mapResponseData(recentResponse.data);
+                const lifePosts = mapResponseData(lifeResponse.data);
+                const newsPosts = mapResponseData(newsResponse.data);
+                const entertainmentPosts = mapResponseData(entertainmentResponse.data);
+                const opinionPosts = mapResponseData(opinionResponse.data);
+                const sportsPosts = mapResponseData(sportsResponse.data);
+
+                const sortByPublishedDesc = (a: Post, b: Post) => {
+                    const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+                    const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+                    return dateB - dateA;
+                };
+
+                const stickySorted = stickyPosts
+                    .filter((post) => post.isSticky)
+                    .sort(sortByPublishedDesc);
+                const stickyIds = new Set(stickySorted.map((post) => post.id));
+
+                const nonStickyRecent = recentPosts
+                    .filter((post) => !stickyIds.has(post.id))
+                    .sort(sortByPublishedDesc);
+
+                const sortedRecent = [...stickySorted, ...nonStickyRecent];
+                const recentIds = new Set(sortedRecent.map((post) => post.id));
+                const filterAndSort = (posts: Post[]) =>
+                    posts
+                        .filter((post) => !recentIds.has(post.id))
+                        .sort(sortByPublishedDesc);
+
+                setRecentArticles(sortedRecent);
+                setLifeArticles(filterAndSort(lifePosts));
+                setNewsArticles(filterAndSort(newsPosts));
+                setEntertainmentArticles(filterAndSort(entertainmentPosts));
+                setOpinionArticles(filterAndSort(opinionPosts));
+                setSportsArticles(filterAndSort(sportsPosts)); 
             } catch (err) {
                 if (!isMounted) {
                     return;

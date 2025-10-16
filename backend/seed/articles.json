@@ -2135,5 +2135,164 @@
     "updatedAt": {
       "$date": "2024-02-12T19:25:00Z"
     }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e800001"
+    },
+    "title": "Campus Safety Task Force Releases New Guidelines",
+    "slug": "campus-safety-task-force-releases-new-guidelines",
+    "content": "The Institute's Campus Safety Task Force has published its first set of recommendations outlining expanded escort services, improved lighting near residence halls, and a centralized reporting hotline.\n\nImplementation begins this spring with additional funding allocated for officer training and blue-light upgrades.",
+    "excerpt": "Campus Safety Task Force unveils spring rollout of new security measures.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100001"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "news",
+        "value": "Atlanta News"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000001"
+      },
+      {
+        "$oid": "65f0a305095c8b6a0c000003"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000001"
+    },
+    "status": "published",
+    "isSticky": true,
+    "allowComments": true,
+    "viewCount": 1240,
+    "publishedAt": {
+      "$date": "2024-02-14T14:30:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-13T16:45:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-14T15:05:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e800002"
+    },
+    "title": "5 Must-Try Cafés Around Midtown",
+    "slug": "5-must-try-cafes-around-midtown",
+    "content": "From early morning espresso to late-night study snacks, Midtown's café scene is thriving. We scouted five student-favorite spots offering generous study space, reliable Wi-Fi, and house-made pastries.\n\nEach cafe shared signature menu items and discounts available with a BuzzCard.",
+    "excerpt": "Five student-approved cafés in Midtown serving strong coffee and study vibes.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100002"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "life",
+        "value": "Tech Fashion"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": true,
+    "allowComments": true,
+    "viewCount": 1764,
+    "publishedAt": {
+      "$date": "2024-02-12T18:45:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-11T20:10:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-12T19:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e800003"
+    },
+    "title": "Yellow Jackets Upset Rival in Overtime Thriller",
+    "slug": "yellow-jackets-upset-rival-in-overtime-thriller",
+    "content": "Georgia Tech stunned its conference rival in an overtime classic at McCamish Pavilion. Senior guard Tia Lawson sank a buzzer-beating three to force OT before Tech's defense clamped down in the extra period.\n\nHead coach Carla Brooks credited the win to disciplined rebounding and a sold-out home crowd.",
+    "excerpt": "Overtime heroics propel Tech to a statement win over its top rival.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100005"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "sports",
+        "value": "Tech Sports"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000005"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": true,
+    "allowComments": true,
+    "viewCount": 2089,
+    "publishedAt": {
+      "$date": "2024-02-15T03:15:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000002"
+    },
+    "createdAt": {
+      "$date": "2024-02-14T05:40:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-15T03:45:00Z"
+    }
   }
 ]

@@ -63,6 +63,7 @@ const mapArticleToPost = (article: any): Post => {
 
 function Sports() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentSportsArticles, setRecentSportsArticles] = useState<Post[]>([]);
     const [sportsArticles, setSportsArticles] = useState<Post[]>([]);
     const [techSports, setTechSports] = useState<Post[]>([]);
     const [usSports, setUsSports] = useState<Post[]>([]);
@@ -97,27 +98,46 @@ function Sports() {
                     controller.signal
                 );
 
+                const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
+                const allSportsArticles = mapResponseData(sportsResponse.data);
+                const getTimestamp = (post: Post) => {
+                    const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
+                    const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
+                    return Math.max(published, created);
+                };
+                const sortByPublishedDesc = (a: Post, b: Post) => getTimestamp(b) - getTimestamp(a);
+
+                const stickyPosts = allSportsArticles.filter((post) => post.isSticky).sort(sortByPublishedDesc);
+                const nonStickyPosts = allSportsArticles.filter((post) => !post.isSticky).sort(sortByPublishedDesc);
+                const orderedSports = [...stickyPosts, ...nonStickyPosts];
+                const RECENT_COUNT = Math.max(5, stickyPosts.length);
+                const recentSelection = orderedSports.slice(0, RECENT_COUNT);
+                const remainingSports = orderedSports.slice(RECENT_COUNT);
+                const recentIds = new Set(recentSelection.map((post) => post.id));
 
                 const filterBySubcategory = (articles: any[], subcategory: string) =>
-                    articles.filter((article: any) =>
-                        Array.isArray(article.subcategories) &&
-                        article.subcategories.some(
-                            (sub: any) =>
-                                typeof sub?.value === 'string' &&
-                                sub.value.toLowerCase() === subcategory
+                    articles
+                        .filter((article: any) =>
+                            Array.isArray(article.subcategories) &&
+                            article.subcategories.some(
+                                (sub: any) =>
+                                    typeof sub?.value === 'string' &&
+                                    sub.value.toLowerCase() === subcategory
+                            )
                         )
-                    );
-
-                setSportsArticles((sportsResponse.data || []).map(mapArticleToPost));
-                setTechSports(filterBySubcategory(sportsResponse.data || [], 'tech sports').map(mapArticleToPost));
-                setUsSports(filterBySubcategory(sportsResponse.data || [], 'us sports').map(mapArticleToPost));
-                setSeasonScoreboard(filterBySubcategory(sportsResponse.data || [], 'season scoreboard').map(mapArticleToPost));
+                        .map(mapArticleToPost)
+                        .filter((post) => !recentIds.has(post.id))
+                        .sort(sortByPublishedDesc);
 
                 if (!isMounted) {
                     return;
                 }
 
-                setSportsArticles((sportsResponse.data || []).map(mapArticleToPost));
+                setRecentSportsArticles(recentSelection);
+                setSportsArticles(remainingSports);
+                setTechSports(filterBySubcategory(sportsResponse.data || [], 'tech sports'));
+                setUsSports(filterBySubcategory(sportsResponse.data || [], 'us sports'));
+                setSeasonScoreboard(filterBySubcategory(sportsResponse.data || [], 'season scoreboard'));
             } catch (err) {
                 if (!isMounted) {
                     return;
@@ -164,13 +184,13 @@ function Sports() {
                 <div className='w-full'>
                     <div className='grid gap-5 grid-cols-1 lg:grid-cols-[auto_35%] w-full'>
                         <div className='flex flex-col gap-4'>
-                            {sportsArticles[0] && <ArticleBlock post={sportsArticles[0]} height='768px' />}
+                            {recentSportsArticles[0] && <ArticleBlock post={recentSportsArticles[0]} height='768px' />}
                         </div>
                         <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1'>
-                            {sportsArticles[1] && <ArticleBlock post={sportsArticles[1]} height='180px' />}
-                            {sportsArticles[2] && <ArticleBlock post={sportsArticles[2]} height='180px' />}
-                            {sportsArticles[3] && <ArticleBlock post={sportsArticles[3]} height='180px' />}
-                            {sportsArticles[4] && <ArticleBlock post={sportsArticles[4]} height='180px' />}
+                            {recentSportsArticles[1] && <ArticleBlock post={recentSportsArticles[1]} height='180px' />}
+                            {recentSportsArticles[2] && <ArticleBlock post={recentSportsArticles[2]} height='180px' />}
+                            {recentSportsArticles[3] && <ArticleBlock post={recentSportsArticles[3]} height='180px' />}
+                            {recentSportsArticles[4] && <ArticleBlock post={recentSportsArticles[4]} height='180px' />}
                         </div>
                     </div>
 
