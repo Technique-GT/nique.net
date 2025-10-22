@@ -58,7 +58,6 @@ const mapArticleToPost = (article: any): Post => {
 
 const SearchPage = () => {
   const [text, setText] = useState("");
-  const [searchedText, setSearchedText] = useState("");
   const [results, setResults] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +69,6 @@ const SearchPage = () => {
 
   useEffect(() => {
     setText(queryText);
-    setSearchedText(queryText);
   }, [queryText]);
 
   useEffect(() => {
@@ -136,38 +134,38 @@ const SearchPage = () => {
     navigate(`/${id}`);
   };
 
-function formatTimeSincePublished(publishedAt?: string | Date) {
-    if (!publishedAt) {
-        return '';
-    }
+  function formatTimeSincePublished(publishedAt?: string | Date) {
+      if (!publishedAt) {
+          return '';
+      }
 
-    const published = new Date(publishedAt);
-    if (Number.isNaN(published.getTime())) {
-        return '';
-    }
+      const published = new Date(publishedAt);
+      if (Number.isNaN(published.getTime())) {
+          return '';
+      }
 
-    const diff = Date.now() - published.getTime();
-    if (diff < 1000) {
-        return 'just now';
-    }
+      const diff = Date.now() - published.getTime();
+      if (diff < 1000) {
+          return 'just now';
+      }
 
-    const units = [
-        { label: 'day', milliseconds: 24 * 60 * 60 * 1000 },
-        { label: 'hour', milliseconds: 60 * 60 * 1000 },
-        { label: 'minute', milliseconds: 60 * 1000 },
-        { label: 'second', milliseconds: 1000 },
-    ];
+      const units = [
+          { label: 'day', milliseconds: 24 * 60 * 60 * 1000 },
+          { label: 'hour', milliseconds: 60 * 60 * 1000 },
+          { label: 'minute', milliseconds: 60 * 1000 },
+          { label: 'second', milliseconds: 1000 },
+      ];
 
-    for (const unit of units) {
-        if (diff >= unit.milliseconds) {
-            const value = Math.floor(diff / unit.milliseconds);
-            const suffix = value === 1 ? unit.label : `${unit.label}s`;
-            return `${value} ${suffix} ago`;
-        }
-    }
+      for (const unit of units) {
+          if (diff >= unit.milliseconds) {
+              const value = Math.floor(diff / unit.milliseconds);
+              const suffix = value === 1 ? unit.label : `${unit.label}s`;
+              return `${value} ${suffix} ago`;
+          }
+      }
 
-    return 'just now';
-}
+      return 'just now';
+  }
 
   return (
     <>
@@ -189,7 +187,7 @@ function formatTimeSincePublished(publishedAt?: string | Date) {
           {text && (
             <button
               onClick={handleClearSearch}
-              className="absolute right-12 top-1/2 transform -translate-y-1/2 text-blue-950 hover:text-blue-900"
+              className="absolute right-12 top-1/2 transform -translate-y-1/2 text-blue-950 hover:text-blue-900 mx-2"
               aria-label="Clear search"
             >
               <FaTimes size="24" />
@@ -200,7 +198,7 @@ function formatTimeSincePublished(publishedAt?: string | Date) {
             className="absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-950 hover:text-blue-900"
             aria-label="Search"
           >
-            <FaSearch size="30" />
+            <FaSearch size="24" />
           </button>
         </div>
 
@@ -234,12 +232,12 @@ function formatTimeSincePublished(publishedAt?: string | Date) {
               return (
                 <article
                   key={post.id}
-                  className="flex flex-col gap-4 border-b border-gray-200 pb-8 md:flex-row"
+                  className="flex flex-col w-full gap-4 border-b border-gray-200 pb-8 md:flex-row"
                 >
                   <button
                     type="button"
                     onClick={() => handleResultClick(post.id)}
-                    className="text-left flex flex-row gap-4"
+                    className="text-left flex flex-row gap-4 w-full"
                   >
                     {imageUrl && (
                         <img
@@ -267,7 +265,7 @@ function formatTimeSincePublished(publishedAt?: string | Date) {
                         By {post.author}
                       </div>
 
-                      <div>
+                      <div className="text-sm text-gray-500 text-right">
                         {formatTimeSincePublished(post.publishedAt)}
                       </div>
                     </div>
