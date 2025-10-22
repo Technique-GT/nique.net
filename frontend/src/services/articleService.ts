@@ -44,10 +44,27 @@ const fetchArticleComments = (articleId: string, signal?: AbortSignal) => {
   return apiClient.get(`/articles/${articleId}/comments`, { signal });
 };
 
+const searchArticles = (query: string, limit?: number, signal?: AbortSignal) => {
+  const params: Record<string, string | number> = {
+    status: 'published',
+    search: query,
+  };
+
+  if (typeof limit === 'number') {
+    params.limit = limit;
+  }
+
+  return apiClient.get('/articles', {
+    params,
+    signal,
+  });
+};
+
 export default {
   fetchRecentArticles,
   fetchArticlesByCategory,
   fetchCategories,
   fetchArticleById,
   fetchArticleComments,
+  searchArticles,
 };
