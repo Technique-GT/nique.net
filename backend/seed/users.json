@@ -1,0 +1,77 @@
+[
+  {
+    "_id": { "$oid": "65f0a305095c8b6a0a000001" },
+    "username": "editor.jane",
+    "email": "jane.doe@example.com",
+    "password": "$2a$12$KIX8Z8VfGZ7FeCUNXJzpuukjOSAmhpN6wX6ZspuEoBoBPXaG9q4Ha",
+    "role": "editor",
+    "profilePicture": "/uploads/users/jane.jpg",
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "bio": "University editor covering campus policy and student life.",
+    "website": "https://janedoe.com",
+    "socialMedia": {
+      "twitter": "@janedoe",
+      "instagram": "@janedoe",
+      "linkedin": "https://linkedin.com/in/janedoe"
+    },
+    "categories": [
+      { "$oid": "65f0a305095c8b6a0b100001" },
+      { "$oid": "65f0a305095c8b6a0b100003" }
+    ],
+    "isActive": true,
+    "lastLogin": { "$date": "2024-02-09T16:22:00Z" },
+    "createdAt": { "$date": "2024-02-05T14:30:00Z" },
+    "updatedAt": { "$date": "2024-02-09T16:22:00Z" }
+  },
+  {
+    "_id": { "$oid": "65f0a305095c8b6a0a000002" },
+    "username": "reporter.mike",
+    "email": "mike.ross@example.com",
+    "password": "$2a$12$KIX8Z8VfGZ7FeCUNXJzpuukjOSAmhpN6wX6ZspuEoBoBPXaG9q4Ha",
+    "role": "viewer",
+    "profilePicture": "",
+    "firstName": "Mike",
+    "lastName": "Ross",
+    "bio": "Student reporter covering arts and entertainment on campus.",
+    "website": "",
+    "socialMedia": {
+      "twitter": "@mikeross",
+      "instagram": "",
+      "linkedin": ""
+    },
+    "categories": [
+      { "$oid": "65f0a305095c8b6a0b100002" },
+      { "$oid": "65f0a305095c8b6a0b100004" }
+    ],
+    "isActive": true,
+    "lastLogin": { "$date": "2024-02-08T10:15:00Z" },
+    "createdAt": { "$date": "2024-02-05T15:45:00Z" },
+    "updatedAt": { "$date": "2024-02-08T10:15:00Z" }
+  },
+  {
+    "_id": { "$oid": "65f0a305095c8b6a0a000003" },
+    "username": "managing.samira",
+    "email": "samira.lee@example.com",
+    "password": "$2a$12$KIX8Z8VfGZ7FeCUNXJzpuukjOSAmhpN6wX6ZspuEoBoBPXaG9q4Ha",
+    "role": "manager",
+    "profilePicture": "/uploads/users/samira.png",
+    "firstName": "Samira",
+    "lastName": "Lee",
+    "bio": "Managing editor coordinating newsroom coverage and editorial calendar.",
+    "website": "https://samiralee.net",
+    "socialMedia": {
+      "twitter": "@samiralee",
+      "instagram": "@samira.news",
+      "linkedin": "https://linkedin.com/in/samiralee"
+    },
+    "categories": [
+      { "$oid": "65f0a305095c8b6a0b100001" },
+      { "$oid": "65f0a305095c8b6a0b100005" }
+    ],
+    "isActive": true,
+    "lastLogin": { "$date": "2024-02-11T12:05:00Z" },
+    "createdAt": { "$date": "2024-02-04T18:10:00Z" },
+    "updatedAt": { "$date": "2024-02-11T12:05:00Z" }
+  }
+]

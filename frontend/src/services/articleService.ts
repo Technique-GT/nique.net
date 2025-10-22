@@ -17,6 +17,18 @@ const fetchRecentArticles = (limit = 5, status = 'published', signal?: AbortSign
   });
 };
 
+const fetchStickyArticles = (limit?: number, signal?: AbortSignal) => {
+  const params: Record<string, string | number> = { status: 'published', isSticky: 'true' };
+  if (limit !== undefined) {
+    params.limit = limit;
+  }
+
+  return apiClient.get('/articles', {
+    params,
+    signal,
+  });
+};
+
 const fetchArticlesByCategory = (categoryId: string, limit?: number, signal?: AbortSignal) => {
   const params: Record<string, number> = {};
   if (limit !== undefined) {
@@ -62,6 +74,7 @@ const searchArticles = (query: string, limit?: number, signal?: AbortSignal) => 
 
 export default {
   fetchRecentArticles,
+  fetchStickyArticles,
   fetchArticlesByCategory,
   fetchCategories,
   fetchArticleById,

@@ -64,7 +64,11 @@ const mapArticleToPost = (article: any): Post => {
 
 function News() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentNews, setRecentNews] = useState<Post[]>([]);
     const [newsArticles, setNewsArticles] = useState<Post[]>([]);
+    const [atlantaNews, setAtlantaNews] = useState<Post[]>([]);
+    const [usNews, setUsNews] = useState<Post[]>([]);
+    const [entertainmentNews, setEntertainmentNews] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -96,11 +100,46 @@ function News() {
                     controller.signal
                 );
 
+                const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
+                const allNewsArticles = mapResponseData(newsResponse.data);
+                const getTimestamp = (post: Post) => {
+                    const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
+                    const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
+                    return Math.max(published, created);
+                };
+                const sortByPublishedDesc = (a: Post, b: Post) => getTimestamp(b) - getTimestamp(a);
+
+                const stickyPosts = allNewsArticles.filter((post) => post.isSticky).sort(sortByPublishedDesc);
+                const nonStickyPosts = allNewsArticles.filter((post) => !post.isSticky).sort(sortByPublishedDesc);
+                const orderedNews = [...stickyPosts, ...nonStickyPosts];
+                const RECENT_COUNT = Math.max(2, stickyPosts.length);
+                const recentSelection = orderedNews.slice(0, RECENT_COUNT);
+                const remainingNews = orderedNews.slice(RECENT_COUNT);
+                const recentIds = new Set(recentSelection.map((post) => post.id));
+
+                const filterBySubcategory = (articles: any[], subcategory: string) =>
+                    articles
+                        .filter((article: any) =>
+                            Array.isArray(article.subcategories) &&
+                            article.subcategories.some(
+                                (sub: any) =>
+                                    typeof sub?.value === 'string' &&
+                                    sub.value.toLowerCase() === subcategory
+                            )
+                        )
+                        .map(mapArticleToPost)
+                        .filter((post) => !recentIds.has(post.id))
+                        .sort(sortByPublishedDesc);
+
                 if (!isMounted) {
                     return;
                 }
 
-                setNewsArticles((newsResponse.data || []).map(mapArticleToPost));
+                setRecentNews(recentSelection);
+                setNewsArticles(remainingNews);
+                setAtlantaNews(filterBySubcategory(newsResponse.data || [], 'atlanta news'));
+                setUsNews(filterBySubcategory(newsResponse.data || [], 'us news'));
+                setEntertainmentNews(filterBySubcategory(newsResponse.data || [], 'entertainment'));
             } catch (err) {
                 if (!isMounted) {
                     return;
@@ -146,8 +185,8 @@ function News() {
             <div className='max-w-[1470px] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div className='w-full'>
                     <div className='flex flex-col gap-4'>
-                        {newsArticles[0] && <JustInBlock post={newsArticles[0]} />}
-                        {newsArticles[1] && <FeaturedStory post={newsArticles[1]} height='695px' />}
+                        {recentNews[0] && <JustInBlock post={recentNews[0]} />}
+                        {recentNews[1] && <FeaturedStory post={recentNews[1]} height='695px' />}
                     </div>
 
                     <hr className='my-4' />
@@ -155,25 +194,25 @@ function News() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Atlanta News</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='col-span-2'>
-                            {newsArticles[2] && <ArticleBlock post={newsArticles[2]} height='460px' />}
+                            {atlantaNews[0] && <ArticleBlock post={atlantaNews[0]} height='460px' />}
                         </div>
                         <div className='grid col-span-2 gap-4'>
-                            {newsArticles[3] && <ArticleBlock post={newsArticles[3]} height='222px' />}
-                            {newsArticles[4] && <ArticleBlock post={newsArticles[4]} height='222px' />}
+                            {atlantaNews[1] && <ArticleBlock post={atlantaNews[1]} height='222px' />}
+                            {atlantaNews[2] && <ArticleBlock post={atlantaNews[2]} height='222px' />}
                             <div className='col-span-2'>
-                                {newsArticles[5] && <ArticleBlock post={newsArticles[5]} height='222px' />}
+                                {atlantaNews[3] && <ArticleBlock post={atlantaNews[3]} height='222px' />}
                             </div>
                         </div>
                         <div className='col-span-2'>
                             {(() => {
-                                const posts = newsArticles.slice(6, 8);
+                                const posts = atlantaNews.slice(6, 8);
                                 return posts.length ? <SmallArticle posts={posts} direction='left'/> : null;
                             })()}
                         </div>
                         <hr className="block lg:hidden col-span-2" />
                         <div className='col-span-2'>
                             {(() => {
-                                const posts = newsArticles.slice(8, 10);
+                                const posts = atlantaNews.slice(8, 10);
                                 return posts.length ? <SmallArticle posts={posts} direction='left'/> : null;
                             })()}
                         </div>
@@ -184,13 +223,13 @@ function News() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">U.S. News</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='grid grid-cols-2 gap-4 col-span-2'>
-                            {newsArticles.slice(10, 14).map((article) => (
+                            {usNews.slice(0, 4).map((article) => (
                                 <ArticleBlock key={article.id} post={article} height='222px' />
                             ))}
                         </div>
                         <div className='grid col-span-2 gap-4'>
                             {(() => {
-                                const posts = newsArticles.slice(14, 18);
+                                const posts = usNews.slice(14, 18);
                                 return posts.length ? <SideArticle posts={posts} width='18%'/> : null;
                             })()}
                         </div>
@@ -200,7 +239,7 @@ function News() {
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.ENTERTAINMENT}</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
-                        {newsArticles.slice(18, 24).map((article) => (
+                        {entertainmentNews.slice(0, 4).map((article) => (
                             <ArticleBlock key={article.id} post={article} height='230px' />
                         ))}
                     </div>
@@ -209,7 +248,7 @@ function News() {
                 <div className='flex flex-col gap-4'>
                     <hr className="lg:mt-15" />
                     {(() => {
-                        const posts = newsArticles.slice(6, 9);
+                        const posts = newsArticles.slice(0, 3);
                         return posts.length ? (
                             <SideArticle posts={posts} width='80px' hasDesc={true}/>
                         ) : null;

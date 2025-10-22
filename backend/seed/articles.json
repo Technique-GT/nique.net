@@ -1,0 +1,2298 @@
+[
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e100001"
+    },
+    "title": "Campus Council Approves Housing Expansion",
+    "slug": "campus-council-approves-housing-expansion",
+    "content": "In a unanimous vote, the campus council approved funding for a new residential complex that will add 600 beds by 2026.\n\nAdministrators highlighted sustainable design elements and affordability guarantees for incoming students.",
+    "excerpt": "Council gives green light to the largest housing project in a decade.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 0
+      },
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 1
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100001"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "news",
+        "value": "Atlanta News"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000001"
+      },
+      {
+        "$oid": "65f0a305095c8b6a0c000003"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000001"
+    },
+    "status": "published",
+    "isSticky": true,
+    "allowComments": true,
+    "viewCount": 1820,
+    "publishedAt": {
+      "$date": "2024-02-01T10:00:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-01-30T14:20:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-02T09:30:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e100002"
+    },
+    "title": "SGA Launches Tuition Transparency Dashboard",
+    "slug": "sga-launches-tuition-transparency-dashboard",
+    "content": "Student Government released an online dashboard allowing students to track tuition spending categories.\n\nThe tool breaks down capital projects, faculty hiring, and financial aid distribution in real time.",
+    "excerpt": "New dashboard demystifies tuition allocation for current students.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100001"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "news",
+        "value": "Atlanta News"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      },
+      {
+        "$oid": "65f0a305095c8b6a0c000003"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000001"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 940,
+    "publishedAt": {
+      "$date": "2024-02-03T13:15:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-02T11:40:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-03T14:05:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e100003"
+    },
+    "title": "City Transit Adds Late-Night Shuttle for Campus",
+    "slug": "city-transit-adds-late-night-shuttle-for-campus",
+    "content": "Atlanta Transit Authority introduced a pilot shuttle that runs every 30 minutes between Tech Square and Midtown after midnight.\n\nThe partnership emerged after a series of student safety forums and will be evaluated at the end of the semester.",
+    "excerpt": "New shuttle responds to student calls for safer late-night travel.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100001"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "news",
+        "value": "Atlanta News"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000001"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 728,
+    "publishedAt": {
+      "$date": "2024-02-05T07:45:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-04T20:10:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-05T08:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e100004"
+    },
+    "title": "Research Labs Secure NSF Grant for AI Safety",
+    "slug": "research-labs-secure-nsf-grant-for-ai-safety",
+    "content": "A consortium of campus labs won a $4.5 million NSF grant to investigate AI safety frameworks for autonomous systems.\n\nThe grant funds undergraduate research stipends and partnerships with local industry leaders.",
+    "excerpt": "NSF award positions Tech researchers at the forefront of AI safety.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100001"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "news",
+        "value": "US News"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000003"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000001"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 1120,
+    "publishedAt": {
+      "$date": "2024-02-07T09:25:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-06T10:50:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-07T09:40:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e100005"
+    },
+    "title": "Tech Dining Overhauls Meal Plan Options",
+    "slug": "tech-dining-overhauls-meal-plan-options",
+    "content": "Beginning in fall 2024, campus dining will offer three customizable plans with expanded halal, vegan, and allergen-friendly stations.\n\nAdministrators say pricing will stay flat while eliminating the 150-swipe requirement.",
+    "excerpt": "Dining revamp promises more flexibility without cost increases.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100001"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "news",
+        "value": "Atlanta News"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 604,
+    "publishedAt": {
+      "$date": "2024-02-09T11:10:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-08T13:45:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-09T11:15:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e100006"
+    },
+    "title": "Faculty Senate Backs Pass/Fail Expansion",
+    "slug": "faculty-senate-backs-pass-fail-expansion",
+    "content": "The Faculty Senate approved a pilot allowing juniors and seniors to take up to six credits of electives pass/fail without GPA penalties.\n\nThe policy goes to the Provost\u2019s office for final approval later this month.",
+    "excerpt": "Pass/fail flexibility could arrive for upperclass students by fall.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100001"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "news",
+        "value": "Atlanta News"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      },
+      {
+        "$oid": "65f0a305095c8b6a0c000003"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000001"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 488,
+    "publishedAt": {
+      "$date": "2024-02-10T08:30:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-09T17:25:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-10T08:35:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e100007"
+    },
+    "title": "Campus Police Release Annual Safety Report",
+    "slug": "campus-police-release-annual-safety-report",
+    "content": "GT Police Department published its annual Clery report noting a 9% decrease in on-campus theft but a rise in scooter-related accidents.\n\nOfficials plan new lighting audits and scooter safety workshops this spring.",
+    "excerpt": "Latest safety report points to declining theft but emerging challenges.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100001"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "news",
+        "value": "Atlanta News"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000001"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 362,
+    "publishedAt": {
+      "$date": "2024-02-11T12:05:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-10T19:15:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-11T12:10:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e100008"
+    },
+    "title": "Tech Hosts Regional STEM Policy Summit",
+    "slug": "tech-hosts-regional-stem-policy-summit",
+    "content": "Policy makers from across the Southeast met on campus to design STEM workforce pathways, with breakout sessions led by Tech faculty and students.\n\nThe summit concluded with a resolution advocating for expanded undergraduate research funding.",
+    "excerpt": "Regional summit highlights Tech's role in shaping STEM policy.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      },
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 1
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100001"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "news",
+        "value": "US News"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000003"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 515,
+    "publishedAt": {
+      "$date": "2024-02-12T09:00:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-11T11:40:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-12T09:10:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e200001"
+    },
+    "title": "Wellness Ambassadors Launch Peer Support Pods",
+    "slug": "wellness-ambassadors-launch-peer-support-pods",
+    "content": "Counseling Center wellness ambassadors introduced small peer support pods aimed at easing the transition for first-year students.\n\nThe pods meet weekly to focus on stress management, building community, and navigating campus resources.",
+    "excerpt": "Peer-led support pods give first-years a new way to find community.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100002"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "life",
+        "value": "Tech Fashion"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 412,
+    "publishedAt": {
+      "$date": "2024-02-01T15:20:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-01-31T18:05:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-01T15:30:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e200002"
+    },
+    "title": "Campus Farmers Market Returns With Local Vendors",
+    "slug": "campus-farmers-market-returns-with-local-vendors",
+    "content": "The weekly campus farmers market reopened for spring featuring 25 local vendors, cooking demos, and discounted produce bundles for students with SNAP benefits.",
+    "excerpt": "Spring farmers market embraces local food and affordability.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100002"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "life",
+        "value": "Tech Fashion"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      },
+      {
+        "$oid": "65f0a305095c8b6a0c000004"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 298,
+    "publishedAt": {
+      "$date": "2024-02-03T16:40:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-02T10:55:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-03T16:45:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e200003"
+    },
+    "title": "Residence Life Hosts DIY Dorm Makeover Contest",
+    "slug": "residence-life-hosts-diy-dorm-makeover-contest",
+    "content": "Residence Life rolled out a dorm makeover competition encouraging students to upcycle furniture and showcase creative storage solutions.\n\nWinners receive gift cards to the campus bookstore and sustainability swag bags.",
+    "excerpt": "DIY contest sparks creativity and sustainability in dorm spaces.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100002"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "life",
+        "value": "Tech Fashion"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      },
+      {
+        "$oid": "65f0a305095c8b6a0c000004"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 356,
+    "publishedAt": {
+      "$date": "2024-02-05T17:00:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-04T09:25:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-05T17:05:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e200004"
+    },
+    "title": "Student Chefs Share Budget-Friendly Meal Prep",
+    "slug": "student-chefs-share-budget-friendly-meal-prep",
+    "content": "The Culinary Club hosted a workshop on meal prepping with limited kitchen access, sharing recipes and ingredient swaps for dorm cooking.",
+    "excerpt": "Culinary Club proves healthy meal prep is possible without a full kitchen.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100002"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "life",
+        "value": "Tech Fashion"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      },
+      {
+        "$oid": "65f0a305095c8b6a0c000004"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 274,
+    "publishedAt": {
+      "$date": "2024-02-07T14:20:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-06T08:35:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-07T14:25:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e200005"
+    },
+    "title": "Health Center Expands Teletherapy Hours",
+    "slug": "health-center-expands-teletherapy-hours",
+    "content": "Campus Health announced extended teletherapy hours with evening and weekend appointments to better serve graduate and co-op students.",
+    "excerpt": "Expanded teletherapy aims to meet growing demand for counseling support.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100002"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "life",
+        "value": "Tech Fashion"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000001"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 389,
+    "publishedAt": {
+      "$date": "2024-02-08T09:50:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-07T15:10:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-08T09:55:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e200006"
+    },
+    "title": "Outdoor Recreation Club Plans Spring Adventure Series",
+    "slug": "outdoor-recreation-club-plans-spring-adventure-series",
+    "content": "The Outdoor Recreation Club unveiled a spring series including hiking, paddle boarding, and overnight camping trips with beginner-friendly pricing.",
+    "excerpt": "Adventure series invites students to explore Georgia's natural spaces.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100002"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "life",
+        "value": "Tech Fashion"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 321,
+    "publishedAt": {
+      "$date": "2024-02-09T07:15:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-08T10:05:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-09T07:20:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e200007"
+    },
+    "title": "Career Center Hosts Women in Tech Networking Night",
+    "slug": "career-center-hosts-women-in-tech-networking-night",
+    "content": "More than 200 students attended a networking night connecting women in tech with alumnae mentors and recruiters from partner companies.",
+    "excerpt": "Networking night bridges students with alumnae leaders in tech.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100002"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "life",
+        "value": "Tech Fashion"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      },
+      {
+        "$oid": "65f0a305095c8b6a0c000003"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 355,
+    "publishedAt": {
+      "$date": "2024-02-10T19:40:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-09T21:30:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-10T19:45:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e200008"
+    },
+    "title": "Artisans Collective Opens Pop-Up Studio on Campus",
+    "slug": "artisans-collective-opens-pop-up-studio-on-campus",
+    "content": "A student-run artisans collective opened a pop-up studio in the Student Center offering weekend workshops in ceramics, fiber arts, and screen printing.",
+    "excerpt": "Pop-up studio gives creatives a collaborative space to learn new crafts.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      },
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 1
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100002"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "life",
+        "value": "Tech Fashion"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000004"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 276,
+    "publishedAt": {
+      "$date": "2024-02-12T11:10:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-11T13:55:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-12T11:20:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e300001"
+    },
+    "title": "Editorial: Tech Must Address Accessibility in New Builds",
+    "slug": "editorial-tech-must-address-accessibility-in-new-builds",
+    "content": "With new construction underway across campus, our editorial board urges administrators to prioritize universal design principles and student input on accessibility features.",
+    "excerpt": "Editorial board presses for universal design in upcoming projects.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100003"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "opinion",
+        "value": "fitness"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000001"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000001"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 501,
+    "publishedAt": {
+      "$date": "2024-02-01T08:00:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-01-31T12:15:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-01T08:05:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e300002"
+    },
+    "title": "Column: Why Mentorship Matters for First-Gen Students",
+    "slug": "column-why-mentorship-matters-for-first-gen-students",
+    "content": "As a first-generation student, I found mentorship essential for navigating unwritten rules. Tech should invest in expanded mentorship programs pairing first-gen students with faculty allies.",
+    "excerpt": "Opinion writer advocates for more robust mentorship for first-gen students.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100003"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "opinion",
+        "value": "mental-health"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 430,
+    "publishedAt": {
+      "$date": "2024-02-03T09:30:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-02T10:20:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-03T09:35:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e300003"
+    },
+    "title": "Guest Column: Invest in Atlanta's Tech Corridor",
+    "slug": "guest-column-invest-in-atlantas-tech-corridor",
+    "content": "City council member Jordan Ellis argues for transit investments linking Tech Square with growing tech hubs to support talent retention and equitable growth.",
+    "excerpt": "City leader calls for transit-focused investments in the tech corridor.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100003"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "opinion",
+        "value": "fitness"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000003"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000001"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 387,
+    "publishedAt": {
+      "$date": "2024-02-05T13:00:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-04T15:25:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-05T13:05:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e300004"
+    },
+    "title": "Editorial: Protect Student Journalism Funding",
+    "slug": "editorial-protect-student-journalism-funding",
+    "content": "The Technique editorial board urges campus leaders to safeguard student media funding amid ongoing budget realignments and advertising shortfalls.",
+    "excerpt": "Editorial argues that student voices require stable institutional support.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 0
+      },
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 1
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100003"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "opinion",
+        "value": "nutrition"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000001"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": true,
+    "allowComments": true,
+    "viewCount": 612,
+    "publishedAt": {
+      "$date": "2024-02-07T06:45:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-06T08:15:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-07T06:50:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e300005"
+    },
+    "title": "Column: Redesigning Tech Walkway for Pedestrian Safety",
+    "slug": "column-redesigning-tech-walkway-for-pedestrian-safety",
+    "content": "With scooter and bike traffic increasing, Tech Walkway needs better lane separation, clearer signage, and enforcement to protect pedestrians.",
+    "excerpt": "Opinion writer proposes concrete steps to keep Tech Walkway safe.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100003"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "opinion",
+        "value": "fitness"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 344,
+    "publishedAt": {
+      "$date": "2024-02-08T12:25:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-07T09:40:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-08T12:35:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e300006"
+    },
+    "title": "Editorial: Let Students Lead Sustainability Projects",
+    "slug": "editorial-let-students-lead-sustainability-projects",
+    "content": "Student organizations have piloted successful sustainability projects; administration should scale them with funding, mentorship, and institutional backing.",
+    "excerpt": "Editorial calls for institutional support of student-led sustainability ideas.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100003"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "opinion",
+        "value": "nutrition"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000001"
+      },
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000001"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 468,
+    "publishedAt": {
+      "$date": "2024-02-09T10:05:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000002"
+    },
+    "createdAt": {
+      "$date": "2024-02-08T07:30:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-09T10:10:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e300007"
+    },
+    "title": "Column: Redefining Success Beyond GPA",
+    "slug": "column-redefining-success-beyond-gpa",
+    "content": "Tech culture often equates success with GPA. It's time to recognize learning, creativity, and community impact as equally meaningful achievements.",
+    "excerpt": "Opinion urges students to broaden their definition of success.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100003"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "opinion",
+        "value": "mental-health"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 309,
+    "publishedAt": {
+      "$date": "2024-02-10T13:55:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000002"
+    },
+    "createdAt": {
+      "$date": "2024-02-09T12:05:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-10T14:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e300008"
+    },
+    "title": "Editorial: Celebrate the Hidden Labor on Campus",
+    "slug": "editorial-celebrate-the-hidden-labor-on-campus",
+    "content": "Custodial staff, dining workers, and maintenance teams keep Tech running. Administration should spotlight their contributions and improve compensation.",
+    "excerpt": "Editorial argues for recognition and pay equity for essential staff.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 0
+      },
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 1
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100003"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "opinion",
+        "value": "nutrition"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000001"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 522,
+    "publishedAt": {
+      "$date": "2024-02-12T07:25:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-11T06:50:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-12T07:30:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e400001"
+    },
+    "title": "Student Theatre Debuts Original Sci-Fi Production",
+    "slug": "student-theatre-debuts-original-sci-fi-production",
+    "content": "The DramaTech troupe premiered an original sci-fi play written and directed by students, blending practical effects with projection mapping.",
+    "excerpt": "DramaTech's new production pushes boundaries with sci-fi storytelling.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100004"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "entertainment",
+        "value": "Movies and Shows"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000004"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 478,
+    "publishedAt": {
+      "$date": "2024-02-01T20:30:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-01-31T19:00:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-01T21:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e400002"
+    },
+    "title": "Indie Film Showcase Spotlights Student Directors",
+    "slug": "indie-film-showcase-spotlights-student-directors",
+    "content": "The Tech Film Society curated a slate of student-produced short films exploring themes of identity, climate anxiety, and campus humor.",
+    "excerpt": "Film society celebrates student storytellers with indie showcase.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100004"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "entertainment",
+        "value": "Movies and Shows"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000004"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 332,
+    "publishedAt": {
+      "$date": "2024-02-03T22:10:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-02T17:35:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-03T22:15:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e400003"
+    },
+    "title": "Campus Orchestra Prepares for Spring Gala",
+    "slug": "campus-orchestra-prepares-for-spring-gala",
+    "content": "The Tech Symphony Orchestra is rehearsing a genre-spanning setlist featuring classical works, anime themes, and a surprise EDM mashup for the spring gala.",
+    "excerpt": "Symphony orchestra mixes genres for an adventurous spring program.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100004"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "entertainment",
+        "value": "Music"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000004"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 410,
+    "publishedAt": {
+      "$date": "2024-02-05T19:55:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-04T21:05:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-05T20:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e400004"
+    },
+    "title": "Esports Arena Hosts Collegiate Valorant Invitational",
+    "slug": "esports-arena-hosts-collegiate-valorant-invitational",
+    "content": "Tech's esports arena welcomed teams from across the Southeast for a weekend-long Valorant invitational, complete with shoutcasters and live audience.",
+    "excerpt": "Valorant invitational showcases Tech's growing esports scene.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100004"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "entertainment",
+        "value": "Comics"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000004"
+      },
+      {
+        "$oid": "65f0a305095c8b6a0c000005"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 592,
+    "publishedAt": {
+      "$date": "2024-02-07T23:45:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000002"
+    },
+    "createdAt": {
+      "$date": "2024-02-06T18:30:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-07T23:50:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e400005"
+    },
+    "title": "Dance Team Captures Top Honors at Nationals",
+    "slug": "dance-team-captures-top-honors-at-nationals",
+    "content": "Tech's Goldrush dance team won the contemporary division at NDA Nationals with a performance inspired by Atlanta's civil rights history.",
+    "excerpt": "Goldrush brings home national title with poignant choreography.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100004"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "entertainment",
+        "value": "Movies and Shows"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000004"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 644,
+    "publishedAt": {
+      "$date": "2024-02-09T21:25:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-08T20:35:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-09T21:30:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e400006"
+    },
+    "title": "Local Band Premieres New EP at Student Center",
+    "slug": "local-band-premieres-new-ep-at-student-center",
+    "content": "Indie rock trio Midtown Mosaic debuted their latest EP during a packed show at the Student Center, featuring collaborations with Tech's music tech students.",
+    "excerpt": "Midtown Mosaic's EP release draws a crowd to the Student Center stage.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100004"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "entertainment",
+        "value": "Music"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000004"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 287,
+    "publishedAt": {
+      "$date": "2024-02-10T18:10:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-09T19:20:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-10T18:15:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e400007"
+    },
+    "title": "Student Art Walk Celebrates Black Creatives",
+    "slug": "student-art-walk-celebrates-black-creatives",
+    "content": "The Black Student Alumni Connection hosted an art walk featuring Black student painters, sculptors, and digital artists across campus galleries.",
+    "excerpt": "Art walk shines a spotlight on Black creatives and their work.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100004"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "entertainment",
+        "value": "Books"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000004"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 354,
+    "publishedAt": {
+      "$date": "2024-02-11T16:45:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-10T14:30:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-11T16:50:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e400008"
+    },
+    "title": "Board Game Club Hosts Mega Marathon Weekend",
+    "slug": "board-game-club-hosts-mega-marathon-weekend",
+    "content": "The Board Game Club hosted a 48-hour marathon featuring indie tabletop designers, charity raffles, and a giant Settlers of Catan tournament.",
+    "excerpt": "Board Game Club's marathon packs the student center with players.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100004"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "entertainment",
+        "value": "Comics"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000004"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 295,
+    "publishedAt": {
+      "$date": "2024-02-12T20:05:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000002"
+    },
+    "createdAt": {
+      "$date": "2024-02-11T22:15:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-12T20:10:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e500001"
+    },
+    "title": "Eagles Baseball Shuts Out Coastal in Season Opener",
+    "slug": "eagles-baseball-shuts-out-coastal-in-season-opener",
+    "content": "Behind a complete game from ace pitcher Tyler James, the Eagles blanked Coastal State 6-0 to open the season with a statement win.",
+    "excerpt": "Tyler James tosses a shutout as Eagles baseball starts hot.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100005"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "sports",
+        "value": "Tech Sports"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000005"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 512,
+    "publishedAt": {
+      "$date": "2024-02-01T21:10:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-01-31T22:40:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-01T21:15:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e500002"
+    },
+    "title": "Softball Walks Off Rival Panthers in Extra Innings",
+    "slug": "softball-walks-off-rival-panthers-in-extra-innings",
+    "content": "Sophomore shortstop Maya Kirk delivered a walk-off double in the 10th inning to lift the Eagles over the Panthers in a thriller at Mewborn Field.",
+    "excerpt": "Maya Kirk's walk-off double caps an instant softball classic.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100005"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "sports",
+        "value": "Tech Sports"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000005"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 438,
+    "publishedAt": {
+      "$date": "2024-02-03T18:05:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-02T20:20:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-03T18:10:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e500003"
+    },
+    "title": "Men's Basketball Upsets Ranked Rival on the Road",
+    "slug": "mens-basketball-upsets-ranked-rival-on-the-road",
+    "content": "Led by senior guard Nina Chen's 28 points, the Eagles stunned No. 14 Metro University 78-74 with clutch defense down the stretch.",
+    "excerpt": "Chen shines in statement road win over a ranked opponent.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100005"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "sports",
+        "value": "US Sports"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000005"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": true,
+    "allowComments": true,
+    "viewCount": 783,
+    "publishedAt": {
+      "$date": "2024-02-05T23:20:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-04T22:15:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-05T23:25:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e500004"
+    },
+    "title": "Track and Field Sets Records at Indoor Invitational",
+    "slug": "track-and-field-sets-records-at-indoor-invitational",
+    "content": "Tech track athletes broke three program indoor records at the Clemson Invitational, highlighted by freshman sprinter Alexis Brown's 200m time.",
+    "excerpt": "Track team shatters records and builds momentum for championships.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100005"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "sports",
+        "value": "Tech Sports"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000005"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 365,
+    "publishedAt": {
+      "$date": "2024-02-07T14:45:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-06T13:05:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-07T14:50:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e500005"
+    },
+    "title": "Women's Tennis Sweeps Opening Weekend Matches",
+    "slug": "womens-tennis-sweeps-opening-weekend-matches",
+    "content": "The women's tennis squad swept their doubleheader against Mercer and Georgia State, anchored by dominant singles play from senior captain Isla Moreno.",
+    "excerpt": "Women's tennis opens the season with two decisive sweeps.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100005"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "sports",
+        "value": "Tech Sports"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000005"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 298,
+    "publishedAt": {
+      "$date": "2024-02-09T16:25:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000002"
+    },
+    "createdAt": {
+      "$date": "2024-02-08T15:15:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-09T16:30:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e500006"
+    },
+    "title": "Club Ultimate Qualifies for Nationals",
+    "slug": "club-ultimate-qualifies-for-nationals",
+    "content": "Tech's club Ultimate Frisbee team punched their ticket to nationals after a dramatic universe-point victory over Georgia College in the regional final.",
+    "excerpt": "Ultimate team earns nationals berth with thrilling universe-point win.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100005"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "sports",
+        "value": "Tech Sports"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000005"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 332,
+    "publishedAt": {
+      "$date": "2024-02-10T11:50:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-09T10:05:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-10T11:55:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e500007"
+    },
+    "title": "Rowing Team Opens Season with Regatta Sweep",
+    "slug": "rowing-team-opens-season-with-regatta-sweep",
+    "content": "In their first outing of the year, the rowing team swept gold across varsity eight, novice eight, and four events at the Lanier Winter Regatta.",
+    "excerpt": "Rowing squad starts strong by sweeping the season-opening regatta.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100005"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "sports",
+        "value": "Tech Sports"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000005"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 276,
+    "publishedAt": {
+      "$date": "2024-02-11T15:05:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-10T09:40:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-11T15:10:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e500008"
+    },
+    "title": "Gymnastics Scores Season-High in Home Meet",
+    "slug": "gymnastics-scores-season-high-in-home-meet",
+    "content": "The gymnastics team posted a season-high 196.450 to defeat Clemson and NC State, highlighted by sophomore Ava Patel's 9.925 on beam.",
+    "excerpt": "Gymnastics hits its stride with a season-best team score at home.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100005"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "sports",
+        "value": "Tech Sports"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000005"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": false,
+    "allowComments": true,
+    "viewCount": 347,
+    "publishedAt": {
+      "$date": "2024-02-12T19:20:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-11T18:05:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-12T19:25:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e800001"
+    },
+    "title": "Campus Safety Task Force Releases New Guidelines",
+    "slug": "campus-safety-task-force-releases-new-guidelines",
+    "content": "The Institute's Campus Safety Task Force has published its first set of recommendations outlining expanded escort services, improved lighting near residence halls, and a centralized reporting hotline.\n\nImplementation begins this spring with additional funding allocated for officer training and blue-light upgrades.",
+    "excerpt": "Campus Safety Task Force unveils spring rollout of new security measures.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000001"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100001"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "news",
+        "value": "Atlanta News"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000001"
+      },
+      {
+        "$oid": "65f0a305095c8b6a0c000003"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000001"
+    },
+    "status": "published",
+    "isSticky": true,
+    "allowComments": true,
+    "viewCount": 1240,
+    "publishedAt": {
+      "$date": "2024-02-14T14:30:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000003"
+    },
+    "createdAt": {
+      "$date": "2024-02-13T16:45:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-14T15:05:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e800002"
+    },
+    "title": "5 Must-Try Cafés Around Midtown",
+    "slug": "5-must-try-cafes-around-midtown",
+    "content": "From early morning espresso to late-night study snacks, Midtown's café scene is thriving. We scouted five student-favorite spots offering generous study space, reliable Wi-Fi, and house-made pastries.\n\nEach cafe shared signature menu items and discounts available with a BuzzCard.",
+    "excerpt": "Five student-approved cafés in Midtown serving strong coffee and study vibes.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000002"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100002"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "life",
+        "value": "Tech Fashion"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000002"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000002"
+    },
+    "status": "published",
+    "isSticky": true,
+    "allowComments": true,
+    "viewCount": 1764,
+    "publishedAt": {
+      "$date": "2024-02-12T18:45:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000001"
+    },
+    "createdAt": {
+      "$date": "2024-02-11T20:10:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-12T19:00:00Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "65f0a305095c8b6a0e800003"
+    },
+    "title": "Yellow Jackets Upset Rival in Overtime Thriller",
+    "slug": "yellow-jackets-upset-rival-in-overtime-thriller",
+    "content": "Georgia Tech stunned its conference rival in an overtime classic at McCamish Pavilion. Senior guard Tia Lawson sank a buzzer-beating three to force OT before Tech's defense clamped down in the extra period.\n\nHead coach Carla Brooks credited the win to disciplined rebounding and a sold-out home crowd.",
+    "excerpt": "Overtime heroics propel Tech to a statement win over its top rival.",
+    "authors": [
+      {
+        "user": {
+          "$oid": "65f0a305095c8b6a0a000003"
+        },
+        "position": 0
+      }
+    ],
+    "categories": [
+      {
+        "$oid": "65f0a305095c8b6a0b100005"
+      }
+    ],
+    "subcategories": [
+      {
+        "category": "sports",
+        "value": "Tech Sports"
+      }
+    ],
+    "tags": [
+      {
+        "$oid": "65f0a305095c8b6a0c000005"
+      }
+    ],
+    "featuredImage": {
+      "$oid": "65f0a305095c8b6a0d000003"
+    },
+    "status": "published",
+    "isSticky": true,
+    "allowComments": true,
+    "viewCount": 2089,
+    "publishedAt": {
+      "$date": "2024-02-15T03:15:00Z"
+    },
+    "updatedBy": {
+      "$oid": "65f0a305095c8b6a0a000002"
+    },
+    "createdAt": {
+      "$date": "2024-02-14T05:40:00Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-15T03:45:00Z"
+    }
+  }
+]

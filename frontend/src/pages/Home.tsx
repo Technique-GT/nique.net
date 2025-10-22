@@ -11,6 +11,7 @@ import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 
 const mapArticleToPost = (article: any): Post => {
+    // add primary author
     const primaryAuthor = article.authors?.[0]?.user;
 
     let authorName = 'Technique Staff';
@@ -30,6 +31,7 @@ const mapArticleToPost = (article: any): Post => {
         }
     }
 
+    // add description
     const descriptionSource = article.excerpt || article.content || '';
     const normalizedDescription =
         typeof descriptionSource === 'string'
@@ -67,6 +69,7 @@ function Home() {
     const [newsArticles, setNewsArticles] = useState<Post[]>([]);
     const [entertainmentArticles, setEntertainmentArticles] = useState<Post[]>([]);
     const [opinionArticles, setOpinionArticles] = useState<Post[]>([]);
+    const [sportsArticles, setSportsArticles] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -90,14 +93,18 @@ function Home() {
                 const newsCategoryId = findCategoryId(Categories.NEWS);
                 const entertainmentCategoryId = findCategoryId(Categories.ENTERTAINMENT);
                 const opinionCategoryId = findCategoryId(Categories.OPINION);
+                const sportsCategoryId = findCategoryId(Categories.SPORTS);
 
                 const [
+                    stickyResponse,
                     recentResponse,
                     lifeResponse,
                     newsResponse,
                     entertainmentResponse,
                     opinionResponse,
+                    sportsResponse,
                 ] = await Promise.all([
+                    articleService.fetchStickyArticles(undefined, controller.signal),
                     articleService.fetchRecentArticles(5, 'published', controller.signal),
                     lifeCategoryId
                         ? articleService.fetchArticlesByCategory(lifeCategoryId, 3, controller.signal)
@@ -111,17 +118,52 @@ function Home() {
                     opinionCategoryId
                         ? articleService.fetchArticlesByCategory(opinionCategoryId, 5, controller.signal)
                         : Promise.resolve({ data: [] }),
+                    sportsCategoryId
+                        ? articleService.fetchArticlesByCategory(sportsCategoryId, 5, controller.signal)
+                        : Promise.resolve({ data: [] }),
                 ]);
 
                 if (!isMounted) {
                     return;
                 }
 
-                setRecentArticles((recentResponse.data || []).map(mapArticleToPost));
-                setLifeArticles((lifeResponse.data || []).map(mapArticleToPost));
-                setNewsArticles((newsResponse.data || []).map(mapArticleToPost));
-                setEntertainmentArticles((entertainmentResponse.data || []).map(mapArticleToPost));
-                setOpinionArticles((opinionResponse.data || []).map(mapArticleToPost));
+                const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
+                const stickyPosts = mapResponseData(stickyResponse.data);
+                const recentPosts = mapResponseData(recentResponse.data);
+                const lifePosts = mapResponseData(lifeResponse.data);
+                const newsPosts = mapResponseData(newsResponse.data);
+                const entertainmentPosts = mapResponseData(entertainmentResponse.data);
+                const opinionPosts = mapResponseData(opinionResponse.data);
+                const sportsPosts = mapResponseData(sportsResponse.data);
+
+                const sortByPublishedDesc = (a: Post, b: Post) => {
+                    const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+                    const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+                    return dateB - dateA;
+                };
+
+                const stickySorted = stickyPosts
+                    .filter((post) => post.isSticky)
+                    .sort(sortByPublishedDesc);
+                const stickyIds = new Set(stickySorted.map((post) => post.id));
+
+                const nonStickyRecent = recentPosts
+                    .filter((post) => !stickyIds.has(post.id))
+                    .sort(sortByPublishedDesc);
+
+                const sortedRecent = [...stickySorted, ...nonStickyRecent];
+                const recentIds = new Set(sortedRecent.map((post) => post.id));
+                const filterAndSort = (posts: Post[]) =>
+                    posts
+                        .filter((post) => !recentIds.has(post.id))
+                        .sort(sortByPublishedDesc);
+
+                setRecentArticles(sortedRecent);
+                setLifeArticles(filterAndSort(lifePosts));
+                setNewsArticles(filterAndSort(newsPosts));
+                setEntertainmentArticles(filterAndSort(entertainmentPosts));
+                setOpinionArticles(filterAndSort(opinionPosts));
+                setSportsArticles(filterAndSort(sportsPosts)); 
             } catch (err) {
                 if (!isMounted) {
                     return;
@@ -172,7 +214,7 @@ function Home() {
                 <div className='w-full'>
                     <div className='grid gap-5 grid-cols-1 lg:grid-cols-[30%_auto] w-full'>
                         <div className='flex flex-col gap-4 order-last lg:order-first'>
-                            {recentArticles.slice(1, 5).map((article) => (
+                            {recentArticles.slice(2, 6).map((article) => (
                                 <ArticleBlock key={article.id} post={article} height='200px' />
                             ))}
                         </div>
@@ -210,6 +252,15 @@ function Home() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.ENTERTAINMENT}</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         {entertainmentArticles.map((article) => (
+                            <ArticleBlock key={article.id} post={article} height='230px' />
+                        ))}
+                    </div>
+
+                    <hr className='my-4' />
+
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.SPORTS}</h4>
+                    <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
+                        {sportsArticles.map((article) => (
                             <ArticleBlock key={article.id} post={article} height='230px' />
                         ))}
                     </div>

@@ -47,7 +47,7 @@ exports.createArticle = async (req, res) => {
 exports.getAllArticles = async (req, res) => {
   try {
     let query = {};
-    const { status, category, author, search, limit } = req.query;
+    const { status, category, author, search, limit, isSticky } = req.query;
     const user = req.user || { role: 'viewer', id: null };
 
     // Apply filters
@@ -69,6 +69,13 @@ exports.getAllArticles = async (req, res) => {
     }
 
     const parsedLimit = parseInt(limit, 10);
+    if (typeof isSticky !== 'undefined') {
+      if (isSticky === 'true') {
+        query.isSticky = true;
+      } else if (isSticky === 'false') {
+        query.isSticky = false;
+      }
+    }
 
     let articleQuery = Article.find(query)
       .populate('authors.user', 'username profilePicture')
@@ -92,13 +99,23 @@ exports.getAllArticles = async (req, res) => {
 exports.getArticleByCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
-    const { limit } = req.query;
+    const { limit, isSticky } = req.query;
     const parsedLimit = parseInt(limit, 10);
 
-    let articleQuery = Article.find({ 
+    const findQuery = { 
       categories: categoryId, 
       status: 'published' 
-    })
+    };
+
+    if (typeof isSticky !== 'undefined') {
+      if (isSticky === 'true') {
+        findQuery.isSticky = true;
+      } else if (isSticky === 'false') {
+        findQuery.isSticky = false;
+      }
+    }
+
+    let articleQuery = Article.find(findQuery)
     .populate('authors.user', 'username profilePicture')
     .populate('categories', 'name')
     .populate('tags', 'name')

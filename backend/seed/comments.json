@@ -1,0 +1,33 @@
+[
+  {
+    "_id": { "$oid": "65f0a305095c8b6a0f000001" },
+    "content": "Really encouraged to see student leaders pushing for accountability. Looking forward to the town hall next week.",
+    "article": { "$oid": "65f0a305095c8b6a0e100001" },
+    "author": { "$oid": "65f0a305095c8b6a0a000003" },
+    "isApproved": true,
+    "isSpam": false,
+    "createdAt": { "$date": "2024-02-10T15:05:00Z" },
+    "updatedAt": { "$date": "2024-02-10T15:05:00Z" }
+  },
+  {
+    "_id": { "$oid": "65f0a305095c8b6a0f000002" },
+    "content": "Thanks Samira! We're planning a live blog from the town hall—stay tuned.",
+    "article": { "$oid": "65f0a305095c8b6a0e100001" },
+    "author": { "$oid": "65f0a305095c8b6a0a000001" },
+    "parentComment": { "$oid": "65f0a305095c8b6a0f000001" },
+    "isApproved": true,
+    "isSpam": false,
+    "createdAt": { "$date": "2024-02-10T16:12:00Z" },
+    "updatedAt": { "$date": "2024-02-10T16:12:00Z" }
+  },
+  {
+    "_id": { "$oid": "65f0a305095c8b6a0f000003" },
+    "content": "Can we get a playlist of the performers? Would love to check them out before the showcase.",
+    "article": { "$oid": "65f0a305095c8b6a0e200002" },
+    "author": { "$oid": "65f0a305095c8b6a0a000002" },
+    "isApproved": false,
+    "isSpam": false,
+    "createdAt": { "$date": "2024-02-09T20:05:00Z" },
+    "updatedAt": { "$date": "2024-02-09T20:05:00Z" }
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "_id": { "$oid": "65f0a305095c8b6a16000001" },
+    "name": "Alex Kim",
+    "email": "alex.kim@example.com",
+    "subject": "Request for coverage",
+    "message": "Hi team, could you cover the upcoming robotics exhibition on March 5?",
+    "isRead": true,
+    "responded": true,
+    "responseNotes": "Reporter assigned; follow-up email sent on Feb 10.",
+    "createdAt": { "$date": "2024-02-08T14:25:00Z" },
+    "updatedAt": { "$date": "2024-02-10T09:10:00Z" }
+  }
+]

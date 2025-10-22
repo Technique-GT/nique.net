@@ -61,6 +61,7 @@ const mapArticleToPost = (article: any): Post => {
 
 function Opinions() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentOpinionArticles, setRecentOpinionArticles] = useState<Post[]>([]);
     const [opinionArticles, setOpinionArticles] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
 
@@ -93,11 +94,28 @@ function Opinions() {
             controller.signal
             );
 
+            const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
+            const allOpinions = mapResponseData(opinionResponse.data);
+            const getTimestamp = (post: Post) => {
+                const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
+                const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
+                return Math.max(published, created);
+            };
+            const sortByPublishedDesc = (a: Post, b: Post) => getTimestamp(b) - getTimestamp(a);
+
+            const stickyPosts = allOpinions.filter((post) => post.isSticky).sort(sortByPublishedDesc);
+            const nonStickyPosts = allOpinions.filter((post) => !post.isSticky).sort(sortByPublishedDesc);
+            const orderedOpinion = [...stickyPosts, ...nonStickyPosts];
+            const RECENT_COUNT = Math.max(5, stickyPosts.length);
+            const recentSelection = orderedOpinion.slice(0, RECENT_COUNT);
+            const remainingOpinion = orderedOpinion.slice(RECENT_COUNT);
+
             if (!isMounted) {
             return;
             }
 
-            setOpinionArticles((opinionResponse.data || []).map(mapArticleToPost));
+            setRecentOpinionArticles(recentSelection);
+            setOpinionArticles(remainingOpinion);
         } catch (err) {
             if (!isMounted) {
             return;
@@ -143,10 +161,10 @@ function Opinions() {
 
         <div className='max-w-[1470px] m-auto p-5 flex flex-col gap-8'>
             <div className='grid grid-cols-1 lg:grid-cols-[70%_30%] gap-4'>
-            {opinionArticles[0] && <FeaturedStory post={opinionArticles[0]} height='670px' />}
+            {recentOpinionArticles[0] && <FeaturedStory post={recentOpinionArticles[0]} height='670px' />}
             <div className='flex flex-col gap-4'>
                 {(() => {
-                const posts = opinionArticles.slice(1, 5);
+                const posts = recentOpinionArticles.slice(1, 5);
                 return posts.length ? (
                     <SideArticle posts={posts} width='80px' hasDesc={true}/>
                 ) : null;
@@ -155,19 +173,19 @@ function Opinions() {
             </div>
             <hr/>
             <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
-            {opinionArticles.slice(5, 9).map((article) => (
+            {opinionArticles.slice(0, 4).map((article) => (
                 <ArticleBlock key={article.id} post={article} height='300px' />
             ))}
             </div>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             {(() => {
-                const posts = opinionArticles.slice(9, 11);
+                const posts = opinionArticles.slice(4, 6);
                 return posts.length ? (
                 <SmallArticle posts={posts} direction="left" />
                 ) : null;
             })()}
             {(() => {
-                const posts = opinionArticles.slice(11, 13);
+                const posts = opinionArticles.slice(6, 8);
                 return posts.length ? (
                 <SmallArticle posts={posts} direction="left" />
                 ) : null;
