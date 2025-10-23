@@ -15,7 +15,9 @@ const defaultPermissions = {
     manageUsers: true,
     managePermissions: true,
     accessDashboard: true,
-    viewAnalytics: true
+    viewAnalytics: true,
+    viewSliver: true,
+    deleteSliver: true
   },
   manager: {
     createArticle: true,
@@ -31,7 +33,9 @@ const defaultPermissions = {
     manageUsers: false,
     managePermissions: false,
     accessDashboard: true,
-    viewAnalytics: true
+    viewAnalytics: true,
+    viewSliver: true,
+    deleteSliver: true
   },
   editor: {
     createArticle: true,
@@ -47,7 +51,9 @@ const defaultPermissions = {
     manageUsers: false,
     managePermissions: false,
     accessDashboard: true,
-    viewAnalytics: false
+    viewAnalytics: false,
+    viewSliver: true,
+    deleteSliver: true
   },
   subscriber: {
     createArticle: false,
@@ -63,7 +69,9 @@ const defaultPermissions = {
     manageUsers: false,
     managePermissions: false,
     accessDashboard: false,
-    viewAnalytics: false
+    viewAnalytics: false,
+    viewSliver: false,
+    deleteSliver: false
   },
   viewer: {
     createArticle: false,
@@ -79,7 +87,9 @@ const defaultPermissions = {
     manageUsers: false,
     managePermissions: false,
     accessDashboard: false,
-    viewAnalytics: false
+    viewAnalytics: false,
+    viewSliver: false,
+    deleteSliver: false
   }
 };
 
