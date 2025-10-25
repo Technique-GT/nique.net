@@ -25,6 +25,11 @@ export interface ArticleMedia {
     altText?: string;
 }
 
+export interface ArticleSubcategory {
+    category?: string;
+    value?: string;
+}
+
 export interface ArticleDocument {
     id: string;
     title: string;
@@ -33,6 +38,7 @@ export interface ArticleDocument {
     excerpt: string;
     authors: ArticleAuthor[];
     categories: ArticleReference[];
+    subcategories?: ArticleSubcategory[];
     tags: ArticleTag[];
     featuredImage: ArticleMedia;
     status: ArticleStatus;

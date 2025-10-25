@@ -96,6 +96,77 @@ exports.getAllArticles = async (req, res) => {
   }
 };
 
+exports.getArticleFeed = async (req, res) => {
+  try {
+    let query = {};
+    const {
+      status = 'published',
+      category,
+      author,
+      search,
+      limit = 10,
+      page = 1,
+      offset,
+      isSticky,
+    } = req.query;
+    const user = req.user || { role: 'viewer', id: null };
+
+    if (status) query.status = status;
+    if (category) query.categories = category;
+    if (author) query['authors.user'] = author;
+    if (search) query.title = { $regex: search, $options: 'i' };
+
+    if (!['admin', 'manager', 'editor'].includes(user.role || '')) {
+      if (user.id) {
+        query.$or = [{ status: 'published' }, { 'authors.user': user.id }];
+      } else {
+        query.status = 'published';
+      }
+    }
+
+    if (typeof isSticky !== 'undefined') {
+      if (isSticky === 'true') {
+        query.isSticky = true;
+      } else if (isSticky === 'false') {
+        query.isSticky = false;
+      }
+    }
+
+    const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 50);
+    const parsedPage = Math.max(parseInt(page, 10) || 1, 1);
+    const parsedOffset = Number.isNaN(parseInt(offset, 10))
+      ? null
+      : Math.max(parseInt(offset, 10), 0);
+    const skip = parsedOffset !== null ? parsedOffset : (parsedPage - 1) * parsedLimit;
+
+    const [totalItems, articles] = await Promise.all([
+      Article.countDocuments(query),
+      Article.find(query)
+        .populate('authors.user', 'username profilePicture')
+        .populate('categories', 'name')
+        .populate('tags', 'name')
+        .populate('featuredImage', 'url title')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parsedLimit),
+    ]);
+
+    const nextOffset = skip + articles.length;
+
+    res.json({
+      data: articles,
+      page: parsedPage,
+      limit: parsedLimit,
+      total: totalItems,
+      hasMore: nextOffset < totalItems,
+      offset: skip,
+      nextOffset,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.getArticleByCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;

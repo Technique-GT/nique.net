@@ -11,6 +11,13 @@ import SmallArticle from '../components/SmallArticle';
 import VerticalAd from '../components/VerticalAd';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
+import InfiniteScrollModule from '../components/InfiniteScrollModule';
+
+const MAIN_SECTION_LIMIT = 80;
+const ATLANTA_SECTION_LIMIT = 8;
+const US_SECTION_LIMIT = 8;
+const WORLD_SECTION_LIMIT = 6;
+const RECENT_MIN_COUNT = 2;
 
 const mapArticleToPost = (article: any): Post => {
     const primaryAuthor = article.authors?.[0]?.user;
@@ -47,6 +54,7 @@ const mapArticleToPost = (article: any): Post => {
         authors: article.authors || [],
         categories: article.categories || [],
         tags: article.tags || [],
+        subcategories: article.subcategories || [],
         featuredImage: article.featuredImage,
         status: article.status,
         isSticky: article.isSticky,
@@ -68,8 +76,10 @@ function News() {
     const [newsArticles, setNewsArticles] = useState<Post[]>([]);
     const [atlantaNews, setAtlantaNews] = useState<Post[]>([]);
     const [usNews, setUsNews] = useState<Post[]>([]);
-    const [entertainmentNews, setEntertainmentNews] = useState<Post[]>([]);
+    const [worldNews, setWorldNews] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [newsCategoryId, setNewsCategoryId] = useState<string | null>(null);
+    const [nextNewsOffset, setNextNewsOffset] = useState<number>(0);
 
     useEffect(() => {
         let isMounted = true;
@@ -83,25 +93,32 @@ function News() {
                 const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
                 const categories = categoriesResponse.data || [];
 
-                const newsCategory = categories.find((category: any) =>
+                const found = categories.find((category: any) =>
                     category.name?.toLowerCase() === Categories.NEWS.toLowerCase()
                 );
+                const categoryId = typeof found?._id === 'string' ? found._id : null;
+                setNewsCategoryId(categoryId);
 
-                if (!newsCategory?._id) {
+                if (!categoryId) {
                     if (!isMounted) return;
                     setNewsArticles([]);
                     setError('News category not found.');
                     return;
                 }
 
-                const newsResponse = await articleService.fetchArticlesByCategory(
-                    newsCategory._id,
-                    undefined,
+                const newsResponse = await articleService.fetchArticleFeed(
+                    {
+                        category: categoryId,
+                        limit: MAIN_SECTION_LIMIT,
+                        offset: 0,
+                        status: 'published',
+                    },
                     controller.signal
                 );
 
                 const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
                 const allNewsArticles = mapResponseData(newsResponse.data);
+                setNextNewsOffset(newsResponse.nextOffset ?? allNewsArticles.length);
                 const getTimestamp = (post: Post) => {
                     const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
                     const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
@@ -112,34 +129,51 @@ function News() {
                 const stickyPosts = allNewsArticles.filter((post) => post.isSticky).sort(sortByPublishedDesc);
                 const nonStickyPosts = allNewsArticles.filter((post) => !post.isSticky).sort(sortByPublishedDesc);
                 const orderedNews = [...stickyPosts, ...nonStickyPosts];
-                const RECENT_COUNT = Math.max(2, stickyPosts.length);
-                const recentSelection = orderedNews.slice(0, RECENT_COUNT);
-                const remainingNews = orderedNews.slice(RECENT_COUNT);
-                const recentIds = new Set(recentSelection.map((post) => post.id));
+                const normalizeSubcategory = (value?: string) =>
+                    typeof value === 'string' ? value.trim().toLowerCase() : '';
+                const matchesSubcategory = (post: Post, target: string) => {
+                    const normalizedTarget = normalizeSubcategory(target);
+                    if (!normalizedTarget) return false;
+                    return Array.isArray(post.subcategories) &&
+                        post.subcategories.some((sub: any) => normalizeSubcategory(sub?.value) === normalizedTarget);
+                };
 
-                const filterBySubcategory = (articles: any[], subcategory: string) =>
-                    articles
-                        .filter((article: any) =>
-                            Array.isArray(article.subcategories) &&
-                            article.subcategories.some(
-                                (sub: any) =>
-                                    typeof sub?.value === 'string' &&
-                                    sub.value.toLowerCase() === subcategory
-                            )
-                        )
-                        .map(mapArticleToPost)
-                        .filter((post) => !recentIds.has(post.id))
-                        .sort(sortByPublishedDesc);
+                const seenIds = new Set<string>();
+                const takeArticles = (limit: number, predicate: (post: Post) => boolean = () => true) => {
+                    if (limit <= 0) {
+                        return [];
+                    }
+                    const picked: Post[] = [];
+                    for (const post of orderedNews) {
+                        if (picked.length >= limit) break;
+                        if (seenIds.has(post.id)) continue;
+                        if (!predicate(post)) continue;
+                        picked.push(post);
+                        seenIds.add(post.id);
+                    }
+                    return picked;
+                };
+
+                const recentSelection = takeArticles(Math.max(RECENT_MIN_COUNT, stickyPosts.length));
+                const atlantaStories = takeArticles(ATLANTA_SECTION_LIMIT, (post) =>
+                    matchesSubcategory(post, 'atlanta news')
+                );
+                const usStories = takeArticles(US_SECTION_LIMIT, (post) => matchesSubcategory(post, 'us news'));
+                const worldStories = takeArticles(WORLD_SECTION_LIMIT, (post) =>
+                    matchesSubcategory(post, 'world news')
+                );
+
+                const remainingNews = orderedNews.filter((post) => !seenIds.has(post.id));
 
                 if (!isMounted) {
                     return;
                 }
 
                 setRecentNews(recentSelection);
+                setAtlantaNews(atlantaStories);
+                setUsNews(usStories);
+                setWorldNews(worldStories);
                 setNewsArticles(remainingNews);
-                setAtlantaNews(filterBySubcategory(newsResponse.data || [], 'atlanta news'));
-                setUsNews(filterBySubcategory(newsResponse.data || [], 'us news'));
-                setEntertainmentNews(filterBySubcategory(newsResponse.data || [], 'entertainment'));
             } catch (err) {
                 if (!isMounted) {
                     return;
@@ -237,12 +271,17 @@ function News() {
 
                     <hr className='my-4' />
 
-                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.ENTERTAINMENT}</h4>
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">World News</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
-                        {entertainmentNews.slice(0, 4).map((article) => (
+                        {worldNews.slice(0, 4).map((article) => (
                             <ArticleBlock key={article.id} post={article} height='230px' />
                         ))}
                     </div>
+
+                    <InfiniteScrollModule
+                        categoryId={newsCategoryId ?? undefined}
+                        startOffset={nextNewsOffset}
+                    />
                 </div>
 
                 <div className='flex flex-col gap-4'>
