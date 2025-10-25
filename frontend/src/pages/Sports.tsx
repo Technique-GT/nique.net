@@ -10,6 +10,7 @@ import InstagramEmbed from '../components/InstaEmbed';
 import SmallArticle from '../components/SmallArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
+import InfiniteScrollModule from '../components/InfiniteScrollModule';
 
 const mapArticleToPost = (article: any): Post => {
     const primaryAuthor = article.authors?.[0]?.user;
@@ -69,6 +70,7 @@ function Sports() {
     const [usSports, setUsSports] = useState<Post[]>([]);
     const [seasonScoreboard, setSeasonScoreboard] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [sportsCategoryId, setSportsCategoryId] = useState<string | null>(null);
 
         useEffect(() => {
         let isMounted = true;
@@ -84,6 +86,7 @@ function Sports() {
                 const sportsCategory = categories.find((category: any) =>
                     category.name?.toLowerCase() === Categories.SPORTS.toLowerCase()
                 );
+                setSportsCategoryId(typeof sportsCategory?._id === 'string' ? sportsCategory._id : null);
 
                 if (!sportsCategory?._id) {
                     if (!isMounted) return;
@@ -194,7 +197,7 @@ function Sports() {
                         </div>
                     </div>
 
-                    <hr className='my-4' />
+                    <hr className='my-3' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Tech Sports</h4>
                     <div className='grid grid-cols-1 lg:grid-cols-[48%_auto] gap-4'>
@@ -211,7 +214,7 @@ function Sports() {
                         </div>
                     </div>
 
-                    <hr className='my-4' />
+                    <hr className='my-3' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">U.S. Sports</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
@@ -219,6 +222,8 @@ function Sports() {
                             <ArticleBlock key={article.id} post={article} height='180px' />
                         ))}
                     </div>
+
+                    <InfiniteScrollModule categoryId={sportsCategoryId ?? undefined}  />
                 </div>
 
                 <div className='flex flex-col'>

@@ -9,6 +9,7 @@ import Comic from '../components/Comic';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import { Categories } from '../types/categories';
+import InfiniteScrollModule from '../components/InfiniteScrollModule';
 
 const mapArticleToPost = (article: any): Post => {
     const primaryAuthor = article.authors?.[0]?.user;
@@ -69,6 +70,7 @@ function Entertainment() {
     const [books, setBooks] = useState<Post[]>([]);
     const [comics, setComics] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [entertainmentCategoryId, setEntertainmentCategoryId] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -85,6 +87,7 @@ function Entertainment() {
             const entertainmentCategory = categories.find((category: any) =>
             category.name?.toLowerCase() === Categories.ENTERTAINMENT.toLowerCase()
             );
+            setEntertainmentCategoryId(entertainmentCategory?._id || null);
 
             if (!entertainmentCategory?._id) {
             if (!isMounted) return;
@@ -192,7 +195,7 @@ function Entertainment() {
                 )}
                 </div>
             </div>
-            <hr className='my-4' />
+            <hr className='my-3' />
 
             <h4 className="font-bold mb-2 text-2xl text-nique-blue">Movies and Shows</h4>
             <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
@@ -207,7 +210,7 @@ function Entertainment() {
                 </div>
             </div>
 
-            <hr className='my-4' />
+            <hr className='my-3' />
 
             <h4 className="font-bold mb-2 text-2xl text-nique-blue">Music</h4>
             <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
@@ -216,7 +219,7 @@ function Entertainment() {
                 ))}
             </div>
 
-            <hr className='my-4' />
+            <hr className='my-3' />
 
             <h4 className="font-bold mb-2 text-2xl text-nique-blue">Books</h4>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4 items-start'>
@@ -230,7 +233,7 @@ function Entertainment() {
                 })()}
             </div>
 
-            <hr className='my-4' />
+            <hr className='my-3' />
 
             <h4 className="font-bold mb-2 text-2xl text-nique-blue">Comics</h4>
             <div className='flex gap-4 overflow-x-auto'>
@@ -238,6 +241,8 @@ function Entertainment() {
                 <Comic key={article.id} post={article} height='190px' />
                 ))}
             </div>
+
+            <InfiniteScrollModule categoryId={entertainmentCategoryId ?? undefined} />
             </div>
 
             <div className='flex flex-col gap-4'>
@@ -248,7 +253,7 @@ function Entertainment() {
                     loading="lazy"
                 />
                 {(() => {
-                    const posts = [entertainmentArticles[6], entertainmentArticles[7], entertainmentArticles[16], entertainmentArticles[22]]
+                    const posts = entertainmentArticles.slice(0, 5)
                     .filter(Boolean) as Post[];
                     return posts.length ? <SideArticle posts={posts} width='28%'/> : null;
                 })()}

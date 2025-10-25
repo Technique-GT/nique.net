@@ -104,7 +104,7 @@ function SideWidget() {
             <h4 className="font-bold mb-1 text-xl">Next Print: Nov 1, The Politics Issue</h4>
             <button className='bg-nique-blue hover:bg-nique-blue-hover rounded-md text-white w-full p-1'><h4>Fall Schedule</h4></button>
 
-            <hr className='my-3 border-nique-blue' />
+            <hr className='my-3' />
 
             <h4 className="font-bold mb-1 text-xl">Sliver : Your Thoughts</h4>
             <textarea maxLength={500} className={`h-[60px] w-full border-solid border-1 border-nique-blue rounded-md px-2 py-1 ${sliverSubmitted === 'error' ? 'border-red-600' : ''}`} value={text} onChange={handleChange}></textarea>
@@ -123,7 +123,7 @@ function SideWidget() {
             </div>
             <h4 className='text-black text-xs mt-2'>The Sliver Box is a way to quickly share vents, thoughts on campus happenings, and more! See your words in print in the News section of every issue.</h4>
 
-            <hr className='my-3 border-nique-blue' />
+            <hr className='my-3' />
 
             <h4 className="font-bold mb-1 text-xl">Got News?</h4>
             <h4 className='text-black text-xs mt-1 mb-3'>Do you have any ideas for our reporters or editors? Do you want to give new news about your organization or business? Tell us!</h4>
@@ -161,11 +161,11 @@ function SideWidget() {
                 </button>)
             }
 
-            <hr className='my-3 border-nique-blue' />
+            <hr className='my-3' />
 
             <VerticalAd ad={MockAd} />
 
-            <hr className='my-3 border-nique-blue' />
+            <hr className='my-3' />
 
             <div className='flex gap-6 items-center w-full max-w-lg m-auto'>
                 <img className='w-[60%] mt-3 mb-2' src={PrintIssues} />
@@ -176,7 +176,7 @@ function SideWidget() {
                 </div>
             </div>
 
-            <hr className='my-3 border-nique-blue' />
+            <hr className='my-3' />
 
             <h4 className="font-bold mb-1 text-2xl">{Categories.OPINION}</h4>
         </div>

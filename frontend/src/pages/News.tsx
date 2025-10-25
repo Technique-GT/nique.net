@@ -13,12 +13,6 @@ import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
 
-const MAIN_SECTION_LIMIT = 80;
-const ATLANTA_SECTION_LIMIT = 8;
-const US_SECTION_LIMIT = 8;
-const WORLD_SECTION_LIMIT = 6;
-const RECENT_MIN_COUNT = 2;
-
 const mapArticleToPost = (article: any): Post => {
     const primaryAuthor = article.authors?.[0]?.user;
 
@@ -54,7 +48,6 @@ const mapArticleToPost = (article: any): Post => {
         authors: article.authors || [],
         categories: article.categories || [],
         tags: article.tags || [],
-        subcategories: article.subcategories || [],
         featuredImage: article.featuredImage,
         status: article.status,
         isSticky: article.isSticky,
@@ -79,7 +72,6 @@ function News() {
     const [worldNews, setWorldNews] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [newsCategoryId, setNewsCategoryId] = useState<string | null>(null);
-    const [nextNewsOffset, setNextNewsOffset] = useState<number>(0);
 
     useEffect(() => {
         let isMounted = true;
@@ -93,10 +85,10 @@ function News() {
                 const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
                 const categories = categoriesResponse.data || [];
 
-                const found = categories.find((category: any) =>
+                const newsCategory = categories.find((category: any) =>
                     category.name?.toLowerCase() === Categories.NEWS.toLowerCase()
                 );
-                const categoryId = typeof found?._id === 'string' ? found._id : null;
+                const categoryId = typeof newsCategory?._id === 'string' ? newsCategory._id : null;
                 setNewsCategoryId(categoryId);
 
                 if (!categoryId) {
@@ -106,19 +98,14 @@ function News() {
                     return;
                 }
 
-                const newsResponse = await articleService.fetchArticleFeed(
-                    {
-                        category: categoryId,
-                        limit: MAIN_SECTION_LIMIT,
-                        offset: 0,
-                        status: 'published',
-                    },
+                const newsResponse = await articleService.fetchArticlesByCategory(
+                    categoryId,
+                    undefined,
                     controller.signal
                 );
 
                 const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
                 const allNewsArticles = mapResponseData(newsResponse.data);
-                setNextNewsOffset(newsResponse.nextOffset ?? allNewsArticles.length);
                 const getTimestamp = (post: Post) => {
                     const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
                     const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
@@ -129,51 +116,34 @@ function News() {
                 const stickyPosts = allNewsArticles.filter((post) => post.isSticky).sort(sortByPublishedDesc);
                 const nonStickyPosts = allNewsArticles.filter((post) => !post.isSticky).sort(sortByPublishedDesc);
                 const orderedNews = [...stickyPosts, ...nonStickyPosts];
-                const normalizeSubcategory = (value?: string) =>
-                    typeof value === 'string' ? value.trim().toLowerCase() : '';
-                const matchesSubcategory = (post: Post, target: string) => {
-                    const normalizedTarget = normalizeSubcategory(target);
-                    if (!normalizedTarget) return false;
-                    return Array.isArray(post.subcategories) &&
-                        post.subcategories.some((sub: any) => normalizeSubcategory(sub?.value) === normalizedTarget);
-                };
+                const RECENT_COUNT = Math.max(2, stickyPosts.length);
+                const recentSelection = orderedNews.slice(0, RECENT_COUNT);
+                const remainingNews = orderedNews.slice(RECENT_COUNT);
+                const recentIds = new Set(recentSelection.map((post) => post.id));
 
-                const seenIds = new Set<string>();
-                const takeArticles = (limit: number, predicate: (post: Post) => boolean = () => true) => {
-                    if (limit <= 0) {
-                        return [];
-                    }
-                    const picked: Post[] = [];
-                    for (const post of orderedNews) {
-                        if (picked.length >= limit) break;
-                        if (seenIds.has(post.id)) continue;
-                        if (!predicate(post)) continue;
-                        picked.push(post);
-                        seenIds.add(post.id);
-                    }
-                    return picked;
-                };
-
-                const recentSelection = takeArticles(Math.max(RECENT_MIN_COUNT, stickyPosts.length));
-                const atlantaStories = takeArticles(ATLANTA_SECTION_LIMIT, (post) =>
-                    matchesSubcategory(post, 'atlanta news')
-                );
-                const usStories = takeArticles(US_SECTION_LIMIT, (post) => matchesSubcategory(post, 'us news'));
-                const worldStories = takeArticles(WORLD_SECTION_LIMIT, (post) =>
-                    matchesSubcategory(post, 'world news')
-                );
-
-                const remainingNews = orderedNews.filter((post) => !seenIds.has(post.id));
+                const filterBySubcategory = (articles: any[], subcategory: string) =>
+                    articles
+                        .filter((article: any) =>
+                            Array.isArray(article.subcategories) &&
+                            article.subcategories.some(
+                                (sub: any) =>
+                                    typeof sub?.value === 'string' &&
+                                    sub.value.toLowerCase() === subcategory
+                            )
+                        )
+                        .map(mapArticleToPost)
+                        .filter((post) => !recentIds.has(post.id))
+                        .sort(sortByPublishedDesc);
 
                 if (!isMounted) {
                     return;
                 }
 
                 setRecentNews(recentSelection);
-                setAtlantaNews(atlantaStories);
-                setUsNews(usStories);
-                setWorldNews(worldStories);
                 setNewsArticles(remainingNews);
+                setAtlantaNews(filterBySubcategory(newsResponse.data || [], 'atlanta news'));
+                setUsNews(filterBySubcategory(newsResponse.data || [], 'us news'));
+                setWorldNews(filterBySubcategory(newsResponse.data || [], 'world news'));
             } catch (err) {
                 if (!isMounted) {
                     return;
@@ -223,7 +193,7 @@ function News() {
                         {recentNews[1] && <FeaturedStory post={recentNews[1]} height='695px' />}
                     </div>
 
-                    <hr className='my-4' />
+                    <hr className='my-3' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Atlanta News</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
@@ -252,7 +222,7 @@ function News() {
                         </div>
                     </div>
 
-                    <hr className='my-4' />
+                    <hr className='my-3' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">U.S. News</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
@@ -263,25 +233,22 @@ function News() {
                         </div>
                         <div className='grid col-span-2 gap-4'>
                             {(() => {
-                                const posts = usNews.slice(14, 18);
+                                const posts = usNews.slice(4, 8);
                                 return posts.length ? <SideArticle posts={posts} width='18%'/> : null;
                             })()}
                         </div>
                     </div>
 
-                    <hr className='my-4' />
+                    <hr className='my-3' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">World News</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
-                        {worldNews.slice(0, 4).map((article) => (
+                        {worldNews.slice(0, 6).map((article) => (
                             <ArticleBlock key={article.id} post={article} height='230px' />
                         ))}
                     </div>
 
-                    <InfiniteScrollModule
-                        categoryId={newsCategoryId ?? undefined}
-                        startOffset={nextNewsOffset}
-                    />
+                    <InfiniteScrollModule categoryId={newsCategoryId ?? undefined} />
                 </div>
 
                 <div className='flex flex-col gap-4'>

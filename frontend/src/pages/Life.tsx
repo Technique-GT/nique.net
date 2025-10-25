@@ -10,6 +10,7 @@ import Navbar from '../components/Navbar';
 import VerticalAd from '../components/VerticalAd';
 import InstaEmbed from '../components/InstaEmbed';
 import Spinner from '../components/Spinner';
+import InfiniteScrollModule from '../components/InfiniteScrollModule';
 
 const mapArticleToPost = (article: any): Post => {
     const primaryAuthor = article.authors?.[0]?.user;
@@ -66,7 +67,9 @@ function Life() {
     const [recentLifeArticles, setRecentLifeArticles] = useState<Post[]>([]);
     const [lifeArticles, setLifeArticles] = useState<Post[]>([]);
     const [techFashion, setTechFashion] = useState<Post[]>([]);
+    const [alumniSpotlight, setAlumniSpotlight] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [lifeCategoryId, setLifeCategoryId] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -83,6 +86,8 @@ function Life() {
                 const lifeCategory = categories.find((category: any) =>
                     category.name?.toLowerCase() === Categories.LIFE.toLowerCase()
                 );
+                const categoryId = typeof lifeCategory?._id === 'string' ? lifeCategory._id : null;
+                setLifeCategoryId(categoryId);
 
                 if (!lifeCategory?._id) {
                     if (!isMounted) return;
@@ -135,7 +140,7 @@ function Life() {
                 setRecentLifeArticles(recentSelection);
                 setLifeArticles(remainingLife);
                 setTechFashion(filterBySubcategory(lifeResponse.data || [], 'tech fashion'));
-
+                setAlumniSpotlight(filterBySubcategory(lifeResponse.data || [], 'alumni spotlight'));
             } catch (err) {
                 if (!isMounted) {
                     return;
@@ -199,7 +204,7 @@ function Life() {
                         </div>
                     </div>
 
-                    <hr className='my-4' />
+                    <hr className='my-3' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Tech Fashion</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
@@ -208,13 +213,13 @@ function Life() {
                         ))}
                     </div>
 
-                    <hr className='my-4' />
+                    <hr className='my-3' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">More Stories</h4>
                     <div className='grid gap-4 grid-cols-1 lg:grid-rows-3 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='row-span-2 col-span-2'>
                             {(() => {
-                                const posts = [lifeArticles[6], lifeArticles[7], lifeArticles[8], lifeArticles[9]]
+                                const posts = lifeArticles.slice(0, 10)
                                     .filter(Boolean) as Post[];
                                 return posts.length ? <SideArticle posts={posts} width='18%' /> : null;
                             })()}
@@ -232,6 +237,8 @@ function Life() {
                         {lifeArticles[13] && <ArticleBlock post={lifeArticles[13]} height='230px' />}
                         {lifeArticles[14] && <ArticleBlock post={lifeArticles[14]} height='230px' />}
                     </div>
+
+                    <InfiniteScrollModule categoryId={lifeCategoryId ?? undefined} />
 
                 </div>
 
@@ -264,7 +271,7 @@ function Life() {
                     <hr />
 
                     {(() => {
-                        const posts = [lifeArticles[14], lifeArticles[15], lifeArticles[16], lifeArticles[17], lifeArticles[18]]
+                        const posts = alumniSpotlight.slice(0, 4)
                             .filter(Boolean) as Post[];
                         return posts.length ? <SideArticle posts={posts} width='80px'/> : null;
                     })()}

@@ -8,6 +8,7 @@ import Spinner from '../components/Spinner';
 import FeaturedStory from '../components/FeaturedStory';
 import SmallArticle from '../components/SmallArticle';
 import { Categories } from '../types/categories';
+import InfiniteScrollModule from '../components/InfiniteScrollModule';
 
 const mapArticleToPost = (article: any): Post => {
     const primaryAuthor = article.authors?.[0]?.user;
@@ -64,6 +65,7 @@ function Opinions() {
     const [recentOpinionArticles, setRecentOpinionArticles] = useState<Post[]>([]);
     const [opinionArticles, setOpinionArticles] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [opinionCategoryId, setOpinionCategoryId] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -80,6 +82,7 @@ function Opinions() {
             const opinionCategory = categories.find((category: any) =>
             category.name?.toLowerCase() === Categories.OPINION.toLowerCase()
             );
+            setOpinionCategoryId(typeof opinionCategory?._id === 'string' ? opinionCategory._id : null);
 
             if (!opinionCategory?._id) {
             if (!isMounted) return;
@@ -159,37 +162,44 @@ function Opinions() {
         <>
         <Navbar />
 
-        <div className='max-w-[1470px] m-auto p-5 flex flex-col gap-8'>
-            <div className='grid grid-cols-1 lg:grid-cols-[70%_30%] gap-4'>
-            {recentOpinionArticles[0] && <FeaturedStory post={recentOpinionArticles[0]} height='670px' />}
+        <div className='max-w-[1470px] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
+            <div className='w-full'>
+                <div className='grid grid-cols-1 gap-4'>
+                    {recentOpinionArticles[0] && <FeaturedStory post={recentOpinionArticles[0]} height='670px' />}
+                </div>
+
+                <hr className='my-3'/>
+
+                <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
+                    {opinionArticles.slice(0, 4).map((article) => (
+                        <ArticleBlock key={article.id} post={article} height='230px' />
+                    ))}
+                </div>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    {(() => {
+                        const posts = opinionArticles.slice(4, 6);
+                        return posts.length ? (
+                        <SmallArticle posts={posts} direction="left" />
+                        ) : null;
+                    })()}
+                    {(() => {
+                        const posts = opinionArticles.slice(6, 8);
+                        return posts.length ? (
+                        <SmallArticle posts={posts} direction="left" />
+                        ) : null;
+                    })()}
+                </div>
+
+                <InfiniteScrollModule categoryId={opinionCategoryId ?? undefined} />
+            </div>
+
             <div className='flex flex-col gap-4'>
                 {(() => {
-                const posts = recentOpinionArticles.slice(1, 5);
+                const posts = recentOpinionArticles.slice(1, 6);
                 return posts.length ? (
                     <SideArticle posts={posts} width='80px' hasDesc={true}/>
                 ) : null;
                 })()}
-            </div>
-            </div>
-            <hr/>
-            <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
-            {opinionArticles.slice(0, 4).map((article) => (
-                <ArticleBlock key={article.id} post={article} height='300px' />
-            ))}
-            </div>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            {(() => {
-                const posts = opinionArticles.slice(4, 6);
-                return posts.length ? (
-                <SmallArticle posts={posts} direction="left" />
-                ) : null;
-            })()}
-            {(() => {
-                const posts = opinionArticles.slice(6, 8);
-                return posts.length ? (
-                <SmallArticle posts={posts} direction="left" />
-                ) : null;
-            })()}
             </div>
         </div>
         </>

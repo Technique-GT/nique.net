@@ -224,7 +224,7 @@ function Home() {
                         </div>
                     </div>
 
-                    <hr className='my-4' />
+                    <hr className='my-3' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.LIFE}</h4>
                     <div className='grid grid-cols-1 md:grid-cols-[48%_auto] gap-4'>
@@ -238,7 +238,7 @@ function Home() {
                         </div>
                     </div>
 
-                    <hr className='my-4' />
+                    <hr className='my-3' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.NEWS}</h4>
                     <div className='flex flex-col sm:flex-row gap-4'>
@@ -247,7 +247,7 @@ function Home() {
                         ))}
                     </div>
 
-                    <hr className='my-4' />
+                    <hr className='my-3' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.ENTERTAINMENT}</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
@@ -256,7 +256,7 @@ function Home() {
                         ))}
                     </div>
 
-                    <hr className='my-4' />
+                    <hr className='my-3' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.SPORTS}</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
