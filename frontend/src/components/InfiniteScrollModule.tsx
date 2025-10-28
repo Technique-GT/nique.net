@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import articleService from '../services/articleService';
-import type { ArticleDocument } from '../types/article';
+import type { Post } from '../types/article';
 
 const PAGE_SIZE = 8;
 
@@ -9,9 +9,61 @@ interface InfiniteScrollModuleProps {
     startOffset?: number;
 }
 
+const mapArticleToPost = (article: any): Post => {
+    // add primary author
+    const primaryAuthor = article.authors?.[0]?.user;
+
+    let authorName = 'Technique Staff';
+    if (primaryAuthor) {
+        if (typeof primaryAuthor === 'string') {
+        authorName = primaryAuthor;
+        } else {
+        const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
+            .filter(Boolean)
+            .join(' ');
+
+        authorName =
+            primaryAuthor.username ||
+            firstAndLast ||
+            primaryAuthor.email ||
+            authorName;
+        }
+    }
+
+    // add description
+    const descriptionSource = article.excerpt || article.content || '';
+    const normalizedDescription =
+        typeof descriptionSource === 'string'
+        ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
+        : '';
+
+    return {
+        id: article._id,
+        title: article.title,
+        slug: article.slug,
+        content: article.content,
+        excerpt: article.excerpt,
+        authors: article.authors || [],
+        categories: article.categories || [],
+        tags: article.tags || [],
+        featuredImage: article.featuredImage,
+        status: article.status,
+        isSticky: article.isSticky,
+        allowComments: article.allowComments,
+        viewCount: article.viewCount,
+        publishedAt: article.publishedAt,
+        updatedBy: article.updatedBy,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        desc: normalizedDescription,
+        author: authorName,
+        category: article.categories?.[0]?.name || '',
+    };
+};
+
 function InfiniteScrollModule({ categoryId, startOffset = 0 }: InfiniteScrollModuleProps) {
     const sentinelRef = useRef<HTMLDivElement | null>(null);
-    const [articles, setArticles] = useState<ArticleDocument[]>([]);
+    const [articles, setArticles] = useState<Post[]>([]);
     const [offset, setOffset] = useState(startOffset);
     const [hasMore, setHasMore] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
@@ -46,9 +98,10 @@ function InfiniteScrollModule({ categoryId, startOffset = 0 }: InfiniteScrollMod
 
             if (!isCurrent) return;
 
-            setArticles((prev) => (offset === startOffset ? payload.data : [...prev, ...payload.data]));
+            const mappedArticles = (payload.data || []).map(mapArticleToPost);
+            setArticles((prev) => offset === startOffset ? mappedArticles : [...prev, ...mappedArticles]);
             setHasMore(payload.hasMore);
-            nextOffsetRef.current = payload.nextOffset ?? offset + payload.data.length;
+            nextOffsetRef.current = payload.nextOffset ?? offset + mappedArticles.length;
         } catch (fetchError) {
             if (!isCurrent || controller.signal.aborted) return;
 
@@ -101,7 +154,7 @@ function InfiniteScrollModule({ categoryId, startOffset = 0 }: InfiniteScrollMod
         };
     }, [requestNextPage, supportsIntersectionObserver]);
 
-    const renderArticles = (article: ArticleDocument) => {
+    const renderArticles = (article: Post) => {
         const key = article.id;
         return (
         <article
@@ -109,7 +162,7 @@ function InfiniteScrollModule({ categoryId, startOffset = 0 }: InfiniteScrollMod
             className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md"
         >
             <p className="text-xs uppercase tracking-wide text-slate-400">
-            {new Date(article.publishedAt || article.createdAt).toLocaleDateString()}
+                {new Date(article.publishedAt || article.createdAt).toLocaleDateString()}  &#8226; {article.category}
             </p>
             <h3 className="mt-1 text-xl font-semibold text-nique-blue">{article.title}</h3>
             {article.excerpt && <h6 className="text-sm text-slate-600">{article.excerpt}</h6>}

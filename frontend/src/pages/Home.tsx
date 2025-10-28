@@ -9,6 +9,7 @@ import SideArticle from '../components/SideArticle';
 import { Categories } from '../types/categories';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
+import InfiniteScrollModule from '../components/InfiniteScrollModule';
 
 const mapArticleToPost = (article: any): Post => {
     // add primary author
@@ -107,19 +108,19 @@ function Home() {
                     articleService.fetchStickyArticles(undefined, controller.signal),
                     articleService.fetchRecentArticles(5, 'published', controller.signal),
                     lifeCategoryId
-                        ? articleService.fetchArticles({ category: lifeCategoryId, limit: 3, status: 'published' }, controller.signal)
+                        ? articleService.fetchArticles({ category: lifeCategoryId, limit: 15, status: 'published' }, controller.signal)
                         : Promise.resolve({ data: [] }),
                     newsCategoryId
-                        ? articleService.fetchArticles({ category: newsCategoryId, limit: 3, status: 'published' }, controller.signal)
+                        ? articleService.fetchArticles({ category: newsCategoryId, limit: 15, status: 'published' }, controller.signal)
                         : Promise.resolve({ data: [] }),
                     entertainmentCategoryId
-                        ? articleService.fetchArticles({ category: entertainmentCategoryId, limit: 8, status: 'published' }, controller.signal)
+                        ? articleService.fetchArticles({ category: entertainmentCategoryId, limit: 15, status: 'published' }, controller.signal)
                         : Promise.resolve({ data: [] }),
                     opinionCategoryId
-                        ? articleService.fetchArticles({ category: opinionCategoryId, limit: 5, status: 'published' }, controller.signal)
+                        ? articleService.fetchArticles({ category: opinionCategoryId, limit: 15, status: 'published' }, controller.signal)
                         : Promise.resolve({ data: [] }),
                     sportsCategoryId
-                        ? articleService.fetchArticles({ category: sportsCategoryId, limit: 5, status: 'published' }, controller.signal)
+                        ? articleService.fetchArticles({ category: sportsCategoryId, limit: 15, status: 'published' }, controller.signal)
                         : Promise.resolve({ data: [] }),
                 ]);
 
@@ -131,9 +132,7 @@ function Home() {
                 const stickyPosts = mapResponseData(stickyResponse.data);
                 const recentPosts = mapResponseData(recentResponse.data);
                 const lifePosts = mapResponseData(lifeResponse.data);
-                console.log("LifePosts: " + lifePosts.length)
                 const newsPosts = mapResponseData(newsResponse.data);
-                console.log("NewsPosts: " + newsPosts.length)
                 const entertainmentPosts = mapResponseData(entertainmentResponse.data);
                 const opinionPosts = mapResponseData(opinionResponse.data);
                 const sportsPosts = mapResponseData(sportsResponse.data);
@@ -153,9 +152,7 @@ function Home() {
 
                 setRecentArticles(sortedRecent);
                 setLifeArticles(filterAndSort(lifePosts));
-                console.log("LifeArticles: " + lifeArticles.length)
                 setNewsArticles(filterAndSort(newsPosts));
-                console.log("NewsArticles: " + newsArticles.length)
                 setEntertainmentArticles(filterAndSort(entertainmentPosts));
                 setOpinionArticles(filterAndSort(opinionPosts));
                 setSportsArticles(filterAndSort(sportsPosts)); 
@@ -222,12 +219,12 @@ function Home() {
                     <hr className='my-3' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.LIFE}</h4>
-                    <div className='grid grid-cols-1 md:grid-cols-[48%_auto] gap-4'>
+                    <div className='grid grid-cols-2 md:grid-cols-[48%_auto] gap-4'>
                         <div className='w-full'>
                             {lifeArticles[0] && <ArticleBlock post={lifeArticles[0]} height='396px' />}
                         </div>
                         <div className='flex flex-col gap-4 w-full'>
-                            {lifeArticles.slice(1).map((article) => (
+                            {lifeArticles.slice(1,3).map((article) => (
                                 <ArticleBlock key={article.id} post={article} height='190px' />
                             ))}
                         </div>
@@ -237,7 +234,7 @@ function Home() {
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.NEWS}</h4>
                     <div className='grid grid-cols-3 sm:flex-row gap-4'>
-                        {newsArticles.map((article) => (
+                        {newsArticles.slice(0,3).map((article) => (
                             <ArticleBlock key={article.id} post={article} height='200px' />
                         ))}
                     </div>
@@ -246,7 +243,7 @@ function Home() {
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.ENTERTAINMENT}</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
-                        {entertainmentArticles.map((article) => (
+                        {entertainmentArticles.slice(0, 8).map((article) => (
                             <ArticleBlock key={article.id} post={article} height='230px' />
                         ))}
                     </div>
@@ -254,11 +251,18 @@ function Home() {
                     <hr className='my-3' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.SPORTS}</h4>
-                    <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
-                        {sportsArticles.map((article) => (
-                            <ArticleBlock key={article.id} post={article} height='230px' />
-                        ))}
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-4">
+                        <div className="sm:col-span-2">
+                            {sportsArticles[0] && <ArticleBlock post={sportsArticles[0]} height="396px" />}
+                        </div>
+                        <div className="sm:col-span-2 grid gap-4 grid-cols-1 md:grid-cols-2">
+                            {sportsArticles.slice(1, 5).map((article) => (
+                            <ArticleBlock key={article.id} post={article} height="190px" />
+                            ))}
+                        </div>
                     </div>
+
+                    <InfiniteScrollModule />
                 </div>
 
                 <div className='flex flex-col gap-4'>
