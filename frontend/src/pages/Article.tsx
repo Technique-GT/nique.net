@@ -5,6 +5,7 @@ import ArticleBlock from "../components/ArticleBlock";
 import Comment from "../components/Comment";
 import Spinner from "../components/Spinner";
 import articleService from "../services/articleService";
+import commentService from "../services/commentService";
 import { ArticleDocument, Post } from "../types/article";
 
 interface LoadedComment {
@@ -93,28 +94,54 @@ export default function Article() {
             : undefined);
 
         if (categoryId) {
-          const relatedResponse = await articleService.fetchArticlesByCategory(
-            categoryId,
-            4,
-            controller.signal
-          );
+          try {
+            const relatedResponse = await articleService.fetchArticles(
+              { category: categoryId, status: "published", limit: 4 },
+              controller.signal
+            );
 
-          const mappedRelated = (relatedResponse.data as ArticleDocument[])
-            .filter((item) => item.id !== fetchedArticle.id)
-            .map(mapArticleToPost);
+            const fetchedArticleId =
+              fetchedArticle.id ||
+              (fetchedArticle as unknown as { _id?: string })._id ||
+              "";
 
-          setRelatedArticles(mappedRelated);
+            const mappedRelated = (relatedResponse.data as ArticleDocument[])
+              .filter((item) => {
+                const candidateId =
+                  item.id || (item as unknown as { _id?: string })._id || "";
+                return candidateId !== fetchedArticleId;
+              })
+              .map(mapArticleToPost);
+
+            setRelatedArticles(mappedRelated);
+          } catch (relatedErr) {
+            console.warn("Unable to load related articles", relatedErr);
+            setRelatedArticles([]);
+          }
         } else {
           setRelatedArticles([]);
         }
 
         if (fetchedArticle.allowComments) {
           try {
-            const commentsResponse = await articleService.fetchArticleComments(
+            const commentsResponse = await commentService.fetchCommentsByArticle(
               id,
               controller.signal
             );
-            setComments(commentsResponse.data || []);
+            const mappedComments: LoadedComment[] = (commentsResponse.data || []).map(
+              (comment: any) => ({
+                _id: comment._id,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                thumbsUp: comment.thumbsUp ?? 0,
+                thumbsDown: comment.thumbsDown ?? 0,
+                author: {
+                  name: comment.author?.username || comment.author?.name,
+                  avatar: comment.author?.profilePicture || comment.author?.avatar,
+                },
+              })
+            );
+            setComments(mappedComments);
           } catch {
             setComments([]);
           }
@@ -122,6 +149,12 @@ export default function Article() {
           setComments([]);
         }
       } catch (err) {
+        if (
+          (err as { name?: string; code?: string })?.name === "CanceledError" ||
+          (err as { code?: string })?.code === "ERR_CANCELED"
+        ) {
+          return;
+        }
         console.error("Failed to load article", err);
         setArticle(null);
         setRelatedArticles([]);
@@ -268,8 +301,8 @@ export default function Article() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-nique-blue">Related Articles</h2>
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-              {relatedArticles.map((related) => (
-                <ArticleBlock key={related.id} post={related} height="230px" />
+              {relatedArticles.map((related, index) => (
+                <ArticleBlock key={index} post={related} height="230px" />
               ))}
             </div>
           </section>

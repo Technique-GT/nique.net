@@ -179,7 +179,7 @@ function About() {
                 <p className='text-lg mt-5'>
                     Interested in writing, photography, sales or design? If so, the Technique has a lot to offer. Our staff is comprised entirely of Tech students interested 
                     in improving their writing, communication and design skills. If you are interested in any of the following, consider joining the Technique.
-
+                </p>
                     <ul className='text-lg my-3 list-disc ml-8'>
                         <li>
                             <strong>Improving your writing skills:</strong> By joining the Technique, you will learn how to write articles for a range of different 
@@ -201,6 +201,7 @@ function About() {
                         </li>
                     </ul>
 
+                <p className='text-lg'>
                     General Body Meetings are held weekly on Tuesdays at 7:00 p.m. in the Student Center in room 2150 (Student Media suite).
                 </p>
                 <p className='text-lg mt-3'>

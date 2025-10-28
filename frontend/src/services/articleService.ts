@@ -111,10 +111,6 @@ const fetchArticleById = (id: string, signal?: AbortSignal) => {
   return apiClient.get(`/articles/${id}`, { signal });
 };
 
-const fetchArticleComments = (articleId: string, signal?: AbortSignal) => {
-  return apiClient.get(`/articles/${articleId}/comments`, { signal });
-};
-
 const searchArticles = (query: string, limit?: number, signal?: AbortSignal) => {
   const params: Record<string, string | number> = {
     status: 'published',
@@ -174,7 +170,6 @@ export default {
   fetchArticlesByCategory,
   fetchCategories,
   fetchArticleById,
-  fetchArticleComments,
   searchArticles,
   fetchArticleFeed,
 };

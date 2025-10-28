@@ -1,16 +1,12 @@
 import Navbar from "../components/Navbar";
 import { staff } from "../types/staff";
-import Print from "../assets/print_issues.png";
 
 function Contact() {
   return (
-    <div>
+    <div className='max-h-screen'>
         <Navbar />
-        <div className='max-w-[1470px] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_65%] gap-4'>
-            <div className="flex justify-center items-center">
-                <img src={Print} alt="The Technique"/> {/* place holder image, intended to be something about the Technique, like one of the article posts on their insta */}
-            </div>
-            <div>
+        <div className='max-w-[1470px] h-full m-auto py-5 px-30 gap-4'>
+            <div className='flex flex-col'>
             <h4 className="font-bold mb-2 text-2xl text-nique-blue">Contact The Technique</h4>
             <p> 
                 If you're trying to get in touch with a member of the <i>Technique</i> staff, please see below. 

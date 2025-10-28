@@ -11,6 +11,7 @@ const staffRoutes = require('./routes/staff.routes');
 const categoryRoutes = require('./routes/category.routes');
 const tagRoutes = require('./routes/tag.routes');
 const articleRoutes = require('./routes/article.routes');
+const commentRoutes = require('./routes/comment.routes');
 const sliverRoutes = require('./routes/sliver.routes');
 const storyRoutes = require('./routes/story.routes');
 
@@ -62,6 +63,7 @@ app.use('/api/tags', tagRoutes);
 
 //article route
 app.use('/api/articles', articleRoutes);
+app.use('/api/comments', commentRoutes);
 
 // Sliver route
 app.use('/api/slivers', sliverRoutes);
