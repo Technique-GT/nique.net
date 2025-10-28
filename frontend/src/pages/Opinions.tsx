@@ -66,6 +66,9 @@ function Opinions() {
     const [opinionArticles, setOpinionArticles] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [opinionCategoryId, setOpinionCategoryId] = useState<string | null>(null);
+    const [opEdArticles, setOpEdArticles] = useState<Post[]>([]);
+    const [consensusArticles, setConsensusArticles] = useState<Post[]>([]);
+    const [lettersArticles, setLettersArticles] = useState<Post[]>([]);
 
     useEffect(() => {
         let isMounted = true;
@@ -80,20 +83,19 @@ function Opinions() {
             const categories = categoriesResponse.data || [];
 
             const opinionCategory = categories.find((category: any) =>
-            category.name?.toLowerCase() === Categories.OPINION.toLowerCase()
+                category.name?.toLowerCase() === Categories.OPINION.toLowerCase()
             );
             setOpinionCategoryId(typeof opinionCategory?._id === 'string' ? opinionCategory._id : null);
 
             if (!opinionCategory?._id) {
-            if (!isMounted) return;
-            setOpinionArticles([]);
-            setError('Opinion category not found.');
-            return;
+                if (!isMounted) return;
+                setOpinionArticles([]);
+                setError('Opinion category not found.');
+                return;
             }
 
-            const opinionResponse = await articleService.fetchArticlesByCategory(
-            opinionCategory._id,
-            undefined,
+            const opinionResponse = await articleService.fetchArticles(
+            { category: opinionCategory._id, status: 'published' },
             controller.signal
             );
 
@@ -112,6 +114,21 @@ function Opinions() {
             const RECENT_COUNT = Math.max(5, stickyPosts.length);
             const recentSelection = orderedOpinion.slice(0, RECENT_COUNT);
             const remainingOpinion = orderedOpinion.slice(RECENT_COUNT);
+            const recentIds = new Set(recentSelection.map((post) => post.id));
+
+            const filterBySubcategory = (articles: any[], subcategory: string) =>
+                articles
+                    .filter((article: any) =>
+                        Array.isArray(article.subcategories) &&
+                        article.subcategories.some(
+                            (sub: any) =>
+                                typeof sub?.value === 'string' &&
+                                sub.value.toLowerCase() === subcategory
+                        )
+                    )
+                    .map(mapArticleToPost)
+                    .filter((post) => !recentIds.has(post.id))
+                    .sort(sortByPublishedDesc);
 
             if (!isMounted) {
             return;
@@ -119,6 +136,9 @@ function Opinions() {
 
             setRecentOpinionArticles(recentSelection);
             setOpinionArticles(remainingOpinion);
+            setOpEdArticles(filterBySubcategory(opinionResponse.data || [], 'op ed'));
+            setConsensusArticles(filterBySubcategory(opinionResponse.data || [], 'consensus'));
+            setLettersArticles(filterBySubcategory(opinionResponse.data || [], 'letters to the editor'));
         } catch (err) {
             if (!isMounted) {
             return;
@@ -170,24 +190,38 @@ function Opinions() {
 
                 <hr className='my-3'/>
 
+                <h4 className="font-bold mb-2 text-2xl text-nique-blue">Op Ed</h4>
                 <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
-                    {opinionArticles.slice(0, 4).map((article) => (
+                    {opEdArticles.map((article) => (
                         <ArticleBlock key={article.id} post={article} height='230px' />
                     ))}
                 </div>
+
+                <hr className='my-3'/>
+                
+                <h4 className="font-bold mb-2 text-2xl text-nique-blue">Consensus</h4>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                     {(() => {
-                        const posts = opinionArticles.slice(4, 6);
+                        const posts = consensusArticles.slice(0, 2);
                         return posts.length ? (
                         <SmallArticle posts={posts} direction="left" />
                         ) : null;
                     })()}
                     {(() => {
-                        const posts = opinionArticles.slice(6, 8);
+                        const posts = consensusArticles.slice(2, 4);
                         return posts.length ? (
                         <SmallArticle posts={posts} direction="left" />
                         ) : null;
                     })()}
+                </div>
+
+                <hr className='my-3'/>
+                
+                <h4 className="font-bold mb-2 text-2xl text-nique-blue">Letters to the Editor</h4>
+                <div className='grid grid-cols-3 gap-4'>
+                    {lettersArticles.slice(0, 3).map((article) => (
+                    <ArticleBlock key={article.id} post={article} height='190px' />
+                    ))}
                 </div>
 
                 <InfiniteScrollModule categoryId={opinionCategoryId ?? undefined} />

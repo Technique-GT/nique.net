@@ -27,6 +27,15 @@ export interface PaginatedArticlesResponse {
   nextOffset: number;
 }
 
+export interface FetchArticlesParams {
+  status?: string;
+  category?: string;
+  author?: string;
+  search?: string;
+  limit?: number;
+  isSticky?: boolean;
+}
+
 const fetchRecentArticles = (limit = 5, status = 'published', signal?: AbortSignal) => {
   const params: Record<string, string | number> = { status };
   if (limit !== undefined) {
@@ -35,6 +44,34 @@ const fetchRecentArticles = (limit = 5, status = 'published', signal?: AbortSign
 
   return apiClient.get('/articles', {
     params,
+    signal,
+  });
+};
+
+const fetchArticles = (params: FetchArticlesParams = {}, signal?: AbortSignal) => {
+  const formattedParams: Record<string, string | number> = {};
+
+  if (params.status) {
+    formattedParams.status = params.status;
+  }
+  if (params.category) {
+    formattedParams.category = params.category;
+  }
+  if (params.author) {
+    formattedParams.author = params.author;
+  }
+  if (params.search) {
+    formattedParams.search = params.search;
+  }
+  if (typeof params.limit === 'number') {
+    formattedParams.limit = params.limit;
+  }
+  if (typeof params.isSticky === 'boolean') {
+    formattedParams.isSticky = params.isSticky ? 'true' : 'false';
+  }
+
+  return apiClient.get('/articles', {
+    params: formattedParams,
     signal,
   });
 };
@@ -132,6 +169,7 @@ const fetchArticleFeed = (params: FetchArticleFeedParams = {}, signal?: AbortSig
 
 export default {
   fetchRecentArticles,
+  fetchArticles,
   fetchStickyArticles,
   fetchArticlesByCategory,
   fetchCategories,

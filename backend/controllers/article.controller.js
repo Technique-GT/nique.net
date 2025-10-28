@@ -12,6 +12,11 @@ const validateAuthors = (authors, user) => {
   return authors;
 };
 
+/**
+ * Create a new article, auto-filling an author when none is provided and defaulting
+ * the status to draft for non-admins. Unlike `updateArticle`, this path always builds
+ * a fresh document, so callers do not need an existing article id.
+ */
 exports.createArticle = async (req, res) => {
   try {
     // Check if user has permission to create articles
@@ -44,6 +49,11 @@ exports.createArticle = async (req, res) => {
   }
 };
 
+/**
+ * Return a filtered list of articles with optional status, category, author, search,
+ * and sticky filters. This endpoint only supports a `limit` cap; use `getArticleFeed`
+ * when you need full pagination.
+ */
 exports.getAllArticles = async (req, res) => {
   try {
     let query = {};
@@ -96,6 +106,11 @@ exports.getAllArticles = async (req, res) => {
   }
 };
 
+/**
+ * Return a paginated article feed complete with total counts and next-page cursors.
+ * Compared to `getAllArticles`, this handler calculates `skip`, enforces sane page/limit
+ * bounds, and mirrors infinite-scroll needs on the frontend.
+ */
 exports.getArticleFeed = async (req, res) => {
   try {
     let query = {};
@@ -167,44 +182,11 @@ exports.getArticleFeed = async (req, res) => {
   }
 };
 
-exports.getArticleByCategory = async (req, res) => {
-  try {
-    const { categoryId } = req.params;
-    const { limit, isSticky } = req.query;
-    const parsedLimit = parseInt(limit, 10);
-
-    const findQuery = { 
-      categories: categoryId, 
-      status: 'published' 
-    };
-
-    if (typeof isSticky !== 'undefined') {
-      if (isSticky === 'true') {
-        findQuery.isSticky = true;
-      } else if (isSticky === 'false') {
-        findQuery.isSticky = false;
-      }
-    }
-
-    let articleQuery = Article.find(findQuery)
-    .populate('authors.user', 'username profilePicture')
-    .populate('categories', 'name')
-    .populate('tags', 'name')
-    .populate('featuredImage', 'url title')
-    .sort({ createdAt: -1 });
-
-    if (!Number.isNaN(parsedLimit) && parsedLimit > 0) {
-      articleQuery = articleQuery.limit(parsedLimit);
-    }
-
-    const articles = await articleQuery;
-
-    res.json(articles);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
+/**
+ * Retrieve a single article by id, enforcing visibility rules for unpublished
+ * content and incrementing the view counter for published pieces. This is the only
+ * endpoint that mutates view counts as part of the read.
+ */
 exports.getArticleById = async (req, res) => {
   try {
     const article = await Article.findById(req.params.id)
@@ -236,6 +218,11 @@ exports.getArticleById = async (req, res) => {
   }
 };
 
+/**
+ * Update an existing article after validating authorship and role permissions.
+ * Unlike `createArticle`, this route preserves the existing document and only
+ * applies the provided changes.
+ */
 exports.updateArticle = async (req, res) => {
   try {
     const { id } = req.params;
@@ -283,6 +270,10 @@ exports.updateArticle = async (req, res) => {
   }
 };
 
+/**
+ * Permanently delete an article and any saved-article references tied to it.
+ * This goes beyond `updateArticle`'s soft edits by removing the document entirely.
+ */
 exports.deleteArticle = async (req, res) => {
   try {
     const article = await Article.findById(req.params.id);
@@ -323,6 +314,11 @@ exports.deleteArticle = async (req, res) => {
   }
 };
 
+/**
+ * Toggle the saved state of a published article for the current user. Unlike the CRUD
+ * endpoints above, this works against the SavedArticle collection and is only allowed
+ * when the article is already public.
+ */
 exports.toggleSaveArticle = async (req, res) => {
   try {
     const { articleId } = req.params;
@@ -349,6 +345,11 @@ exports.toggleSaveArticle = async (req, res) => {
   }
 };
 
+/**
+ * Transition an article to the published state and stamp `publishedAt`. This is a
+ * specialized mutation compared to the more general `updateArticle`, ensuring the
+ * publish workflow always sets the expected fields.
+ */
 exports.publishArticle = async (req, res) => {
   try {
     const article = await Article.findById(req.params.id);

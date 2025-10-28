@@ -28,7 +28,6 @@ const requirePermission = (permission) => {
 router.post('/', requirePermission('createArticle'), articleController.createArticle);
 router.get('/', articleController.getAllArticles);
 router.get('/feed/paginated', articleController.getArticleFeed);
-router.get('/category/:categoryId', articleController.getArticleByCategory);
 router.get('/:id', articleController.getArticleById);
 router.put('/:id', requirePermission('editAnyArticle'), articleController.updateArticle);
 router.delete('/:id', requirePermission('deleteAnyArticle'), articleController.deleteArticle);

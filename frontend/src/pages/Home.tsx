@@ -107,19 +107,19 @@ function Home() {
                     articleService.fetchStickyArticles(undefined, controller.signal),
                     articleService.fetchRecentArticles(5, 'published', controller.signal),
                     lifeCategoryId
-                        ? articleService.fetchArticlesByCategory(lifeCategoryId, 3, controller.signal)
+                        ? articleService.fetchArticles({ category: lifeCategoryId, limit: 3, status: 'published' }, controller.signal)
                         : Promise.resolve({ data: [] }),
                     newsCategoryId
-                        ? articleService.fetchArticlesByCategory(newsCategoryId, 3, controller.signal)
+                        ? articleService.fetchArticles({ category: newsCategoryId, limit: 3, status: 'published' }, controller.signal)
                         : Promise.resolve({ data: [] }),
                     entertainmentCategoryId
-                        ? articleService.fetchArticlesByCategory(entertainmentCategoryId, 8, controller.signal)
+                        ? articleService.fetchArticles({ category: entertainmentCategoryId, limit: 8, status: 'published' }, controller.signal)
                         : Promise.resolve({ data: [] }),
                     opinionCategoryId
-                        ? articleService.fetchArticlesByCategory(opinionCategoryId, 5, controller.signal)
+                        ? articleService.fetchArticles({ category: opinionCategoryId, limit: 5, status: 'published' }, controller.signal)
                         : Promise.resolve({ data: [] }),
                     sportsCategoryId
-                        ? articleService.fetchArticlesByCategory(sportsCategoryId, 5, controller.signal)
+                        ? articleService.fetchArticles({ category: sportsCategoryId, limit: 5, status: 'published' }, controller.signal)
                         : Promise.resolve({ data: [] }),
                 ]);
 
@@ -131,7 +131,9 @@ function Home() {
                 const stickyPosts = mapResponseData(stickyResponse.data);
                 const recentPosts = mapResponseData(recentResponse.data);
                 const lifePosts = mapResponseData(lifeResponse.data);
+                console.log("LifePosts: " + lifePosts.length)
                 const newsPosts = mapResponseData(newsResponse.data);
+                console.log("NewsPosts: " + newsPosts.length)
                 const entertainmentPosts = mapResponseData(entertainmentResponse.data);
                 const opinionPosts = mapResponseData(opinionResponse.data);
                 const sportsPosts = mapResponseData(sportsResponse.data);
@@ -142,25 +144,18 @@ function Home() {
                     return dateB - dateA;
                 };
 
-                const stickySorted = stickyPosts
-                    .filter((post) => post.isSticky)
-                    .sort(sortByPublishedDesc);
+                const stickySorted = stickyPosts.filter((post) => post.isSticky).sort(sortByPublishedDesc);
                 const stickyIds = new Set(stickySorted.map((post) => post.id));
-
-                const nonStickyRecent = recentPosts
-                    .filter((post) => !stickyIds.has(post.id))
-                    .sort(sortByPublishedDesc);
-
+                const nonStickyRecent = recentPosts.filter((post) => !stickyIds.has(post.id)).sort(sortByPublishedDesc);
                 const sortedRecent = [...stickySorted, ...nonStickyRecent];
                 const recentIds = new Set(sortedRecent.map((post) => post.id));
-                const filterAndSort = (posts: Post[]) =>
-                    posts
-                        .filter((post) => !recentIds.has(post.id))
-                        .sort(sortByPublishedDesc);
+                const filterAndSort = (posts: Post[]) => posts.filter((post) => !recentIds.has(post.id)).sort(sortByPublishedDesc);
 
                 setRecentArticles(sortedRecent);
                 setLifeArticles(filterAndSort(lifePosts));
+                console.log("LifeArticles: " + lifeArticles.length)
                 setNewsArticles(filterAndSort(newsPosts));
+                console.log("NewsArticles: " + newsArticles.length)
                 setEntertainmentArticles(filterAndSort(entertainmentPosts));
                 setOpinionArticles(filterAndSort(opinionPosts));
                 setSportsArticles(filterAndSort(sportsPosts)); 
@@ -241,7 +236,7 @@ function Home() {
                     <hr className='my-3' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.NEWS}</h4>
-                    <div className='flex flex-col sm:flex-row gap-4'>
+                    <div className='grid grid-cols-3 sm:flex-row gap-4'>
                         {newsArticles.map((article) => (
                             <ArticleBlock key={article.id} post={article} height='200px' />
                         ))}

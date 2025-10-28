@@ -65,10 +65,9 @@ function Entertainment() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [recentEntertainment, setRecentEntertainment] = useState<Post[]>([]);
     const [entertainmentArticles, setEntertainmentArticles] = useState<Post[]>([]);
-    const [moviesAndShows, setMoviesAndShows] = useState<Post[]>([]);
+    const [filmtv, setFilmAndTV] = useState<Post[]>([]);
     const [music, setMusic] = useState<Post[]>([]);
-    const [books, setBooks] = useState<Post[]>([]);
-    const [comics, setComics] = useState<Post[]>([]);
+    const [artsTheatre, setArtsTheatre] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [entertainmentCategoryId, setEntertainmentCategoryId] = useState<string | null>(null);
 
@@ -96,9 +95,8 @@ function Entertainment() {
             return;
             }
 
-            const entertainmentResponse = await articleService.fetchArticlesByCategory(
-                entertainmentCategory._id,
-                undefined,
+            const entertainmentResponse = await articleService.fetchArticles(
+                { category: entertainmentCategory._id, status: 'published' },
                 controller.signal
             );
 
@@ -139,10 +137,9 @@ function Entertainment() {
 
             setRecentEntertainment(recentSelection);
             setEntertainmentArticles(remainingEntertainment);
-            setMoviesAndShows(filterBySubcategory(entertainmentResponse.data || [], 'movies and shows'));
+            setFilmAndTV(filterBySubcategory(entertainmentResponse.data || [], 'film & tv'));
             setMusic(filterBySubcategory(entertainmentResponse.data || [], 'music'));
-            setBooks(filterBySubcategory(entertainmentResponse.data || [], 'books'));
-            setComics(filterBySubcategory(entertainmentResponse.data || [], 'comics'));
+            setArtsTheatre(filterBySubcategory(entertainmentResponse.data || [], 'arts & theatre'));
 
         } catch (err) {
             if (!isMounted) {
@@ -197,14 +194,14 @@ function Entertainment() {
             </div>
             <hr className='my-3' />
 
-            <h4 className="font-bold mb-2 text-2xl text-nique-blue">Movies and Shows</h4>
+            <h4 className="font-bold mb-2 text-2xl text-nique-blue">Music</h4>
             <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                 <div className='lg:col-span-2 sm:col-span-2'>
-                {moviesAndShows[0] && <ArticleBlock post={moviesAndShows[0]} height='400px'/>}
+                {music[0] && <ArticleBlock post={music[0]} height='400px'/>}
                 </div>
 
                 <div className='grid gap-4 grid-cols-2 lg:col-span-2'>
-                {moviesAndShows.slice(1, 5).map((article) => (
+                {music.slice(1, 5).map((article) => (
                     <ArticleBlock key={article.id} post={article} height='190px' />
                 ))}
                 </div>
@@ -212,34 +209,25 @@ function Entertainment() {
 
             <hr className='my-3' />
 
-            <h4 className="font-bold mb-2 text-2xl text-nique-blue">Music</h4>
+            <h4 className="font-bold mb-2 text-2xl text-nique-blue">Film & TV</h4>
             <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
-                {music.slice(0, 4).map((article) => (
+                {filmtv.slice(0, 4).map((article) => (
                 <ArticleBlock key={article.id} post={article} height='230px' />
                 ))}
             </div>
 
             <hr className='my-3' />
 
-            <h4 className="font-bold mb-2 text-2xl text-nique-blue">Books</h4>
+            <h4 className="font-bold mb-2 text-2xl text-nique-blue">Arts & Theatre</h4>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4 items-start'>
                 {(() => {
-                const posts = books.slice(0, 2);
+                const posts = artsTheatre.slice(0, 2);
                 return posts.length ? <SmallArticle posts={posts} direction="left"/> : null;
                 })()}
                 {(() => {
-                const posts = books.slice(2, 4);
+                const posts = artsTheatre.slice(2, 4);
                 return posts.length ? <SmallArticle posts={posts} direction="left"/> : null;
                 })()}
-            </div>
-
-            <hr className='my-3' />
-
-            <h4 className="font-bold mb-2 text-2xl text-nique-blue">Comics</h4>
-            <div className='flex gap-4 overflow-x-auto'>
-                {comics.slice(0, 3).map((article) => (
-                <Comic key={article.id} post={article} height='190px' />
-                ))}
             </div>
 
             <InfiniteScrollModule categoryId={entertainmentCategoryId ?? undefined} />

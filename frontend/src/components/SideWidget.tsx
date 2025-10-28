@@ -117,7 +117,7 @@ function SideWidget() {
                     disabled={text.trim().length === 0}
                 >
                     {isSliverSubmitting && <h4 className='text-sm'>Submitting...</h4>}
-                    {(sliverSubmitted === 'idle' || sliverSubmitted === 'error') && <h4 className='text-sm'>Submit Sliver</h4>}
+                    {!isSliverSubmitting && (sliverSubmitted === 'idle' || sliverSubmitted === 'error') && <h4 className='text-sm'>Submit Sliver</h4>}
                     {sliverSubmitted === 'success' && <h4 className='text-sm'><SuccessTick /></h4>}
                 </button>
             </div>

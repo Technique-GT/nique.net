@@ -67,9 +67,9 @@ function News() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [recentNews, setRecentNews] = useState<Post[]>([]);
     const [newsArticles, setNewsArticles] = useState<Post[]>([]);
-    const [atlantaNews, setAtlantaNews] = useState<Post[]>([]);
-    const [usNews, setUsNews] = useState<Post[]>([]);
-    const [worldNews, setWorldNews] = useState<Post[]>([]);
+    const [theInstituteNews, setTheInstituteNews] = useState<Post[]>([]);
+    const [cityStateNews, setCityStateNews] = useState<Post[]>([]);
+    const [scienceResearchNews, setScienceResearchNews] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [newsCategoryId, setNewsCategoryId] = useState<string | null>(null);
 
@@ -98,9 +98,8 @@ function News() {
                     return;
                 }
 
-                const newsResponse = await articleService.fetchArticlesByCategory(
-                    categoryId,
-                    undefined,
+                const newsResponse = await articleService.fetchArticles(
+                    { category: categoryId, status: 'published' },
                     controller.signal
                 );
 
@@ -141,9 +140,9 @@ function News() {
 
                 setRecentNews(recentSelection);
                 setNewsArticles(remainingNews);
-                setAtlantaNews(filterBySubcategory(newsResponse.data || [], 'atlanta news'));
-                setUsNews(filterBySubcategory(newsResponse.data || [], 'us news'));
-                setWorldNews(filterBySubcategory(newsResponse.data || [], 'world news'));
+                setTheInstituteNews(filterBySubcategory(newsResponse.data || [], 'the institute'));
+                setCityStateNews(filterBySubcategory(newsResponse.data || [], 'city & state'));
+                setScienceResearchNews(filterBySubcategory(newsResponse.data || [], 'science & research'));
             } catch (err) {
                 if (!isMounted) {
                     return;
@@ -195,28 +194,28 @@ function News() {
 
                     <hr className='my-3' />
 
-                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">Atlanta News</h4>
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">The Institute</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='col-span-2'>
-                            {atlantaNews[0] && <ArticleBlock post={atlantaNews[0]} height='460px' />}
+                            {theInstituteNews[0] && <ArticleBlock post={theInstituteNews[0]} height='460px' />}
                         </div>
                         <div className='grid col-span-2 gap-4'>
-                            {atlantaNews[1] && <ArticleBlock post={atlantaNews[1]} height='222px' />}
-                            {atlantaNews[2] && <ArticleBlock post={atlantaNews[2]} height='222px' />}
+                            {theInstituteNews[1] && <ArticleBlock post={theInstituteNews[1]} height='222px' />}
+                            {theInstituteNews[2] && <ArticleBlock post={theInstituteNews[2]} height='222px' />}
                             <div className='col-span-2'>
-                                {atlantaNews[3] && <ArticleBlock post={atlantaNews[3]} height='222px' />}
+                                {theInstituteNews[3] && <ArticleBlock post={theInstituteNews[3]} height='222px' />}
                             </div>
                         </div>
                         <div className='col-span-2'>
                             {(() => {
-                                const posts = atlantaNews.slice(6, 8);
+                                const posts = theInstituteNews.slice(6, 8);
                                 return posts.length ? <SmallArticle posts={posts} direction='left'/> : null;
                             })()}
                         </div>
                         <hr className="block lg:hidden col-span-2" />
                         <div className='col-span-2'>
                             {(() => {
-                                const posts = atlantaNews.slice(8, 10);
+                                const posts = theInstituteNews.slice(8, 10);
                                 return posts.length ? <SmallArticle posts={posts} direction='left'/> : null;
                             })()}
                         </div>
@@ -224,16 +223,16 @@ function News() {
 
                     <hr className='my-3' />
 
-                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">U.S. News</h4>
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">City & State</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='grid grid-cols-2 gap-4 col-span-2'>
-                            {usNews.slice(0, 4).map((article) => (
+                            {cityStateNews.slice(0, 4).map((article) => (
                                 <ArticleBlock key={article.id} post={article} height='222px' />
                             ))}
                         </div>
                         <div className='grid col-span-2 gap-4'>
                             {(() => {
-                                const posts = usNews.slice(4, 8);
+                                const posts = cityStateNews.slice(4, 8);
                                 return posts.length ? <SideArticle posts={posts} width='18%'/> : null;
                             })()}
                         </div>
@@ -241,9 +240,9 @@ function News() {
 
                     <hr className='my-3' />
 
-                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">World News</h4>
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">Science & Research</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
-                        {worldNews.slice(0, 6).map((article) => (
+                        {scienceResearchNews.slice(0, 6).map((article) => (
                             <ArticleBlock key={article.id} post={article} height='230px' />
                         ))}
                     </div>

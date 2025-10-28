@@ -66,8 +66,9 @@ function Life() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [recentLifeArticles, setRecentLifeArticles] = useState<Post[]>([]);
     const [lifeArticles, setLifeArticles] = useState<Post[]>([]);
-    const [techFashion, setTechFashion] = useState<Post[]>([]);
-    const [alumniSpotlight, setAlumniSpotlight] = useState<Post[]>([]);
+    const [events, setEvents] = useState<Post[]>([]);
+    const [rsos, setRsos] = useState<Post[]>([]);
+    const [studentFeatures, setStudentFeatures] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [lifeCategoryId, setLifeCategoryId] = useState<string | null>(null);
 
@@ -96,9 +97,8 @@ function Life() {
                     return;
                 }
 
-                const lifeResponse = await articleService.fetchArticlesByCategory(
-                    lifeCategory._id,
-                    undefined,
+                const lifeResponse = await articleService.fetchArticles(
+                    { category: lifeCategory._id, status: 'published' },
                     controller.signal
                 );
 
@@ -139,8 +139,9 @@ function Life() {
 
                 setRecentLifeArticles(recentSelection);
                 setLifeArticles(remainingLife);
-                setTechFashion(filterBySubcategory(lifeResponse.data || [], 'tech fashion'));
-                setAlumniSpotlight(filterBySubcategory(lifeResponse.data || [], 'alumni spotlight'));
+                setEvents(filterBySubcategory(lifeResponse.data || [], 'events'));
+                setRsos(filterBySubcategory(lifeResponse.data || [], 'rsos'));
+                setStudentFeatures(filterBySubcategory(lifeResponse.data || [], 'student features'));
             } catch (err) {
                 if (!isMounted) {
                     return;
@@ -206,9 +207,18 @@ function Life() {
 
                     <hr className='my-3' />
 
-                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">Tech Fashion</h4>
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">Events</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
-                        {techFashion.slice(0, 4).map((article) => (
+                        {events.slice(0, 4).map((article) => (
+                            <ArticleBlock key={article.id} post={article} height='230px' />
+                        ))}
+                    </div>
+
+                    <hr className='my-3' />
+
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">RSOs</h4>
+                    <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
+                        {rsos.slice(0, 4).map((article) => (
                             <ArticleBlock key={article.id} post={article} height='230px' />
                         ))}
                     </div>
@@ -219,23 +229,23 @@ function Life() {
                     <div className='grid gap-4 grid-cols-1 lg:grid-rows-3 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='row-span-2 col-span-2'>
                             {(() => {
-                                const posts = lifeArticles.slice(0, 10)
+                                const posts = lifeArticles.slice(0, 4)
                                     .filter(Boolean) as Post[];
                                 return posts.length ? <SideArticle posts={posts} width='18%' /> : null;
                             })()}
                         </div>
                         <div className='grid row-span-2 col-span-2 gap-4 lg:gap-y-0'>
                             <div className='col-span-2'>
-                                {lifeArticles[9] && <ArticleBlock post={lifeArticles[9]} height='222px' />}
+                                {lifeArticles[4] && <ArticleBlock post={lifeArticles[4]} height='222px' />}
                             </div>
-                            {lifeArticles[10] && <ArticleBlock post={lifeArticles[10]} height='222px' />}
-                            {lifeArticles[11] && <ArticleBlock post={lifeArticles[11]} height='222px' />}
+                            {lifeArticles[5] && <ArticleBlock post={lifeArticles[5]} height='222px' />}
+                            {lifeArticles[6] && <ArticleBlock post={lifeArticles[6]} height='222px' />}
                         </div>
                         <div className='col-span-2'>
-                            {lifeArticles[12] && <ArticleBlock post={lifeArticles[12]} height='230px' />}
+                            {lifeArticles[7] && <ArticleBlock post={lifeArticles[7]} height='230px' />}
                         </div>
-                        {lifeArticles[13] && <ArticleBlock post={lifeArticles[13]} height='230px' />}
-                        {lifeArticles[14] && <ArticleBlock post={lifeArticles[14]} height='230px' />}
+                        {lifeArticles[8] && <ArticleBlock post={lifeArticles[8]} height='230px' />}
+                        {lifeArticles[9] && <ArticleBlock post={lifeArticles[9]} height='230px' />}
                     </div>
 
                     <InfiniteScrollModule categoryId={lifeCategoryId ?? undefined} />
@@ -266,12 +276,12 @@ function Life() {
 
                     <hr />
 
-                    <h4 className="font-bold text-2xl text-nique-blue">Alumni Spotlight</h4>   
+                    <h4 className="font-bold text-2xl text-nique-blue">Student Features</h4>   
                     
                     <hr />
 
                     {(() => {
-                        const posts = alumniSpotlight.slice(0, 4)
+                        const posts = studentFeatures.slice(0, 4)
                             .filter(Boolean) as Post[];
                         return posts.length ? <SideArticle posts={posts} width='80px'/> : null;
                     })()}

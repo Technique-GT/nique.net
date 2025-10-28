@@ -67,7 +67,7 @@ function Sports() {
     const [recentSportsArticles, setRecentSportsArticles] = useState<Post[]>([]);
     const [sportsArticles, setSportsArticles] = useState<Post[]>([]);
     const [techSports, setTechSports] = useState<Post[]>([]);
-    const [usSports, setUsSports] = useState<Post[]>([]);
+    const [atlSports, setAtlSports] = useState<Post[]>([]);
     const [seasonScoreboard, setSeasonScoreboard] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [sportsCategoryId, setSportsCategoryId] = useState<string | null>(null);
@@ -95,9 +95,8 @@ function Sports() {
                     return;
                 }
 
-                const sportsResponse = await articleService.fetchArticlesByCategory(
-                    sportsCategory._id,
-                    undefined,
+                const sportsResponse = await articleService.fetchArticles(
+                    { category: sportsCategory._id, status: 'published' },
                     controller.signal
                 );
 
@@ -139,7 +138,7 @@ function Sports() {
                 setRecentSportsArticles(recentSelection);
                 setSportsArticles(remainingSports);
                 setTechSports(filterBySubcategory(sportsResponse.data || [], 'tech sports'));
-                setUsSports(filterBySubcategory(sportsResponse.data || [], 'us sports'));
+                setAtlSports(filterBySubcategory(sportsResponse.data || [], 'atlanta'));
                 setSeasonScoreboard(filterBySubcategory(sportsResponse.data || [], 'season scoreboard'));
             } catch (err) {
                 if (!isMounted) {
@@ -199,7 +198,7 @@ function Sports() {
 
                     <hr className='my-3' />
 
-                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">Tech Sports</h4>
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">Jackets</h4>
                     <div className='grid grid-cols-1 lg:grid-cols-[48%_auto] gap-4'>
                         <div className='w-full'>
                             {(() => {
@@ -216,9 +215,9 @@ function Sports() {
 
                     <hr className='my-3' />
 
-                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">U.S. Sports</h4>
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">Atlanta</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
-                        {usSports.slice(0, 4).map((article) => (
+                        {atlSports.slice(0, 4).map((article) => (
                             <ArticleBlock key={article.id} post={article} height='180px' />
                         ))}
                     </div>
