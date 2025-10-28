@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import articleService from '../services/articleService';
 import type { Post } from '../types/article';
 
@@ -62,6 +63,8 @@ const mapArticleToPost = (article: any): Post => {
 };
 
 function InfiniteScrollModule({ categoryId, startOffset = 0 }: InfiniteScrollModuleProps) {
+    const navigate = useNavigate();
+
     const sentinelRef = useRef<HTMLDivElement | null>(null);
     const [articles, setArticles] = useState<Post[]>([]);
     const [offset, setOffset] = useState(startOffset);
@@ -160,6 +163,7 @@ function InfiniteScrollModule({ categoryId, startOffset = 0 }: InfiniteScrollMod
         <article
             key={key}
             className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md"
+            onClick={()=>navigate('/'+article.id)}
         >
             <p className="text-xs uppercase tracking-wide text-slate-400">
                 {new Date(article.publishedAt || article.createdAt).toLocaleDateString()}  &#8226; {article.category}

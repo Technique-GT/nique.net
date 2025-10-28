@@ -215,14 +215,6 @@ function Opinions() {
                     })()}
                 </div>
 
-                <hr className='my-3'/>
-                
-                <h4 className="font-bold mb-2 text-2xl text-nique-blue">Letters to the Editor</h4>
-                <div className='grid grid-cols-3 gap-4'>
-                    {lettersArticles.slice(0, 3).map((article) => (
-                    <ArticleBlock key={article.id} post={article} height='190px' />
-                    ))}
-                </div>
 
                 <InfiniteScrollModule categoryId={opinionCategoryId ?? undefined} />
             </div>
@@ -234,6 +226,14 @@ function Opinions() {
                     <SideArticle posts={posts} width='80px' hasDesc={true}/>
                 ) : null;
                 })()}
+
+                <h4 className="font-bold text-2xl text-nique-blue">Letters to the Editor</h4>
+                <hr />
+                <div className='grid grid-cols-3 gap-4'>
+                    {lettersArticles.slice(0, 3).map((article) => (
+                    <ArticleBlock key={article.id} post={article} height='190px' />
+                    ))}
+                </div>
             </div>
         </div>
         </>

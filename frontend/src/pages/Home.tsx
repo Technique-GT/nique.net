@@ -40,7 +40,7 @@ const mapArticleToPost = (article: any): Post => {
         : '';
 
     return {
-        id: article._id,
+        id: article._id || article.id,
         title: article.title,
         slug: article.slug,
         content: article.content,
