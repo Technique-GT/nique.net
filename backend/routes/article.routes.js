@@ -6,23 +6,23 @@ const { checkPermission } = require('../middlewares/permissions.util');
 
 const requirePermission = (permission) => {
     return (req, res, next) => {
-      // Ensure user is authenticated first
-      auth(req, res, () => {
-        if (!req.user || !req.user.role) {
-          return res.status(401).json({ message: 'Unauthorized' });
-        }
-        
-        // Use the existing checkPermission utility
-        const hasPermission = checkPermission(req.user.role, permission);
-        
-        if (!hasPermission) {
-          return res.status(403).json({ message: 'Forbidden' });
-        }
-        
-        next();
-      });
+        // Ensure user is authenticated first
+        auth(req, res, () => {
+            if (!req.user || !req.user.role) {
+                return res.status(401).json({ message: 'Unauthorized' });
+            }
+            
+            // Use the existing checkPermission utility
+            const hasPermission = checkPermission(req.user.role, permission);
+            
+            if (!hasPermission) {
+                return res.status(403).json({ message: 'Forbidden' });
+            }
+            
+            next();
+        });
     };
-  };
+};
 
 // CRUD operations with permission checks
 router.post('/', requirePermission('createArticle'), articleController.createArticle);

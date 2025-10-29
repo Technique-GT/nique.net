@@ -11,6 +11,8 @@ const staffRoutes = require('./routes/staff.routes');
 const categoryRoutes = require('./routes/category.routes');
 const tagRoutes = require('./routes/tag.routes');
 const articleRoutes = require('./routes/article.routes');
+const sliverRoutes = require('./routes/sliver.routes');
+const storyRoutes = require('./routes/story.routes');
 
 // Load environment variables from config.env
 dotenv.config({ path: './config.env' });  // Specify the correct path to your config.env file
@@ -60,6 +62,12 @@ app.use('/api/tags', tagRoutes);
 
 //article route
 app.use('/api/articles', articleRoutes);
+
+// Sliver route
+app.use('/api/slivers', sliverRoutes);
+
+// Story route
+app.use('/api/stories', storyRoutes);
 
 // Example protected route
 app.get('/api', (req, res) => {
