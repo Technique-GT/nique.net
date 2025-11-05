@@ -5,7 +5,6 @@ import { Post } from '../types/article';
 import SideArticle from '../components/SideArticle';
 import Carousel from '../components/Carousel';
 import SmallArticle from '../components/SmallArticle';
-import Comic from '../components/Comic';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import { Categories } from '../types/categories';

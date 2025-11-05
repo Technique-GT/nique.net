@@ -65,7 +65,7 @@ const mapArticleToPost = (article: any): Post => {
 function Sports() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [recentSportsArticles, setRecentSportsArticles] = useState<Post[]>([]);
-    const [sportsArticles, setSportsArticles] = useState<Post[]>([]);
+    // const [sportsArticles, setSportsArticles] = useState<Post[]>([]);
     const [techSports, setTechSports] = useState<Post[]>([]);
     const [atlSports, setAtlSports] = useState<Post[]>([]);
     const [seasonScoreboard, setSeasonScoreboard] = useState<Post[]>([]);
@@ -90,7 +90,7 @@ function Sports() {
 
                 if (!sportsCategory?._id) {
                     if (!isMounted) return;
-                    setSportsArticles([]);
+                    // setSportsArticles([]);
                     setError('Sports category not found.');
                     return;
                 }
@@ -136,7 +136,7 @@ function Sports() {
                 }
 
                 setRecentSportsArticles(recentSelection);
-                setSportsArticles(remainingSports);
+                // setSportsArticles(remainingSports);
                 setTechSports(filterBySubcategory(sportsResponse.data || [], 'tech sports'));
                 setAtlSports(filterBySubcategory(sportsResponse.data || [], 'atlanta'));
                 setSeasonScoreboard(filterBySubcategory(sportsResponse.data || [], 'season scoreboard'));

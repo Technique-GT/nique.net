@@ -63,7 +63,7 @@ const mapArticleToPost = (article: any): Post => {
 function Opinions() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [recentOpinionArticles, setRecentOpinionArticles] = useState<Post[]>([]);
-    const [opinionArticles, setOpinionArticles] = useState<Post[]>([]);
+    // const [opinionArticles, setOpinionArticles] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [opinionCategoryId, setOpinionCategoryId] = useState<string | null>(null);
     const [opEdArticles, setOpEdArticles] = useState<Post[]>([]);
@@ -89,7 +89,7 @@ function Opinions() {
 
             if (!opinionCategory?._id) {
                 if (!isMounted) return;
-                setOpinionArticles([]);
+                // setOpinionArticles([]);
                 setError('Opinion category not found.');
                 return;
             }
@@ -135,7 +135,7 @@ function Opinions() {
             }
 
             setRecentOpinionArticles(recentSelection);
-            setOpinionArticles(remainingOpinion);
+            // setOpinionArticles(remainingOpinion);
             setOpEdArticles(filterBySubcategory(opinionResponse.data || [], 'op ed'));
             setConsensusArticles(filterBySubcategory(opinionResponse.data || [], 'consensus'));
             setLettersArticles(filterBySubcategory(opinionResponse.data || [], 'letters to the editor'));

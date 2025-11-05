@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { FaSearch, FaTimes } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
