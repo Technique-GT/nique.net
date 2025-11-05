@@ -113,7 +113,7 @@ function Opinions() {
             const orderedOpinion = [...stickyPosts, ...nonStickyPosts];
             const RECENT_COUNT = Math.max(5, stickyPosts.length);
             const recentSelection = orderedOpinion.slice(0, RECENT_COUNT);
-            const remainingOpinion = orderedOpinion.slice(RECENT_COUNT);
+            // const remainingOpinion = orderedOpinion.slice(RECENT_COUNT);
             const recentIds = new Set(recentSelection.map((post) => post.id));
 
             const filterBySubcategory = (articles: any[], subcategory: string) =>
