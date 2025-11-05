@@ -114,7 +114,7 @@ function Sports() {
                 const orderedSports = [...stickyPosts, ...nonStickyPosts];
                 const RECENT_COUNT = Math.max(5, stickyPosts.length);
                 const recentSelection = orderedSports.slice(0, RECENT_COUNT);
-                const remainingSports = orderedSports.slice(RECENT_COUNT);
+                // const remainingSports = orderedSports.slice(RECENT_COUNT);
                 const recentIds = new Set(recentSelection.map((post) => post.id));
 
                 const filterBySubcategory = (articles: any[], subcategory: string) =>
