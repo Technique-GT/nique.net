@@ -7,19 +7,19 @@ export interface Staff {
 
 export const staff: Staff[] = [
     {
-        name: "Cole Murphy",
+        name: "Alec Grosswald",
         role: "Editor-in-Chief",
         email: "editor@nique.net",
         contact: null
     },
     {
-        name: "Alec Grosswald",
+        name: "Sanika Tank",
         role: "Managing Editor",
         email: "managing.editor@nique.net",
         contact: null
     },
     {
-        name: "Amarachi Nnabue",
+        name: "Kingston Barber",
         role: "Head Copy Editor",
         email: "copy@nique.net",
         contact: null
@@ -32,18 +32,18 @@ export const staff: Staff[] = [
     },
     {
         name: "Anika Nallur",
-        role: "Photograph Editor",
+        role: "Photography Editor",
         email: "photo@nique.net",
         contact: null
     },
     {
-        name: "Christine Lee",
+        name: "Madeline Dunn",
         role: "Design Editor",
         email: "design@nique.net",
         contact: null
     },
     {
-        name: "Rohan Raman",
+        name: "Jack Elliott",
         role: "Sports Editor",
         email: "", // no email address provided
         contact: null
@@ -55,13 +55,13 @@ export const staff: Staff[] = [
         contact: null
     },
     {
-        name: "Ethan Percell",
+        name: "Molly Khayat",
         role: "Opinions Editor",
         email: "opinions@nique.net",
         contact: null
     },
     {
-        name: "Sanika Tank",
+        name: "Haris Rashli",
         role: "News Editor",
         email: "news@nique.net",
         contact: null
@@ -73,8 +73,8 @@ export const staff: Staff[] = [
         contact: null
     },
     {
-        name: "Shaswat Dhakal",
-        role: "Technology Editor",
+        name: "Alejandro González-Betancourt",
+        role: "Business Editor",
         email: "developer@nique.net",
         contact: null
     },
