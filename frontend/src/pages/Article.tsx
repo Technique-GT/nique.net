@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import DOMPurify from "dompurify";
 import Navbar from "../components/Navbar";
 import ArticleBlock from "../components/ArticleBlock";
 import Comment from "../components/Comment";
@@ -173,6 +174,16 @@ export default function Article() {
     window.scrollTo(0, 0);
   }, [id]);
 
+  const articleContent =typeof article?.content === "string" ? (article.content as string) : null;
+
+  const normalizeSpansToParagraphs = (raw: string) => raw.replace(/<\s*span([^>]*)>/gi, "<p$1>").replace(/<\/\s*span\s*>/gi, "</p>");
+
+  const sanitizedContent = useMemo(() => {
+    if (!articleContent) return "";
+    const normalized = normalizeSpansToParagraphs(articleContent);
+    return DOMPurify.sanitize(normalized);
+  }, [articleContent]);
+
   useMemo(() => {
     setNumCommentsToView(5);
     if (!comments?.length) return;
@@ -288,9 +299,9 @@ export default function Article() {
         </figure>
 
         {/* Article Content */}
-        <section className="prose prose-lg max-w-3xl mx-auto text-[#1A1E47]">
-          {typeof article.content === "string" ? (
-            <p>{ article.content }</p>
+        <section className="prose prose-lg max-w-3xl mx-auto text-[#1A1E47] article-body">
+          {sanitizedContent ? (
+            <article dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
           ) : (
             <p>{article.excerpt}</p>
           )}

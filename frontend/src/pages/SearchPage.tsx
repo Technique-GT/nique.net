@@ -6,6 +6,23 @@ import Spinner from "../components/Spinner";
 import articleService from "../services/articleService";
 import { Post } from "../types/article";
 
+const buildPreview = (rawContent?: string | null, fallback?: string) => {
+  if (typeof rawContent === "string") {
+    const plain = rawContent.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    if (plain) {
+      const snippet = plain.slice(0, 200);
+      return snippet.length === 200 ? `${snippet}...` : snippet;
+    }
+  }
+
+  if (fallback) {
+    const snippet = fallback.slice(0, 200);
+    return snippet.length === 200 ? `${snippet}...` : snippet;
+  }
+
+  return "Read more...";
+};
+
 const mapArticleToPost = (article: any): Post => {
   const primaryAuthor = article.authors?.[0]?.user;
 
@@ -259,7 +276,9 @@ const SearchPage = () => {
                         {post.category}
                       </div>
 
-                      <p className="text-base text-gray-700">{post.content.slice(0, 200)}...</p>
+                      <p className="text-base text-gray-700">
+                        {buildPreview(post.content, post.excerpt)}
+                      </p>
 
                       <div className="text-sm text-gray-500">
                         By {post.author}

@@ -180,35 +180,35 @@ function InfiniteScrollModule({ categoryId, startOffset = 0 }: InfiniteScrollMod
 
     return (
         <div className="space-y-6">
-        <hr className='my-4' />
-        <div className="grid gap-4 md:grid-cols-2">{articles.map(renderArticles)}</div>
+            <hr className='my-4' />
+            <div className="grid gap-4 md:grid-cols-2 cursor-pointer">{articles.map(renderArticles)}</div>
 
-        {error && (
-            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
-            {error}
+            {error && (
+                <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+                {error}
+                </div>
+            )}
+
+            <div ref={sentinelRef} aria-hidden="true" className="flex w-full justify-center py-4">
+                {isLoading ? (
+                <span className="text-sm text-slate-500">Loading more stories…</span>
+                ) : hasMore ? (
+                <span className="text-sm text-slate-400">Keep scrolling for more</span>
+                ) : null}
             </div>
-        )}
 
-        <div ref={sentinelRef} aria-hidden="true" className="flex w-full justify-center py-4">
-            {isLoading ? (
-            <span className="text-sm text-slate-500">Loading more stories…</span>
-            ) : hasMore ? (
-            <span className="text-sm text-slate-400">Keep scrolling for more</span>
-            ) : null}
-        </div>
-
-        {!supportsIntersectionObserver && hasMore && (
-            <div className="flex justify-center">
-            <button
-                type="button"
-                onClick={requestNextPage}
-                disabled={isLoading}
-                className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-                {isLoading ? 'Loading…' : 'Load more'}
-            </button>
-            </div>
-        )}
+            {!supportsIntersectionObserver && hasMore && (
+                <div className="flex justify-center">
+                <button
+                    type="button"
+                    onClick={requestNextPage}
+                    disabled={isLoading}
+                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    {isLoading ? 'Loading…' : 'Load more'}
+                </button>
+                </div>
+            )}
         </div>
     );
 }

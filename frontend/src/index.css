@@ -44,6 +44,17 @@ h5, th, td {
     font-family: 'DM Sans', sans-serif;
 }
 
+.article-body p {
+    font-family: 'EB Garamond', Times, serif;
+    font-weight: 600;
+    text-indent: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+.article-body p:first-child {
+  margin-top: 0;
+}
+
 @keyframes scroll {
     from {
         transform: translateX(0);

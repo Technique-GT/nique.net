@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.5",
+    "@types/dompurify": "^3.0.5",
     "axios": "^1.7.9",
+    "dompurify": "^3.3.0",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.476.0",
     "pdfjs-dist": "^4.8.69",
