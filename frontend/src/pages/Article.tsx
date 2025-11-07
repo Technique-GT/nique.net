@@ -237,15 +237,16 @@ export default function Article() {
     );
   }
 
-  const primaryAuthorUser = article.authors?.[0]?.user;
-  const primaryAuthor =
-    typeof primaryAuthorUser === "string"
-      ? primaryAuthorUser
-      : [primaryAuthorUser?.firstName, primaryAuthorUser?.lastName]
-          .filter(Boolean)
-          .join(" ") ||
-        primaryAuthorUser?.username ||
-        "Technique Staff";
+  const authorNames =
+    article.authors?.map((author) => {
+      const authorUser = author.user;
+      if (!authorUser) return null;
+      if (typeof authorUser === "string") return authorUser;
+      const composedName = [authorUser.firstName, authorUser.lastName].filter(Boolean).join(" ");
+      return composedName || authorUser.username || authorUser.email || null;
+    }).filter((name): name is string => Boolean(name)) || [];
+
+  const authorsDisplay = authorNames.length ? authorNames.join(" • ") : "Technique Staff";
 
   const publishedDate =
     article.publishedAt &&
@@ -265,8 +266,8 @@ export default function Article() {
         <header className="space-y-2">
           <h3 className="text-4xl font-bold mt-2 mb-1">{article.title}</h3>
           <h4 className="flex flex-wrap mb-2 gap-x-4 text-nique-blue text-lg justify-between">
-            <div>  
-              <span>{primaryAuthor}</span>
+            <div>
+              <span>{authorsDisplay}</span>
               {publishedDate && <span> • {publishedDate}</span>}
             </div>
               {article.categories?.length > 0 &&
@@ -277,7 +278,7 @@ export default function Article() {
                       {idx > 0 && " • "}
                       {cat.name}
                     </span>
-                  ))}
+              ))}
           </h4>
           {tagsDisplay && <p className="text-xs text-nique-blue">{tagsDisplay}</p>}
           <hr className="opacity-50" />

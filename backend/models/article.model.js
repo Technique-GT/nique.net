@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const CATEGORY_SUBCATEGORY_MAP = Object.freeze({
   news: ['The Institute', 'City & State', 'Science & Research'],
-  life: ['Events', 'RSOs', 'Student Features'],
+  life: ['Campus Events', 'RSOs', 'Features'],
   opinion: ['Op Ed', 'Consensus', 'Letters to the Editor'],
   entertainment: ['Music', 'Film & TV', 'Arts & Theater'],
   sports: ['Jackets', 'Atlanta']

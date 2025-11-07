@@ -68,7 +68,7 @@ function Life() {
     const [lifeArticles, setLifeArticles] = useState<Post[]>([]);
     const [events, setEvents] = useState<Post[]>([]);
     const [rsos, setRsos] = useState<Post[]>([]);
-    const [studentFeatures, setStudentFeatures] = useState<Post[]>([]);
+    const [featuresArticles, setFeaturesArticles] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [lifeCategoryId, setLifeCategoryId] = useState<string | null>(null);
 
@@ -139,9 +139,9 @@ function Life() {
 
                 setRecentLifeArticles(recentSelection);
                 setLifeArticles(remainingLife);
-                setEvents(filterBySubcategory(lifeResponse.data || [], 'events'));
+                setEvents(filterBySubcategory(lifeResponse.data || [], 'campus events'));
                 setRsos(filterBySubcategory(lifeResponse.data || [], 'rsos'));
-                setStudentFeatures(filterBySubcategory(lifeResponse.data || [], 'student features'));
+                setFeaturesArticles(filterBySubcategory(lifeResponse.data || [], 'features'));
             } catch (err) {
                 if (!isMounted) {
                     return;
@@ -207,7 +207,7 @@ function Life() {
 
                     <hr className='my-3' />
 
-                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">Events</h4>
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">Campus Events</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         {events.slice(0, 4).map((article) => (
                             <ArticleBlock key={article.id} post={article} height='230px' />
@@ -276,12 +276,12 @@ function Life() {
 
                     <hr /> */}
 
-                    <h4 className="font-bold text-2xl text-nique-blue">Student Features</h4>   
+                    <h4 className="font-bold text-2xl text-nique-blue">Features</h4>   
                     
                     <hr />
 
                     {(() => {
-                        const posts = studentFeatures.slice(0, 4)
+                        const posts = featuresArticles.slice(0, 4)
                             .filter(Boolean) as Post[];
                         return posts.length ? <SideArticle posts={posts} width='80px'/> : null;
                     })()}

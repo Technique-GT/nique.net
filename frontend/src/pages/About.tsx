@@ -112,7 +112,7 @@ function About() {
                 <h4 className="font-bold mb-2 text-2xl text-nique-blue">About Us</h4>
             </div>
 
-            <Collage posts={[recentArticles[0], recentArticles[1], recentArticles[2], recentArticles[3], recentArticles[4]]} /> {/* collection of best pictures you may want to feature */}
+            <Collage posts={[recentArticles[0], recentArticles[1], recentArticles[2], recentArticles[3], recentArticles[4], recentArticles[5]]} /> {/* collection of best pictures you may want to feature */}
 
             {/* Mission */}
             <div className='grid grid-cols-1 sm:grid-cols-3 max-w-[1470px] m-auto p-5 gap-x-16'>

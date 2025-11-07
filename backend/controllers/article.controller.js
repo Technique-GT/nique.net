@@ -92,7 +92,7 @@ exports.getAllArticles = async (req, res) => {
       .populate('categories', 'name')
       .populate('tags', 'name')
       .populate('featuredImage', 'url title')
-      .sort({ createdAt: -1 });
+      .sort({ publishedAt: -1 });
 
     if (!Number.isNaN(parsedLimit) && parsedLimit > 0) {
       articleQuery = articleQuery.limit(parsedLimit);
@@ -161,7 +161,7 @@ exports.getArticleFeed = async (req, res) => {
         .populate('categories', 'name')
         .populate('tags', 'name')
         .populate('featuredImage', 'url title')
-        .sort({ createdAt: -1 })
+        .sort({ publishedAt: -1 })
         .skip(skip)
         .limit(parsedLimit),
     ]);

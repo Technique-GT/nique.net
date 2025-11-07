@@ -87,14 +87,14 @@ function SideWidget() {
             <hr className='my-3' />
 
             <h4 className="font-bold mb-1 text-xl">Got News?</h4>
-            <h4 className='text-black text-xs mt-1 mb-3'>Do you have any ideas for our reporters or editors? Do you want to give new news about your organization or business? Tell us!</h4>
-            <button 
-                className='bg-nique-blue hover:bg-nique-blue-hover rounded-md text-white w-full p-1' 
-                onClick={() => {(e : any) => {
+            <h4 className='text-black text-xs mt-1 mb-3'>Do you have any ideas for our reporters or editors? Do you want to give new news about your organization or business? Tell us at editor@nique.net!</h4>
+            <button
+                type='button'
+                className='bg-nique-blue hover:bg-nique-blue-hover rounded-md text-white w-full p-1'
+                onClick={(event) => {
+                    event.preventDefault();
                     window.location.href = 'mailto:editor@nique.net';
-                    e.preventDefault();
-                }
-            }}>
+                }}>
                 <h4>Submit a Story</h4>
             </button>
 
