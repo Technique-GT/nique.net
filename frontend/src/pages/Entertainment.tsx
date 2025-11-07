@@ -66,7 +66,7 @@ function Entertainment() {
     const [entertainmentArticles, setEntertainmentArticles] = useState<Post[]>([]);
     const [filmtv, setFilmAndTV] = useState<Post[]>([]);
     const [music, setMusic] = useState<Post[]>([]);
-    const [artsTheatre, setArtsTheatre] = useState<Post[]>([]);
+    const [artsTheater, setArtsTheater] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [entertainmentCategoryId, setEntertainmentCategoryId] = useState<string | null>(null);
 
@@ -138,7 +138,7 @@ function Entertainment() {
             setEntertainmentArticles(remainingEntertainment);
             setFilmAndTV(filterBySubcategory(entertainmentResponse.data || [], 'film & tv'));
             setMusic(filterBySubcategory(entertainmentResponse.data || [], 'music'));
-            setArtsTheatre(filterBySubcategory(entertainmentResponse.data || [], 'arts & theatre'));
+            setArtsTheater(filterBySubcategory(entertainmentResponse.data || [], 'arts & theater'));
 
         } catch (err) {
             if (!isMounted) {
@@ -217,14 +217,14 @@ function Entertainment() {
 
             <hr className='my-3' />
 
-            <h4 className="font-bold mb-2 text-2xl text-nique-blue">Arts & Theatre</h4>
+            <h4 className="font-bold mb-2 text-2xl text-nique-blue">Arts & Theater</h4>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4 items-start'>
                 {(() => {
-                const posts = artsTheatre.slice(0, 2);
+                const posts = artsTheater.slice(0, 2);
                 return posts.length ? <SmallArticle posts={posts} direction="left"/> : null;
                 })()}
                 {(() => {
-                const posts = artsTheatre.slice(2, 4);
+                const posts = artsTheater.slice(2, 4);
                 return posts.length ? <SmallArticle posts={posts} direction="left"/> : null;
                 })()}
             </div>
