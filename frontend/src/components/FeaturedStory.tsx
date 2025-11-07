@@ -8,7 +8,7 @@ function FeaturedStory({ post, height }: ArticleBlockProps) {
             <div className='cursor-pointer rounded-md bg-cover bg-center h-[200px] w-full flex p-4'
                 onClick={() => navigate('/' + post.id)}
                 style={{
-                    backgroundImage: `linear-gradient(to top, transparent 70%, rgba(229, 229, 229) 90%), url(${post.featuredImage.url})`,
+                    backgroundImage: `linear-gradient(to top, transparent 70%, rgba(229, 229, 229) 90%), url(${post.featuredImage?.url})`,
                     height: `${height}`
                 }}>
                 <div>
@@ -18,7 +18,7 @@ function FeaturedStory({ post, height }: ArticleBlockProps) {
                 </div>
             </div>
 
-            <h6 className="text-nique-blue text-xs mt-1">{post.featuredImage.caption}</h6>
+            <h6 className="text-nique-blue text-xs mt-1">{post.featuredImage?.caption}</h6>
             <p className="mt-2">{post.desc}
                 &nbsp;<a className='text-nique-blue-hover underline cursor-pointer' onClick={() => navigate('/' + post.id)}>[Read more...]</a>
             </p>
