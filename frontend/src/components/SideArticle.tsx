@@ -6,22 +6,22 @@ interface SideArticleProps extends ArticleListProps {
     hasDesc?: boolean;
 }
 
-function SideArticle({ posts, width = '28%', hasBreak = true, hasDesc = false }: SideArticleProps ) {
+function SideArticle({ posts, hasBreak = true, hasDesc = false }: SideArticleProps ) {
     const navigate = useNavigate();
     return (
-        <div>
+        <div className='w-full'>
             {posts.map((post) => (
                 <div key={post.id}>
-                    <div className='cursor-pointer w-full flex justify-between gap-1' onClick={() => navigate('/' + post.id)}>
-                        <div>
+                    <div className='cursor-pointer w-full grid grid-cols-4 justify-between gap-1' onClick={() => navigate('/' + post.id)}>
+                        <div className='col-span-3 flex flex-col justify-start'>
                             <h3 className="title text-[#1A1E47] font-bold text-xl/6 mb-2">{post.title}</h3>
                             <h6 className="text-nique-blue text-sm">{post.author}</h6>
                             
                         </div>
                         <img 
-                            src={post.featuredImage.url} 
-                            style = {{ width: `${width}` }}
-                            className='aspect-square h-auto rounded-md object-cover' />
+                            src={post.featuredImage?.url}
+                            className='aspect-square w-full rounded-md object-cover col-span-1' 
+                        />
                     </div>
                     {hasDesc && <p className="text-[#1A1E47] text-sm">{post.desc}</p>}
                     {hasBreak ? <hr className='my-3' /> : <div className='my-3' />}
