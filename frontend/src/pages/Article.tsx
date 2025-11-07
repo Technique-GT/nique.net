@@ -50,7 +50,7 @@ const mapArticleToPost = (article: ArticleDocument): Post => {
     authors: article.authors || [],
     categories: article.categories || [],
     tags: article.tags || [],
-    featuredImage: article.featuredImage,
+    featuredImage: article.featuredImage || null,
     status: article.status,
     isSticky: article.isSticky ?? false,
     allowComments: article.allowComments ?? true,
@@ -284,19 +284,21 @@ export default function Article() {
         </header>
 
         {/* Featured Image */}
-        <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
-          <img
-            className="w-full aspect-3/2 object-cover rounded-md"
-            src={article.featuredImage.url || "https://picsum.photos/900/600"}
-            alt={article.featuredImage.altText || article.title || "Article featured"}
-          />
-          {(article.featuredImage.title || article.featuredImage.caption) && (
-            <figcaption className="w-full flex flex-col sm:flex-row sm:justify-between text-xs text-nique-blue mt-2 space-y-1 sm:space-y-0">
-              <span>{article.featuredImage.title}</span>
-              <span>{article.featuredImage.caption}</span>
-            </figcaption>
-          )}
-        </figure>
+        {article.featuredImage && (
+          <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
+            <img
+              className="w-full aspect-3/2 object-cover rounded-md"
+              src={article.featuredImage.url || "https://picsum.photos/900/600"}
+              alt={article.featuredImage.altText || article.title || "Article featured"}
+            />
+            {(article.featuredImage.title || article.featuredImage.caption) && (
+              <figcaption className="w-full flex flex-col sm:flex-row sm:justify-between text-xs text-nique-blue mt-2 space-y-1 sm:space-y-0">
+                <span>{article.featuredImage.title}</span>
+                <span>{article.featuredImage.caption}</span>
+              </figcaption>
+            )}
+          </figure>
+        )}
 
         {/* Article Content */}
         <section className="prose prose-lg max-w-3xl mx-auto text-[#1A1E47] article-body">

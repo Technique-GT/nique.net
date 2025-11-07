@@ -4,11 +4,11 @@ import ArticleBlock from "../components/ArticleBlock";
 import { Post } from '../types/article';
 import { Categories } from '../types/categories';
 import FeaturedStory from '../components/FeaturedStory';
-import MockAd from '../assets/mock_advertisement.jpg';
+// import MockAd from '../assets/mock_advertisement.jpg';
 import JustInBlock from '../components/JustIn';
 import SideArticle from '../components/SideArticle';
 import SmallArticle from '../components/SmallArticle';
-import VerticalAd from '../components/VerticalAd';
+// import VerticalAd from '../components/VerticalAd';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
@@ -258,7 +258,7 @@ function News() {
                             <SideArticle posts={posts} width='80px' hasDesc={true}/>
                         ) : null;
                     })()}
-                    <VerticalAd ad={MockAd} />
+                    {/* <VerticalAd ad={MockAd} /> */}
                 </div>
             </div>
         </>

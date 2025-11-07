@@ -40,7 +40,7 @@ export interface ArticleDocument {
     categories: ArticleReference[];
     subcategories?: ArticleSubcategory[];
     tags: ArticleTag[];
-    featuredImage: ArticleMedia;
+    featuredImage?: ArticleMedia | null;
     status: ArticleStatus;
     isSticky: boolean;
     allowComments?: boolean;
@@ -56,7 +56,7 @@ export interface Post extends ArticleDocument {
     desc: string;
     author: string;
     category: string;
-    featuredImage: ArticleMedia;
+    featuredImage?: ArticleMedia | null;
 }
 
 export interface ArticleBlockProps {

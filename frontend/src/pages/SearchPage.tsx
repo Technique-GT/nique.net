@@ -262,7 +262,7 @@ const SearchPage = () => {
                           alt={post.title}
                           className="size-48 object-cover rounded-xl transition-transform duration-200 hover:scale-105"
                           style={{
-                            backgroundImage: `linear-gradient(to bottom, rgba(26, 30, 71, 0.15), rgba(26, 30, 71, 1) 75%), url(${post.featuredImage.url})`,
+                            backgroundImage: `linear-gradient(to bottom, rgba(26, 30, 71, 0.15), rgba(26, 30, 71, 1) 75%), url(${post.featuredImage?.url})`,
                           }}
                         />
                     )}

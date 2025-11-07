@@ -3,8 +3,8 @@ import articleService from '../services/articleService';
 import { Categories } from '../types/categories';
 import ArticleBlock from "../components/ArticleBlock"
 import { Post } from '../types/article'
-import VerticalAd from "../components/VerticalAd";
-import MockAd from '../assets/mock_advertisement.jpg';
+// import VerticalAd from "../components/VerticalAd";
+// import MockAd from '../assets/mock_advertisement.jpg';
 import SideArticle from '../components/SideArticle';
 import InstagramEmbed from '../components/InstaEmbed';
 import SmallArticle from '../components/SmallArticle';
@@ -227,9 +227,9 @@ function Sports() {
 
                 <div className='flex flex-col'>
                     <InstagramEmbed username="gtathletics" />
-                    <hr className='my-3 border-nique-blue' />
-                    <VerticalAd ad={MockAd} />
-                    <hr className='my-3 border-nique-blue' />
+                    <hr className='my-3' />
+                    {/* <VerticalAd ad={MockAd} />
+                    <hr className='my-3' /> */}
                     <h4 className="text-nique-blue font-bold mb-4 text-2xl">Season Scoreboard</h4>
                     {(() => {
                         const posts = seasonScoreboard.slice(0, 5);

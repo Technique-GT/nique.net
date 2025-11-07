@@ -6,6 +6,9 @@
     --color-nique-blue: #003057;
     --color-nique-blue-hover: #0E3682;
     --color-nique-light-blue: #5C8EB7;
+
+    --font-serif: 'EB Garamond', Times, serif;
+    --font-sans-serif: 'Oswald', sans-serif;
 }
 
 h3 {

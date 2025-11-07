@@ -235,7 +235,7 @@ function Entertainment() {
             <div className='flex flex-col gap-4'>
                 <iframe
                     className="rounded-md w-full h-[550px]"
-                    src="https://open.spotify.com/embed/playlist/3ySGGWEXxBBYvn2cYxEDEx?utm_source=generator&theme=0"
+                    src="https://open.spotify.com/embed/playlist/6hWrY7npl9UIbUzlRgpwoo?utm_source=generator"
                     allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                     loading="lazy"
                 />

@@ -3,11 +3,11 @@ import articleService from '../services/articleService';
 import ArticleBlock from "../components/ArticleBlock";
 import { Post } from '../types/article';
 import { Categories } from '../types/categories';
-import MockAd from '../assets/mock_advertisement.jpg';
+// import MockAd from '../assets/mock_advertisement.jpg';
 import SideArticle from '../components/SideArticle';
 import Carousel from '../components/Carousel';
 import Navbar from '../components/Navbar';
-import VerticalAd from '../components/VerticalAd';
+// import VerticalAd from '../components/VerticalAd';
 import InstaEmbed from '../components/InstaEmbed';
 import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
@@ -272,9 +272,9 @@ function Life() {
 
                     <hr />
 
-                    <VerticalAd ad={MockAd} />
+                    {/* <VerticalAd ad={MockAd} />
 
-                    <hr />
+                    <hr /> */}
 
                     <h4 className="font-bold text-2xl text-nique-blue">Student Features</h4>   
                     

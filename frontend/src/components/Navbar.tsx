@@ -48,7 +48,7 @@ export default function Navbar() {
   });
 
   //Current volume of Technique
-  const currentVolume = 108;
+  // const currentVolume = 108;
 
   //Check whether navbar is open
   const [isOpen, setIsOpen] = useState(false);
@@ -117,8 +117,8 @@ export default function Navbar() {
             <Search />
           </div>
           <span className="hidden lg:inline">{formattedDate}</span>
-          <span className="hidden xl:inline"> &bull; </span>
-          <span className="inline xl:inline-block"><br></br></span>Volume {currentVolume}
+          {/* <span className="hidden xl:inline"> &bull; </span> */}
+          {/* <span className="inline xl:inline-block"><br></br></span>Volume {currentVolume} */}
           
         </h4>
 

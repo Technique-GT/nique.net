@@ -43,9 +43,9 @@ export default function Carousel( {posts, width}: ArticleListProps ) {
                 key={index} 
                 onClick={()=>navigate('/'+p.id)} 
                 style={{
-                  backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0) 80%, rgba(255, 255, 255, 1)), url(${p.featuredImage.url})`,
+                  backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0) 80%, rgba(255, 255, 255, 1)), url(${p.featuredImage?.url})`,
                 }}
-                className='cursor-pointer rounded-lg'
+                className='cursor-pointer rounded-lg bg-cover bg-center relative flex items-end'
               >
                 <h6 className="text-[#1A1E47] text-sm absolute bottom-0 left-0 m-6">{ p.desc }</h6>
               </SwiperSlide>
