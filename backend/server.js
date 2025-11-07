@@ -21,7 +21,7 @@ dotenv.config({ path: './config.env' });  // Specify the correct path to your co
 // Initialize express
 const app = express();
 
-const defaultAllowedOrigins = ['https://www.nique.net/','https://nique.net/','https://technique-4t5.pages.dev/', 'http://localhost:5173', 'http://localhost:5050'];
+const defaultAllowedOrigins = ['https://www.nique.net','https://nique.net','https://technique-4t5.pages.dev/', 'http://localhost:5173', 'http://localhost:5050'];
 const envOrigins = [
   process.env.CLIENT_URL,
   ...(process.env.CLIENT_URLS ? process.env.CLIENT_URLS.split(',') : [])
