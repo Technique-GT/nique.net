@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import articleService from '../services/articleService';
 import type { Post } from '../types/article';
+import { mapArticleToPost } from '../utils/articleMapping';
 
 const PAGE_SIZE = 8;
 
@@ -9,58 +10,6 @@ interface InfiniteScrollModuleProps {
     categoryId?: string;
     startOffset?: number;
 }
-
-const mapArticleToPost = (article: any): Post => {
-    // add primary author
-    const primaryAuthor = article.authors?.[0]?.user;
-
-    let authorName = 'Technique Staff';
-    if (primaryAuthor) {
-        if (typeof primaryAuthor === 'string') {
-        authorName = primaryAuthor;
-        } else {
-        const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
-            .filter(Boolean)
-            .join(' ');
-
-        authorName =
-            primaryAuthor.username ||
-            firstAndLast ||
-            primaryAuthor.email ||
-            authorName;
-        }
-    }
-
-    // add description
-    const descriptionSource = article.excerpt || article.content || '';
-    const normalizedDescription =
-        typeof descriptionSource === 'string'
-        ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
-        : '';
-
-    return {
-        id: article._id,
-        title: article.title,
-        slug: article.slug,
-        content: article.content,
-        excerpt: article.excerpt,
-        authors: article.authors || [],
-        categories: article.categories || [],
-        tags: article.tags || [],
-        featuredImage: article.featuredImage,
-        status: article.status,
-        isSticky: article.isSticky,
-        allowComments: article.allowComments,
-        viewCount: article.viewCount,
-        publishedAt: article.publishedAt,
-        updatedBy: article.updatedBy,
-        createdAt: article.createdAt,
-        updatedAt: article.updatedAt,
-        desc: normalizedDescription,
-        author: authorName,
-        category: article.categories?.[0]?.name || '',
-    };
-};
 
 function InfiniteScrollModule({ categoryId, startOffset = 0 }: InfiniteScrollModuleProps) {
     const navigate = useNavigate();

@@ -32,7 +32,7 @@ export interface ArticleSubcategory {
 
 export interface ArticleDocument {
     _id?: string;
-    id: string;
+    id?: string;
     title: string;
     slug: string;
     content: string;
@@ -46,18 +46,24 @@ export interface ArticleDocument {
     isSticky: boolean;
     allowComments?: boolean;
     viewCount?: number;
-    publishedAt: Date;
+    publishedAt: Date | string;
     updatedBy?: string;
     createdAt: string | Date;
     updatedAt: string | Date;
 }
 
-export interface Post extends ArticleDocument {
+export interface Post {
     id: string;
+    title: string;
+    slug?: string;
+    excerpt?: string;
     desc: string;
     author: string;
     category: string;
     featuredImage?: ArticleMedia | null;
+    publishedAt?: Date | string;
+    createdAt?: Date | string;
+    isSticky?: boolean;
 }
 
 export interface ArticleBlockProps {

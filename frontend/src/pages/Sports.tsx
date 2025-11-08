@@ -11,56 +11,7 @@ import SmallArticle from '../components/SmallArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
-
-const mapArticleToPost = (article: any): Post => {
-    const primaryAuthor = article.authors?.[0]?.user;
-
-    let authorName = 'Technique Staff';
-    if (primaryAuthor) {
-        if (typeof primaryAuthor === 'string') {
-        authorName = primaryAuthor;
-        } else {
-        const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
-            .filter(Boolean)
-            .join(' ');
-
-        authorName =
-            primaryAuthor.username ||
-            firstAndLast ||
-            primaryAuthor.email ||
-            authorName;
-        }
-    }
-
-    const descriptionSource = article.excerpt || article.content || '';
-    const normalizedDescription =
-        typeof descriptionSource === 'string'
-        ? descriptionSource.replace(/<[^>]*>/g, '').slice(0, 220)
-        : '';
-
-    return {
-        id: article._id || '',
-        title: article.title || '',
-        slug: article.slug,
-        content: article.content,
-        excerpt: article.excerpt,
-        authors: article.authors || [],
-        categories: article.categories || [],
-        tags: article.tags || [],
-        featuredImage: article.featuredImage,
-        status: article.status,
-        isSticky: article.isSticky,
-        allowComments: article.allowComments,
-        viewCount: article.viewCount,
-        publishedAt: article.publishedAt,
-        updatedBy: article.updatedBy,
-        createdAt: article.createdAt,
-        updatedAt: article.updatedAt,
-        desc: normalizedDescription,
-        author: authorName,
-        category: article.categories?.[0]?.name || '',
-    };
-};
+import { mapArticleToPost } from '../utils/articleMapping';
 
 function Sports() {
     const [isLoading, setIsLoading] = useState<boolean>(true);

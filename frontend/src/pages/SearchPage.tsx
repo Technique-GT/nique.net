@@ -5,72 +5,13 @@ import Navbar from "../components/Navbar";
 import Spinner from "../components/Spinner";
 import articleService from "../services/articleService";
 import { Post } from "../types/article";
+import { mapArticleToPost } from "../utils/articleMapping";
 
-const buildPreview = (rawContent?: string | null, fallback?: string) => {
-  if (typeof rawContent === "string") {
-    const plain = rawContent.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-    if (plain) {
-      const snippet = plain.slice(0, 200);
-      return snippet.length === 200 ? `${snippet}...` : snippet;
-    }
-  }
-
-  if (fallback) {
-    const snippet = fallback.slice(0, 200);
-    return snippet.length === 200 ? `${snippet}...` : snippet;
-  }
-
-  return "Read more...";
-};
-
-const mapArticleToPost = (article: any): Post => {
-  const primaryAuthor = article.authors?.[0]?.user;
-
-  let authorName = "Technique Staff";
-  if (primaryAuthor) {
-    if (typeof primaryAuthor === "string") {
-      authorName = primaryAuthor;
-    } else {
-      const firstAndLast = [primaryAuthor.firstName, primaryAuthor.lastName]
-        .filter(Boolean)
-        .join(" ");
-
-      authorName =
-        primaryAuthor.username ||
-        firstAndLast ||
-        primaryAuthor.email ||
-        authorName;
-    }
-  }
-
-  const descriptionSource = article.excerpt || article.content || "";
-  const normalizedDescription =
-    typeof descriptionSource === "string"
-      ? descriptionSource.replace(/<[^>]*>/g, "").slice(0, 220)
-      : "";
-
-  return {
-    id: article._id,
-    title: article.title,
-    slug: article.slug,
-    content: article.content,
-    excerpt: article.excerpt,
-    authors: article.authors || [],
-    categories: article.categories || [],
-    tags: article.tags || [],
-    featuredImage: article.featuredImage,
-    status: article.status,
-    isSticky: article.isSticky,
-    allowComments: article.allowComments,
-    viewCount: article.viewCount,
-    publishedAt: article.publishedAt,
-    updatedBy: article.updatedBy,
-    createdAt: article.createdAt,
-    updatedAt: article.updatedAt,
-    desc: normalizedDescription,
-    author: authorName,
-    category: article.categories?.[0]?.name || "",
-  };
+const buildPreview = (primary?: string | null, fallback?: string | null) => {
+  const source = primary || fallback;
+  if (!source) return "Read more...";
+  const snippet = source.slice(0, 200);
+  return snippet.length === 200 ? `${snippet}...` : snippet;
 };
 
 const SearchPage = () => {
@@ -277,7 +218,7 @@ const SearchPage = () => {
                       </div>
 
                       <p className="text-base text-gray-700">
-                        {buildPreview(post.content, post.excerpt)}
+                        {buildPreview(post.desc, post.excerpt)}
                       </p>
 
                       <div className="text-sm text-gray-500">

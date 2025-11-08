@@ -8,6 +8,7 @@ import Spinner from "../components/Spinner";
 import articleService from "../services/articleService";
 import commentService from "../services/commentService";
 import { ArticleDocument, Post } from "../types/article";
+import { mapArticleToPost } from "../utils/articleMapping";
 
 interface LoadedComment {
   _id: string;
@@ -20,52 +21,6 @@ interface LoadedComment {
   thumbsUp?: number;
   thumbsDown?: number;
 }
-
-const mapArticleToPost = (article: ArticleDocument): Post => {
-  const descriptionSource = article.excerpt || article.content || "";
-  const normalizedDescription =
-    typeof descriptionSource === "string"
-      ? descriptionSource.replace(/<[^>]*>/g, "").slice(0, 220)
-      : "";
-
-  const primaryAuthor = article.authors?.[0];
-  const authorUser = primaryAuthor?.user as ArticleDocument["authors"][number]["user"];
-
-  let authorName = "Technique Staff";
-  if (typeof authorUser === "string") {
-    authorName = authorUser;
-  } else if (authorUser) {
-    const composedName = [authorUser.firstName, authorUser.lastName]
-      .filter(Boolean)
-      .join(" ");
-    authorName = authorUser.username || composedName || authorUser.email || authorName;
-  }
-
-  const id = article.id ?? article._id ?? "";
-
-  return {
-    id: id,
-    title: article.title || "",
-    slug: article.slug,
-    content: article.content,
-    excerpt: article.excerpt,
-    authors: article.authors || [],
-    categories: article.categories || [],
-    tags: article.tags || [],
-    featuredImage: article.featuredImage || null,
-    status: article.status,
-    isSticky: article.isSticky ?? false,
-    allowComments: article.allowComments ?? true,
-    viewCount: article.viewCount ?? 0,
-    publishedAt: article.publishedAt,
-    updatedBy: article.updatedBy,
-    createdAt: article.createdAt,
-    updatedAt: article.updatedAt,
-    desc: normalizedDescription,
-    author: authorName,
-    category: article.categories?.[0]?.name || "",
-  };
-};
 
 export default function Article() {
   const { id } = useParams();
