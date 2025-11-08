@@ -6,7 +6,10 @@ import {
   RiThumbDownFill,
 } from "react-icons/ri";
 
+import commentService from "../services/commentService";
+
 interface CommentProps {
+  commentId: string;
   imageURL: string;
   name: string;
   createdAt: string;
@@ -18,7 +21,30 @@ interface CommentProps {
 const Comment = (data: CommentProps) => {
   type Vote = "thumbs up" | "thumbs down" | "none";
   const [vote, setVote] = useState<Vote>("none");
+  const [thumbsUpCount, setThumbsUpCount] = useState(data.thumbsUp);
+  const [thumbsDownCount, setThumbsDownCount] = useState(data.thumbsDown);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [dateText, setDateText] = useState<string>("");
+
+  const applyVoteChange = async (type: "up" | "down", delta: 1 | -1) => {
+    setIsProcessing(true);
+    try {
+      const response = await commentService.updateThumbs(data.commentId, {
+        type,
+        delta,
+      });
+      if (typeof response.data?.thumbsUp === "number") {
+        setThumbsUpCount(response.data.thumbsUp);
+      }
+      if (typeof response.data?.thumbsDown === "number") {
+        setThumbsDownCount(response.data.thumbsDown);
+      }
+    } catch (error) {
+      console.error("Failed to update comment vote", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   useEffect(() => {
     // const temp = new Date(data.createdAt);
@@ -63,7 +89,7 @@ const Comment = (data: CommentProps) => {
 
   return (
     <div className="flex gap-4 mb-5">
-      <img src={data.imageURL} className="border border-gray-300 max-w-16 max-h-16 min-w-16 min-h-16 rounded-lg" />
+      <img src={data.imageURL} className="border border-gray-300 size-12 rounded-full" />
       <div className="flex-auto flex flex-col gap-3">
         <div className="flex items-center gap-6">
           <div>
@@ -77,32 +103,54 @@ const Comment = (data: CommentProps) => {
               <RiThumbUpFill
                 size={24}
                 className="hover:text-nique-blue-hover cursor-pointer"
-                onClick={() => setVote("none")}
+                onClick={async () => {
+                  if (isProcessing) return;
+                  await applyVoteChange("up", -1);
+                  setVote("none");
+                }}
               />
             ) : (
               <RiThumbUpLine
                 size={24}
                 className="hover:text-nique-blue-hover cursor-pointer"
-                onClick={() => setVote("thumbs up")}
+                onClick={async () => {
+                  if (isProcessing) return;
+                  if (vote === "thumbs down") {
+                    await applyVoteChange("down", -1);
+                  }
+                  await applyVoteChange("up", 1);
+                  setVote("thumbs up");
+                }}
               />
             )}
-            <p>{data.thumbsUp}</p>
+            <p>{thumbsUpCount}</p>
           </div>
           <div className="flex items-center gap-0.5">
             {vote == "thumbs down" ? (
               <RiThumbDownFill
                 size={24}
                 className="hover:text-nique-blue-hover cursor-pointer"
-                onClick={() => setVote("none")}
+                onClick={async () => {
+                  if (isProcessing) return;
+                  await applyVoteChange("down", -1);
+                  setVote("none");
+                }}
               />
             ) : (
               <RiThumbDownLine
                 size={24}
                 className="hover:text-nique-blue-hover cursor-pointer"
-                onClick={() => setVote("thumbs down")}
+                onClick={async () => {
+                  if (isProcessing) return;
+                  if (vote === "thumbs up") {
+                    await applyVoteChange("up", -1);
+                  }
+                  await applyVoteChange("down", 1);
+                  setVote("thumbs down");
+                }}
               />
             )}
-            <p>{data.thumbsDown}</p>
+            <p>{thumbsDownCount}</p>
           </div>
         </div>
         <p>{data.content}</p>

@@ -12,15 +12,60 @@ import { mapArticleToPost } from "../utils/articleMapping";
 
 interface LoadedComment {
   _id: string;
-  author?: {
-    name?: string;
-    avatar?: string;
+  author: {
+    name: string;
+    avatar: string;
   };
   createdAt: string;
   content: string;
-  thumbsUp?: number;
-  thumbsDown?: number;
+  thumbsUp: number;
+  thumbsDown: number;
 }
+
+const mapApiCommentToLoaded = (comment: any): LoadedComment => {
+  const authorInfo = comment?.author || {};
+  const user = typeof authorInfo.user === "object" ? authorInfo.user : undefined;
+  const composedUserName =
+    user && [user.firstName, user.lastName].filter(Boolean).join(" ");
+
+  const authorName =
+    authorInfo.name ||
+    user?.username ||
+    composedUserName ||
+    user?.email ||
+    "Reader";
+
+  return {
+    _id: comment?._id,
+    content: comment?.content,
+    createdAt: comment?.createdAt,
+    thumbsUp: comment?.thumbsUp ?? comment?.Up ?? 0,
+    thumbsDown: comment?.thumbsDown ?? comment?.Down ?? 0,
+    author: {
+      name: authorName,
+      avatar: authorInfo.avatar || user?.profilePicture,
+    },
+  };
+};
+
+const sortComments = (
+  list: LoadedComment[],
+  sortMode: "Best" | "Newest" | "Oldest"
+): LoadedComment[] => {
+  const clone = [...list];
+  switch (sortMode) {
+    case "Oldest":
+      return clone.sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+    case "Newest":
+      return clone.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    default:
+      return clone.sort((a, b) => (b.thumbsUp || 0) - (a.thumbsUp || 0));
+  }
+};
 
 export default function Article() {
   const { id } = useParams();
@@ -33,6 +78,8 @@ export default function Article() {
 
   const [newCommentName, setNewCommentName] = useState("");
   const [newCommentText, setNewCommentText] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [commentSubmitError, setCommentSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -87,19 +134,9 @@ export default function Article() {
               controller.signal
             );
             const mappedComments: LoadedComment[] = (commentsResponse.data || []).map(
-              (comment: any) => ({
-                _id: comment._id,
-                content: comment.content,
-                createdAt: comment.createdAt,
-                thumbsUp: comment.thumbsUp ?? 0,
-                thumbsDown: comment.thumbsDown ?? 0,
-                author: {
-                  name: comment.author?.username || comment.author?.name,
-                  avatar: comment.author?.profilePicture || comment.author?.avatar,
-                },
-              })
+              mapApiCommentToLoaded
             );
-            setComments(mappedComments);
+            setComments(sortComments(mappedComments, commentsSortBy));
           } catch {
             setComments([]);
           }
@@ -141,30 +178,39 @@ export default function Article() {
     return DOMPurify.sanitize(normalized);
   }, [articleContent]);
 
-  useMemo(() => {
-    setNumCommentsToView(5);
-    if (!comments?.length) return;
+  const handleSubmitComment = async () => {
+    async () => {
+      if (!id || !newCommentText.trim() || isSubmittingComment) {
+        return;
+      }
 
-    switch (commentsSortBy) {
-      case "Oldest":
+      setIsSubmittingComment(true);
+      setCommentSubmitError(null);
+
+      try {
+        const response = await commentService.createComment(id, {
+          content: newCommentText.trim(),
+          name: newCommentName.trim() || undefined,
+        });
+
+        const createdComment = mapApiCommentToLoaded(response.data);
         setComments((prev) =>
-          [...prev].sort(
-            (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-          )
+          sortComments([createdComment, ...prev], commentsSortBy)
         );
-        break;
-      case "Newest":
-        setComments((prev) =>
-          [...prev].sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          )
-        );
-        break;
-      default:
-        setComments((prev) =>
-          [...prev].sort((a, b) => (b.thumbsUp || 0) - (a.thumbsUp || 0))
-        );
+        setNewCommentText("");
+        setNewCommentName("");
+      } catch (error) {
+        console.error("Error creating comment:", error);
+        setCommentSubmitError("Unable to submit your comment. Please try again.");
+      } finally {
+        setIsSubmittingComment(false);
+      }
     }
+  };
+
+  useEffect(() => {
+    setNumCommentsToView(5);
+    setComments((prev) => sortComments(prev, commentsSortBy));
   }, [commentsSortBy]);
 
   const updateCommentsSort = () => {
@@ -299,14 +345,13 @@ export default function Article() {
                 {comments.slice(0, numCommentsToView).map((com) => (
                   <Comment
                     key={com._id}
-                    name={com.author?.name || "Reader"}
-                    imageURL={
-                      com.author?.avatar || "https://picsum.photos/seed/comment/80"
-                    }
+                    commentId={com._id}
+                    name={com.author.name}
+                    imageURL={com.author.avatar}
                     content={com.content}
                     createdAt={new Date(com.createdAt).toLocaleString()}
-                    thumbsDown={com.thumbsDown ?? 0}
-                    thumbsUp={com.thumbsUp ?? 0}
+                    thumbsDown={com.thumbsDown}
+                    thumbsUp={com.thumbsUp}
                   />
                 ))}
               </div>
@@ -335,8 +380,15 @@ export default function Article() {
                   className="w-full border border-nique-blue/40 rounded-md px-3 py-2"
                   rows={4}
                 />
-                <button className="px-4 py-2 bg-nique-blue text-white rounded-md">
-                  Submit
+                {commentSubmitError && (
+                  <p className="text-sm text-red-600">{commentSubmitError}</p>
+                )}
+                <button
+                  onClick={handleSubmitComment}
+                  disabled={!newCommentText.trim() || isSubmittingComment}
+                  className="px-4 py-2 bg-nique-blue text-white rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <h4>{isSubmittingComment ? "Submitting..." : "Submit"}</h4>
                 </button>
               </div>
             </>
