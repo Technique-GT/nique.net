@@ -180,11 +180,8 @@ function Opinions() {
 
                 <h4 className="font-bold text-2xl text-nique-blue">Letters to the Editor</h4>
                 <hr />
-                <div className='grid grid-cols-3 gap-4'>
-                    {lettersArticles.slice(0, 3).map((article) => (
-                    <ArticleBlock key={article.id} post={article} height='190px' />
-                    ))}
-                </div>
+                <SmallArticle posts={lettersArticles} direction="right" />
+                
             </div>
         </div>
         </>

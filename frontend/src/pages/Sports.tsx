@@ -6,7 +6,7 @@ import { Post } from '../types/article'
 // import VerticalAd from "../components/VerticalAd";
 // import MockAd from '../assets/mock_advertisement.jpg';
 import SideArticle from '../components/SideArticle';
-import InstagramEmbed from '../components/InstaEmbed';
+import InstaEmbed from '../components/InstaEmbed';
 import SmallArticle from '../components/SmallArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
@@ -177,7 +177,7 @@ function Sports() {
                 </div>
 
                 <div className='flex flex-col'>
-                    <InstagramEmbed username="gt_nique" />
+                    <InstaEmbed username="gt_nique" />
                     <hr className='my-3' />
                     {/* <VerticalAd ad={MockAd} />
                     <hr className='my-3' /> */}

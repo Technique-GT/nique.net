@@ -49,7 +49,15 @@ export default function Carousel( {posts, width}: ArticleListProps ) {
                   p.featuredImage ? "" : "bg-gradient-to-b from-nique-blue/10 to-white"
                 }`}
               >
-                <h6 className="text-[#1A1E47] text-sm absolute bottom-0 left-0 m-6">{ p.desc }</h6>
+                <h6 
+                  className="text-[#1A1E47] text-sm absolute bottom-0 left-0 m-6 overflow-hidden"
+                  style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                }}>
+                    { p.desc }
+                </h6>
               </SwiperSlide>
             );
           })}
