@@ -267,7 +267,7 @@ export default function Article() {
           )}
         </section>
 
-        {/* Related Articles */}
+        {/* Related Articles - fetches 4 published articles from the same category */}
         {relatedArticles.length > 0 && (
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-nique-blue">Related Articles</h2>

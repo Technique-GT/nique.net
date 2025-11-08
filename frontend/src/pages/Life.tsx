@@ -219,7 +219,7 @@ function Life() {
                 
                     <hr />
 
-                    <InstaEmbed username='gtathletics' />
+                    <InstaEmbed username='gt_nique' />
 
                     <hr />
 

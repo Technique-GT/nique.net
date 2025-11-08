@@ -18,10 +18,12 @@ function SideArticle({ posts, hasBreak = true, hasDesc = false }: SideArticlePro
                             <h6 className="text-nique-blue text-sm">{post.author}</h6>
                             
                         </div>
-                        <img 
-                            src={post.featuredImage?.url}
-                            className='aspect-square w-full rounded-md object-cover col-span-1' 
-                        />
+                        {post.featuredImage && (
+                            <img
+                                src={post.featuredImage?.url}
+                                className='aspect-square w-full rounded-md object-cover col-span-1'
+                            />
+                        )}
                     </div>
                     {hasDesc && <p className="text-[#1A1E47] text-sm">{post.desc}</p>}
                     {hasBreak ? <hr className='my-3' /> : <div className='my-3' />}

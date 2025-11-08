@@ -177,7 +177,7 @@ function Sports() {
                 </div>
 
                 <div className='flex flex-col'>
-                    <InstagramEmbed username="gtathletics" />
+                    <InstagramEmbed username="gt_nique" />
                     <hr className='my-3' />
                     {/* <VerticalAd ad={MockAd} />
                     <hr className='my-3' /> */}
