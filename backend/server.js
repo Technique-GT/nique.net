@@ -71,6 +71,9 @@ app.use('/api/slivers', sliverRoutes);
 // Story route
 app.use('/api/stories', storyRoutes);
 
+//Comment route
+app.use('/api/comments', commentRoutes);
+
 // Example protected route
 app.get('/api', (req, res) => {
   res.send('Hello, this is your API!');

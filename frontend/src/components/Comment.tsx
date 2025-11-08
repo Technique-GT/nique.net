@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import {
-  RiThumbUpLine,
-  RiThumbDownLine,
-  RiThumbUpFill,
-  RiThumbDownFill,
-} from "react-icons/ri";
+// import {
+//   RiThumbUpLine,
+//   RiThumbDownLine,
+//   RiThumbUpFill,
+//   RiThumbDownFill,
+// } from "react-icons/ri";
 
-import commentService from "../services/commentService";
+// import commentService from "../services/commentService";
 
 interface CommentProps {
   commentId: string;
-  imageURL: string;
+  avatar: string;
   name: string;
   createdAt: string;
   thumbsUp: number;
@@ -19,32 +19,9 @@ interface CommentProps {
 }
 
 const Comment = (data: CommentProps) => {
-  type Vote = "thumbs up" | "thumbs down" | "none";
-  const [vote, setVote] = useState<Vote>("none");
-  const [thumbsUpCount, setThumbsUpCount] = useState(data.thumbsUp);
-  const [thumbsDownCount, setThumbsDownCount] = useState(data.thumbsDown);
-  const [isProcessing, setIsProcessing] = useState(false);
+  // type Vote = "thumbs up" | "thumbs down" | "none";
+  // const [vote, setVote] = useState<Vote>("none");
   const [dateText, setDateText] = useState<string>("");
-
-  const applyVoteChange = async (type: "up" | "down", delta: 1 | -1) => {
-    setIsProcessing(true);
-    try {
-      const response = await commentService.updateThumbs(data.commentId, {
-        type,
-        delta,
-      });
-      if (typeof response.data?.thumbsUp === "number") {
-        setThumbsUpCount(response.data.thumbsUp);
-      }
-      if (typeof response.data?.thumbsDown === "number") {
-        setThumbsDownCount(response.data.thumbsDown);
-      }
-    } catch (error) {
-      console.error("Failed to update comment vote", error);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   useEffect(() => {
     // const temp = new Date(data.createdAt);
@@ -89,7 +66,7 @@ const Comment = (data: CommentProps) => {
 
   return (
     <div className="flex gap-4 mb-5">
-      <img src={data.imageURL} className="border border-gray-300 size-12 rounded-full" />
+      <img src={data.avatar} className="border border-gray-300 size-12 rounded-full" />
       <div className="flex-auto flex flex-col gap-3">
         <div className="flex items-center gap-6">
           <div>
@@ -98,7 +75,7 @@ const Comment = (data: CommentProps) => {
             </p>
             <p className="text-xs text-nique-blue mt-auto">{dateText}</p>
           </div>
-          <div className="flex items-center gap-0.5">
+          {/* <div className="flex items-center gap-0.5">
             {vote == "thumbs up" ? (
               <RiThumbUpFill
                 size={24}
@@ -151,7 +128,7 @@ const Comment = (data: CommentProps) => {
               />
             )}
             <p>{thumbsDownCount}</p>
-          </div>
+          </div> */}
         </div>
         <p>{data.content}</p>
       </div>

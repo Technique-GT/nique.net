@@ -23,17 +23,7 @@ interface LoadedComment {
 }
 
 const mapApiCommentToLoaded = (comment: any): LoadedComment => {
-  const authorInfo = comment?.author || {};
-  const user = typeof authorInfo.user === "object" ? authorInfo.user : undefined;
-  const composedUserName =
-    user && [user.firstName, user.lastName].filter(Boolean).join(" ");
-
-  const authorName =
-    authorInfo.name ||
-    user?.username ||
-    composedUserName ||
-    user?.email ||
-    "Reader";
+  const authorInfo = comment.author
 
   return {
     _id: comment?._id,
@@ -42,8 +32,8 @@ const mapApiCommentToLoaded = (comment: any): LoadedComment => {
     thumbsUp: comment?.thumbsUp ?? comment?.Up ?? 0,
     thumbsDown: comment?.thumbsDown ?? comment?.Down ?? 0,
     author: {
-      name: authorName,
-      avatar: authorInfo.avatar || user?.profilePicture,
+      name: authorInfo.name,
+      avatar: authorInfo.avatar
     },
   };
 };
@@ -292,8 +282,8 @@ export default function Article() {
           <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
             <img
               className="w-full aspect-3/2 object-cover rounded-md"
-              src={article.featuredImage.url || "https://picsum.photos/900/600"}
-              alt={article.featuredImage.altText || article.title || "Article featured"}
+              src={article.featuredImage.url}
+              alt={article.featuredImage.altText || article.title}
             />
             {(article.featuredImage.title || article.featuredImage.caption) && (
               <figcaption className="w-full flex flex-col sm:flex-row sm:justify-between text-xs text-nique-blue mt-2 space-y-1 sm:space-y-0">
@@ -347,7 +337,7 @@ export default function Article() {
                     key={com._id}
                     commentId={com._id}
                     name={com.author.name}
-                    imageURL={com.author.avatar}
+                    avatar={com.author.avatar}
                     content={com.content}
                     createdAt={new Date(com.createdAt).toLocaleString()}
                     thumbsDown={com.thumbsDown}
