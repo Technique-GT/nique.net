@@ -169,32 +169,30 @@ export default function Article() {
   }, [articleContent]);
 
   const handleSubmitComment = async () => {
-    async () => {
-      if (!id || !newCommentText.trim() || isSubmittingComment) {
-        return;
-      }
+    if (!id || !newCommentText.trim() || isSubmittingComment) {
+      return;
+    }
 
-      setIsSubmittingComment(true);
-      setCommentSubmitError(null);
+    setIsSubmittingComment(true);
+    setCommentSubmitError(null);
 
-      try {
-        const response = await commentService.createComment(id, {
-          content: newCommentText.trim(),
-          name: newCommentName.trim() || undefined,
-        });
+    try {
+      const response = await commentService.createComment(id, {
+        content: newCommentText.trim(),
+        name: newCommentName.trim() || undefined,
+      });
 
-        const createdComment = mapApiCommentToLoaded(response.data);
-        setComments((prev) =>
-          sortComments([createdComment, ...prev], commentsSortBy)
-        );
-        setNewCommentText("");
-        setNewCommentName("");
-      } catch (error) {
-        console.error("Error creating comment:", error);
-        setCommentSubmitError("Unable to submit your comment. Please try again.");
-      } finally {
-        setIsSubmittingComment(false);
-      }
+      const createdComment = mapApiCommentToLoaded(response.data);
+      setComments((prev) =>
+        sortComments([createdComment, ...prev], commentsSortBy)
+      );
+      setNewCommentText("");
+      setNewCommentName("");
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      setCommentSubmitError("Unable to submit your comment. Please try again.");
+    } finally {
+      setIsSubmittingComment(false);
     }
   };
 
