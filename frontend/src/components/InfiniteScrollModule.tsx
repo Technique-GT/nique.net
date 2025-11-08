@@ -115,7 +115,10 @@ function InfiniteScrollModule({ categoryId, startOffset = 0 }: InfiniteScrollMod
             onClick={()=>navigate('/'+article.id)}
         >
             <p className="text-xs uppercase tracking-wide text-slate-400">
-                {new Date(article.publishedAt || article.createdAt).toLocaleDateString()}  &#8226; {article.category}
+                {(() => {
+                    const rawDate = article.publishedAt ?? article.createdAt ?? Date.now();
+                    return new Date(rawDate).toLocaleDateString();
+                })()}  &#8226; {article.category}
             </p>
             <h3 className="mt-1 text-xl font-semibold text-nique-blue">{article.title}</h3>
             {article.excerpt && <h6 className="text-sm text-slate-600">{article.excerpt}</h6>}
