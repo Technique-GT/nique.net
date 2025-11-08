@@ -25,7 +25,15 @@ function SideArticle({ posts, hasBreak = true, hasDesc = false }: SideArticlePro
                             />
                         )}
                     </div>
-                    {hasDesc && <p className="text-[#1A1E47] text-sm">{post.desc}</p>}
+                    {hasDesc && 
+                        <p className="text-[#1A1E47] text-sm overflow-hidden" style={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            }}>
+                            {post.desc}
+                        </p>
+                    }
                     {hasBreak ? <hr className='my-3' /> : <div className='my-3' />}
                 </div>
             ))}
