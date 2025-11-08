@@ -31,6 +31,7 @@ export interface ArticleSubcategory {
 }
 
 export interface ArticleDocument {
+    _id?: string;
     id: string;
     title: string;
     slug: string;

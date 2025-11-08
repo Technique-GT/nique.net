@@ -42,7 +42,7 @@ const mapArticleToPost = (article: ArticleDocument): Post => {
   }
 
   return {
-    id: article.id,
+    id: article.id || article._id,
     title: article.title || "",
     slug: article.slug,
     content: article.content,

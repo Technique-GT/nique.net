@@ -114,7 +114,7 @@ function Life() {
                 const stickyPosts = allLifeArticles.filter((post) => post.isSticky).sort(sortByPublishedDesc);
                 const nonStickyPosts = allLifeArticles.filter((post) => !post.isSticky).sort(sortByPublishedDesc);
                 const orderedLife = [...stickyPosts, ...nonStickyPosts];
-                const RECENT_COUNT = Math.max(5, stickyPosts.length);
+                const RECENT_COUNT = Math.max(7, stickyPosts.length);
                 const recentSelection = orderedLife.slice(0, RECENT_COUNT);
                 const remainingLife = orderedLife.slice(RECENT_COUNT);
                 const recentIds = new Set(recentSelection.map((post) => post.id));
@@ -199,8 +199,8 @@ function Life() {
                             {recentLifeArticles[3] && <ArticleBlock post={recentLifeArticles[3]} height='222px' />}
                         </div>
                         <div className='col-span-2 lg:col-span-4 m-0'>
-                            {recentLifeArticles.slice(1, 5).length > 0 && (
-                                <Carousel posts={recentLifeArticles.slice(1, 5)} width='80%'/>
+                            {recentLifeArticles.slice(4, 7).length > 0 && (
+                                <Carousel posts={recentLifeArticles.slice(4, 7)} width='80%'/>
                             )}
                         </div>
                     </div>
@@ -236,10 +236,10 @@ function Life() {
                         </div>
                         <div className='grid row-span-2 col-span-2 gap-4 lg:gap-y-0'>
                             <div className='col-span-2'>
-                                {lifeArticles[4] && <ArticleBlock post={lifeArticles[4]} height='222px' />}
+                                {lifeArticles[4] && <ArticleBlock post={lifeArticles[4]} height='280px' />}
                             </div>
-                            {lifeArticles[5] && <ArticleBlock post={lifeArticles[5]} height='222px' />}
-                            {lifeArticles[6] && <ArticleBlock post={lifeArticles[6]} height='222px' />}
+                            {lifeArticles[5] && <ArticleBlock post={lifeArticles[5]} height='280px' />}
+                            {lifeArticles[6] && <ArticleBlock post={lifeArticles[6]} height='280px' />}
                         </div>
                         <div className='col-span-2'>
                             {lifeArticles[7] && <ArticleBlock post={lifeArticles[7]} height='230px' />}
