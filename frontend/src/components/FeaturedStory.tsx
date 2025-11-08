@@ -19,9 +19,17 @@ function FeaturedStory({ post, height }: ArticleBlockProps) {
             </div>
 
             <h6 className="text-nique-blue text-xs mt-1">{post.featuredImage?.caption}</h6>
-            <p className="mt-2">{post.desc}
-                &nbsp;<a className='text-nique-blue-hover underline cursor-pointer' onClick={() => navigate('/' + post.id)}>[Read more...]</a>
+            <p
+                className="mt-2 overflow-hidden"
+                style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                }}
+            >
+                {post.desc}
             </p>
+            <p><a className='text-nique-blue-hover underline cursor-pointer' onClick={() => navigate('/' + post.id)}>[Read more...]</a></p>
         </div>
     )
 }

@@ -10,8 +10,17 @@ function ArticleBlock({ post, height }: ArticleBlockProps) {
             backgroundImage: `linear-gradient(to bottom, rgba(26, 30, 71, 0.15), rgba(26, 30, 71, 1) 75%), url(${post.featuredImage?.url})`,
             height: `${height}`
         }}>
-            <div>
-                <h3 className="title text-white font-bold text-2xl/7 mb-2">{post.title}</h3>
+            <div className="w-full">
+                <h3
+                    className="title text-white font-bold text-2xl/7 mb-2 overflow-hidden"
+                    style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                    }}
+                >
+                    {post.title}
+                </h3>
                 <h6 className="text-[#BAC0FF] text-sm"><span className="uppercase">{post.category}</span> &#8226; {post.author}</h6>
             </div>
         </div>

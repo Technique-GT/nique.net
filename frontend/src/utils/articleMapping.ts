@@ -31,18 +31,14 @@ export const mapArticleToPost = (article: ArticleDocument): Post => {
     article.slug ||
     "";
 
-  const descriptionSource = article.excerpt || article.content || "";
-  const normalizedDescription =
-    typeof descriptionSource === "string"
-      ? stripHtml(descriptionSource).slice(0, 220)
-      : "";
+  const desc = article.excerpt || article.content || "";
 
   return {
     id: fallbackId,
     slug: article.slug,
     title: article.title || "",
     excerpt: article.excerpt,
-    desc: normalizedDescription,
+    desc: stripHtml(desc),
     author: resolveAuthorName(article),
     category: article.categories?.[0]?.name || "",
     featuredImage: article.featuredImage || null,
