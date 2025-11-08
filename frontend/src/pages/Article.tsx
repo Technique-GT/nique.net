@@ -41,8 +41,10 @@ const mapArticleToPost = (article: ArticleDocument): Post => {
     authorName = authorUser.username || composedName || authorUser.email || authorName;
   }
 
+  const id = article.id ?? article._id ?? "";
+
   return {
-    id: article.id || article._id,
+    id: id,
     title: article.title || "",
     slug: article.slug,
     content: article.content,
