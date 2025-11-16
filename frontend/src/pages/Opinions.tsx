@@ -135,8 +135,15 @@ function Opinions() {
 
         <div className='max-w-[95%] md:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
             <div className='w-full'>
-                <div className='grid grid-cols-1 gap-4'>
-                    {recentOpinionArticles[0] && <FeaturedStory post={recentOpinionArticles[0]} height='670px' />}
+                <div className='grid gap-5 grid-cols-1 lg:grid-cols-[70%_auto] w-full'>
+                    <div className='flex flex-col gap-4 order-first'>
+                        {recentOpinionArticles[0] && <FeaturedStory post={recentOpinionArticles[0]} height='695px' />}
+                    </div>
+                    <div className='flex flex-col gap-4'>
+                        {recentOpinionArticles.slice(1, 6).map((article) => (
+                            <ArticleBlock key={article.id} post={article} height='180px' />
+                        ))}
+                    </div>
                 </div>
 
                 <hr className='my-3'/>
@@ -171,13 +178,6 @@ function Opinions() {
             </div>
 
             <div className='flex flex-col gap-4'>
-                {(() => {
-                const posts = recentOpinionArticles.slice(1, 6);
-                return posts.length ? (
-                    <SideArticle posts={posts} width='80px' hasDesc={true}/>
-                ) : null;
-                })()}
-
                 <h4 className="font-bold text-2xl text-nique-blue">Letters to the Editor</h4>
                 <hr />
                 <SmallArticle posts={lettersArticles} direction="right" />

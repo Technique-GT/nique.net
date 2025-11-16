@@ -204,7 +204,7 @@ function News() {
                 <div className='flex flex-col gap-4'>
                     <hr className="lg:mt-15" />
                     {(() => {
-                        const posts = newsArticles.slice(0, 3);
+                        const posts = newsArticles.slice(0, 4);
                         return posts.length ? (
                             <SideArticle posts={posts} width='80px' hasDesc={true}/>
                         ) : null;
