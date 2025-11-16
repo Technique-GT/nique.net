@@ -293,7 +293,7 @@ export default function Article() {
         )}
 
         {/* Article Content */}
-        <section className="prose prose-lg max-w-3xl mx-auto text-[#1A1E47] article-body">
+        <section className="prose prose-lg max-w-4xl mx-auto text-[#1A1E47] article-body">
           {sanitizedContent ? (
             <article dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
           ) : (

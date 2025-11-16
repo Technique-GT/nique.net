@@ -133,7 +133,7 @@ function Sports() {
     return (
         <>
             <Navbar />
-            <div className='max-w-[1470px] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
+            <div className='max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div className='w-full'>
                     <div className='grid gap-5 grid-cols-1 lg:grid-cols-[auto_35%] w-full'>
                         <div className='flex flex-col gap-4'>

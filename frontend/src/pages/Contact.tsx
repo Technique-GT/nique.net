@@ -5,7 +5,7 @@ function Contact() {
   return (
     <div className='max-h-screen'>
         <Navbar />
-        <div className='max-w-[1470px] h-full m-auto py-5 px-30 gap-4'>
+        <div className='max-w-[95%] md:max-w-[80%] h-full m-auto py-5 px-30 gap-4'>
             <div className='flex flex-col'>
             <h4 className="font-bold mb-2 text-2xl text-nique-blue">Contact The Technique</h4>
             <p> 
