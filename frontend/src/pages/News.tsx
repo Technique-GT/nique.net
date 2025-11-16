@@ -134,13 +134,18 @@ function News() {
     }
 
     return (
-        <>
+        <div className="min-h-screen flex flex-col">
             <Navbar />
-            <div className='max-w-[1470px] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
-                <div className='w-full'>
-                    <div className='flex flex-col gap-4'>
-                        {recentNews[0] && <JustInBlock post={recentNews[0]} />}
-                        {recentNews[1] && <FeaturedStory post={recentNews[1]} height='695px' />}
+            <div className='flex-1'>
+                <div className='max-w-[95%] md:max-w-[80%] mx-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
+                    <div>
+                        <div
+                            className='flex flex-col gap-4'
+                            style={{ minHeight: 'calc(100vh - var(--navbar-stack-height, 0px))' }}
+                        >
+                            {recentNews[0] && <JustInBlock post={recentNews[0]} />}
+                            {recentNews[1] && <FeaturedStory post={recentNews[1]} height='' />}
+                        </div>
                     </div>
 
                     <hr className='my-3' />
@@ -212,7 +217,7 @@ function News() {
                     {/* <VerticalAd ad={MockAd} /> */}
                 </div>
             </div>
-        </>
+        </div>
     )
 }
 
