@@ -45,13 +45,20 @@ Media
     createdAt: date
     updatedAt: date
 
-Sliver:
+Sliver
     text: string
     expiresAt: date | null
 
-Authors:
+User
     name: string
     bio: string
+    isAdmin: boolean
     profilePicture: Media
     socialLinks: { platform: string, url: string } array
+
+Tag
+    name: string
+    slug: string
+
+
 ```
