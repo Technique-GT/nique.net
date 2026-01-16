@@ -1,7 +1,7 @@
 import Masthead from './../assets/masthead.png';
 import MastheadMobile from './../assets/masthead_mobile.png'
 import { FaFacebook, FaXTwitter, FaInstagram, FaTiktok, FaLinkedin } from "react-icons/fa6";
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { IoMenuSharp, IoCloseSharp } from "react-icons/io5";
 import Search from './Search';
@@ -55,7 +55,6 @@ export default function Navbar() {
   const toggleNavbar = () => {
     setIsOpen(!isOpen);
   }
-  const navContainerRef = useRef<HTMLDivElement | null>(null);
 
   // If page is scrolled past offset
   const [scrolled, setScrolled] = useState(false);
@@ -80,18 +79,6 @@ export default function Navbar() {
   };
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
     // Add scroll event listener
     window.addEventListener("scroll", onScroll);
 
@@ -101,34 +88,12 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    const updateNavbarHeight = () => {
-      if (navContainerRef.current) {
-        const height = navContainerRef.current.getBoundingClientRect().height;
-        document.documentElement.style.setProperty('--navbar-stack-height', `${height}px`);
-      }
-    };
-
-    updateNavbarHeight();
-    window.addEventListener('resize', updateNavbarHeight);
-    return () => {
-      window.removeEventListener('resize', updateNavbarHeight);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (navContainerRef.current) {
-      const height = navContainerRef.current.getBoundingClientRect().height;
-      document.documentElement.style.setProperty('--navbar-stack-height', `${height}px`);
-    }
-  }, [isOpen]);
-
   return (
-    <div ref={navContainerRef}>
+    <>
       {/* header above navbar */}
-      <div className="max-w-[80%] gap-8 md:px-5 lg:px-8 hidden md:grid grid-cols-[1fr_500px_1fr] items-end mb-2 m-auto">
+      <div className="max-w-[95%] md:max-w-[80%] gap-8 md:px-5 lg:px-8 hidden md:grid grid-cols-[1fr_600px_1fr] items-end mb-2 m-auto">
         {/* large masthead in header */}
-        <a href ='/'><img src={Masthead} alt="Masthead" className="w-[500px] -mb-3 mt-4" /></a>
+        <a href ='/'><img src={Masthead} alt="Masthead" className="w-[600px] -mb-3 mt-4" /></a>
 
         {/* left of masthead */}
         <div className="order-first">
@@ -156,8 +121,6 @@ export default function Navbar() {
           {/* <span className="inline xl:inline-block"><br></br></span>Volume {currentVolume} */}
           
         </h4>
-
-        
       </div>
 
       {/* navbar section */}
@@ -184,18 +147,14 @@ export default function Navbar() {
         <h4 className='block md:hidden border-b border-gray-400 bg-white px-4 py-1'>{formattedDate}</h4>
         {/* mobile navlinks */}
         {isOpen && (
-          <div className='fixed inset-0 z-40 flex flex-col bg-white md:hidden overflow-y-auto pt-[120px] pb-10'>
-            <div className='px-4'>
+          <div className='md:hidden h-screen bg-white'>
+            <div className='items-center px-4 pt-4'>
               <Search searchOn={true}/>
             </div>
-            <div className='flex flex-col mt-4'>
-              <NavLinks />
-            </div>
+            <NavLinks />
           </div>
         )}
       </div>
-
-
-    </div>
+    </>
   );
 }

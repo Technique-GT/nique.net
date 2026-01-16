@@ -1,0 +1,7 @@
+[
+  { "id": 1, "name": "News", "slug": "news", "count": 15 },
+  { "id": 2, "name": "Life", "slug": "life", "count": 8 },
+  { "id": 3, "name": "Opinion", "slug": "opinion", "count": 12 },
+  { "id": 4, "name": "Sports", "slug": "sports", "count": 10 },
+  { "id": 8, "name": "Entertainment", "slug": "entertainment", "count": 6 }
+]

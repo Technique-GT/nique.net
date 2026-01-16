@@ -1,0 +1,7 @@
+{
+    "News": ["Atlanta News", "US News", "World News"],
+    "Life": ["Tech Fashion"],
+    "Opinion": [],
+    "Sports": ["Tech Sports", "US Sports"],
+    "Entertainment": ["Movies and Shows", "Music", "Books", "Comics"]
+}

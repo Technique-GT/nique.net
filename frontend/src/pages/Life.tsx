@@ -140,9 +140,9 @@ function Life() {
             <Navbar />
             <div className='max-w-[95%] lg:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div>
-                    <div className='flex flex-col gap-4'>
+                    <div className='flex flex-col gap-4 h-[80vh]'>
                         {recentLifeArticles[0] && <JustInBlock post={recentLifeArticles[0]} />}
-                        {recentLifeArticles[1] && <FeaturedStory post={recentLifeArticles[1]} height='695px' />}
+                        {recentLifeArticles[1] && <FeaturedStory post={recentLifeArticles[1]} height='715px' />}
                     </div>
 
                     <hr className='my-3' />

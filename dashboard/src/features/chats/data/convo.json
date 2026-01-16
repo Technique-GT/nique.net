@@ -1,0 +1,207 @@
+{
+  "conversations": [
+    {
+      "id": "campus-news-editor",
+      "profile": "CN",
+      "username": "CNE",
+      "fullName": "Campus News Editor",
+      "title": "Breaking news and campus updates",
+      "messages": [
+        {
+          "sender": "Campus News Editor",
+          "message": "Final draft ready for review:\n\nHeadline: 'New Library Opening Delayed Until Spring 2025'\n\nKey points:\n- Construction delays due to supply chain issues\n- $2M budget increase approved\n- Temporary study spaces being arranged\n\nWord count: 450\nPhotos: 3 (construction site, architect rendering, student protest)",
+          "timestamp": "2024-08-24T10:15:00"
+        },
+        {
+          "sender": "You",
+          "message": "Can we get a quote from the student council president?",
+          "timestamp": "2024-08-24T10:14:30"
+        },
+        {
+          "sender": "Campus News Editor",
+          "message": "First draft complete. I've included:\n- Timeline of delays\n- Interview with project manager\n- Student reactions from social media\n\nNeeds:\n- Official statement from administration\n- Better lead photo",
+          "timestamp": "2024-08-24T10:14:00"
+        },
+        {
+          "sender": "You",
+          "message": "Please draft a story about the library construction delay",
+          "timestamp": "2024-08-24T10:13:30"
+        }
+      ]
+    },
+    {
+      "id": "sports-desk",
+      "profile": "SD",
+      "username": "SDE",
+      "fullName": "Sports Desk Editor",
+      "title": "Game coverage and athlete profiles",
+      "messages": [
+        {
+          "sender": "Sports Desk Editor",
+          "message": "Basketball preview package ready:\n\n1. Starting lineup analysis (800 words)\n2. Coach interview (video + transcript)\n3. Opponent breakdown (stats comparison)\n4. Season predictions from 3 analysts\n\nCan we get 2 more photos from last season's championship?",
+          "timestamp": "2024-08-24T11:30:00"
+        },
+        {
+          "sender": "You",
+          "message": "Make sure to highlight the new freshman recruit",
+          "timestamp": "2024-08-24T11:29:45"
+        },
+        {
+          "sender": "Sports Desk Editor",
+          "message": "Working on season preview. Have interviews scheduled with:\n- Head coach (today 3pm)\n- Team captain (tomorrow)\n- Athletic director (pending)\n\nNeed photographer for practice shots",
+          "timestamp": "2024-08-24T11:29:00"
+        },
+        {
+          "sender": "You",
+          "message": "Let's do a comprehensive basketball season preview",
+          "timestamp": "2024-08-24T11:28:30"
+        }
+      ]
+    },
+    {
+      "id": "opinion-editor",
+      "profile": "OE",
+      "username": "OED",
+      "fullName": "Opinion Editor",
+      "title": "Editorials and student perspectives",
+      "messages": [
+        {
+          "sender": "Opinion Editor",
+          "message": "Controversial parking op-ed submitted:\n\nTitle: 'The Great Parking Scam: How the University Profits From Student Desperation'\n\nArguments:\n- 78% increase in permits since 2020\n- No new spaces added\n- Alternatives not promoted\n\nPotential backlash from admin?",
+          "timestamp": "2024-08-24T14:45:00"
+        },
+        {
+          "sender": "You",
+          "message": "Get a counterpoint from transportation services",
+          "timestamp": "2024-08-24T14:44:30"
+        },
+        {
+          "sender": "Opinion Editor",
+          "message": "Received 3 submissions about parking issues. Strongest is from senior PoliSci major with data backing claims. Needs fact-checking but compelling.",
+          "timestamp": "2024-08-24T14:44:00"
+        },
+        {
+          "sender": "You",
+          "message": "Let's cover the parking permit price hike",
+          "timestamp": "2024-08-24T14:43:30"
+        }
+      ]
+    },
+    {
+      "id": "photo-editor",
+      "profile": "PE",
+      "username": "PED",
+      "fullName": "Photo Editor",
+      "title": "Visual storytelling",
+      "messages": [
+        {
+          "sender": "Photo Editor",
+          "message": "Protest gallery edited:\n- 12 selects\n- 3 B&W conversions for dramatic effect\n- Cropped for print/web\n\nIssues:\n- Need captions for 4 images\n- One student requested blurring (FERPA?)",
+          "timestamp": "2024-08-24T16:20:00"
+        },
+        {
+          "sender": "You",
+          "message": "Make sure we have wide shots showing crowd size",
+          "timestamp": "2024-08-24T16:19:30"
+        },
+        {
+          "sender": "Photo Editor",
+          "message": "Shot list for tuition protest:\n1. Wide crowd (quad steps)\n2. Sign close-ups\n3. Speaker moments\n4. Police presence\n5. Student reactions\n\nSending 2 photographers",
+          "timestamp": "2024-08-24T16:19:00"
+        },
+        {
+          "sender": "You",
+          "message": "Need coverage of the tuition protest today at noon",
+          "timestamp": "2024-08-24T16:18:30"
+        }
+      ]
+    },
+    {
+      "id": "copy-editor",
+      "profile": "CE",
+      "username": "CED",
+      "fullName": "Copy Editor",
+      "title": "Grammar and style guardian",
+      "messages": [
+        {
+          "sender": "Copy Editor",
+          "message": "Final edits complete on all pieces:\n\n- Fixed 47 AP style errors\n- Caught 3 factual inconsistencies\n- Standardized all grade references (e.g., 'first-year' not 'freshman')\n\nOne piece still needs sources for 2 claims",
+          "timestamp": "2024-08-24T22:10:00"
+        },
+        {
+          "sender": "You",
+          "message": "Double-check the president's title in all pieces",
+          "timestamp": "2024-08-24T22:09:30"
+        },
+        {
+          "sender": "Copy Editor",
+          "message": "Starting final pass on:\n- 3 news stories\n- 2 features\n- 1 opinion\n\nFlagged:\n- Inconsistent date formatting\n- Overuse of 'very'\n- 2 potential libel issues",
+          "timestamp": "2024-08-24T22:09:00"
+        },
+        {
+          "sender": "You",
+          "message": "Please do final edit pass before deadline",
+          "timestamp": "2024-08-24T22:08:30"
+        }
+      ]
+    },
+    {
+      "id": "social-media",
+      "profile": "SM",
+      "username": "SMM",
+      "fullName": "Social Media Manager",
+      "title": "Digital engagement",
+      "messages": [
+        {
+          "sender": "Social Media Manager",
+          "message": "Basketball post performance:\n\nInstagram:\n- 2,300 likes (+42% from last)\n- 89 comments\n- 12 shares\n\nTwitter:\n- 650 retweets\n- Highlight video: 14K views\n\nBest time to post follow-up: Tomorrow 11am",
+          "timestamp": "2024-08-24T18:45:00"
+        },
+        {
+          "sender": "You",
+          "message": "Create a Twitter thread with player stats",
+          "timestamp": "2024-08-24T18:44:30"
+        },
+        {
+          "sender": "Social Media Manager",
+          "message": "Scheduled:\n- 3 Instagram posts\n- Twitter thread\n- TikTok highlights\n\nNeed:\n- 2 more player quotes\n- Behind-the-scenes footage",
+          "timestamp": "2024-08-24T18:44:00"
+        },
+        {
+          "sender": "You",
+          "message": "Let's promote the basketball season preview",
+          "timestamp": "2024-08-24T18:43:30"
+        }
+      ]
+    },
+    {
+      "id": "investigative-team",
+      "profile": "IT",
+      "username": "INV",
+      "fullName": "Investigative Team",
+      "title": "Deep-dive reporting",
+      "messages": [
+        {
+          "sender": "Investigative Team",
+          "message": "FOIA documents reveal:\n- 63% of security incidents not reported\n- Response times average 22 minutes\n- Only 3 officers on night shift\n\nWe have 4 student victims willing to talk. Need legal review before publishing names.",
+          "timestamp": "2024-08-24T15:30:00"
+        },
+        {
+          "sender": "You",
+          "message": "Get comment from campus police chief",
+          "timestamp": "2024-08-24T15:29:30"
+        },
+        {
+          "sender": "Investigative Team",
+          "message": "Found disturbing pattern - 12 assaults in parking garages this semester, none in official reports. Cross-referencing police logs with student accounts.",
+          "timestamp": "2024-08-24T15:29:00"
+        },
+        {
+          "sender": "You",
+          "message": "Follow up on those security incident reports",
+          "timestamp": "2024-08-24T15:28:30"
+        }
+      ]
+    }
+  ]
+}

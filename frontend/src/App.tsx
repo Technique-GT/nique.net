@@ -8,7 +8,6 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Life from "./pages/Life";
 import Article from "./pages/Article";
-import AdminPage from "./pages/AdminPage";
 import Sports from "./pages/Sports";
 
 import Opinions from "./pages/Opinions";
@@ -44,7 +43,6 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/life" element={<Life />} />
           <Route path="/:id" element={<Article />} />
-          <Route path="/admin" element={<AdminPage />} />
           <Route path="/sports" element={<Sports />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/news" element={<News />} />

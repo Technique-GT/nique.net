@@ -8,16 +8,15 @@ Article
     title: string
     slug: string
     content: string
-    authors: string array | string
+    excerpt: string
+    authors: User array
     categories: Category object
-    subcategories: { category: Category, subcategory: string } array
-    tags: string array
-    publishedAt: date
-    updatedAt: date
+    tags: Tag array
     featuredImage: Media
     imageCaption: string
     published: boolean
     isFeatured: boolean
+    isSticky: boolean
     allowComments: boolean
     viewCount: number
     publishedAt: date | null
@@ -26,7 +25,11 @@ Article
 Category
     name: string
     slug: string
-    isActive: boolean #?
+
+Subcategory
+    name: string
+    slug: string
+    category: Category
 
 Comments
     content: string
