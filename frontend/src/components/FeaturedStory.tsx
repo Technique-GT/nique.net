@@ -1,15 +1,14 @@
 import { useNavigate } from 'react-router-dom'
 import { ArticleBlockProps } from '../types/article'
 
-function FeaturedStory({ post, height }: ArticleBlockProps) {
+function FeaturedStory({ post }: ArticleBlockProps) {
     const navigate = useNavigate();
     return (
-        <div>
-            <div className='cursor-pointer rounded-md bg-cover bg-center h-full w-full flex p-4'
+        <div className="flex flex-col flex-1 min-h-0">
+            <div className="cursor-pointer rounded-md bg-cover bg-center w-full flex p-4 flex-1 min-h-0"
                 onClick={() => navigate('/' + post.id)}
                 style={{
-                    backgroundImage: `linear-gradient(to top, transparent 70%, rgba(229, 229, 229) 90%), url(${post.featuredImage?.url})`,
-                    height: `${height}`
+                    backgroundImage: `linear-gradient(to top, transparent 70%, rgba(229, 229, 229) 90%), url(${post.featuredImage?.url})`
                 }}>
                 <div>
                     <h4 className="text-[#1A1E47] font-bold text-xl mb-1">Featured Story</h4>

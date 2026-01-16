@@ -68,7 +68,7 @@ export interface Post {
 
 export interface ArticleBlockProps {
     post: Post;
-    height: string;
+    height?: string;
 }
 
 export interface ArticleProps {
