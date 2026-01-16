@@ -225,7 +225,7 @@ async function fixDanglingSubcategoryIds(params: { targetDb: any }) {
 }
 
 async function main() {
-  const client = new MongoClient(ATLAS_URI);
+  const client = new MongoClient(ATLAS_URI as string);
   await client.connect();
 
   const sourceDb = client.db(SOURCE_DB_NAME);
@@ -244,7 +244,7 @@ async function main() {
   let missingTarget = 0;
   let missingMapping = 0;
   let multi = 0;
-  const sampleMissing: Array<{ id: string; title?: string; value?: string; category?: string; reason?: string }> = [];
+  const sampleMissing: Array<{ id: string; title?: string | undefined; value?: string | undefined; category?: string | undefined; reason?: string | undefined }> = [];
 
   for await (const legacy of cursor) {
     processed += 1;

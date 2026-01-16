@@ -8,6 +8,10 @@
   "scripts": {
     "dev": "npx concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
     "dev:api": "npm --prefix backend run dev",
-    "dev:web": "npm --prefix frontend run dev"
+    "dev:web": "npm --prefix frontend run dev",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "start": "npx concurrently \"npm run start:api\" \"npm run start:web\"",
+    "start:api": "npm --prefix backend run start",
+    "start:web": "npm --prefix frontend run preview"
   }
 }

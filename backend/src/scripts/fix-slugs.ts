@@ -37,7 +37,7 @@ if (DB_NAME === 'technique') {
 }
 
 async function main() {
-  const client = new MongoClient(ATLAS_URI);
+  const client = new MongoClient(ATLAS_URI as string);
   await client.connect();
   const db = client.db(DB_NAME as string);
   const collection = db.collection('articles');
