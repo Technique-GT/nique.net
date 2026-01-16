@@ -145,7 +145,7 @@ function Life() {
                 <div>
                     <div className='flex flex-col gap-4 h-[80vh]'>
                         {recentLifeArticles[0] && <JustInBlock post={recentLifeArticles[0]} />}
-                        {recentLifeArticles[1] && <FeaturedStory post={recentLifeArticles[1]} />}
+                        {recentLifeArticles[1] && <FeaturedStory post={recentLifeArticles[1]} priority={true} />}
                     </div>
 
                     <hr className='my-3' />

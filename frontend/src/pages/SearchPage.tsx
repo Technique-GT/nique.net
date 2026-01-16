@@ -202,10 +202,8 @@ const SearchPage = () => {
                         <img
                           src={imageUrl}
                           alt={post.title}
+                          loading="lazy"
                           className="size-48 object-cover rounded-xl transition-transform duration-200 hover:scale-105"
-                          style={{
-                            backgroundImage: `linear-gradient(to bottom, rgba(26, 30, 71, 0.15), rgba(26, 30, 71, 1) 75%), url(${post.featuredImage?.url})`,
-                          }}
                         />
                     )}
 

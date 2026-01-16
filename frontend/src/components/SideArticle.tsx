@@ -23,6 +23,8 @@ function SideArticle({ posts, hasBreak = true, hasDesc = false }: SideArticlePro
                         {post.featuredImage && (
                             <img
                                 src={post.featuredImage?.url}
+                                loading="lazy"
+                                alt={post.title}
                                 className='aspect-square w-full rounded-md object-cover col-span-1'
                             />
                         )}

@@ -290,6 +290,7 @@ export default function Article() {
             <img
               className="w-full aspect-3/2 object-cover rounded-md"
               src={article.featuredMediaId.url}
+              loading="lazy"
               alt={article.featuredMediaId.altText || article.title}
             />
             {article.imageCaption && (

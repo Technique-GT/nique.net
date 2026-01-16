@@ -149,7 +149,7 @@ function News() {
                 <div>
                     <div className='flex flex-col gap-4 h-[80vh]'>
                         {recentNews[0] && <JustInBlock post={recentNews[0]} />}
-                        {recentNews[1] && <FeaturedStory post={recentNews[1]} />}
+                        {recentNews[1] && <FeaturedStory post={recentNews[1]} priority={true} />}
                     </div>
 
                     <hr className='my-3' />

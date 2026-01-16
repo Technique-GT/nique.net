@@ -5,13 +5,29 @@ function ArticleBlock({ post, height }: ArticleBlockProps) {
     const navigate=useNavigate();
     const link = post.categorySlug && post.slug ? `/${post.categorySlug}/${post.slug}` : `/${post.id}`;
     return (
-        <div className='cursor-pointer rounded-md bg-cover bg-center max-h-[50vh] md:max-h-none w-full flex items-end p-3'
-        onClick={()=>navigate(link)}
-        style={{
-            backgroundImage: `linear-gradient(to bottom, rgba(26, 30, 71, 0.15), rgba(26, 30, 71, 1) 85%), url(${post.featuredImage?.url})`,
-            height: `${height}`
-        }}>
-            <div className="w-full">
+        <div 
+            className='relative cursor-pointer rounded-md max-h-[50vh] md:max-h-none w-full flex items-end p-3 overflow-hidden group'
+            onClick={()=>navigate(link)}
+            style={{ height: `${height}` }}
+        >
+            {post.featuredImage?.url && (
+                <img 
+                    src={post.featuredImage.url} 
+                    alt={post.title}
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 will-change-transform"
+                />
+            )}
+            
+            <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                    background: 'linear-gradient(to bottom, rgba(26, 30, 71, 0.15), rgba(26, 30, 71, 1) 85%)'
+                }}
+            />
+
+            <div className="relative z-10 w-full pointer-events-none">
                 <h3
                     className="title text-white font-bold text-2xl/7 mb-2 overflow-hidden"
                     style={{

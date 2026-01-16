@@ -22,7 +22,13 @@ function SmallArticle({ posts, direction }: SmallArticleProps) {
                         </div>
                         {
                             post.featuredImage && 
-                            <img src={post.featuredImage?.url} className={`${direction === "right" ? "" : "order-first"} w-[128px] border-0 aspect-3/2 rounded-md object-cover`} />
+                            <img 
+                                src={post.featuredImage?.url} 
+                                loading="lazy"
+                                decoding="async"
+                                alt={post.title}
+                                className={`${direction === "right" ? "" : "order-first"} w-[128px] border-0 aspect-3/2 rounded-md object-cover`} 
+                            />
                         }
                     </div>
                     {/* Show <hr /> only if it's not the last post */}

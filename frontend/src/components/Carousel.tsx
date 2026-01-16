@@ -43,15 +43,29 @@ export default function Carousel( {posts, width}: ArticleListProps ) {
               <SwiperSlide 
                 key={index} 
                 onClick={()=>navigate(link)} 
-                style={{
-                  backgroundImage: p.featuredImage ? `linear-gradient(to bottom, rgba(0,0,0,0) 80%, rgba(255,255,255,1)), url(${p.featuredImage.url})` : undefined
-                }}
-                className={`cursor-pointer rounded-lg bg-cover bg-center relative flex items-end ${
+                className={`cursor-pointer rounded-lg relative flex items-end h-full overflow-hidden group ${
                   p.featuredImage ? "" : "bg-gradient-to-b from-nique-blue/10 to-white"
                 }`}
               >
+                {p.featuredImage?.url && (
+                    <img 
+                        src={p.featuredImage.url} 
+                        alt={p.title}
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 will-change-transform"
+                    />
+                )}
+                
+                <div 
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                        background: p.featuredImage ? 'linear-gradient(to bottom, rgba(0,0,0,0) 80%, rgba(255,255,255,1))' : undefined
+                    }}
+                />
+
                 <h6 
-                  className="text-[#1A1E47] text-sm absolute bottom-0 left-0 m-6 overflow-hidden"
+                  className="text-[#1A1E47] text-sm absolute bottom-0 left-0 m-6 overflow-hidden z-10"
                   style={{
                     display: '-webkit-box',
                     WebkitLineClamp: 2,

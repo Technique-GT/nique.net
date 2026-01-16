@@ -145,7 +145,7 @@ function Opinions() {
             <div className='w-full h-screen'>
                 <div className='grid gap-5 grid-cols-1 lg:grid-cols-[70%_auto] lg:grid-rows-4 w-full h-[80vh]'>
                     <div className='flex flex-col gap-4 order-first row-span-4'>
-                        {recentOpinionArticles[0] && <FeaturedStory post={recentOpinionArticles[0]} />}
+                        {recentOpinionArticles[0] && <FeaturedStory post={recentOpinionArticles[0]} priority={true} />}
                     </div>
                     <div className='flex flex-col gap-4 row-span-4'>
                         {recentOpinionArticles.slice(1, 6).map((article) => (
