@@ -79,6 +79,15 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
 
     const bio = typeof req.body?.bio === 'string' ? req.body.bio : undefined;
     const isAdmin = typeof req.body?.isAdmin === 'boolean' ? req.body.isAdmin : false;
+    const googleSubRaw = typeof req.body?.googleSub === 'string' ? req.body.googleSub : undefined;
+    const googleSub = googleSubRaw?.trim() || undefined;
+    if (googleSub) {
+      const existingUser = await User.findOne({ googleSub });
+      if (existingUser) {
+        res.status(400).json({ success: false, message: 'googleSub already in use' });
+        return;
+      }
+    }
 
     const profilePictureMediaIdRaw = typeof req.body?.profilePictureMediaId === 'string' ? req.body.profilePictureMediaId : undefined;
     const profilePictureMediaId = toObjectId(profilePictureMediaIdRaw) ?? undefined;
@@ -89,6 +98,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       name,
       ...(bio ? { bio } : {}),
       isAdmin,
+      ...(googleSub ? { googleSub } : {}),
       ...(profilePictureMediaId ? { profilePictureMediaId } : {}),
       socialLinks,
     });
@@ -118,6 +128,23 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
 
     if (typeof req.body?.isAdmin === 'boolean') {
       update.isAdmin = req.body.isAdmin;
+    }
+
+    if (typeof req.body?.googleSub === 'string' || req.body?.googleSub === null) {
+      const googleSub = typeof req.body?.googleSub === 'string' ? req.body.googleSub.trim() : '';
+      if (req.body.googleSub === null) {
+        update.googleSub = undefined;
+      } else if (!googleSub) {
+        res.status(400).json({ success: false, message: 'googleSub cannot be empty' });
+        return;
+      } else {
+        const existingUser = await User.findOne({ googleSub, _id: { $ne: id } });
+        if (existingUser) {
+          res.status(400).json({ success: false, message: 'googleSub already in use' });
+          return;
+        }
+        update.googleSub = googleSub;
+      }
     }
 
     if (typeof req.body?.profilePictureMediaId === 'string' || req.body?.profilePictureMediaId === null) {

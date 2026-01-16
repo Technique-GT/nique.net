@@ -15,10 +15,6 @@ export default function SignIn() {
       <Card className='gap-4'>
         <CardHeader>
           <CardTitle className='text-lg tracking-tight'>Login</CardTitle>
-          <CardDescription>
-            Enter your email and password below to <br />
-            log into your account
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <UserAuthForm />
