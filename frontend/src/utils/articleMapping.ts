@@ -52,6 +52,7 @@ export const mapArticleToPost = (article: ArticleDocument): Post => {
     author: resolveAuthorName(article),
     // backend uses categoryId (populated object), not categories[]
     category: article.categoryId?.name || "",
+    categorySlug: article.categoryId?.slug || "",
     // backend uses featuredMediaId, not featuredImage
     featuredImage: article.featuredMediaId || null,
     imageCaption: article.imageCaption,

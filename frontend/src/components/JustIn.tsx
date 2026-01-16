@@ -36,10 +36,11 @@ function formatTimeSincePublished(publishedAt?: string | Date | null) {
 
 function JustInBlock({ post }: ArticleProps) {
     const navigate = useNavigate();
+    const link = post.categorySlug && post.slug ? `/${post.categorySlug}/${post.slug}` : `/${post.id}`;
 
     return (
-        <div className='flex flex-col sm:flex-row gap-4 content-center cursor-pointer' onClick={() => navigate('/' + post.id)}>
-            <button className='bg-[#1A1E47] m-auto sm:m-0 rounded-md text-white h-[42px] lg:h-full w-[94px] py-2 cursor-pointer' onClick={() => navigate('/' + post.id)}><h4 className='font-bold uppercase text-xl'>Just In</h4></button>
+        <div className='flex flex-col sm:flex-row gap-4 content-center cursor-pointer' onClick={() => navigate(link)}>
+            <button className='bg-[#1A1E47] m-auto sm:m-0 rounded-md text-white h-[42px] lg:h-full w-[94px] py-2 cursor-pointer' onClick={() => navigate(link)}><h4 className='font-bold uppercase text-xl'>Just In</h4></button>
             <div>
                 <h3 className="title text-center sm:text-left text-black font-bold text-2xl/5 mb-1">{post.title}</h3>
                 <h6 className="text-center sm:text-left text-[#BAC0FF] text-sm">{formatTimeSincePublished(post.publishedAt)}</h6>

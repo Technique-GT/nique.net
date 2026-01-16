@@ -3,9 +3,10 @@ import { ArticleBlockProps } from '../types/article'
 
 function ArticleBlock({ post, height }: ArticleBlockProps) {
     const navigate=useNavigate();
+    const link = post.categorySlug && post.slug ? `/${post.categorySlug}/${post.slug}` : `/${post.id}`;
     return (
         <div className='cursor-pointer rounded-md bg-cover bg-center max-h-[50vh] md:max-h-none w-full flex items-end p-3'
-        onClick={()=>navigate('/'+post.id)}
+        onClick={()=>navigate(link)}
         style={{
             backgroundImage: `linear-gradient(to bottom, rgba(26, 30, 71, 0.15), rgba(26, 30, 71, 1) 85%), url(${post.featuredImage?.url})`,
             height: `${height}`

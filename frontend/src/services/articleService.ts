@@ -127,6 +127,18 @@ const fetchArticleById = async (
 };
 
 /**
+ * Fetch a single article by slug.
+ * backend: GET /articles/slug/:slug
+ */
+const fetchArticleBySlug = async (
+  slug: string,
+  signal?: AbortSignal
+): Promise<ArticleDocument> => {
+  const response = await apiClient.get(`/articles/slug/${slug}`, { signal });
+  return unwrap(response.data);
+};
+
+/**
  * Search published articles.
  * Uses /articles/published with search param.
  */
@@ -197,6 +209,7 @@ export default {
   fetchArticlesByCategory,
   fetchCategories,
   fetchArticleById,
+  fetchArticleBySlug,
   searchArticles,
   fetchArticleFeed,
 };

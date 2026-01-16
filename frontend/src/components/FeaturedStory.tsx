@@ -3,10 +3,11 @@ import { ArticleBlockProps } from '../types/article'
 
 function FeaturedStory({ post }: ArticleBlockProps) {
     const navigate = useNavigate();
+    const link = post.categorySlug && post.slug ? `/${post.categorySlug}/${post.slug}` : `/${post.id}`;
     return (
         <div className="flex flex-col flex-1 min-h-0">
             <div className="cursor-pointer rounded-md bg-cover bg-center w-full flex p-4 flex-1 min-h-0"
-                onClick={() => navigate('/' + post.id)}
+                onClick={() => navigate(link)}
                 style={{
                     backgroundImage: `linear-gradient(to top, transparent 70%, rgba(229, 229, 229) 90%), url(${post.featuredImage?.url})`
                 }}>
@@ -24,13 +25,14 @@ function FeaturedStory({ post }: ArticleBlockProps) {
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
-                }}
+                    }}
             >
                 {post.desc}
             </p>
-            <p><a className='text-nique-blue-hover underline cursor-pointer' onClick={() => navigate('/' + post.id)}>[Read more...]</a></p>
+            <p><a className='text-nique-blue-hover underline cursor-pointer' onClick={() => navigate(link)}>[Read more...]</a></p>
         </div>
     )
 }
+
 
 export default FeaturedStory

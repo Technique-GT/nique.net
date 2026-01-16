@@ -38,10 +38,11 @@ export default function Carousel( {posts, width}: ArticleListProps ) {
           className="coverflow h-96"
         >
           {posts.map((p, index) => {
+            const link = p.categorySlug && p.slug ? `/${p.categorySlug}/${p.slug}` : `/${p.id}`;
             return (
               <SwiperSlide 
                 key={index} 
-                onClick={()=>navigate('/'+p.id)} 
+                onClick={()=>navigate(link)} 
                 style={{
                   backgroundImage: p.featuredImage ? `linear-gradient(to bottom, rgba(0,0,0,0) 80%, rgba(255,255,255,1)), url(${p.featuredImage.url})` : undefined
                 }}

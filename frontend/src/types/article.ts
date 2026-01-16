@@ -106,6 +106,7 @@ export interface Post {
   desc: string;
   author: string;
   category: string;
+  categorySlug?: string; // Added for routing
   featuredImage?: Media | null;
   imageCaption?: string;
   publishedAt?: Date | string | null;

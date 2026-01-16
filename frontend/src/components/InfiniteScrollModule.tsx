@@ -111,11 +111,12 @@ function InfiniteScrollModule({ categoryId, startPage = 1 }: InfiniteScrollModul
   }, [requestNextPage, supportsIntersectionObserver]);
 
   const renderArticle = (article: Post) => {
+    const link = article.categorySlug && article.slug ? `/${article.categorySlug}/${article.slug}` : `/${article.id}`;
     return (
       <article
         key={article.id}
         className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md cursor-pointer"
-        onClick={() => navigate('/' + article.id)}
+        onClick={() => navigate(link)}
       >
         <p className="text-xs uppercase tracking-wide text-slate-400">
           {(() => {

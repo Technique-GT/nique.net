@@ -42,6 +42,7 @@ function App() {
           {/* Public routes */}
           <Route path="/" element={<Home />} />
           <Route path="/life" element={<Life />} />
+          <Route path="/:category/:slug" element={<Article />} />
           <Route path="/:id" element={<Article />} />
           <Route path="/sports" element={<Sports />} />
           <Route path="/search" element={<SearchPage />} />

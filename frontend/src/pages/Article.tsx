@@ -61,11 +61,12 @@ const flattenComments = (comments: CommentType[]): CommentType[] => {
 };
 
 export default function Article() {
-  const { id } = useParams();
+  const { id, slug } = useParams();
   const normalizedId = useMemo(() => {
+    if (slug) return undefined; // prefer slug if available
     if (!id) return undefined;
     return /^[a-f0-9]{24}:\d+$/i.test(id) ? id.split(":")[0] : id;
-  }, [id]);
+  }, [id, slug]);
   const [isLoading, setIsLoading] = useState(true);
   const [article, setArticle] = useState<ArticleDocument | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<Post[]>([]);
@@ -79,16 +80,22 @@ export default function Article() {
   const [commentSubmitError, setCommentSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!normalizedId) return;
+    if (!normalizedId && !slug) return;
 
     const controller = new AbortController();
     const load = async () => {
       try {
         setIsLoading(true);
-        const fetchedArticle = await articleService.fetchArticleById(
-          normalizedId,
-          controller.signal
-        );
+        let fetchedArticle: ArticleDocument;
+
+        if (slug) {
+          fetchedArticle = await articleService.fetchArticleBySlug(slug, controller.signal);
+        } else if (normalizedId) {
+          fetchedArticle = await articleService.fetchArticleById(normalizedId, controller.signal);
+        } else {
+          return;
+        }
+
         setArticle(fetchedArticle);
 
         // backend uses categoryId (populated object), not categories[]
@@ -120,7 +127,7 @@ export default function Article() {
         if (fetchedArticle.allowComments) {
           try {
             const fetchedComments = await commentService.fetchCommentsByArticle(
-              normalizedId,
+              fetchedArticle._id, // use the real ID from the fetched article
               controller.signal
             );
             // Flatten any nested replies and map to display format
@@ -152,11 +159,11 @@ export default function Article() {
     load();
 
     return () => controller.abort();
-  }, [normalizedId]);
+  }, [normalizedId, slug]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [normalizedId]);
+  }, [normalizedId, slug]);
 
   const articleContent = typeof article?.content === "string" ? article.content : null;
 
@@ -170,7 +177,8 @@ export default function Article() {
   }, [articleContent]);
 
   const handleSubmitComment = async () => {
-    if (!normalizedId || !newCommentText.trim() || isSubmittingComment) {
+    const articleId = article?._id || normalizedId;
+    if (!articleId || !newCommentText.trim() || isSubmittingComment) {
       return;
     }
 
@@ -178,7 +186,7 @@ export default function Article() {
     setCommentSubmitError(null);
 
     try {
-      const createdComment = await commentService.createComment(normalizedId, {
+      const createdComment = await commentService.createComment(articleId, {
         content: newCommentText.trim(),
         username: newCommentName.trim() || undefined,
       });

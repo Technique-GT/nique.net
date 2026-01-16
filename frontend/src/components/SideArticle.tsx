@@ -10,9 +10,11 @@ function SideArticle({ posts, hasBreak = true, hasDesc = false }: SideArticlePro
     const navigate = useNavigate();
     return (
         <div className='w-full'>
-            {posts.map((post) => (
+            {posts.map((post) => {
+                const link = post.categorySlug && post.slug ? `/${post.categorySlug}/${post.slug}` : `/${post.id}`;
+                return (
                 <div key={post.id}>
-                    <div className='cursor-pointer w-full grid grid-cols-4 justify-between gap-1' onClick={() => navigate('/' + post.id)}>
+                    <div className='cursor-pointer w-full grid grid-cols-4 justify-between gap-1' onClick={() => navigate(link)}>
                         <div className='col-span-3 flex flex-col justify-start'>
                             <h3 className="title text-[#1A1E47] font-bold text-xl/6 mb-2">{post.title}</h3>
                             <h6 className="text-nique-blue text-sm">{post.author}</h6>
@@ -36,7 +38,7 @@ function SideArticle({ posts, hasBreak = true, hasDesc = false }: SideArticlePro
                     }
                     {hasBreak ? <hr className='my-3' /> : <div className='my-3' />}
                 </div>
-            ))}
+            )})}
         </div>
     )
 }
