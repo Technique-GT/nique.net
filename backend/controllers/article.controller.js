@@ -161,7 +161,7 @@ exports.getArticleFeed = async (req, res) => {
         .populate('categories', 'name')
         .populate('tags', 'name')
         .populate('featuredImage', 'url title')
-        .sort({ publishedAt: -1 })
+        .sort({ publishedAt: -1, _id: -1 })
         .skip(skip)
         .limit(parsedLimit),
     ]);

@@ -24,12 +24,20 @@ const resolveAuthorName = (article: Pick<ArticleDocument, "authors">) => {
   return authorName;
 };
 
+const normalizeArticleId = (value: string) => {
+  if (/^[a-f0-9]{24}:\d+$/i.test(value)) {
+    return value.split(":")[0];
+  }
+  return value;
+};
+
 export const mapArticleToPost = (article: ArticleDocument): Post => {
-  const fallbackId =
+  const rawId =
     article.id ||
     article._id ||
     article.slug ||
     "";
+  const fallbackId = normalizeArticleId(rawId);
 
   const desc = article.excerpt || article.content || "";
 

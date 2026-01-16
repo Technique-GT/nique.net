@@ -59,6 +59,10 @@ const sortComments = (
 
 export default function Article() {
   const { id } = useParams();
+  const normalizedId = useMemo(() => {
+    if (!id) return undefined;
+    return /^[a-f0-9]{24}:\d+$/i.test(id) ? id.split(":")[0] : id;
+  }, [id]);
   const [isLoading, setIsLoading] = useState(true);
   const [article, setArticle] = useState<ArticleDocument | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<Post[]>([]);
@@ -72,13 +76,16 @@ export default function Article() {
   const [commentSubmitError, setCommentSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) return;
+    if (!normalizedId) return;
 
     const controller = new AbortController();
     const load = async () => {
       try {
         setIsLoading(true);
-        const articleResponse = await articleService.fetchArticleById(id, controller.signal);
+        const articleResponse = await articleService.fetchArticleById(
+          normalizedId,
+          controller.signal
+        );
         const fetchedArticle: ArticleDocument = articleResponse.data;
         setArticle(fetchedArticle);
 
@@ -120,7 +127,7 @@ export default function Article() {
         if (fetchedArticle.allowComments) {
           try {
             const commentsResponse = await commentService.fetchCommentsByArticle(
-              id,
+              normalizedId,
               controller.signal
             );
             const mappedComments: LoadedComment[] = (commentsResponse.data || []).map(
@@ -152,11 +159,11 @@ export default function Article() {
     load();
 
     return () => controller.abort();
-  }, [id]);
+  }, [normalizedId]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [id]);
+  }, [normalizedId]);
 
   const articleContent =typeof article?.content === "string" ? (article.content as string) : null;
 
@@ -169,7 +176,7 @@ export default function Article() {
   }, [articleContent]);
 
   const handleSubmitComment = async () => {
-    if (!id || !newCommentText.trim() || isSubmittingComment) {
+    if (!normalizedId || !newCommentText.trim() || isSubmittingComment) {
       return;
     }
 
@@ -177,7 +184,7 @@ export default function Article() {
     setCommentSubmitError(null);
 
     try {
-      const response = await commentService.createComment(id, {
+      const response = await commentService.createComment(normalizedId, {
         content: newCommentText.trim(),
         name: newCommentName.trim() || undefined,
       });
