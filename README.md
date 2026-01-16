@@ -8,14 +8,13 @@ This repository contains multiple apps:
 
 ## Quick Start (frontend + backend)
 
-Install dependencies in each app directory:
+Install dependencies for the whole repo (npm workspaces):
 
 ```sh
-cd backend && npm install
-cd ../frontend && npm install
+npm install
 ```
 
-Then, from the repo root:
+Then start both apps from the repo root:
 
 ```sh
 npm run dev

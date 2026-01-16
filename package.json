@@ -1,6 +1,10 @@
 {
   "name": "technique",
   "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
     "dev": "npx concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
     "dev:api": "npm --prefix backend run dev",
