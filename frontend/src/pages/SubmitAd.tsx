@@ -1,7 +1,9 @@
 import Navbar from '../components/Navbar';
-import { useState } from 'react';
+import { useState, Suspense, lazy } from 'react';
 import MediaKit from '../assets/media-kit-2024.pdf';
-import PDFViewer from '../components/PDFViewer';
+import Spinner from '../components/Spinner';
+
+const PDFViewer = lazy(() => import('../components/PDFViewer'));
 
 const adPricePlans = [
     {
@@ -66,12 +68,16 @@ function SubmitAd() {
                     </div>
                 </div>
 
-                <PDFViewer 
-                  isOpen={showPDF}
-                  onClose={() => setShowPDF(false)}
-                  pdfFile={MediaKit}
-                  title="Media Kit 2024"
-                />
+                {showPDF && (
+                    <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xs p-4"><Spinner /></div>}>
+                        <PDFViewer 
+                            isOpen={showPDF}
+                            onClose={() => setShowPDF(false)}
+                            pdfFile={MediaKit}
+                            title="Media Kit 2024"
+                        />
+                    </Suspense>
+                )}
 
                 <div className="my-4">
                     <h4 className="text-2xl font-bold mb-2 text-nique-blue mt-6">Price Plans</h4>
