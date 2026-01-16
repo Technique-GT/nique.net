@@ -145,6 +145,7 @@ function Life() {
                         {recentLifeArticles[1] && <FeaturedStory post={recentLifeArticles[1]} height='715px' />}
                     </div>
 
+
                     <hr className='my-3' />
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Events</h4>
