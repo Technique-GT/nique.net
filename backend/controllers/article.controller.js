@@ -208,9 +208,9 @@ exports.getArticleById = async (req, res) => {
 
     // Increment view count for published articles
     if (article.status === 'published') {
-      article.viewCount += 1;
-      await article.save();
+      await Article.updateOne({ _id: article._id }, { $inc: { viewCount: 1 } });
     }
+
 
     res.json(article);
   } catch (error) {

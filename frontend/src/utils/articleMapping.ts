@@ -7,18 +7,15 @@ const resolveAuthorName = (article: Pick<ArticleDocument, "authors">) => {
   const primaryAuthor = article.authors?.[0]?.user;
   let authorName = "Technique Staff";
 
-  if (typeof primaryAuthor === "string") {
+  if (primaryAuthor && typeof primaryAuthor !== "string") {
+    const fullName = [primaryAuthor.firstName, primaryAuthor.lastName].filter(Boolean).join(" ");
+    if (fullName) {
+      authorName = fullName;
+    } else if (primaryAuthor.username) {
+      authorName = primaryAuthor.username;
+    }
+  } else if (typeof primaryAuthor === "string" && primaryAuthor.trim()) {
     authorName = primaryAuthor;
-  } else if (primaryAuthor) {
-    const composed = [primaryAuthor.firstName, primaryAuthor.lastName]
-      .filter(Boolean)
-      .join(" ");
-
-    authorName =
-      primaryAuthor.username ||
-      composed ||
-      primaryAuthor.email ||
-      authorName;
   }
 
   return authorName;

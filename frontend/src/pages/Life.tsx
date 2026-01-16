@@ -3,15 +3,11 @@ import articleService from '../services/articleService';
 import ArticleBlock from "../components/ArticleBlock";
 import { Post } from '../types/article';
 import { Categories } from '../types/categories';
-// import MockAd from '../assets/mock_advertisement.jpg';
 import SideArticle from '../components/SideArticle';
 import FeaturedStory from '../components/FeaturedStory';
 import JustInBlock from '../components/JustIn';
 import SmallArticle from '../components/SmallArticle';
-import Carousel from '../components/Carousel';
 import Navbar from '../components/Navbar';
-// import VerticalAd from '../components/VerticalAd';
-import InstaEmbed from '../components/InstaEmbed';
 import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
 import { mapArticleToPost } from '../utils/articleMapping';
@@ -142,7 +138,7 @@ function Life() {
                 <div>
                     <div className='flex flex-col gap-4 h-[80vh]'>
                         {recentLifeArticles[0] && <JustInBlock post={recentLifeArticles[0]} />}
-                        {recentLifeArticles[1] && <FeaturedStory post={recentLifeArticles[1]} height='715px' />}
+                        {recentLifeArticles[1] && <FeaturedStory post={recentLifeArticles[1]} />}
                     </div>
 
                     <hr className='my-3' />

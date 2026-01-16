@@ -117,21 +117,17 @@ export default function Navbar() {
             <Search />
           </div>
           <span className="hidden lg:inline">{formattedDate}</span>
-          {/* <span className="hidden xl:inline"> &bull; </span> */}
-          {/* <span className="inline xl:inline-block"><br></br></span>Volume {currentVolume} */}
-          
         </h4>
       </div>
 
       {/* navbar section */}
-      <div className="sticky top-0 z-50 ">
+      <div className="sticky top-0 z-50">
         <header id="navbar"
-          className={`${scrolled ? "scrolled" : ""} ${navAtTop ? "bg-white" : "bg-transparent"}
-        md:border-t border-b border-gray-400 md:border-black`}
+          className={`${scrolled ? "scrolled" : ""} ${navAtTop ? "bg-white" : "bg-transparent"} md:border-t border-b border-gray-400 md:border-black`}
         >
           {/* desktop nav links */}
           <div
-            className={`hidden md:flex justify-evenly items-center w-full max-w-[1200px] m-auto`}
+            className={`hidden md:flex justify-evenly items-center w-full max-w-[80%] m-auto`}
           >
             <NavLinks />
           </div>

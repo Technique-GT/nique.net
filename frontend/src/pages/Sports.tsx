@@ -135,15 +135,15 @@ function Sports() {
             <Navbar />
             <div className='max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div className='w-full h-screen'>
-                    <div className='grid gap-5 grid-cols-1 lg:grid-cols-[auto_35%] w-full h-[80vh]'>
-                        <div className='flex flex-col gap-4'>
-                            {recentSportsArticles[0] && <ArticleBlock post={recentSportsArticles[0]} height='858px' />}
+                    <div className='grid gap-5 grid-cols-1 lg:grid-cols-[auto_35%] lg:grid-rows-4 w-full h-[80vh]'>
+                        <div className='flex flex-col gap-4 lg:row-span-4'>
+                            {recentSportsArticles[0] && <ArticleBlock post={recentSportsArticles[0]} height="100%" />}
                         </div>
-                        <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1'>
-                            {recentSportsArticles[1] && <ArticleBlock post={recentSportsArticles[1]} height='200px' />}
-                            {recentSportsArticles[2] && <ArticleBlock post={recentSportsArticles[2]} height='200px' />}
-                            {recentSportsArticles[3] && <ArticleBlock post={recentSportsArticles[3]} height='200px' />}
-                            {recentSportsArticles[4] && <ArticleBlock post={recentSportsArticles[4]} height='200px' />}
+                        <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:grid-rows-4 lg:row-span-4 h-full'>
+                            {recentSportsArticles[1] && <ArticleBlock post={recentSportsArticles[1]} height="100%" />}
+                            {recentSportsArticles[2] && <ArticleBlock post={recentSportsArticles[2]} height="100%" />}
+                            {recentSportsArticles[3] && <ArticleBlock post={recentSportsArticles[3]} height="100%" />}
+                            {recentSportsArticles[4] && <ArticleBlock post={recentSportsArticles[4]} height="100%" />}
                         </div>
                     </div>
 

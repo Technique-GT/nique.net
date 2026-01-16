@@ -153,15 +153,15 @@ function Home() {
             <Navbar />
             <div className='max-w-[95%] md:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div className='w-full h-screen'>
-                    <div className='grid gap-5 grid-cols-1 lg:grid-cols-[30%_auto] w-full h-[80vh]'>
-                        <div className='flex flex-col gap-4 order-last lg:order-first'>
+                    <div className='grid gap-5 grid-cols-1 lg:grid-cols-[30%_auto] lg:grid-rows-4 w-full h-[80vh]'>
+                        <div className='flex flex-col gap-4 order-last lg:order-first lg:row-span-4'>
                             {recentArticles.slice(2, 6).map((article) => (
-                                <ArticleBlock key={article.id} post={article} height='200px' />
+                                <ArticleBlock key={article.id} post={article} height='100%'/>
                             ))}
                         </div>
-                        <div className='flex flex-col gap-4'>
+                        <div className='flex flex-col gap-4 row-span-4 h-full'>
                             {recentArticles[0] && <JustInBlock post={recentArticles[0]} />}
-                            {recentArticles[1] && <FeaturedStory post={recentArticles[1]} height='695px' />}
+                            {recentArticles[1] && <FeaturedStory post={recentArticles[1]} />}
                         </div>
                     </div>
 
