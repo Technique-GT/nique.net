@@ -179,6 +179,14 @@ export type MongoComment = {
   updatedAt: Date;
 };
 
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+
 const isHexObjectId = (v: unknown): v is string => typeof v === 'string' && /^[a-fA-F0-9]{24}$/.test(v);
 
 const objectIdToHex = (v: any): string | undefined => {
@@ -267,7 +275,8 @@ const toMongoCategory = (input: any): TransformResult<MongoCategory> => {
   const name = readNonEmptyString(input?.name) ?? '';
   if (!name) warnings.push('missing name');
 
-  const slug = readNonEmptyString(input?.slug) ?? '';
+  const slugRaw = readNonEmptyString(input?.slug) ?? '';
+  const slug = slugify(slugRaw);
   if (!slug) warnings.push('missing slug');
 
   const __v = typeof input?.__v === 'number' ? input.__v : 0;
@@ -292,7 +301,8 @@ const toMongoTag = (input: any): TransformResult<MongoTag> => {
   const name = readNonEmptyString(input?.name) ?? '';
   if (!name) warnings.push('missing name');
 
-  const slug = readNonEmptyString(input?.slug) ?? '';
+  const slugRaw = readNonEmptyString(input?.slug) ?? '';
+  const slug = slugify(slugRaw);
   if (!slug) warnings.push('missing slug');
 
   const __v = typeof input?.__v === 'number' ? input.__v : 0;
@@ -320,7 +330,8 @@ const toMongoSubcategory = (input: any): TransformResult<MongoSubcategory> => {
   const name = readNonEmptyString(input?.name) ?? '';
   if (!name) warnings.push('missing name');
 
-  const slug = readNonEmptyString(input?.slug) ?? '';
+  const slugRaw = readNonEmptyString(input?.slug) ?? '';
+  const slug = slugify(slugRaw);
   if (!slug) warnings.push('missing slug');
 
   const __v = typeof input?.__v === 'number' ? input.__v : 0;
@@ -519,7 +530,8 @@ const toMongoArticle = (input: any): TransformResult<MongoArticle> => {
   const title = typeof input?.title === 'string' ? input.title : '';
   if (!title) warnings.push('missing title');
 
-  const slug = typeof input?.slug === 'string' ? input.slug : '';
+  const slugRaw = typeof input?.slug === 'string' ? input.slug : '';
+  const slug = slugify(slugRaw);
   if (!slug) warnings.push('missing slug');
 
   const content = typeof input?.content === 'string' ? input.content : '';
@@ -736,7 +748,8 @@ export function toCanonicalArticle(input: any): TransformResult<CanonicalArticle
   const title = typeof input?.title === 'string' ? input.title : '';
   if (!title) warnings.push('missing title');
 
-  const slug = typeof input?.slug === 'string' ? input.slug : '';
+  const slugRaw = typeof input?.slug === 'string' ? input.slug : '';
+  const slug = slugify(slugRaw);
   if (!slug) warnings.push('missing slug');
 
   const content = typeof input?.content === 'string' ? input.content : '';
@@ -905,7 +918,8 @@ export function toCanonicalCategory(input: any): TransformResult<CanonicalCatego
   const name = readNonEmptyString(input?.name) ?? '';
   if (!name) warnings.push('missing name');
 
-  const slug = readNonEmptyString(input?.slug) ?? '';
+  const slugRaw = readNonEmptyString(input?.slug) ?? '';
+  const slug = slugify(slugRaw);
   if (!slug) warnings.push('missing slug');
 
   const __v = typeof input?.__v === 'number' ? input.__v : 0;
@@ -936,7 +950,8 @@ export function toCanonicalTag(input: any): TransformResult<CanonicalTag> {
   const name = readNonEmptyString(input?.name) ?? '';
   if (!name) warnings.push('missing name');
 
-  const slug = readNonEmptyString(input?.slug) ?? '';
+  const slugRaw = readNonEmptyString(input?.slug) ?? '';
+  const slug = slugify(slugRaw);
   if (!slug) warnings.push('missing slug');
 
   const __v = typeof input?.__v === 'number' ? input.__v : 0;
@@ -970,7 +985,8 @@ export function toCanonicalSubcategory(input: any): TransformResult<CanonicalSub
   const name = readNonEmptyString(input?.name) ?? '';
   if (!name) warnings.push('missing name');
 
-  const slug = readNonEmptyString(input?.slug) ?? '';
+  const slugRaw = readNonEmptyString(input?.slug) ?? '';
+  const slug = slugify(slugRaw);
   if (!slug) warnings.push('missing slug');
 
   const __v = typeof input?.__v === 'number' ? input.__v : 0;
