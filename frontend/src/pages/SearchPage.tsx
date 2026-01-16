@@ -55,7 +55,8 @@ const SearchPage = () => {
           return;
         }
 
-        setResults((response.data || []).map(mapArticleToPost));
+        // Services now return unwrapped data directly
+        setResults((response || []).map(mapArticleToPost));
       } catch (err: any) {
         if (!isMounted || controller.signal.aborted || err?.code === "ERR_CANCELED") {
           return;
@@ -92,7 +93,7 @@ const SearchPage = () => {
     navigate(`/${id}`);
   };
 
-  function formatTimeSincePublished(publishedAt?: string | Date) {
+  function formatTimeSincePublished(publishedAt?: string | Date | null) {
       if (!publishedAt) {
           return '';
       }

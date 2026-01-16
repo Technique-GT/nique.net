@@ -1,15 +1,47 @@
-import axios from 'axios';
+import apiClient, { unwrap } from './apiClient';
 
-const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api',
-  withCredentials: true,
-});
+// =============================================================================
+// Sliver Endpoints (aligned with newbackend routes)
+// =============================================================================
 
-export const createSliver = async (content: string) => {
-    try {
-        const response = await apiClient.post('/slivers', { text: content });
-        return response.data;
-    } catch (error) {
-        throw error;
-    }
+interface Sliver {
+  _id: string;
+  text: string;
+  expiresAt: Date | string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+}
+
+/**
+ * Create a new sliver.
+ * newbackend: POST /slivers
+ * Body: { text }
+ */
+export const createSliver = async (content: string): Promise<Sliver> => {
+  const response = await apiClient.post('/slivers', { text: content });
+  return unwrap(response.data);
+};
+
+/**
+ * Fetch all active slivers.
+ * newbackend: GET /slivers/active
+ */
+export const fetchActiveSlivers = async (signal?: AbortSignal): Promise<Sliver[]> => {
+  const response = await apiClient.get('/slivers/active', { signal });
+  return unwrap(response.data);
+};
+
+/**
+ * Fetch all slivers.
+ * newbackend: GET /slivers
+ */
+export const fetchAllSlivers = async (signal?: AbortSignal): Promise<Sliver[]> => {
+  const response = await apiClient.get('/slivers', { signal });
+  return unwrap(response.data);
+};
+
+export default {
+  createSliver,
+  fetchActiveSlivers,
+  fetchAllSlivers,
 };

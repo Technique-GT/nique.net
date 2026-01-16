@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { ArticleProps } from '../types/article'
 
-function formatTimeSincePublished(publishedAt?: string | Date) {
+function formatTimeSincePublished(publishedAt?: string | Date | null) {
     if (!publishedAt) {
         return '';
     }

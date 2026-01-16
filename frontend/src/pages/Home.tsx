@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import articleService from '../services/articleService';
 import ArticleBlock from "../components/ArticleBlock";
-import { Post } from '../types/article';
+import { Post, ArticleDocument } from '../types/article';
 import FeaturedStory from '../components/FeaturedStory';
 import JustInBlock from '../components/JustIn';
 import SideWidget from '../components/SideWidget';
@@ -31,11 +31,11 @@ function Home() {
             setError(null);
 
             try {
-                const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
-                const categories = categoriesResponse.data || [];
+                // Services now return unwrapped data directly
+                const categories = await articleService.fetchCategories(50, controller.signal);
 
                 const findCategoryId = (name: string) => {
-                    const match = categories.find((category: any) => category.name?.toLowerCase() === name.toLowerCase());
+                    const match = categories.find((category) => category.name?.toLowerCase() === name.toLowerCase());
                     return match?._id || null;
                 };
 
@@ -46,45 +46,45 @@ function Home() {
                 const sportsCategoryId = findCategoryId(Categories.SPORTS);
 
                 const [
-                    stickyResponse,
-                    recentResponse,
-                    lifeResponse,
-                    newsResponse,
-                    entertainmentResponse,
-                    opinionResponse,
-                    sportsResponse,
+                    stickyArticles,
+                    recentArticlesData,
+                    lifeArticlesData,
+                    newsArticlesData,
+                    entertainmentArticlesData,
+                    opinionArticlesData,
+                    sportsArticlesData,
                 ] = await Promise.all([
                     articleService.fetchStickyArticles(undefined, controller.signal),
                     articleService.fetchRecentArticles(5, 'published', controller.signal),
                     lifeCategoryId
                         ? articleService.fetchArticles({ category: lifeCategoryId, limit: 15, status: 'published' }, controller.signal)
-                        : Promise.resolve({ data: [] }),
+                        : Promise.resolve([] as ArticleDocument[]),
                     newsCategoryId
                         ? articleService.fetchArticles({ category: newsCategoryId, limit: 15, status: 'published' }, controller.signal)
-                        : Promise.resolve({ data: [] }),
+                        : Promise.resolve([] as ArticleDocument[]),
                     entertainmentCategoryId
                         ? articleService.fetchArticles({ category: entertainmentCategoryId, limit: 15, status: 'published' }, controller.signal)
-                        : Promise.resolve({ data: [] }),
+                        : Promise.resolve([] as ArticleDocument[]),
                     opinionCategoryId
                         ? articleService.fetchArticles({ category: opinionCategoryId, limit: 15, status: 'published' }, controller.signal)
-                        : Promise.resolve({ data: [] }),
+                        : Promise.resolve([] as ArticleDocument[]),
                     sportsCategoryId
                         ? articleService.fetchArticles({ category: sportsCategoryId, limit: 15, status: 'published' }, controller.signal)
-                        : Promise.resolve({ data: [] }),
+                        : Promise.resolve([] as ArticleDocument[]),
                 ]);
 
                 if (!isMounted) {
                     return;
                 }
 
-                const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
-                const stickyPosts = mapResponseData(stickyResponse.data);
-                const recentPosts = mapResponseData(recentResponse.data);
-                const lifePosts = mapResponseData(lifeResponse.data);
-                const newsPosts = mapResponseData(newsResponse.data);
-                const entertainmentPosts = mapResponseData(entertainmentResponse.data);
-                const opinionPosts = mapResponseData(opinionResponse.data);
-                const sportsPosts = mapResponseData(sportsResponse.data);
+                const mapResponseData = (data: ArticleDocument[]) => (data || []).map(mapArticleToPost);
+                const stickyPosts = mapResponseData(stickyArticles);
+                const recentPosts = mapResponseData(recentArticlesData);
+                const lifePosts = mapResponseData(lifeArticlesData);
+                const newsPosts = mapResponseData(newsArticlesData);
+                const entertainmentPosts = mapResponseData(entertainmentArticlesData);
+                const opinionPosts = mapResponseData(opinionArticlesData);
+                const sportsPosts = mapResponseData(sportsArticlesData);
 
                 const sortByPublishedDesc = (a: Post, b: Post) => {
                     const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;

@@ -17,7 +17,7 @@ function FeaturedStory({ post }: ArticleBlockProps) {
                 </div>
             </div>
 
-            <h6 className="text-nique-blue text-xs mt-1">{post.featuredImage?.caption}</h6>
+            <h6 className="text-nique-blue text-xs mt-1">{post.imageCaption}</h6>
             <p
                 className="mt-2 overflow-hidden"
                 style={{

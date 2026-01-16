@@ -33,8 +33,8 @@ function News() {
             setError(null);
 
             try {
-                const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
-                const categories = categoriesResponse.data || [];
+                // Services now return unwrapped data directly
+                const categories = await articleService.fetchCategories(50, controller.signal);
 
                 const newsCategory = categories.find((category: any) =>
                     category.name?.toLowerCase() === Categories.NEWS.toLowerCase()
@@ -55,7 +55,7 @@ function News() {
                 );
 
                 const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
-                const allNewsArticles = mapResponseData(newsResponse.data);
+                const allNewsArticles = mapResponseData(newsResponse);
                 const getTimestamp = (post: Post) => {
                     const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
                     const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
@@ -91,9 +91,9 @@ function News() {
 
                 setRecentNews(recentSelection);
                 setNewsArticles(remainingNews);
-                setTheInstituteNews(filterBySubcategory(newsResponse.data || [], 'the institute'));
-                setCityStateNews(filterBySubcategory(newsResponse.data || [], 'city & state'));
-                setScienceResearchNews(filterBySubcategory(newsResponse.data || [], 'science & research'));
+                setTheInstituteNews(filterBySubcategory(newsResponse || [], 'the institute'));
+                setCityStateNews(filterBySubcategory(newsResponse || [], 'city & state'));
+                setScienceResearchNews(filterBySubcategory(newsResponse || [], 'science & research'));
             } catch (err) {
                 if (!isMounted) {
                     return;

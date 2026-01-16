@@ -30,8 +30,8 @@ function Entertainment() {
         setError(null);
 
         try {
-            const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
-            const categories = categoriesResponse.data || [];
+            // Services now return unwrapped data directly
+            const categories = await articleService.fetchCategories(50, controller.signal);
 
             const entertainmentCategory = categories.find((category: any) =>
             category.name?.toLowerCase() === Categories.ENTERTAINMENT.toLowerCase()
@@ -51,7 +51,7 @@ function Entertainment() {
             );
 
             const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
-            const allEntertainment = mapResponseData(entertainmentResponse.data);
+            const allEntertainment = mapResponseData(entertainmentResponse);
             const getTimestamp = (post: Post) => {
                 const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
                 const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
@@ -87,9 +87,9 @@ function Entertainment() {
 
             setRecentEntertainment(recentSelection);
             setEntertainmentArticles(remainingEntertainment);
-            setFilmAndTV(filterBySubcategory(entertainmentResponse.data || [], 'film & tv'));
-            setMusic(filterBySubcategory(entertainmentResponse.data || [], 'music'));
-            setArtsTheater(filterBySubcategory(entertainmentResponse.data || [], 'arts & theater'));
+            setFilmAndTV(filterBySubcategory(entertainmentResponse || [], 'film & tv'));
+            setMusic(filterBySubcategory(entertainmentResponse || [], 'music'));
+            setArtsTheater(filterBySubcategory(entertainmentResponse || [], 'arts & theater'));
 
         } catch (err) {
             if (!isMounted) {

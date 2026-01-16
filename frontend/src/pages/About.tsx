@@ -19,15 +19,14 @@ function About() {
                 setIsLoading(true);
     
                 try {
-                    const [recentResponse] = await Promise.all([
-                        articleService.fetchRecentArticles(5, 'published', controller.signal),
-                    ]);
+                    // Services now return unwrapped data directly
+                    const recentArticlesData = await articleService.fetchRecentArticles(5, 'published', controller.signal);
     
                     if (!isMounted) {
                         return;
                     }
     
-                    setRecentArticles((recentResponse.data || []).map(mapArticleToPost));
+                    setRecentArticles((recentArticlesData || []).map(mapArticleToPost));
                 } catch (err) {
                     if (!isMounted) {
                         return;

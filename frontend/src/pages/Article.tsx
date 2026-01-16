@@ -7,41 +7,30 @@ import Comment from "../components/Comment";
 import Spinner from "../components/Spinner";
 import articleService from "../services/articleService";
 import commentService from "../services/commentService";
-import { ArticleDocument, Post } from "../types/article";
+import { ArticleDocument, Post, User, Comment as CommentType } from "../types/article";
 import { mapArticleToPost } from "../utils/articleMapping";
 
-interface LoadedComment {
-  _id: string;
-  author: {
-    name: string;
-    avatar: string;
-  };
-  createdAt: string;
-  content: string;
-  thumbsUp: number;
-  thumbsDown: number;
-}
-
-const mapApiCommentToLoaded = (comment: any): LoadedComment => {
-  const authorInfo = comment.author
-
+/**
+ * Map API comment (newbackend shape) to display format.
+ * newbackend uses `username` directly, not `author.name/avatar`.
+ */
+const mapApiCommentToDisplay = (comment: CommentType) => {
   return {
-    _id: comment?._id,
-    content: comment?.content,
-    createdAt: comment?.createdAt,
-    thumbsUp: comment?.thumbsUp ?? comment?.Up ?? 0,
-    thumbsDown: comment?.thumbsDown ?? comment?.Down ?? 0,
-    author: {
-      name: authorInfo.name,
-      avatar: authorInfo.avatar
-    },
+    _id: comment._id,
+    content: comment.content,
+    createdAt: comment.createdAt,
+    thumbsUp: comment.thumbsUp ?? 0,
+    thumbsDown: comment.thumbsDown ?? 0,
+    username: comment.username || "Anonymous",
   };
 };
 
+type DisplayComment = ReturnType<typeof mapApiCommentToDisplay>;
+
 const sortComments = (
-  list: LoadedComment[],
+  list: DisplayComment[],
   sortMode: "Best" | "Newest" | "Oldest"
-): LoadedComment[] => {
+): DisplayComment[] => {
   const clone = [...list];
   switch (sortMode) {
     case "Oldest":
@@ -57,6 +46,20 @@ const sortComments = (
   }
 };
 
+/**
+ * Flatten nested comment replies into a single list (if needed).
+ */
+const flattenComments = (comments: CommentType[]): CommentType[] => {
+  const result: CommentType[] = [];
+  for (const comment of comments) {
+    result.push(comment);
+    if (comment.replies && comment.replies.length > 0) {
+      result.push(...flattenComments(comment.replies));
+    }
+  }
+  return result;
+};
+
 export default function Article() {
   const { id } = useParams();
   const normalizedId = useMemo(() => {
@@ -66,7 +69,7 @@ export default function Article() {
   const [isLoading, setIsLoading] = useState(true);
   const [article, setArticle] = useState<ArticleDocument | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<Post[]>([]);
-  const [comments, setComments] = useState<LoadedComment[]>([]);
+  const [comments, setComments] = useState<DisplayComment[]>([]);
   const [numCommentsToView, setNumCommentsToView] = useState(5);
   const [commentsSortBy, setCommentsSort] = useState<"Best" | "Newest" | "Oldest">("Best");
 
@@ -82,37 +85,27 @@ export default function Article() {
     const load = async () => {
       try {
         setIsLoading(true);
-        const articleResponse = await articleService.fetchArticleById(
+        const fetchedArticle = await articleService.fetchArticleById(
           normalizedId,
           controller.signal
         );
-        const fetchedArticle: ArticleDocument = articleResponse.data;
         setArticle(fetchedArticle);
 
-        const categoryId =
-          fetchedArticle.categories?.[0]?._id ||
-          (typeof fetchedArticle.categories?.[0] === "string"
-            ? fetchedArticle.categories?.[0]
-            : undefined);
+        // newbackend uses categoryId (populated object), not categories[]
+        const categoryId = fetchedArticle.categoryId?._id;
 
         if (categoryId) {
           try {
-            const relatedResponse = await articleService.fetchArticles(
-              { category: categoryId, status: "published", limit: 4 },
+            const relatedArticles = await articleService.fetchArticlesByCategory(
+              categoryId,
+              4,
               controller.signal
             );
 
-            const fetchedArticleId =
-              fetchedArticle.id ||
-              (fetchedArticle as unknown as { _id?: string })._id ||
-              "";
+            const fetchedArticleId = fetchedArticle._id || "";
 
-            const mappedRelated = (relatedResponse.data as ArticleDocument[])
-              .filter((item) => {
-                const candidateId =
-                  item.id || (item as unknown as { _id?: string })._id || "";
-                return candidateId !== fetchedArticleId;
-              })
+            const mappedRelated = relatedArticles
+              .filter((item) => item._id !== fetchedArticleId)
               .map(mapArticleToPost);
 
             setRelatedArticles(mappedRelated);
@@ -126,13 +119,13 @@ export default function Article() {
 
         if (fetchedArticle.allowComments) {
           try {
-            const commentsResponse = await commentService.fetchCommentsByArticle(
+            const fetchedComments = await commentService.fetchCommentsByArticle(
               normalizedId,
               controller.signal
             );
-            const mappedComments: LoadedComment[] = (commentsResponse.data || []).map(
-              mapApiCommentToLoaded
-            );
+            // Flatten any nested replies and map to display format
+            const flattened = flattenComments(fetchedComments);
+            const mappedComments = flattened.map(mapApiCommentToDisplay);
             setComments(sortComments(mappedComments, commentsSortBy));
           } catch {
             setComments([]);
@@ -165,9 +158,10 @@ export default function Article() {
     window.scrollTo(0, 0);
   }, [normalizedId]);
 
-  const articleContent =typeof article?.content === "string" ? (article.content as string) : null;
+  const articleContent = typeof article?.content === "string" ? article.content : null;
 
-  const normalizeSpansToParagraphs = (raw: string) => raw.replace(/<\s*span([^>]*)>/gi, "<p$1>").replace(/<\/\s*span\s*>/gi, "</p>");
+  const normalizeSpansToParagraphs = (raw: string) =>
+    raw.replace(/<\s*span([^>]*)>/gi, "<p$1>").replace(/<\/\s*span\s*>/gi, "</p>");
 
   const sanitizedContent = useMemo(() => {
     if (!articleContent) return "";
@@ -184,15 +178,13 @@ export default function Article() {
     setCommentSubmitError(null);
 
     try {
-      const response = await commentService.createComment(normalizedId, {
+      const createdComment = await commentService.createComment(normalizedId, {
         content: newCommentText.trim(),
-        name: newCommentName.trim() || undefined,
+        username: newCommentName.trim() || undefined,
       });
 
-      const createdComment = mapApiCommentToLoaded(response.data);
-      setComments((prev) =>
-        sortComments([createdComment, ...prev], commentsSortBy)
-      );
+      const displayComment = mapApiCommentToDisplay(createdComment);
+      setComments((prev) => sortComments([displayComment, ...prev], commentsSortBy));
       setNewCommentText("");
       setNewCommentName("");
     } catch (error) {
@@ -235,13 +227,19 @@ export default function Article() {
     );
   }
 
+  // Extract author names from newbackend's authors[].authorId shape
   const authorNames =
-    article.authors?.map((author) => {
-      const authorUser = author.user;
-      if (!authorUser) return null;
-      if (typeof authorUser === "string") return authorUser;
-      const composedName = [authorUser.firstName, authorUser.lastName].filter(Boolean).join(" ");
-      return composedName || authorUser.username || authorUser.email || null;
+    article.authors?.map((authorEntry) => {
+      const authorId = authorEntry.authorId;
+      if (!authorId) return null;
+      // If populated (User object with name)
+      if (typeof authorId === "object") {
+        const user = authorId as User;
+        return user.name || null;
+      }
+      // If string (shouldn't happen when populated)
+      if (typeof authorId === "string") return authorId;
+      return null;
     }).filter((name): name is string => Boolean(name)) || [];
 
   const authorsDisplay = authorNames.length ? authorNames.join(" • ") : "Technique Staff";
@@ -254,7 +252,8 @@ export default function Article() {
       day: "numeric",
     });
 
-  const tagsDisplay = article.tags?.map((tag) => tag.name).filter(Boolean).join(" • ");
+  // newbackend uses tagIds, not tags
+  const tagsDisplay = article.tagIds?.map((tag) => tag.name).filter(Boolean).join(" • ");
 
   return (
     <>
@@ -268,32 +267,26 @@ export default function Article() {
               <span>{authorsDisplay}</span>
               {publishedDate && <span> • {publishedDate}</span>}
             </div>
-              {article.categories?.length > 0 &&
-                article.categories
-                  .filter((cat) => !!cat?.name)
-                  .map((cat, idx) => (
-                    <span key={cat._id || cat.name}>
-                      {idx > 0 && " • "}
-                      {cat.name}
-                    </span>
-              ))}
+            {/* newbackend uses categoryId (single object), not categories[] */}
+            {article.categoryId && (
+              <span>{article.categoryId.name}</span>
+            )}
           </h4>
           {tagsDisplay && <p className="text-xs text-nique-blue">{tagsDisplay}</p>}
           <hr className="opacity-50" />
         </header>
 
-        {/* Featured Image */}
-        {article.featuredImage && (
+        {/* Featured Image - newbackend uses featuredMediaId, not featuredImage */}
+        {article.featuredMediaId && (
           <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
             <img
               className="w-full aspect-3/2 object-cover rounded-md"
-              src={article.featuredImage.url}
-              alt={article.featuredImage.altText || article.title}
+              src={article.featuredMediaId.url}
+              alt={article.featuredMediaId.altText || article.title}
             />
-            {(article.featuredImage.title || article.featuredImage.caption) && (
-              <figcaption className="w-full flex flex-col sm:flex-row sm:justify-between text-xs text-nique-blue mt-2 space-y-1 sm:space-y-0">
-                <span>{article.featuredImage.title}</span>
-                <span>{article.featuredImage.caption}</span>
+            {article.imageCaption && (
+              <figcaption className="w-full text-xs text-nique-blue mt-2">
+                {article.imageCaption}
               </figcaption>
             )}
           </figure>
@@ -341,8 +334,7 @@ export default function Article() {
                   <Comment
                     key={com._id}
                     commentId={com._id}
-                    name={com.author.name}
-                    avatar={com.author.avatar}
+                    username={com.username}
                     content={com.content}
                     createdAt={new Date(com.createdAt).toLocaleString()}
                     thumbsDown={com.thumbsDown}

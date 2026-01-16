@@ -1,134 +1,84 @@
 import { useEffect, useState } from "react";
-// import {
-//   RiThumbUpLine,
-//   RiThumbDownLine,
-//   RiThumbUpFill,
-//   RiThumbDownFill,
-// } from "react-icons/ri";
 
-// import commentService from "../services/commentService";
-
+/**
+ * Comment component props aligned with newbackend Comment shape.
+ * Uses `username` instead of `author.name/avatar`.
+ */
 interface CommentProps {
   commentId: string;
-  avatar: string;
-  name: string;
+  username: string;
   createdAt: string;
   thumbsUp: number;
   thumbsDown: number;
   content: string;
 }
 
+// Default avatar placeholder (simple user icon via data URI)
+const DEFAULT_AVATAR =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23999'%3E%3Cpath d='M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z'/%3E%3C/svg%3E";
+
 const Comment = (data: CommentProps) => {
-  // type Vote = "thumbs up" | "thumbs down" | "none";
-  // const [vote, setVote] = useState<Vote>("none");
   const [dateText, setDateText] = useState<string>("");
 
   useEffect(() => {
-    // const temp = new Date(data.createdAt);
-    var seconds = Math.floor(
+    const seconds = Math.floor(
       (new Date().getTime() - new Date(data.createdAt).getTime()) / 1000
     );
 
-    var interval = seconds / 31536000;
-
+    let interval = seconds / 31536000;
     if (interval > 1) {
-      const temp = Math.floor(interval) == 1 ? " year ago" : " years ago";
-      setDateText(Math.floor(interval) + temp);
+      const suffix = Math.floor(interval) === 1 ? " year ago" : " years ago";
+      setDateText(Math.floor(interval) + suffix);
       return;
     }
+
     interval = seconds / 2592000;
     if (interval > 1) {
-      const temp = Math.floor(interval) == 1 ? " month ago" : " months ago";
-      setDateText(Math.floor(interval) + temp);
+      const suffix = Math.floor(interval) === 1 ? " month ago" : " months ago";
+      setDateText(Math.floor(interval) + suffix);
       return;
     }
+
     interval = seconds / 86400;
     if (interval > 1) {
-      const temp = Math.floor(interval) == 1 ? " day ago" : " days ago";
-      setDateText(Math.floor(interval) + temp);
+      const suffix = Math.floor(interval) === 1 ? " day ago" : " days ago";
+      setDateText(Math.floor(interval) + suffix);
       return;
     }
+
     interval = seconds / 3600;
     if (interval > 1) {
-      const temp = Math.floor(interval) == 1 ? " hour ago" : " hours ago";
-      setDateText(Math.floor(interval) + temp);
+      const suffix = Math.floor(interval) === 1 ? " hour ago" : " hours ago";
+      setDateText(Math.floor(interval) + suffix);
       return;
     }
+
     interval = seconds / 60;
     if (interval > 1) {
-      const temp = Math.floor(interval) == 1 ? " minute ago" : " minutes ago";
-      setDateText(Math.floor(interval) + temp);
+      const suffix = Math.floor(interval) === 1 ? " minute ago" : " minutes ago";
+      setDateText(Math.floor(interval) + suffix);
       return;
     }
-    const temp = Math.floor(interval) == 1 ? " second ago" : " seconds ago";
-    setDateText(Math.floor(seconds) + temp);
-  }, []);
+
+    const suffix = Math.floor(seconds) === 1 ? " second ago" : " seconds ago";
+    setDateText(Math.floor(seconds) + suffix);
+  }, [data.createdAt]);
 
   return (
     <div className="flex gap-4 mb-5">
-      <img src={data.avatar} className="border border-gray-300 size-12 rounded-full" />
+      <img
+        src={DEFAULT_AVATAR}
+        alt={`${data.username}'s avatar`}
+        className="border border-gray-300 size-12 rounded-full bg-gray-100"
+      />
       <div className="flex-auto flex flex-col gap-3">
         <div className="flex items-center gap-6">
           <div>
             <p>
-              <b>{data.name}</b>
+              <b>{data.username}</b>
             </p>
             <p className="text-xs text-nique-blue mt-auto">{dateText}</p>
           </div>
-          {/* <div className="flex items-center gap-0.5">
-            {vote == "thumbs up" ? (
-              <RiThumbUpFill
-                size={24}
-                className="hover:text-nique-blue-hover cursor-pointer"
-                onClick={async () => {
-                  if (isProcessing) return;
-                  await applyVoteChange("up", -1);
-                  setVote("none");
-                }}
-              />
-            ) : (
-              <RiThumbUpLine
-                size={24}
-                className="hover:text-nique-blue-hover cursor-pointer"
-                onClick={async () => {
-                  if (isProcessing) return;
-                  if (vote === "thumbs down") {
-                    await applyVoteChange("down", -1);
-                  }
-                  await applyVoteChange("up", 1);
-                  setVote("thumbs up");
-                }}
-              />
-            )}
-            <p>{thumbsUpCount}</p>
-          </div>
-          <div className="flex items-center gap-0.5">
-            {vote == "thumbs down" ? (
-              <RiThumbDownFill
-                size={24}
-                className="hover:text-nique-blue-hover cursor-pointer"
-                onClick={async () => {
-                  if (isProcessing) return;
-                  await applyVoteChange("down", -1);
-                  setVote("none");
-                }}
-              />
-            ) : (
-              <RiThumbDownLine
-                size={24}
-                className="hover:text-nique-blue-hover cursor-pointer"
-                onClick={async () => {
-                  if (isProcessing) return;
-                  if (vote === "thumbs up") {
-                    await applyVoteChange("up", -1);
-                  }
-                  await applyVoteChange("down", 1);
-                  setVote("thumbs down");
-                }}
-              />
-            )}
-            <p>{thumbsDownCount}</p>
-          </div> */}
         </div>
         <p>{data.content}</p>
       </div>

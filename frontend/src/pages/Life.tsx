@@ -31,8 +31,8 @@ function Life() {
             setError(null);
 
             try {
-                const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
-                const categories = categoriesResponse.data || [];
+                // Services now return unwrapped data directly
+                const categories = await articleService.fetchCategories(50, controller.signal);
 
                 const lifeCategory = categories.find((category: any) =>
                     category.name?.toLowerCase() === Categories.LIFE.toLowerCase()
@@ -53,7 +53,7 @@ function Life() {
                 );
 
                 const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
-                const allLifeArticles = mapResponseData(lifeResponse.data);
+                const allLifeArticles = mapResponseData(lifeResponse);
                 const getTimestamp = (post: Post) => {
                     const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
                     const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
@@ -89,9 +89,9 @@ function Life() {
 
                 setRecentLifeArticles(recentSelection);
                 setLifeArticles(remainingLife);
-                setEvents(filterBySubcategory(lifeResponse.data || [], 'campus events'));
-                setRsos(filterBySubcategory(lifeResponse.data || [], 'rsos'));
-                setFeaturesArticles(filterBySubcategory(lifeResponse.data || [], 'features'));
+                setEvents(filterBySubcategory(lifeResponse || [], 'campus events'));
+                setRsos(filterBySubcategory(lifeResponse || [], 'rsos'));
+                setFeaturesArticles(filterBySubcategory(lifeResponse || [], 'features'));
             } catch (err) {
                 if (!isMounted) {
                     return;

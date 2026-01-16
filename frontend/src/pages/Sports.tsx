@@ -32,8 +32,8 @@ function Sports() {
             setError(null);
 
             try {
-                const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
-                const categories = categoriesResponse.data || [];
+                // Services now return unwrapped data directly
+                const categories = await articleService.fetchCategories(50, controller.signal);
                 const sportsCategory = categories.find((category: any) =>
                     category.name?.toLowerCase() === Categories.SPORTS.toLowerCase()
                 );
@@ -52,7 +52,7 @@ function Sports() {
                 );
 
                 const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
-                const allSportsArticles = mapResponseData(sportsResponse.data);
+                const allSportsArticles = mapResponseData(sportsResponse);
                 const getTimestamp = (post: Post) => {
                     const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
                     const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
@@ -88,9 +88,9 @@ function Sports() {
 
                 setRecentSportsArticles(recentSelection);
                 // setSportsArticles(remainingSports);
-                setTechSports(filterBySubcategory(sportsResponse.data || [], 'tech sports'));
-                setAtlSports(filterBySubcategory(sportsResponse.data || [], 'atlanta'));
-                setSeasonScoreboard(filterBySubcategory(sportsResponse.data || [], 'season scoreboard'));
+                setTechSports(filterBySubcategory(sportsResponse || [], 'tech sports'));
+                setAtlSports(filterBySubcategory(sportsResponse || [], 'atlanta'));
+                setSeasonScoreboard(filterBySubcategory(sportsResponse || [], 'season scoreboard'));
             } catch (err) {
                 if (!isMounted) {
                     return;

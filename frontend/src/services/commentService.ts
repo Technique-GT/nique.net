@@ -1,30 +1,62 @@
-import axios from 'axios';
+import apiClient, { unwrap } from './apiClient';
+import type { Comment } from '../types/article';
 
-const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api',
-  withCredentials: true,
-});
+// =============================================================================
+// Comment Endpoints (aligned with newbackend routes)
+// =============================================================================
 
-const fetchCommentsByArticle = (articleId: string, signal?: AbortSignal) => {
-  return apiClient.get(`/comments/article/${articleId}`, { signal });
-};
-
-const createComment = (
+/**
+ * Fetch comments for an article.
+ * newbackend: GET /comments/article/:articleId
+ * Returns approved comments by default, structured as a tree with `replies`.
+ */
+const fetchCommentsByArticle = async (
   articleId: string,
-  payload: { content: string; name?: string; avatar?: string }
-) => {
-  return apiClient.post(`/comments/article/${articleId}`, payload);
+  signal?: AbortSignal
+): Promise<Comment[]> => {
+  const response = await apiClient.get(`/comments/article/${articleId}`, { signal });
+  return unwrap(response.data);
 };
 
-const updateThumbs = (
-  commentId: string,
-  payload: { type: 'up' | 'down'; delta: 1 | -1 }
-) => {
-  return apiClient.patch(`/comments/${commentId}/thumbs`, payload);
+/**
+ * Create a new comment on an article.
+ * newbackend: POST /comments
+ * Body: { articleId, content, username }
+ */
+const createComment = async (
+  articleId: string,
+  payload: { content: string; username?: string }
+): Promise<Comment> => {
+  const body = {
+    articleId,
+    content: payload.content,
+    username: payload.username || 'Anonymous',
+  };
+  const response = await apiClient.post('/comments', body);
+  return unwrap(response.data);
+};
+
+/**
+ * Like a comment.
+ * newbackend: PATCH /comments/:id/like
+ */
+const likeComment = async (commentId: string): Promise<Comment> => {
+  const response = await apiClient.patch(`/comments/${commentId}/like`);
+  return unwrap(response.data);
+};
+
+/**
+ * Dislike a comment.
+ * newbackend: PATCH /comments/:id/dislike
+ */
+const dislikeComment = async (commentId: string): Promise<Comment> => {
+  const response = await apiClient.patch(`/comments/${commentId}/dislike`);
+  return unwrap(response.data);
 };
 
 export default {
   fetchCommentsByArticle,
   createComment,
-  updateThumbs,
+  likeComment,
+  dislikeComment,
 };

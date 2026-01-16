@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
 import ArticleBlock from "../components/ArticleBlock";
 import { Post } from '../types/article';
-import SideArticle from '../components/SideArticle';
+// SideArticle not currently used
+// import SideArticle from '../components/SideArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import FeaturedStory from '../components/FeaturedStory';
@@ -30,8 +31,8 @@ function Opinions() {
         setError(null);
 
         try {
-            const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
-            const categories = categoriesResponse.data || [];
+            // Services now return unwrapped data directly
+            const categories = await articleService.fetchCategories(50, controller.signal);
 
             const opinionCategory = categories.find((category: any) =>
                 category.name?.toLowerCase() === Categories.OPINION.toLowerCase()
@@ -51,7 +52,7 @@ function Opinions() {
             );
 
             const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
-            const allOpinions = mapResponseData(opinionResponse.data);
+            const allOpinions = mapResponseData(opinionResponse);
             const getTimestamp = (post: Post) => {
                 const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
                 const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
@@ -87,9 +88,9 @@ function Opinions() {
 
             setRecentOpinionArticles(recentSelection);
             // setOpinionArticles(remainingOpinion);
-            setOpEdArticles(filterBySubcategory(opinionResponse.data || [], 'op ed'));
-            setConsensusArticles(filterBySubcategory(opinionResponse.data || [], 'consensus'));
-            setLettersArticles(filterBySubcategory(opinionResponse.data || [], 'letters to the editor'));
+            setOpEdArticles(filterBySubcategory(opinionResponse || [], 'op ed'));
+            setConsensusArticles(filterBySubcategory(opinionResponse || [], 'consensus'));
+            setLettersArticles(filterBySubcategory(opinionResponse || [], 'letters to the editor'));
         } catch (err) {
             if (!isMounted) {
             return;
