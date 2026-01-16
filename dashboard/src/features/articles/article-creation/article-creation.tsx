@@ -23,10 +23,10 @@ export default function ArticleCreation() {
 
         // Fetch categories, subcategories, tags, and collaborators
         const [categoriesResponse, subcategoriesResponse, tagsResponse, collaboratorsResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/categories?isActive=true`),
-          fetch(`${API_BASE_URL}/sub-categories?isActive=true`),
-          fetch(`${API_BASE_URL}/tags?isActive=true`),
-          fetch(`${API_BASE_URL}/collaborators?status=active`)
+          fetch(`${API_BASE_URL}/categories`),
+          fetch(`${API_BASE_URL}/sub-categories`),
+          fetch(`${API_BASE_URL}/tags`),
+          fetch(`${API_BASE_URL}/collaborators`)
         ]);
 
         const [categoriesData, subcategoriesData, tagsData, collaboratorsData] = await Promise.all([

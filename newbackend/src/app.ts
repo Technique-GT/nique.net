@@ -14,6 +14,7 @@ import subCategoryRoutes from './routes/subCategory.routes';
 import tagRoutes from './routes/tag.routes';
 import userRoutes from './routes/user.routes';
 import adminArticleRoutes from './routes/admin.articles.routes';
+import authRoutes from './routes/auth.routes';
 
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import { env } from './utils/env';
@@ -52,6 +53,7 @@ export function createApp() {
   // Routes
   app.use('/api/articles', articleRoutes);
   app.use('/api/admin', adminArticleRoutes);
+  app.use('/api/auth', authRoutes);
   app.use('/api/categories', categoryRoutes);
   app.use('/api/sub-categories', subCategoryRoutes);
   app.use('/api/tags', tagRoutes);
