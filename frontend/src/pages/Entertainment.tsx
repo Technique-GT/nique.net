@@ -69,14 +69,21 @@ function Entertainment() {
 
             const filterBySubcategory = (articles: any[], subcategory: string) =>
                 articles
-                    .filter((article: any) =>
-                        Array.isArray(article.subcategories) &&
-                        article.subcategories.some(
-                            (sub: any) =>
-                                typeof sub?.value === 'string' &&
-                                sub.value.toLowerCase() === subcategory
-                        )
-                    )
+                    .filter((article: any) => {
+                        if (article.subcategoryId && typeof article.subcategoryId === 'object') {
+                            return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
+                        }
+
+                        if (Array.isArray(article.subcategories)) {
+                            return article.subcategories.some(
+                                (sub: any) =>
+                                    typeof sub?.value === 'string' &&
+                                    sub.value.toLowerCase() === subcategory.toLowerCase()
+                            );
+                        }
+
+                        return false;
+                    })
                     .map(mapArticleToPost)
                     .filter((post) => !recentIds.has(post.id))
                     .sort(sortByPublishedDesc);

@@ -4,7 +4,7 @@ const stripHtml = (value: string) =>
   value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 
 /**
- * Resolve author name from newbackend's `authors[].authorId` shape.
+ * Resolve author name from backend's `authors[].authorId` shape.
  * authorId is populated to a User object with `name` field.
  */
 const resolveAuthorName = (article: Pick<ArticleDocument, "authors">) => {
@@ -19,7 +19,7 @@ const resolveAuthorName = (article: Pick<ArticleDocument, "authors">) => {
     if (user.name) return user.name;
   }
 
-  // If string (unpopulated ObjectId) - shouldn't happen with newbackend but defensive
+  // If string (unpopulated ObjectId) - shouldn't happen with backend but defensive
   if (typeof authorId === "string" && authorId.trim()) {
     return authorId;
   }
@@ -35,7 +35,7 @@ const normalizeArticleId = (value: string) => {
 };
 
 /**
- * Map a full ArticleDocument (newbackend shape) to a simplified Post for list views.
+ * Map a full ArticleDocument (backend shape) to a simplified Post for list views.
  */
 export const mapArticleToPost = (article: ArticleDocument): Post => {
   const rawId = article._id || article.slug || "";
@@ -50,9 +50,9 @@ export const mapArticleToPost = (article: ArticleDocument): Post => {
     excerpt: article.excerpt,
     desc: stripHtml(desc),
     author: resolveAuthorName(article),
-    // newbackend uses categoryId (populated object), not categories[]
+    // backend uses categoryId (populated object), not categories[]
     category: article.categoryId?.name || "",
-    // newbackend uses featuredMediaId, not featuredImage
+    // backend uses featuredMediaId, not featuredImage
     featuredImage: article.featuredMediaId || null,
     imageCaption: article.imageCaption,
     publishedAt: article.publishedAt,

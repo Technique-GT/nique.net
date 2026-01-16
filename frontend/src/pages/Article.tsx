@@ -11,8 +11,8 @@ import { ArticleDocument, Post, User, Comment as CommentType } from "../types/ar
 import { mapArticleToPost } from "../utils/articleMapping";
 
 /**
- * Map API comment (newbackend shape) to display format.
- * newbackend uses `username` directly, not `author.name/avatar`.
+ * Map API comment (backend shape) to display format.
+ * backend uses `username` directly, not `author.name/avatar`.
  */
 const mapApiCommentToDisplay = (comment: CommentType) => {
   return {
@@ -91,7 +91,7 @@ export default function Article() {
         );
         setArticle(fetchedArticle);
 
-        // newbackend uses categoryId (populated object), not categories[]
+        // backend uses categoryId (populated object), not categories[]
         const categoryId = fetchedArticle.categoryId?._id;
 
         if (categoryId) {
@@ -227,7 +227,7 @@ export default function Article() {
     );
   }
 
-  // Extract author names from newbackend's authors[].authorId shape
+  // Extract author names from backend's authors[].authorId shape
   const authorNames =
     article.authors?.map((authorEntry) => {
       const authorId = authorEntry.authorId;
@@ -252,7 +252,7 @@ export default function Article() {
       day: "numeric",
     });
 
-  // newbackend uses tagIds, not tags
+  // backend uses tagIds, not tags
   const tagsDisplay = article.tagIds?.map((tag) => tag.name).filter(Boolean).join(" • ");
 
   return (
@@ -267,7 +267,7 @@ export default function Article() {
               <span>{authorsDisplay}</span>
               {publishedDate && <span> • {publishedDate}</span>}
             </div>
-            {/* newbackend uses categoryId (single object), not categories[] */}
+            {/* backend uses categoryId (single object), not categories[] */}
             {article.categoryId && (
               <span>{article.categoryId.name}</span>
             )}
@@ -276,7 +276,7 @@ export default function Article() {
           <hr className="opacity-50" />
         </header>
 
-        {/* Featured Image - newbackend uses featuredMediaId, not featuredImage */}
+        {/* Featured Image - backend uses featuredMediaId, not featuredImage */}
         {article.featuredMediaId && (
           <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
             <img

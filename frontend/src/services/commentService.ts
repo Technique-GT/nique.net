@@ -2,12 +2,12 @@ import apiClient, { unwrap } from './apiClient';
 import type { Comment } from '../types/article';
 
 // =============================================================================
-// Comment Endpoints (aligned with newbackend routes)
+// Comment Endpoints (aligned with backend routes)
 // =============================================================================
 
 /**
  * Fetch comments for an article.
- * newbackend: GET /comments/article/:articleId
+ * backend: GET /comments/article/:articleId
  * Returns approved comments by default, structured as a tree with `replies`.
  */
 const fetchCommentsByArticle = async (
@@ -20,7 +20,7 @@ const fetchCommentsByArticle = async (
 
 /**
  * Create a new comment on an article.
- * newbackend: POST /comments
+ * backend: POST /comments
  * Body: { articleId, content, username }
  */
 const createComment = async (
@@ -38,7 +38,7 @@ const createComment = async (
 
 /**
  * Like a comment.
- * newbackend: PATCH /comments/:id/like
+ * backend: PATCH /comments/:id/like
  */
 const likeComment = async (commentId: string): Promise<Comment> => {
   const response = await apiClient.patch(`/comments/${commentId}/like`);
@@ -47,7 +47,7 @@ const likeComment = async (commentId: string): Promise<Comment> => {
 
 /**
  * Dislike a comment.
- * newbackend: PATCH /comments/:id/dislike
+ * backend: PATCH /comments/:id/dislike
  */
 const dislikeComment = async (commentId: string): Promise<Comment> => {
   const response = await apiClient.patch(`/comments/${commentId}/dislike`);

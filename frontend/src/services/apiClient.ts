@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 /**
- * Shared axios instance for calling newbackend.
+ * Shared axios instance for calling backend.
  * All services should import this instead of creating their own axios.create().
  */
 const apiClient = axios.create({
@@ -10,7 +10,7 @@ const apiClient = axios.create({
 });
 
 /**
- * Response shape returned by many newbackend endpoints.
+ * Response shape returned by many backend endpoints.
  */
 export interface ApiResponse<T> {
   success: boolean;

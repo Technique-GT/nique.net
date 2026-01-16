@@ -23,12 +23,12 @@ export interface FetchArticlesParams {
 }
 
 // =============================================================================
-// Article Endpoints (aligned with newbackend routes)
+// Article Endpoints (aligned with backend routes)
 // =============================================================================
 
 /**
  * Fetch published articles with pagination.
- * newbackend: GET /articles/published
+ * backend: GET /articles/published
  */
 const fetchPublishedArticles = async (
   params: FetchArticlesParams = {},
@@ -41,8 +41,21 @@ const fetchPublishedArticles = async (
   if (params.categoryId) queryParams.categoryId = params.categoryId;
   if (params.search) queryParams.search = params.search;
 
+  // Note: backend currently ignores the categoryId filter for /articles/published.
+  // Keep client-side filtering for now to avoid incorrect cross-category mixes.
   const response = await apiClient.get('/articles/published', { params: queryParams, signal });
-  return unwrap(response.data);
+  const data = unwrap(response.data) as ArticleDocument[];
+
+  if (params.categoryId) {
+    return data.filter((article) => {
+      const category = (article as any).categoryId;
+      // categoryId is typically populated object: { _id, name, slug }
+      const id = typeof category === 'object' && category ? category._id : category;
+      return typeof id === 'string' ? id === params.categoryId : String(id) === params.categoryId;
+    });
+  }
+
+  return data;
 };
 
 /**
@@ -65,7 +78,7 @@ const fetchArticles = async (
   params: { category?: string; status?: string; limit?: number; search?: string } = {},
   signal?: AbortSignal
 ): Promise<ArticleDocument[]> => {
-  // newbackend /articles/published uses categoryId, not category
+  // backend /articles/published uses categoryId, not category
   return fetchPublishedArticles(
     {
       categoryId: params.category,
@@ -78,10 +91,10 @@ const fetchArticles = async (
 
 /**
  * Fetch sticky articles.
- * newbackend: GET /articles/sticky
+ * backend: GET /articles/sticky
  */
 const fetchStickyArticles = async (
-  _limit?: number, // newbackend sticky endpoint doesn't support limit, returns all
+   _limit?: number, // backend sticky endpoint doesn't support limit, returns all
   signal?: AbortSignal
 ): Promise<ArticleDocument[]> => {
   const response = await apiClient.get('/articles/sticky', { signal });
@@ -90,11 +103,11 @@ const fetchStickyArticles = async (
 
 /**
  * Fetch articles by category.
- * newbackend: GET /articles/category/:category
+ * backend: GET /articles/category/:category
  */
 const fetchArticlesByCategory = async (
   categoryId: string,
-  _limit?: number, // newbackend doesn't support limit on this route
+   _limit?: number, // backend doesn't support limit on this route
   signal?: AbortSignal
 ): Promise<ArticleDocument[]> => {
   const response = await apiClient.get(`/articles/category/${categoryId}`, { signal });
@@ -103,7 +116,7 @@ const fetchArticlesByCategory = async (
 
 /**
  * Fetch a single article by ID.
- * newbackend: GET /articles/:id
+ * backend: GET /articles/:id
  */
 const fetchArticleById = async (
   id: string,
@@ -127,7 +140,7 @@ const searchArticles = async (
 
 /**
  * Fetch paginated feed for infinite scroll.
- * newbackend: GET /articles/feed
+ * backend: GET /articles/feed
  * Returns page-based pagination.
  */
 const fetchArticleFeed = async (
@@ -162,7 +175,7 @@ const fetchArticleFeed = async (
 
 /**
  * Fetch all categories.
- * newbackend: GET /categories (no limit param)
+ * backend: GET /categories (no limit param)
  */
 const fetchCategories = async (
   _limit = 50, // kept for signature compat, ignored

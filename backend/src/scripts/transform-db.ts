@@ -572,7 +572,10 @@ const toMongoArticle = (input: any): TransformResult<MongoArticle> => {
 
   if (!categoryId) warnings.push('missing categoryId/category/categories[0]');
 
-  const subcategoryId = toObjectIdOrUndefined(input?.subcategoryId) ?? toObjectIdOrUndefined(input?.subcategory);
+  const subcategoryId =
+    toObjectIdOrUndefined(input?.subcategoryId) ??
+    toObjectIdOrUndefined(input?.subcategory) ??
+    (Array.isArray(input?.subcategories) ? toObjectIdOrUndefined(input.subcategories[0]) : undefined);
 
   const tagIdsRaw = Array.isArray(input?.tagIds) ? input.tagIds : Array.isArray(input?.tags) ? input.tags : [];
   const tagIds = tagIdsRaw
@@ -786,7 +789,10 @@ export function toCanonicalArticle(input: any): TransformResult<CanonicalArticle
 
   if (!categoryId) warnings.push('missing categoryId/category/categories[0]');
 
-  const subcategoryId = objectIdToHex(input?.subcategoryId) ?? objectIdToHex(input?.subcategory);
+  const subcategoryId =
+    objectIdToHex(input?.subcategoryId) ??
+    objectIdToHex(input?.subcategory) ??
+    (Array.isArray(input?.subcategories) ? objectIdToHex(input.subcategories[0]) : undefined);
 
   const tagIdsRaw = Array.isArray(input?.tagIds) ? input.tagIds : Array.isArray(input?.tags) ? input.tags : [];
   const tagIds = tagIdsRaw
@@ -1250,6 +1256,19 @@ async function main() {
     const objectId = isHexObjectId(maybeId) ? new mongoose.Types.ObjectId(maybeId) : maybeId;
 
     const doc = await collection.findOne({ _id: objectId });
+    if (!doc && maybeCollectionName === 'articles' && isHexObjectId(maybeId)) {
+      // Legacy technique articles sometimes use `categories`/`subcategories` and a title-like slug.
+      // Allow finding by _id, then try by slug as a fallback.
+      const docBySlug = await collection.findOne({ slug: maybeId });
+      if (docBySlug) {
+        const result = transformByCollection(maybeCollectionName, docBySlug);
+        // eslint-disable-next-line no-console
+        console.log(JSON.stringify(outputWarnings ? result : result.value, null, 2));
+        await mongoose.disconnect();
+        return;
+      }
+    }
+
     if (!doc) {
       // eslint-disable-next-line no-console
       console.error(`Document not found: ${maybeCollectionName} ${maybeId}`);

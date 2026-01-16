@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 /**
- * Comment component props aligned with newbackend Comment shape.
+ * Comment component props aligned with backend Comment shape.
  * Uses `username` instead of `author.name/avatar`.
  */
 interface CommentProps {

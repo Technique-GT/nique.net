@@ -73,14 +73,23 @@ function News() {
 
                 const filterBySubcategory = (articles: any[], subcategory: string) =>
                     articles
-                        .filter((article: any) =>
-                            Array.isArray(article.subcategories) &&
-                            article.subcategories.some(
-                                (sub: any) =>
-                                    typeof sub?.value === 'string' &&
-                                    sub.value.toLowerCase() === subcategory
-                            )
-                        )
+                        .filter((article: any) => {
+                            // new backend shape: article.subcategoryId is a populated object
+                            if (article.subcategoryId && typeof article.subcategoryId === 'object') {
+                                return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
+                            }
+
+                            // legacy shape fallback: article.subcategories: [{ value: string }]
+                            if (Array.isArray(article.subcategories)) {
+                                return article.subcategories.some(
+                                    (sub: any) =>
+                                        typeof sub?.value === 'string' &&
+                                        sub.value.toLowerCase() === subcategory.toLowerCase()
+                                );
+                            }
+
+                            return false;
+                        })
                         .map(mapArticleToPost)
                         .filter((post) => !recentIds.has(post.id))
                         .sort(sortByPublishedDesc);

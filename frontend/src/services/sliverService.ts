@@ -1,7 +1,7 @@
 import apiClient, { unwrap } from './apiClient';
 
 // =============================================================================
-// Sliver Endpoints (aligned with newbackend routes)
+// Sliver Endpoints (aligned with backend routes)
 // =============================================================================
 
 interface Sliver {
@@ -14,7 +14,7 @@ interface Sliver {
 
 /**
  * Create a new sliver.
- * newbackend: POST /slivers
+ * backend: POST /slivers
  * Body: { text }
  */
 export const createSliver = async (content: string): Promise<Sliver> => {
@@ -24,7 +24,7 @@ export const createSliver = async (content: string): Promise<Sliver> => {
 
 /**
  * Fetch all active slivers.
- * newbackend: GET /slivers/active
+ * backend: GET /slivers/active
  */
 export const fetchActiveSlivers = async (signal?: AbortSignal): Promise<Sliver[]> => {
   const response = await apiClient.get('/slivers/active', { signal });
@@ -33,7 +33,7 @@ export const fetchActiveSlivers = async (signal?: AbortSignal): Promise<Sliver[]
 
 /**
  * Fetch all slivers.
- * newbackend: GET /slivers
+ * backend: GET /slivers
  */
 export const fetchAllSlivers = async (signal?: AbortSignal): Promise<Sliver[]> => {
   const response = await apiClient.get('/slivers', { signal });

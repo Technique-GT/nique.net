@@ -12,7 +12,7 @@ interface InfiniteScrollModuleProps {
 }
 
 /**
- * Infinite scroll component using page-based pagination (aligned with newbackend /articles/feed).
+ * Infinite scroll component using page-based pagination (aligned with backend /articles/feed).
  */
 function InfiniteScrollModule({ categoryId, startPage = 1 }: InfiniteScrollModuleProps) {
   const navigate = useNavigate();

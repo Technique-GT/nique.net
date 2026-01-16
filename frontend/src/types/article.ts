@@ -1,6 +1,6 @@
 /**
- * Types aligned with newbackend contracts.
- * See PLAN.MD for the canonical shapes from newbackend/json-schemas/canonical-contract.json
+ * Types aligned with backend contracts.
+ * See PLAN.MD for the canonical shapes from backend/json-schemas/canonical-contract.json
  */
 
 // =============================================================================
@@ -42,7 +42,7 @@ export interface User {
 }
 
 // =============================================================================
-// Article Types (aligned with newbackend)
+// Article Types (aligned with backend)
 // =============================================================================
 
 export interface ArticleAuthor {
@@ -73,7 +73,7 @@ export interface ArticleDocument {
 }
 
 // =============================================================================
-// Comment Types (aligned with newbackend)
+// Comment Types (aligned with backend)
 // =============================================================================
 
 export interface Comment {

@@ -222,13 +222,25 @@ MONGO_DB_NAME=other pnpm tsx src/scripts/dump-validators.ts --stdout
 
 ### Transform DB
 
-Transforms legacy data to canonical format:
+Transforms a document to the canonical format (read-only; no writes):
 
 ```bash
-# Dry run (no writes)
 pnpm tsx src/scripts/transform-db.ts
+```
 
-# See script for full options
+### Migrate Subcategories
+
+Backfills `subcategoryId` in the target DB (`test` by default) by reading legacy `subcategories: [{ category, value }]` entries from the source DB (`technique` by default).
+
+```bash
+# Writes to TARGET_DB_NAME (default: test). Never writes to technique.
+pnpm tsx src/scripts/migrate-subcategories.ts
+
+# Dry run
+DRY_RUN=true pnpm tsx src/scripts/migrate-subcategories.ts
+
+# Use custom DBs
+SOURCE_DB_NAME=technique TARGET_DB_NAME=test pnpm tsx src/scripts/migrate-subcategories.ts
 ```
 
 ## Validation
