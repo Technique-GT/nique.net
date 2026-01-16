@@ -1,0 +1,213 @@
+[
+  {
+    "collection": "categories",
+    "validationLevel": "moderate",
+    "validationAction": "error",
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["_id", "__v", "name", "slug"],
+        "properties": {
+          "_id": { "bsonType": "objectId" },
+          "__v": { "bsonType": ["int", "long", "double", "decimal"] },
+          "name": { "bsonType": "string" },
+          "slug": { "bsonType": "string" }
+        }
+      }
+    }
+  },
+  {
+    "collection": "tags",
+    "validationLevel": "moderate",
+    "validationAction": "error",
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["_id", "__v", "name", "slug"],
+        "properties": {
+          "_id": { "bsonType": "objectId" },
+          "__v": { "bsonType": ["int", "long", "double", "decimal"] },
+          "name": { "bsonType": "string" },
+          "slug": { "bsonType": "string" }
+        }
+      }
+    }
+  },
+  {
+    "collection": "subcategories",
+    "validationLevel": "moderate",
+    "validationAction": "error",
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["_id", "__v", "categoryId", "name", "slug"],
+        "properties": {
+          "_id": { "bsonType": "objectId" },
+          "__v": { "bsonType": ["int", "long", "double", "decimal"] },
+          "categoryId": { "bsonType": "objectId" },
+          "name": { "bsonType": "string" },
+          "slug": { "bsonType": "string" }
+        }
+      }
+    }
+  },
+  {
+    "collection": "media",
+    "validationLevel": "moderate",
+    "validationAction": "error",
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["_id", "__v", "url", "altText"],
+        "properties": {
+          "_id": { "bsonType": "objectId" },
+          "__v": { "bsonType": ["int", "long", "double", "decimal"] },
+          "url": { "bsonType": "string" },
+          "altText": { "bsonType": "string" }
+        }
+      }
+    }
+  },
+  {
+    "collection": "slivers",
+    "validationLevel": "moderate",
+    "validationAction": "error",
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["_id", "__v", "text", "expiresAt"],
+        "properties": {
+          "_id": { "bsonType": "objectId" },
+          "__v": { "bsonType": ["int", "long", "double", "decimal"] },
+          "text": { "bsonType": "string" },
+          "expiresAt": { "bsonType": ["date", "null"] }
+        }
+      }
+    }
+  },
+  {
+    "collection": "users",
+    "validationLevel": "moderate",
+    "validationAction": "error",
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["_id", "__v", "name", "isAdmin", "socialLinks"],
+        "properties": {
+          "_id": { "bsonType": "objectId" },
+          "__v": { "bsonType": ["int", "long", "double", "decimal"] },
+          "name": { "bsonType": "string" },
+          "bio": { "bsonType": "string" },
+          "isAdmin": { "bsonType": "bool" },
+          "profilePictureMediaId": { "bsonType": "objectId" },
+          "socialLinks": {
+            "bsonType": "array",
+            "items": {
+              "bsonType": "object",
+              "required": ["platform", "url"],
+              "properties": {
+                "platform": { "bsonType": "string" },
+                "url": { "bsonType": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "collection": "comments",
+    "validationLevel": "moderate",
+    "validationAction": "error",
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": [
+          "_id",
+          "__v",
+          "articleId",
+          "content",
+          "username",
+          "thumbsUp",
+          "thumbsDown",
+          "approved",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "_id": { "bsonType": "objectId" },
+          "__v": { "bsonType": ["int", "long", "double", "decimal"] },
+          "articleId": { "bsonType": "objectId" },
+          "parentCommentId": { "bsonType": "objectId" },
+          "content": { "bsonType": "string" },
+          "username": { "bsonType": "string" },
+          "thumbsUp": { "bsonType": ["int", "long", "double", "decimal"] },
+          "thumbsDown": { "bsonType": ["int", "long", "double", "decimal"] },
+          "approved": { "bsonType": "bool" },
+          "createdAt": { "bsonType": "date" },
+          "updatedAt": { "bsonType": "date" }
+        }
+      }
+    }
+  },
+  {
+    "collection": "articles",
+    "validationLevel": "moderate",
+    "validationAction": "error",
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": [
+          "_id",
+          "__v",
+          "title",
+          "slug",
+          "content",
+          "authors",
+          "categoryId",
+          "tagIds",
+          "published",
+          "publishedAt",
+          "allowComments",
+          "isFeatured",
+          "isSticky",
+          "viewCount",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "_id": { "bsonType": "objectId" },
+          "__v": { "bsonType": ["int", "long", "double", "decimal"] },
+          "title": { "bsonType": "string" },
+          "slug": { "bsonType": "string" },
+          "content": { "bsonType": "string" },
+          "excerpt": { "bsonType": "string" },
+          "authors": {
+            "bsonType": "array",
+            "items": {
+              "bsonType": "object",
+              "required": ["authorId", "order"],
+              "properties": {
+                "authorId": { "bsonType": "objectId" },
+                "order": { "bsonType": ["int", "long", "double", "decimal"] }
+              }
+            }
+          },
+          "categoryId": { "bsonType": "objectId" },
+          "subcategoryId": { "bsonType": "objectId" },
+          "tagIds": { "bsonType": "array", "items": { "bsonType": "objectId" } },
+          "featuredMediaId": { "bsonType": "objectId" },
+          "imageCaption": { "bsonType": "string" },
+          "published": { "bsonType": "bool" },
+          "publishedAt": { "bsonType": ["date", "null"] },
+          "allowComments": { "bsonType": "bool" },
+          "isFeatured": { "bsonType": "bool" },
+          "isSticky": { "bsonType": "bool" },
+          "viewCount": { "bsonType": ["int", "long", "double", "decimal"] },
+          "createdAt": { "bsonType": "date" },
+          "updatedAt": { "bsonType": "date" }
+        }
+      }
+    }
+  }
+]
