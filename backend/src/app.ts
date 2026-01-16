@@ -32,11 +32,20 @@ export function createApp() {
     }),
   );
 
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:4173',
+    'http://localhost:3000',
+    'https://technique-dash-5men.vercel.app',
+  ];
+
+  if (env.CLIENT_URL) {
+    allowedOrigins.push(env.CLIENT_URL);
+  }
+
   app.use(
     cors({
-      origin:
-        env.CLIENT_URL ||
-        ['http://localhost:5173', 'http://localhost:3000', 'https://technique-dash-5men.vercel.app'],
+      origin: allowedOrigins,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
