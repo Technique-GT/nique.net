@@ -26,6 +26,10 @@ The server runs on `http://localhost:5050` by default.
 | `MONGO_DB_NAME` | No | `test` | Database name to connect to |
 | `PORT` | No | `5050` | Server port |
 | `JWT_SECRET` | Yes | - | Secret for JWT token signing |
+| `JWT_TOKEN` | Yes | - | Alias for `JWT_SECRET` used in Auth Controller |
+| `GOOGLE_CLIENT_ID` | Yes | - | Google OAuth Client ID |
+| `GOOGLE_CLIENT_SECRET` | Yes | - | Google OAuth Client Secret |
+| `GOOGLE_REDIRECT_URI` | Yes | - | Google OAuth Redirect URI |
 | `CLIENT_URL` | No | `http://localhost:5173` | Frontend URL for CORS |
 | `NODE_ENV` | No | `development` | Environment mode |
 
@@ -82,6 +86,15 @@ server/
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/health` | Server health check |
+
+### Authentication
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/auth/google` | Initiate Google OAuth flow |
+| GET | `/api/auth/google/callback` | Google OAuth callback |
+| GET | `/api/auth/me` | Get current logged-in user (requires JWT) |
+| POST | `/api/auth/logout` | Logout (clears cookies) |
 
 ### Articles
 
