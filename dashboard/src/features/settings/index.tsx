@@ -1,10 +1,6 @@
 import { Outlet } from '@tanstack/react-router'
 import {
-  IconBrowserCheck,
-  IconNotification,
   IconPalette,
-  IconTool,
-  IconUser,
 } from '@tabler/icons-react'
 import { Separator } from '@/components/ui/separator'
 import { Header } from '@/components/layout/header'

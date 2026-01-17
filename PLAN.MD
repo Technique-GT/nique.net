@@ -83,27 +83,72 @@ Important note:
 
 ---
 
-## 3) Phase 1: Standardize Data Fetching (Services + React Query)
+## 3) Phase 1: Standardize Data Fetching + TanStack Query Persistence
 
-Objective: Make it easy to replace mocks without scattering fetch logic.
+Objective: Make TanStack Query the single source of truth for server data across the dashboard and persist safe/valuable cache entries across reloads.
+
+### 3.1) Standardize data access (services + apiClient)
 
 - [x] Confirm `dashboard/src/lib/api-client.ts` unwraps `{ success, data }` and passes through non-wrapped responses.
-- [ ] Add a thin services layer (one file per domain):
+- [x] Add/finish a thin services layer (one file per domain). No page-level `fetch()` calls.
   - [x] `dashboard/src/services/articles.ts`
   - [x] `dashboard/src/services/comments.ts`
-  - [ ] `dashboard/src/services/media.ts`
-- [x] `dashboard/src/services/taxonomy.ts`
-- [x] `dashboard/src/services/users.ts`
-- [x] `dashboard/src/services/collaborators.ts`
+  - [x] `dashboard/src/services/media.ts`
+  - [x] `dashboard/src/services/taxonomy.ts`
+  - [x] `dashboard/src/services/users.ts`
+  - [x] `dashboard/src/services/collaborators.ts`
 
-- [ ] Standardize query keys for React Query (examples):
-  - [ ] `['admin-articles', params]`
-  - [ ] `['comment-stats']`
-  - [ ] `['comments', params]`
-  - [ ] `['media', params]`
+- [x] Standardize query keys for TanStack Query (examples):
+  - [x] `['admin-articles', params]`
+  - [x] `['comment-stats']`
+  - [x] `['comments', params]`
+  - [x] `['media', params]`
+  - [x] `['categories']`, `['sub-categories']`, `['tags']`
+
+### 3.2) Make TanStack Query own all server state
+
+Rule: If it comes from the backend, it should not live in `useState` as the authoritative copy.
+
+- [x] Replace remaining `useEffect + fetch + setState` patterns with `useQuery` / `useMutation`.
+- [x] After mutations, update UI via `queryClient.invalidateQueries(...)` (or safe optimistic updates).
+- [x] Use `placeholderData` (or `keepPreviousData`) for paginated lists to prevent flashing/empty transitions.
+
+### 3.3) Persist query cache across reloads (localStorage)
+
+Goal: avoid weird reload behavior and keep "reference" data stable without bloating storage or persisting sensitive data.
+
+- [x] Add dependencies:
+  - [x] `@tanstack/react-query-persist-client`
+  - [x] `@tanstack/query-sync-storage-persister`
+
+- [x] Update `dashboard/src/main.tsx` to enable persistence using `PersistQueryClientProvider` (or `persistQueryClient`):
+  - [x] persister: `createSyncStoragePersister({ storage: window.localStorage, key: 'dashboard-rq-cache' })`
+  - [x] set `maxAge` (default: 15 minutes)
+  - [x] set `buster` tied to app version (invalidate cache on deploy)
+
+- [x] Only persist a safe subset of queries.
+  - [x] Persist by opt-in: `meta: { persist: true }` on queries.
+  - [x] `shouldDehydrateQuery` checks `query.meta?.persist === true`.
+
+Recommended persistence allowlist (default):
+- [x] Taxonomy lookups: categories/subcategories/tags
+- [x] Collaborators
+- [x] Small stats/KPIs: comment stats, dashboard KPIs
+- [x] Playlists
+
+Do not persist:
+- [x] Auth/session (`/auth/me`) and anything sensitive
+- [x] Large/fast-changing lists (admin articles pages, comments list, users list, media)
+
+### 3.4) Persist filter/pagination state in the URL (not React Query)
+
+- [ ] Put list filters/search/page into TanStack Router search params so refresh/back/forward behave consistently.
+- [x] React Query keys include those params, e.g. `['admin-articles', { page, search, status }]`.
 
 Check:
-- [ ] Pages show loading + error + empty states (no silent failures).
+- [x] Pages show loading + error + empty states (no silent failures).
+- [x] Route changes do not double-fetch or "flash" stale content.
+- [x] Refresh keeps persisted reference data without persisting sensitive data.
 
 ---
 

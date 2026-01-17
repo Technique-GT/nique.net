@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,27 +7,18 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Play, Pause, Music, Image as  ExternalLink } from "lucide-react";
-import { API_BASE_URL } from '../../config';
-
-interface Playlist {
-  _id: string;
-  name: string;
-  description: string;
-  spotifyUrl: string;
-  image: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import { Plus, Edit, Trash2, Play, Pause, Music, ExternalLink } from "lucide-react";
+import {
+  usePlaylists,
+  useCreatePlaylist,
+  useUpdatePlaylist,
+  useDeletePlaylist,
+  useSetActivePlaylist,
+  type Playlist,
+} from "@/hooks/use-queries";
 
 export default function SpotifyPlaylistManager() {
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [activePlaylist, setActivePlaylist] = useState<Playlist | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
-
-  // Form states
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -37,64 +28,29 @@ export default function SpotifyPlaylistManager() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null);
 
-  // Fetch playlists on component mount
-  useEffect(() => {
-    fetchPlaylists();
-  }, []);
+  // TanStack Query hooks
+  const { data: playlists = [], isLoading } = usePlaylists();
+  const createPlaylist = useCreatePlaylist();
+  const updatePlaylist = useUpdatePlaylist();
+  const deletePlaylistMutation = useDeletePlaylist();
+  const setActivePlaylistMutation = useSetActivePlaylist();
 
-  const fetchPlaylists = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/playlists`, {
-        headers: { 'Accept': 'application/json' },
-      });
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`HTTP ${response.status}: ${text || response.statusText}`);
-      }
-      const data = await response.json();
-      if (data.success) {
-        setPlaylists(data.data);
-        const active = data.data.find((p: Playlist) => p.isActive);
-        setActivePlaylist(active || null);
-      }
-    } catch (error) {
-      console.error('Error fetching playlists:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Find active playlist
+  const activePlaylist = useMemo(() => {
+    return playlists.find(p => p.isActive) || null;
+  }, [playlists]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const url = editingPlaylist 
-      ? `${API_BASE_URL}/playlists/${editingPlaylist._id}`
-      : `${API_BASE_URL}/playlists`;
-    
-    const method = editingPlaylist ? 'PUT' : 'POST';
-
     try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`HTTP ${response.status}: ${text || response.statusText}`);
+      if (editingPlaylist) {
+        await updatePlaylist.mutateAsync({ id: editingPlaylist._id, data: formData });
+      } else {
+        await createPlaylist.mutateAsync(formData);
       }
-
-      const result = await response.json();
-      
-      if (result.success) {
-        await fetchPlaylists();
-        resetForm();
-        setIsDialogOpen(false);
-      }
+      resetForm();
+      setIsDialogOpen(false);
     } catch (error) {
       console.error('Error saving playlist:', error);
     }
@@ -102,23 +58,8 @@ export default function SpotifyPlaylistManager() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this playlist?')) return;
-
     try {
-      const response = await fetch(`${API_BASE_URL}/playlists/${id}`, {
-        method: 'DELETE',
-        headers: { 'Accept': 'application/json' },
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`HTTP ${response.status}: ${text || response.statusText}`);
-      }
-
-      const result = await response.json();
-      
-      if (result.success) {
-        await fetchPlaylists();
-      }
+      await deletePlaylistMutation.mutateAsync(id);
     } catch (error) {
       console.error('Error deleting playlist:', error);
     }
@@ -126,21 +67,7 @@ export default function SpotifyPlaylistManager() {
 
   const handleSetActive = async (id: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/playlists/${id}/set-active`, {
-        method: 'PUT',
-        headers: { 'Accept': 'application/json' },
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`HTTP ${response.status}: ${text || response.statusText}`);
-      }
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        await fetchPlaylists();
-      }
+      await setActivePlaylistMutation.mutateAsync(id);
     } catch (error) {
       console.error('Error setting active playlist:', error);
     }
@@ -264,8 +191,14 @@ export default function SpotifyPlaylistManager() {
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {editingPlaylist ? 'Update Playlist' : 'Create Playlist'}
+                <Button 
+                  type="submit"
+                  disabled={createPlaylist.isPending || updatePlaylist.isPending}
+                >
+                  {(createPlaylist.isPending || updatePlaylist.isPending) 
+                    ? 'Saving...' 
+                    : (editingPlaylist ? 'Update Playlist' : 'Create Playlist')
+                  }
                 </Button>
               </DialogFooter>
             </form>
@@ -338,6 +271,7 @@ export default function SpotifyPlaylistManager() {
                               variant="secondary"
                               size="sm"
                               onClick={() => handleDelete(playlist._id)}
+                              disabled={deletePlaylistMutation.isPending}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -358,7 +292,7 @@ export default function SpotifyPlaylistManager() {
                               variant={playlist.isActive ? "default" : "outline"}
                               size="sm"
                               onClick={() => handleSetActive(playlist._id)}
-                              disabled={playlist.isActive}
+                              disabled={playlist.isActive || setActivePlaylistMutation.isPending}
                             >
                               {playlist.isActive ? 'Active' : 'Set Active'}
                             </Button>

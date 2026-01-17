@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from "react";
-import { API_BASE_URL } from '../../../config';
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,75 +6,39 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Search, FileText, RefreshCw } from "lucide-react";
-
-interface Tag {
-  _id: string;
-  name: string;
-  slug: string;
-}
+import {
+  useTags,
+  useTagStats,
+  useCreateTag,
+  useUpdateTag,
+  useDeleteTag,
+  type Tag,
+} from "@/hooks/use-queries";
 
 export default function Tags() {
-  const [tags, setTags] = useState<Tag[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const didInitFetchRef = useRef(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
-  const [formData, setFormData] = useState({
-    name: ""
-  });
+  const [formData, setFormData] = useState({ name: "" });
   const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState({
-    totalTags: 0,
-    activeTags: 0,
-    inactiveTags: 0
-  });
 
-  // Fetch tags on component mount
-  useEffect(() => {
-    fetchTags();
-    fetchStats();
-  }, []);
+  // TanStack Query hooks
+  const { data: tags = [], isLoading, refetch } = useTags();
+  const { data: stats } = useTagStats();
+  const createTag = useCreateTag();
+  const updateTag = useUpdateTag();
+  const deleteTag = useDeleteTag();
 
-  const fetchTags = async () => {
-    try {
-      setIsLoading(true);
-      const params = new URLSearchParams();
-      if (searchTerm) params.append('search', searchTerm);
-
-      const response = await fetch(`${API_BASE_URL}/tags?${params}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setTags(data.data || []);
-      } else {
-        setError(data.message || 'Failed to fetch tags');
-      }
-    } catch (error) {
-      console.error('Error fetching tags:', error);
-      setError('Network error. Please check your connection.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/tags/stats`);
-      const data = await response.json();
-      
-      if (data.success) {
-        const totalTags = data.data?.totalTags || 0;
-        setStats({
-          totalTags,
-          activeTags: totalTags,
-          inactiveTags: 0
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  };
+  // Client-side filtering for search
+  const filteredTags = useMemo(() => {
+    if (!searchTerm) return tags;
+    const term = searchTerm.toLowerCase();
+    return tags.filter(
+      (tag) =>
+        tag.name.toLowerCase().includes(term) ||
+        tag.slug.toLowerCase().includes(term)
+    );
+  }, [tags, searchTerm]);
 
   const handleAddTag = async () => {
     if (!formData.name.trim()) {
@@ -85,35 +48,15 @@ export default function Tags() {
 
     try {
       setError(null);
-      const url = editingTag 
-        ? `${API_BASE_URL}/tags/${editingTag._id}`
-        : `${API_BASE_URL}/tags`;
-      
-      const method = editingTag ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name.trim()
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        await fetchTags();
-        await fetchStats();
-        resetForm();
-        setIsDialogOpen(false);
+      if (editingTag) {
+        await updateTag.mutateAsync({ id: editingTag._id, data: { name: formData.name.trim() } });
       } else {
-        setError(data.message || data.errors?.join(', ') || `Error ${editingTag ? 'updating' : 'adding'} tag`);
+        await createTag.mutateAsync({ name: formData.name.trim() });
       }
-    } catch (error) {
-      console.error(`Error ${editingTag ? 'updating' : 'adding'} tag:`, error);
-      setError(`Error ${editingTag ? 'updating' : 'adding'} tag`);
+      resetForm();
+      setIsDialogOpen(false);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || `Error ${editingTag ? 'updating' : 'adding'} tag`);
     }
   };
 
@@ -121,28 +64,14 @@ export default function Tags() {
     if (!confirm('Are you sure you want to delete this tag?')) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/tags/${tag._id}`, {
-        method: 'DELETE'
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        await fetchTags();
-        await fetchStats();
-      } else {
-        alert(data.message || 'Error deleting tag');
-      }
-    } catch (error) {
-      console.error('Error deleting tag:', error);
-      alert('Error deleting tag');
+      await deleteTag.mutateAsync(tag._id);
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Error deleting tag');
     }
   };
 
   const openEditDialog = (tag: Tag) => {
-    setFormData({
-      name: tag.name
-    });
+    setFormData({ name: tag.name });
     setEditingTag(tag);
     setError(null);
     setIsDialogOpen(true);
@@ -154,26 +83,10 @@ export default function Tags() {
   };
 
   const resetForm = () => {
-    setFormData({
-      name: ""
-    });
+    setFormData({ name: "" });
     setEditingTag(null);
     setError(null);
   };
-
-  // Debounced search (skip initial mount; it already fetches)
-  useEffect(() => {
-    if (!didInitFetchRef.current) {
-      didInitFetchRef.current = true;
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      fetchTags();
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
 
   if (isLoading) {
     return (
@@ -212,7 +125,7 @@ export default function Tags() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalTags}</div>
+            <div className="text-2xl font-bold">{stats?.totalTags ?? tags.length}</div>
             <p className="text-xs text-muted-foreground">All tags</p>
           </CardContent>
         </Card>
@@ -240,7 +153,7 @@ export default function Tags() {
               </div>
               
               <div className="flex gap-2">
-                <Button variant="outline" onClick={fetchTags} disabled={isLoading}>
+                <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
                   <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
@@ -287,8 +200,11 @@ export default function Tags() {
                       <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                         Cancel
                       </Button>
-                      <Button onClick={handleAddTag}>
-                        {editingTag ? 'Update Tag' : 'Create Tag'}
+                      <Button 
+                        onClick={handleAddTag} 
+                        disabled={createTag.isPending || updateTag.isPending}
+                      >
+                        {(createTag.isPending || updateTag.isPending) ? 'Saving...' : (editingTag ? 'Update Tag' : 'Create Tag')}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -299,16 +215,16 @@ export default function Tags() {
             <div className="border rounded-lg p-4">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-sm font-medium">
-                  Current Tags ({tags.length})
+                  Current Tags ({filteredTags.length})
                 </h3>
-                {tags.length > 0 && (
+                {filteredTags.length > 0 && (
                   <span className="text-sm text-muted-foreground">
                     Click on a tag to edit
                   </span>
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => (
+                {filteredTags.map((tag) => (
                   <div key={tag._id} className="relative group">
                     <Badge
                       variant="secondary"
@@ -338,13 +254,14 @@ export default function Tags() {
                         }}
                         className="bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-md"
                         title="Delete tag"
+                        disabled={deleteTag.isPending}
                       >
                         <Trash2 className="w-2 h-2" />
                       </button>
                     </div>
                   </div>
                 ))}
-                {tags.length === 0 && (
+                {filteredTags.length === 0 && (
                   <div className="text-center w-full py-8">
                     <p className="text-muted-foreground">No tags found</p>
                     {searchTerm && (

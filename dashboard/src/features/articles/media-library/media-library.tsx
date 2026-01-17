@@ -1,18 +1,20 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Upload, Search, Image, File, Video, Trash2, Loader2, Download } from "lucide-react";
+import { Upload, Search, File, Trash2, Loader2, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { getMedia, deleteMedia, uploadMedia, type MediaItem as ServiceMediaItem } from "@/services/media";
 import { toast } from "sonner";
+import {
+  useMedia,
+  useUploadMedia,
+  useDeleteMedia,
+} from "@/hooks/use-queries";
 
 export default function MediaLibrary() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [mediaItems, setMediaItems] = useState<ServiceMediaItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -20,26 +22,12 @@ export default function MediaLibrary() {
   const [uploadingFileName, setUploadingFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch media items
-  const fetchMedia = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const data = await getMedia({ search: searchTerm, limit: 100 });
-      setMediaItems(data.data);
-    } catch (error: any) {
-      console.error('Error fetching media:', error);
-      setError('Network error. Please check your connection.');
-      toast.error("Failed to load media");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // TanStack Query hooks
+  const { data: mediaData, isLoading } = useMedia({ search: searchTerm, limit: 100 });
+  const uploadMediaMutation = useUploadMedia();
+  const deleteMediaMutation = useDeleteMedia();
 
-  useEffect(() => {
-    fetchMedia();
-  }, [searchTerm]);
+  const mediaItems = mediaData?.data ?? [];
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -60,8 +48,7 @@ export default function MediaLibrary() {
     setUploadProgress(10); // Mock progress for UI feedback
 
     try {
-      const result = await uploadMedia(file);
-      setMediaItems(prev => [result, ...prev]);
+      await uploadMediaMutation.mutateAsync(file);
       setSuccess(`"${file.name}" uploaded successfully!`);
       toast.success(`"${file.name}" uploaded`);
     } catch (error: any) {
@@ -79,8 +66,7 @@ export default function MediaLibrary() {
     if (!confirm(`Are you sure you want to delete "${mediaName}"?`)) return;
 
     try {
-      await deleteMedia(mediaId);
-      setMediaItems(prev => prev.filter(item => item._id !== mediaId));
+      await deleteMediaMutation.mutateAsync(mediaId);
       setSuccess(`"${mediaName}" deleted successfully!`);
       toast.success(`"${mediaName}" deleted`);
     } catch (error: any) {
@@ -106,18 +92,6 @@ export default function MediaLibrary() {
     return 'document';
   };
 
-  const getFileIcon = (url: string) => {
-    const type = getFileType(url);
-    switch (type) {
-      case "image":
-        return <Image className="w-8 h-8 text-blue-500" />;
-      case "video":
-        return <Video className="w-8 h-8 text-red-500" />;
-      default:
-        return <File className="w-8 h-8 text-gray-500" />;
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -138,19 +112,6 @@ export default function MediaLibrary() {
       handleFileUpload({ target: { files } } as any);
     }
   };
-
-  const clearMessages = () => {
-    setError(null);
-    setSuccess(null);
-  };
-
-  // Auto-clear messages after 5 seconds
-  useEffect(() => {
-    if (error || success) {
-      const timer = setTimeout(clearMessages, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [error, success]);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -282,6 +243,7 @@ export default function MediaLibrary() {
                               size="sm"
                               onClick={() => handleDeleteMedia(item._id, item.altText || 'media')}
                               title="Delete"
+                              disabled={deleteMediaMutation.isPending}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>

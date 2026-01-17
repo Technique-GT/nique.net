@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,154 +6,86 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Search, Eye, EyeOff, FolderOpen, FolderTree, ChevronDown, ChevronRight } from "lucide-react";
-import { API_BASE_URL } from '../../../config';
-import { ca } from "date-fns/locale";
+import { Plus, Edit, Trash2, Search, FolderOpen, FolderTree, ChevronDown, ChevronRight } from "lucide-react";
+import {
+  useCategories,
+  useSubCategories,
+  useCategoryStats,
+  useSubCategoryStats,
+  useCreateCategory,
+  useUpdateCategory,
+  useDeleteCategory,
+  useCreateSubCategory,
+  useUpdateSubCategory,
+  useDeleteSubCategory,
+  type Category,
+  type SubCategory,
+} from "@/hooks/use-queries";
 
-interface Category {
-  _id: string;
-  name: string;
-  slug: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface SubCategory {
-  _id: string;
-  name: string;
-  slug: string;
+// Local type for UI with populated category
+interface SubCategoryUI extends Omit<SubCategory, 'categoryId'> {
   category: {
     _id: string;
     name: string;
     slug: string;
   };
-  createdAt: string;
-  updatedAt: string;
 }
 
 export default function Categories() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [allSubCategories, setAllSubCategories] = useState<SubCategory[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const didInitFetchRef = useRef(false);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isSubCategoryDialogOpen, setIsSubCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [editingSubCategory, setEditingSubCategory] = useState<SubCategory | null>(null);
+  const [editingSubCategory, setEditingSubCategory] = useState<SubCategoryUI | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  
-  const [categoryFormData, setCategoryFormData] = useState({
-    name: ""
-  });
-
-  const [subCategoryFormData, setSubCategoryFormData] = useState({
-    name: "",
-    category: ""
-  });
-
   const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState({
-    totalCategories: 0,
-    activeCategories: 0,
-    inactiveCategories: 0,
-    totalSubCategories: 0,
-    activeSubCategories: 0,
-    inactiveSubCategories: 0
-  });
+  
+  const [categoryFormData, setCategoryFormData] = useState({ name: "" });
+  const [subCategoryFormData, setSubCategoryFormData] = useState({ name: "", category: "" });
 
-  // Fetch categories and subcategories on component mount
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      setError(null);
-      const categoryList = await fetchCategories();
-      await fetchSubCategories(categoryList);
-      await fetchStats();
-      setIsLoading(false);
-    };
-    loadData();
-  }, []);
+  // TanStack Query hooks
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const { data: rawSubCategories = [], isLoading: subCategoriesLoading } = useSubCategories();
+  const { data: categoryStats } = useCategoryStats();
+  const { data: subCategoryStats } = useSubCategoryStats();
 
-  const fetchCategories = async () => {
-    try {
-      const params = new URLSearchParams();
-      if (searchTerm) params.append('search', searchTerm);
+  const createCategory = useCreateCategory();
+  const updateCategory = useUpdateCategory();
+  const deleteCategory = useDeleteCategory();
+  const createSubCategory = useCreateSubCategory();
+  const updateSubCategory = useUpdateSubCategory();
+  const deleteSubCategory = useDeleteSubCategory();
 
-      const response = await fetch(`${API_BASE_URL}/categories?${params}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        const normalized = (data.data || []).map((category: Category) => ({
-          ...category
-        }));
-        setCategories(normalized);
-        return normalized;
-      } else {
-        setError(data.message || 'Failed to fetch categories');
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      setError('Network error. Please check your connection.');
-    }
-    return [];
+  const isLoading = categoriesLoading || subCategoriesLoading;
+
+  // Transform subcategories to UI format with populated category
+  const allSubCategories: SubCategoryUI[] = useMemo(() => {
+    const categoryMap = new Map(categories.map((cat) => [cat._id, cat]));
+    return rawSubCategories.map((subCat) => {
+      const categoryId = typeof subCat.categoryId === 'string' 
+        ? subCat.categoryId 
+        : (subCat.categoryId as Category)?._id || '';
+      const category = categoryMap.get(categoryId) || { _id: categoryId, name: "Unknown", slug: "" };
+      return {
+        ...subCat,
+        category: {
+          _id: category._id,
+          name: category.name,
+          slug: category.slug,
+        },
+      };
+    });
+  }, [categories, rawSubCategories]);
+
+  // Stats
+  const stats = {
+    totalCategories: categoryStats?.totalCategories ?? categories.length,
+    totalSubCategories: subCategoryStats?.totalSubCategories ?? allSubCategories.length,
   };
 
-  const fetchSubCategories = async (categoryList: Category[] = categories) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/sub-categories`);
-      const data = await response.json();
-      
-      if (data.success) {
-        const categoryMap = new Map(categoryList.map((category) => [category._id, category]));
-        const normalized = (data.data || []).map((subCategory: any) => {
-          const categoryId = subCategory.categoryId || subCategory.category?._id || "";
-          const category = categoryMap.get(categoryId) || { _id: categoryId, name: "Unknown", slug: "" };
-          return {
-            ...subCategory,
-            categoryId,
-            category,
-            description: subCategory.description || "",
-            isActive: subCategory.isActive ?? true
-          };
-        });
-        setAllSubCategories(normalized);
-      }
-    } catch (error) {
-      console.error('Error fetching sub-categories:', error);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const [categoriesResponse, subCategoriesResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/categories/stats`),
-        fetch(`${API_BASE_URL}/sub-categories/stats`)
-      ]);
-      
-      const categoriesData = await categoriesResponse.json();
-      const subCategoriesData = await subCategoriesResponse.json();
-      
-      if (categoriesData.success && subCategoriesData.success) {
-        const totalCategories = categoriesData.data.totalCategories || 0;
-        const totalSubCategories = subCategoriesData.data.totalSubCategories || 0;
-        setStats({
-          totalCategories,
-          activeCategories: totalCategories,
-          inactiveCategories: 0,
-          totalSubCategories,
-          activeSubCategories: totalSubCategories,
-          inactiveSubCategories: 0
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  };
-
+  // Handlers
   const handleAddCategory = async () => {
     if (!categoryFormData.name.trim()) {
       setError('Category name is required');
@@ -162,35 +94,15 @@ export default function Categories() {
 
     try {
       setError(null);
-      const url = editingCategory 
-        ? `${API_BASE_URL}/categories/${editingCategory._id}`
-        : `${API_BASE_URL}/categories`;
-      
-      const method = editingCategory ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: categoryFormData.name.trim()
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        await fetchCategories();
-        await fetchStats();
-        resetCategoryForm();
-        setIsCategoryDialogOpen(false);
+      if (editingCategory) {
+        await updateCategory.mutateAsync({ id: editingCategory._id, data: { name: categoryFormData.name.trim() } });
       } else {
-        setError(data.message || data.errors?.join(', ') || `Error ${editingCategory ? 'updating' : 'adding'} category`);
+        await createCategory.mutateAsync({ name: categoryFormData.name.trim() });
       }
-    } catch (error) {
-      console.error(`Error ${editingCategory ? 'updating' : 'adding'} category:`, error);
-      setError(`Error ${editingCategory ? 'updating' : 'adding'} category`);
+      resetCategoryForm();
+      setIsCategoryDialogOpen(false);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || `Error ${editingCategory ? 'updating' : 'adding'} category`);
     }
   };
 
@@ -199,7 +111,6 @@ export default function Categories() {
       setError('Sub-category name is required');
       return;
     }
-
     if (!subCategoryFormData.category) {
       setError('Parent category is required');
       return;
@@ -207,97 +118,51 @@ export default function Categories() {
 
     try {
       setError(null);
-      const url = editingSubCategory 
-        ? `${API_BASE_URL}/sub-categories/${editingSubCategory._id}`
-        : `${API_BASE_URL}/sub-categories`;
-      
-      const method = editingSubCategory ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: subCategoryFormData.name.trim(),
-          categoryId: subCategoryFormData.category
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        await fetchSubCategories();
-        await fetchStats();
-        resetSubCategoryForm();
-        setIsSubCategoryDialogOpen(false);
+      if (editingSubCategory) {
+        await updateSubCategory.mutateAsync({ 
+          id: editingSubCategory._id, 
+          data: { name: subCategoryFormData.name.trim(), categoryId: subCategoryFormData.category } 
+        });
       } else {
-        setError(data.message || data.errors?.join(', ') || `Error ${editingSubCategory ? 'updating' : 'adding'} sub-category`);
+        await createSubCategory.mutateAsync({ 
+          name: subCategoryFormData.name.trim(), 
+          categoryId: subCategoryFormData.category 
+        });
       }
-    } catch (error) {
-      console.error(`Error ${editingSubCategory ? 'updating' : 'adding'} sub-category:`, error);
-      setError(`Error ${editingSubCategory ? 'updating' : 'adding'} sub-category`);
+      resetSubCategoryForm();
+      setIsSubCategoryDialogOpen(false);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || `Error ${editingSubCategory ? 'updating' : 'adding'} sub-category`);
     }
   };
 
   const handleDeleteCategory = async (category: Category) => {
     if (!confirm('Are you sure you want to delete this category? This will also delete all associated sub-categories.')) return;
-
     try {
-      const response = await fetch(`${API_BASE_URL}/categories/${category._id}`, {
-        method: 'DELETE'
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        await fetchCategories();
-        await fetchStats();
-      } else {
-        alert(data.message || 'Error deleting category');
-      }
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      alert('Error deleting category');
+      await deleteCategory.mutateAsync(category._id);
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Error deleting category');
     }
   };
 
-  const handleDeleteSubCategory = async (subCategory: SubCategory) => {
+  const handleDeleteSubCategory = async (subCategory: SubCategoryUI) => {
     if (!confirm('Are you sure you want to delete this sub-category?')) return;
-
     try {
-      const response = await fetch(`${API_BASE_URL}/sub-categories/${subCategory._id}`, {
-        method: 'DELETE'
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        await fetchSubCategories();
-        await fetchStats();
-      } else {
-        alert(data.message || 'Error deleting sub-category');
-      }
-    } catch (error) {
-      console.error('Error deleting sub-category:', error);
-      alert('Error deleting sub-category');
+      await deleteSubCategory.mutateAsync(subCategory._id);
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Error deleting sub-category');
     }
   };
 
   const openEditCategoryDialog = (category: Category) => {
-    setCategoryFormData({
-      name: category.name
-    });
+    setCategoryFormData({ name: category.name });
     setEditingCategory(category);
     setError(null);
     setIsCategoryDialogOpen(true);
   };
 
-  const openEditSubCategoryDialog = (subCategory: SubCategory) => {
-    setSubCategoryFormData({
-      name: subCategory.name,
-      category: subCategory.category._id
-    });
+  const openEditSubCategoryDialog = (subCategory: SubCategoryUI) => {
+    setSubCategoryFormData({ name: subCategory.name, category: subCategory.category._id });
     setEditingSubCategory(subCategory);
     setError(null);
     setIsSubCategoryDialogOpen(true);
@@ -314,18 +179,13 @@ export default function Categories() {
   };
 
   const resetCategoryForm = () => {
-    setCategoryFormData({
-      name: ""
-    });
+    setCategoryFormData({ name: "" });
     setEditingCategory(null);
     setError(null);
   };
 
   const resetSubCategoryForm = () => {
-    setSubCategoryFormData({
-      name: "",
-      category: ""
-    });
+    setSubCategoryFormData({ name: "", category: "" });
     setEditingSubCategory(null);
     setError(null);
   };
@@ -340,40 +200,22 @@ export default function Categories() {
     setExpandedCategories(newExpanded);
   };
 
-  // Get subcategories for a specific category
   const getSubCategoriesForCategory = (categoryId: string) => {
     return allSubCategories.filter(subCat => subCat.category._id === categoryId);
   };
 
-  // Filter categories and subcategories based on search term
-  const filteredCategories = categories.filter(category => {
-    const matchesSearch = !searchTerm || category.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    return matchesSearch;
-  });
+  // Client-side filtering
+  const filteredCategories = useMemo(() => {
+    if (!searchTerm) return categories;
+    const term = searchTerm.toLowerCase();
+    return categories.filter(category => category.name.toLowerCase().includes(term));
+  }, [categories, searchTerm]);
 
-  const filteredSubCategories = allSubCategories.filter(subCategory => {
-    const matchesSearch = !searchTerm || 
-      subCategory.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    return matchesSearch;
-  });
-
-  // Debounced search (skip initial mount; it already fetches)
-  useEffect(() => {
-    if (!didInitFetchRef.current) {
-      didInitFetchRef.current = true;
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      fetchCategories().then((categoryList) => {
-        fetchSubCategories(categoryList);
-      });
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+  const filteredSubCategories = useMemo(() => {
+    if (!searchTerm) return allSubCategories;
+    const term = searchTerm.toLowerCase();
+    return allSubCategories.filter(subCategory => subCategory.name.toLowerCase().includes(term));
+  }, [allSubCategories, searchTerm]);
 
   if (isLoading) {
     return (
@@ -451,9 +293,7 @@ export default function Categories() {
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1 relative">
-                  <Label htmlFor="search-categories" className="sr-only">
-                    Search
-                  </Label>
+                  <Label htmlFor="search-categories" className="sr-only">Search</Label>
                   <Input
                     id="search-categories"
                     value={searchTerm}
@@ -507,8 +347,11 @@ export default function Categories() {
                       <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>
                         Cancel
                       </Button>
-                      <Button onClick={handleAddCategory}>
-                        {editingCategory ? 'Update Category' : 'Create Category'}
+                      <Button 
+                        onClick={handleAddCategory}
+                        disabled={createCategory.isPending || updateCategory.isPending}
+                      >
+                        {(createCategory.isPending || updateCategory.isPending) ? 'Saving...' : (editingCategory ? 'Update Category' : 'Create Category')}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -562,8 +405,7 @@ export default function Categories() {
                             <SelectValue placeholder="Select a parent category" />
                           </SelectTrigger>
                           <SelectContent>
-                            {categories
-                              .map((category) => (
+                            {categories.map((category) => (
                               <SelectItem key={category._id} value={category._id}>
                                 {category.name}
                               </SelectItem>
@@ -576,8 +418,11 @@ export default function Categories() {
                       <Button type="button" variant="outline" onClick={() => setIsSubCategoryDialogOpen(false)}>
                         Cancel
                       </Button>
-                      <Button onClick={handleAddSubCategory}>
-                        {editingSubCategory ? 'Update Subcategory' : 'Create Subcategory'}
+                      <Button 
+                        onClick={handleAddSubCategory}
+                        disabled={createSubCategory.isPending || updateSubCategory.isPending}
+                      >
+                        {(createSubCategory.isPending || updateSubCategory.isPending) ? 'Saving...' : (editingSubCategory ? 'Update Subcategory' : 'Create Subcategory')}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -606,7 +451,7 @@ export default function Categories() {
                       
                       return (
                         <>
-                          <TableRow key={category._id} >
+                          <TableRow key={category._id}>
                             <TableCell>
                               {categorySubCategories.length > 0 && (
                                 <Button
@@ -653,6 +498,7 @@ export default function Categories() {
                                   size="sm"
                                   onClick={() => handleDeleteCategory(category)}
                                   title="Delete category"
+                                  disabled={deleteCategory.isPending}
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
@@ -689,6 +535,7 @@ export default function Categories() {
                                             size="sm"
                                             onClick={() => handleDeleteSubCategory(subCategory)}
                                             title="Delete subcategory"
+                                            disabled={deleteSubCategory.isPending}
                                           >
                                             <Trash2 className="w-3 h-3" />
                                           </Button>
@@ -777,6 +624,7 @@ export default function Categories() {
                               size="sm"
                               onClick={() => handleDeleteSubCategory(subCategory)}
                               title="Delete subcategory"
+                              disabled={deleteSubCategory.isPending}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>

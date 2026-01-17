@@ -6,7 +6,8 @@ interface User {
   avatar: string
 }
 
-interface Team {
+// Team is exported for potential future use
+export interface Team {
   name: string
   logo: React.ElementType
   plan: string

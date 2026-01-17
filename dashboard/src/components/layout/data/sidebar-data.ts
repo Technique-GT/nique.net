@@ -1,26 +1,18 @@
 import {
   IconArticle,
   IconBarrierBlock,
-  IconBrowserCheck,
   IconCategory,
   IconChartBar,
-  IconChecklist,
-  IconHelp,
   IconLayoutDashboard,
   IconLibrary,
   IconMessage,
   IconMusic,
-  IconNotification,
   IconPalette,
   IconPhoto,
   IconSettings,
   IconTag,
-  IconTool,
-  IconUserCog,
   IconUsers,
-  IconUsersGroup
 } from '@tabler/icons-react'
-import { AudioWaveform, Command, GalleryVerticalEnd } from 'lucide-react'
 import { type SidebarData } from '../types'
 
 export const sidebarData: SidebarData = {

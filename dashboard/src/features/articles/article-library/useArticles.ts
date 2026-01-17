@@ -1,24 +1,25 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Article, PopulatedCategory, PopulatedSubCategory, PopulatedTag, PopulatedAuthor, MessageType } from "./article";
-import { apiClient } from '@/lib/api-client';
-import { getAdminArticlesPage, Pagination } from "@/services/articles";
+import { getAdminArticlesPage } from "@/services/articles";
+import {
+  useTaxonomy,
+  useUsers,
+  useMedia,
+} from "@/hooks/use-queries";
+
+// Query key for articles
+const articlesQueryKey = (params: { page: number; search?: string }) => 
+  ['admin-articles', params] as const;
 
 export const useArticles = () => {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [message, setMessage] = useState<MessageType | null>(null);
-
-  // State for edit modal data
-  const [categories, setCategories] = useState<PopulatedCategory[]>([]);
-  const [subcategories, setSubcategories] = useState<PopulatedSubCategory[]>([]);
-  const [tags, setTags] = useState<PopulatedTag[]>([]);
-  const [authors, setAuthors] = useState<PopulatedAuthor[]>([]);
-  const [mediaLibrary, setMediaLibrary] = useState<any[]>([]);
+  
+  const queryClient = useQueryClient();
 
   // Helper to transform User to PopulatedAuthor
   const transformAuthor = (user: any): PopulatedAuthor => {
@@ -35,7 +36,7 @@ export const useArticles = () => {
   };
 
   // Helper function
-  const transformArticleData = (article: any): Article => {
+  const transformArticleData = useCallback((article: any): Article => {
     return {
       _id: article._id?.$oid || article._id,
       title: article.title || '',
@@ -45,7 +46,7 @@ export const useArticles = () => {
         _id: article.categoryId._id || article.categoryId,
         name: article.categoryId.name || 'Unknown',
         slug: article.categoryId.slug || '',
-        isActive: true // Fallback as backend doesn't populate this
+        isActive: true
       } : { _id: '', name: '', slug: '', isActive: false },
       subcategory: article.subcategoryId ? {
          _id: article.subcategoryId._id || article.subcategoryId,
@@ -61,7 +62,7 @@ export const useArticles = () => {
         isActive: true
       })) : [],
       authors: Array.isArray(article.authors) ? article.authors.map((a: any) => transformAuthor(a.authorId)) : [],
-      collaborators: [], // Backend might not populated collaborators or different structure
+      collaborators: [],
       featuredMedia: {
         id: article.featuredMediaId?._id || article.featuredMediaId || '',
         url: article.featuredMediaId?.url || '',
@@ -79,60 +80,97 @@ export const useArticles = () => {
       updatedAt: article.updatedAt,
       publishedAt: article.publishedAt
     };
-  };
+  }, []);
 
-  // Fetch articles from backend
-  const fetchArticles = useCallback(async (page = currentPage) => {
-    try {
-      setLoading(true);
+  // TanStack Query for articles (NOT persisted - large/fast-changing list)
+  const articlesQuery = useQuery({
+    queryKey: articlesQueryKey({ page: currentPage, search: searchTerm || undefined }),
+    queryFn: async () => {
       const response = await getAdminArticlesPage({ 
-        page, 
+        page: currentPage, 
         limit: 10,
         search: searchTerm || undefined 
       });
-      
-      const transformedArticles = response.data.map(transformArticleData);
-      setArticles(transformedArticles);
-      setPagination(response.pagination || null);
-    } catch (error) {
-      console.error('Error fetching articles:', error);
-      setMessage({ type: 'error', text: 'Network error. Please check your connection.' });
-    } finally {
-      setLoading(false);
+      return {
+        articles: response.data.map(transformArticleData),
+        pagination: response.pagination || null,
+      };
+    },
+    staleTime: 15 * 1000, // 15 seconds
+    placeholderData: (previousData) => previousData, // Keep previous data while loading
+    // No meta.persist - this is a large, fast-changing list
+  });
+
+  const articles = articlesQuery.data?.articles ?? [];
+  const pagination = articlesQuery.data?.pagination ?? null;
+  const loading = articlesQuery.isLoading;
+
+  // Use centralized taxonomy hooks (PERSISTED)
+  const { categories: rawCategories, subCategories: rawSubCategories, tags: rawTags } = useTaxonomy();
+  
+  // Use centralized users hook (NOT persisted - PII)
+  const { data: rawUsers = [] } = useUsers();
+  
+  // Use centralized media hook (NOT persisted - large)
+  const { data: mediaData } = useMedia({ limit: 100 });
+
+  // Map taxonomy to expected format
+  const categories: PopulatedCategory[] = useMemo(() => {
+    return rawCategories.map((c) => ({
+      _id: c._id,
+      name: c.name,
+      slug: c.slug,
+      isActive: true,
+    }));
+  }, [rawCategories]);
+
+  const subcategories: PopulatedSubCategory[] = useMemo(() => {
+    const categoryMap = new Map(rawCategories.map((cat) => [cat._id, cat]));
+    return rawSubCategories.map((sc) => {
+      const categoryId = typeof sc.categoryId === 'string' 
+        ? sc.categoryId 
+        : (sc.categoryId as any)?._id || '';
+      const category = categoryMap.get(categoryId);
+      return {
+        _id: sc._id,
+        name: sc.name,
+        slug: sc.slug,
+        isActive: true,
+        category: {
+          _id: category?._id || categoryId,
+          name: category?.name || 'Unknown',
+          slug: category?.slug || '',
+        },
+      };
+    });
+  }, [rawSubCategories, rawCategories]);
+
+  const tags: PopulatedTag[] = useMemo(() => {
+    return rawTags.map((t) => ({
+      _id: t._id,
+      name: t.name,
+      slug: t.slug,
+      isActive: true,
+    }));
+  }, [rawTags]);
+
+  const authors: PopulatedAuthor[] = useMemo(() => {
+    return rawUsers.map(transformAuthor);
+  }, [rawUsers]);
+
+  const mediaLibrary = useMemo(() => {
+    return mediaData?.data || [];
+  }, [mediaData]);
+
+  // Fetch articles function (invalidates query)
+  const fetchArticles = useCallback(async (page = currentPage) => {
+    if (page !== currentPage) {
+      setCurrentPage(page);
     }
-  }, [currentPage, searchTerm]);
-
-  // Fetch data for edit form
-  const fetchEditData = async () => {
-    try {
-      const [categoriesData, subcategoriesData, tagsData, usersData, mediaData] = await Promise.all([
-        apiClient.get('/categories'),
-        apiClient.get('/sub-categories'),
-        apiClient.get('/tags'),
-        apiClient.get('/users'),
-        apiClient.get('/media')
-      ]);
-
-      // apiClient returns array directly if success
-      if (Array.isArray(categoriesData)) setCategories(categoriesData as any);
-      if (Array.isArray(subcategoriesData)) setSubcategories(subcategoriesData as any);
-      if (Array.isArray(tagsData)) setTags(tagsData as any);
-      if (Array.isArray(mediaData)) setMediaLibrary(mediaData as any);
-      
-      // Filter authors from users
-      const rawUsers = Array.isArray(usersData) ? usersData : [];
-      const activeAuthors = rawUsers.map(transformAuthor); 
-      setAuthors(activeAuthors);
-
-    } catch (error) {
-      console.error('Error fetching edit data:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchArticles();
-    fetchEditData();
-  }, [fetchArticles]);
+    await queryClient.invalidateQueries({ 
+      queryKey: ['admin-articles'],
+    });
+  }, [currentPage, queryClient]);
 
   // Handle page change
   const handlePageChange = (page: number) => {
@@ -152,7 +190,7 @@ export const useArticles = () => {
     return `${author.firstName} ${author.lastName}`;
   };
 
-  // Filter articles based on search and filters
+  // Filter articles based on search and filters (client-side filtering for status/category)
   const filteredArticles = useMemo(() => 
     articles.filter(article => {
       const matchesSearch = 
@@ -174,7 +212,7 @@ export const useArticles = () => {
   );
 
   // Clear message after 5 seconds
-  useEffect(() => {
+  useMemo(() => {
     if (message) {
       const timer = setTimeout(() => {
         setMessage(null);

@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { apiClient } from '@/lib/api-client'
+import React, { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import useDialogState from '@/hooks/use-dialog-state'
 import { User, userListSchema } from '../data/schema'
+import { getUsers } from '@/services/users'
+import { queryKeys } from '@/hooks/use-queries'
 
 type UsersDialogType = 'invite' | 'add' | 'edit' | 'delete'
 
@@ -24,48 +26,40 @@ interface Props {
 export default function UsersProvider({ children }: Props) {
   const [open, setOpen] = useDialogState<UsersDialogType>(null)
   const [currentRow, setCurrentRow] = useState<User | null>(null)
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(false)
+  const queryClient = useQueryClient()
 
-  const refetchUsers = useCallback(async () => {
-    setLoading(true)
+  // Use TanStack Query for users (not persisted - contains PII)
+  const { data: rawUsers = [], isLoading } = useQuery({
+    queryKey: queryKeys.users(),
+    queryFn: () => getUsers(),
+    staleTime: 30 * 1000, // 30 seconds
+    // No meta.persist - users contain PII
+  })
+
+  // Map backend users to frontend User schema
+  const users: User[] = React.useMemo(() => {
+    const mappedUsers = rawUsers.map((u: any) => ({
+      _id: u._id,
+      id: u._id,
+      name: typeof u.name === 'string' ? u.name : 'Unknown',
+      bio: typeof u.bio === 'string' ? u.bio : undefined,
+      isAdmin: !!u.isAdmin,
+      googleSub: typeof u.googleSub === 'string' ? u.googleSub : undefined,
+      profilePictureMediaId: typeof u.profilePictureMediaId === 'string' ? u.profilePictureMediaId : undefined,
+      socialLinks: Array.isArray(u.socialLinks) ? u.socialLinks : [],
+    }))
+
+    // Validate against schema to be safe
     try {
-      // apiClient response interceptor unwraps { success: true, data: ... } -> returns data
-      // So 'data' here should be the array of users directly, or { users: [], pagination: {} } depending on backend?
-      // Backend GET /users returns { success: true, data: [...], pagination: {...} }
-      // The interceptor returns response.data.data if present.
-      // So 'response' here will be the array of users.
-      // Wait, let's check the interceptor logic again.
-      // if (response.data && response.data.success && response.data.data) -> returns response.data.data
-      // So yes, we get the array.
-      
-      const response = await apiClient.get('/users')
-      const rawUsers = Array.isArray(response) ? response : (response as any).data || []
-
-      const mappedUsers = rawUsers.map((u: any) => ({
-        _id: u._id,
-        id: u._id,
-        name: typeof u.name === 'string' ? u.name : 'Unknown',
-        bio: typeof u.bio === 'string' ? u.bio : undefined,
-        isAdmin: !!u.isAdmin,
-        googleSub: typeof u.googleSub === 'string' ? u.googleSub : undefined,
-        profilePictureMediaId: typeof u.profilePictureMediaId === 'string' ? u.profilePictureMediaId : undefined,
-        socialLinks: Array.isArray(u.socialLinks) ? u.socialLinks : [],
-      }))
-
-      // Validate against schema to be safe, or just trust the mapping
-      const validatedUsers = userListSchema.parse(mappedUsers)
-      setUsers(validatedUsers)
-    } catch (error) {
-      console.error('Failed to fetch users:', error)
-    } finally {
-      setLoading(false)
+      return userListSchema.parse(mappedUsers)
+    } catch {
+      return mappedUsers as User[]
     }
-  }, [])
+  }, [rawUsers])
 
-  useEffect(() => {
-    refetchUsers()
-  }, [refetchUsers])
+  const refetchUsers = React.useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.users() })
+  }, [queryClient])
 
   return (
     <UsersContext.Provider value={{ 
@@ -74,7 +68,7 @@ export default function UsersProvider({ children }: Props) {
       currentRow, 
       setCurrentRow,
       users,
-      loading,
+      loading: isLoading,
       refetchUsers
     }}>
       {children}

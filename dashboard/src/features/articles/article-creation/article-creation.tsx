@@ -1,84 +1,112 @@
-import { useState, useEffect } from "react";
 import ArticleForm from "./ArticleForm";
-import { getCategories, getSubCategories, getTags } from "@/services/taxonomy";
-import { getUsers } from "@/services/users";
-import { getCollaborators } from "@/services/collaborators";
-import { getMedia } from "@/services/media";
+import {
+  useTaxonomy,
+  useUsers,
+  useCollaborators,
+  useMedia,
+} from "@/hooks/use-queries";
 import type { Category, SubCategory, Tag, Author, Collaborator, MediaItem } from "./types";
-import { toast } from "sonner";
+import { useMemo } from "react";
 
 export default function ArticleCreation() {
-  // State for fetched data
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [subcategories, setSubcategories] = useState<SubCategory[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [authors, setAuthors] = useState<Author[]>([]);
-  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
+  // TanStack Query hooks - all taxonomy data is persisted
+  const { categories: rawCategories, subCategories: rawSubCategories, tags: rawTags, isLoading: taxonomyLoading, isError: taxonomyError } = useTaxonomy();
+  const { data: rawUsers = [], isLoading: usersLoading } = useUsers();
+  const { data: collaboratorsData = [], isLoading: collabLoading } = useCollaborators();
+  const { data: mediaData, isLoading: mediaLoading } = useMedia({ limit: 100 });
 
-  // Fetch data from backend
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setFetchError(null);
+  const isLoading = taxonomyLoading || usersLoading || collabLoading || mediaLoading;
 
-        const [catData, subCatData, tagData, collabData, userData, mediaData] = await Promise.all([
-          getCategories(),
-          getSubCategories(),
-          getTags(),
-          getCollaborators(),
-          getUsers(),
-          getMedia({ limit: 100 })
-        ]);
+  // Map to UI shapes with default values for missing fields
+  const categories: Category[] = useMemo(() => {
+    return rawCategories.map((c) => ({
+      _id: c._id,
+      name: c.name,
+      slug: c.slug,
+      description: c.description,
+      isActive: true, // Default since backend doesn't provide
+    }));
+  }, [rawCategories]);
 
-        setCategories(catData as any);
-        setSubcategories(subCatData as any);
-        setTags(tagData as any);
-        setCollaborators(collabData as any);
+  const subcategories: SubCategory[] = useMemo(() => {
+    // Create a map for category lookup
+    const categoryMap = new Map(rawCategories.map((cat) => [cat._id, cat]));
+    
+    return rawSubCategories.map((sc) => {
+      const categoryId = typeof sc.categoryId === 'string' 
+        ? sc.categoryId 
+        : (sc.categoryId as any)?._id || '';
+      const category = categoryMap.get(categoryId);
+      
+      return {
+        _id: sc._id,
+        name: sc.name,
+        slug: sc.slug,
+        description: sc.description,
+        isActive: true,
+        category: {
+          _id: category?._id || categoryId,
+          name: category?.name || 'Unknown',
+          slug: category?.slug || '',
+        },
+      };
+    });
+  }, [rawSubCategories, rawCategories]);
 
-        // Map canonical backend User -> UI Author shape expected by ArticleForm
-        const mappedAuthors: Author[] = (Array.isArray(userData) ? userData : []).map((u: any) => {
-          const fullName = typeof u?.name === 'string' ? u.name.trim() : ''
-          const parts = fullName.split(/\s+/).filter(Boolean)
-          const firstName = parts[0] || 'Unknown'
-          const lastName = parts.slice(1).join(' ')
+  const tags: Tag[] = useMemo(() => {
+    return rawTags.map((t) => ({
+      _id: t._id,
+      name: t.name,
+      slug: t.slug,
+      description: undefined,
+      color: '#6366f1', // Default color
+      isActive: true,
+    }));
+  }, [rawTags]);
 
-          return {
-            _id: u._id,
-            firstName,
-            lastName,
-            username: fullName || 'Unknown',
-            email: 'N/A',
-            role: u.isAdmin ? 'admin' : 'writer',
-            status: 'active',
-          }
-        })
+  // Map canonical backend User -> UI Author shape expected by ArticleForm
+  const authors: Author[] = useMemo(() => {
+    return rawUsers.map((u: any) => {
+      const fullName = typeof u?.name === 'string' ? u.name.trim() : '';
+      const parts = fullName.split(/\s+/).filter(Boolean);
+      const firstName = parts[0] || 'Unknown';
+      const lastName = parts.slice(1).join(' ');
 
-        setAuthors(mappedAuthors);
-        
-        // Map backend media to UI media picker shape
-        const mappedMedia: MediaItem[] = (mediaData.data || []).map(m => ({
-          id: m._id,
-          title: m.altText || 'Untitled',
-          url: m.url,
-          description: m.altText
-        }));
-        setMediaItems(mappedMedia);
+      return {
+        _id: u._id,
+        firstName,
+        lastName,
+        username: fullName || 'Unknown',
+        email: 'N/A',
+        role: u.isAdmin ? 'admin' : 'writer',
+        status: 'active',
+      };
+    });
+  }, [rawUsers]);
 
-      } catch (error: any) {
-        console.error('Error fetching form data:', error);
-        setFetchError(error?.message || 'Failed to load form data');
-        toast.error("Error loading form data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Map backend media to UI media picker shape
+  const mediaItems: MediaItem[] = useMemo(() => {
+    return (mediaData?.data || []).map((m: any) => ({
+      id: m._id,
+      title: m.altText || 'Untitled',
+      url: m.url,
+      description: m.altText
+    }));
+  }, [mediaData]);
 
-    fetchData();
-  }, []);
+  // Map collaborators to expected format
+  const collaborators: Collaborator[] = useMemo(() => {
+    return collaboratorsData.map((c) => ({
+      _id: c._id,
+      name: c.name,
+      title: c.title,
+      email: c.email,
+      status: c.status,
+      joinDate: c.joinDate,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+    }));
+  }, [collaboratorsData]);
 
   if (isLoading) {
     return (
@@ -95,13 +123,13 @@ export default function ArticleCreation() {
     );
   }
 
-  if (fetchError) {
+  if (taxonomyError) {
     return (
       <div className="container mx-auto p-6">
         <div className="border rounded-lg p-6">
           <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md">
             <p className="font-medium">Error loading form data</p>
-            <p className="text-sm mt-1">{fetchError}</p>
+            <p className="text-sm mt-1">Failed to load taxonomy data. Please try again.</p>
             <button 
               onClick={() => window.location.reload()} 
               className="mt-2 px-3 py-1 border border-red-300 rounded text-sm hover:bg-red-100"

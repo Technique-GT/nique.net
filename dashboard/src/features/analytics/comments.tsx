@@ -5,48 +5,31 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Search, Check, X, Trash2, RefreshCw } from "lucide-react";
-import { useEffect, useState, useMemo } from "react";
-import { getComments, getCommentStats, updateCommentStatus, deleteComment, type Comment, type CommentStats } from "@/services/comments";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import {
+  useComments,
+  useCommentStats,
+  useUpdateCommentStatus,
+  useDeleteComment,
+} from "@/hooks/use-queries";
 
 export default function CommentsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState(true);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [stats, setStats] = useState<CommentStats>({
-    totalComments: 0,
-    approvedComments: 0,
-    pendingComments: 0,
-  });
 
-  // Fetch comments and stats on component mount
-  useEffect(() => {
-    fetchData();
-  }, []);
+  // TanStack Query hooks
+  const { data: commentsData, isLoading, refetch } = useComments({ limit: 100 });
+  const { data: stats } = useCommentStats();
+  const updateCommentStatusMutation = useUpdateCommentStatus();
+  const deleteCommentMutation = useDeleteComment();
 
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const [commentsRes, statsRes] = await Promise.all([
-        getComments({ limit: 100 }),
-        getCommentStats()
-      ]);
-      setComments(commentsRes.data);
-      setStats(statsRes);
-    } catch (error) {
-      console.error('Error fetching comments data:', error);
-      toast.error("Failed to load comments");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const comments = commentsData?.data ?? [];
 
   const handleApprove = async (id: string, approved: boolean) => {
     try {
-      await updateCommentStatus(id, approved);
+      await updateCommentStatusMutation.mutateAsync({ id, approved });
       toast.success(approved ? "Comment approved" : "Comment unapproved");
-      fetchData();
     } catch (error) {
       console.error('Error updating comment status:', error);
       toast.error("Failed to update comment status");
@@ -56,9 +39,8 @@ export default function CommentsManagement() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this comment?")) return;
     try {
-      await deleteComment(id);
+      await deleteCommentMutation.mutateAsync(id);
       toast.success("Comment deleted");
-      fetchData();
     } catch (error) {
       console.error('Error deleting comment:', error);
       toast.error("Failed to delete comment");
@@ -112,7 +94,7 @@ export default function CommentsManagement() {
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalComments}</div>
+            <div className="text-2xl font-bold">{stats?.totalComments ?? 0}</div>
           </CardContent>
         </Card>
 
@@ -122,7 +104,7 @@ export default function CommentsManagement() {
             <Check className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.approvedComments}</div>
+            <div className="text-2xl font-bold text-green-600">{stats?.approvedComments ?? 0}</div>
           </CardContent>
         </Card>
 
@@ -132,7 +114,7 @@ export default function CommentsManagement() {
             <RefreshCw className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.pendingComments}</div>
+            <div className="text-2xl font-bold text-yellow-600">{stats?.pendingComments ?? 0}</div>
           </CardContent>
         </Card>
       </div>
@@ -141,7 +123,7 @@ export default function CommentsManagement() {
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <CardTitle>Manage Comments</CardTitle>
-            <Button variant="outline" size="sm" onClick={fetchData} disabled={isLoading}>
+            <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
               <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
@@ -203,6 +185,7 @@ export default function CommentsManagement() {
                             size="icon" 
                             onClick={() => handleApprove(comment._id, !comment.approved)}
                             title={comment.approved ? "Unapprove" : "Approve"}
+                            disabled={updateCommentStatusMutation.isPending}
                           >
                             {comment.approved ? <X className="w-4 h-4 text-orange-500" /> : <Check className="w-4 h-4 text-green-500" />}
                           </Button>
@@ -211,6 +194,7 @@ export default function CommentsManagement() {
                             size="icon" 
                             onClick={() => handleDelete(comment._id)}
                             className="text-destructive"
+                            disabled={deleteCommentMutation.isPending}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>

@@ -4,8 +4,9 @@ import { AxiosError } from 'axios'
 import {
   QueryCache,
   QueryClient,
-  QueryClientProvider,
 } from '@tanstack/react-query'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
@@ -15,6 +16,9 @@ import { ThemeProvider } from './context/theme-context'
 import './index.css'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
+
+// Cache buster: increment or tie to package version on deploy to invalidate old caches
+const CACHE_BUSTER = '1.0.0'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,6 +70,25 @@ const queryClient = new QueryClient({
   }),
 })
 
+// Create persister for localStorage
+const persister = createSyncStoragePersister({
+  storage: window.localStorage,
+  key: 'dashboard-rq-cache',
+})
+
+// Persist options
+const persistOptions = {
+  persister,
+  maxAge: 1000 * 60 * 15, // 15 minutes
+  buster: CACHE_BUSTER,
+  dehydrateOptions: {
+    // Only persist queries that explicitly opt-in via meta.persist
+    shouldDehydrateQuery: (query: { meta?: { persist?: boolean } }) => {
+      return query.meta?.persist === true
+    },
+  },
+}
+
 // Create a new router instance
 const router = createRouter({
   routeTree,
@@ -87,13 +110,16 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={persistOptions}
+      >
         <ThemeProvider defaultTheme='light' storageKey='vite-ui-theme'>
           <FontProvider>
             <RouterProvider router={router} />
           </FontProvider>
         </ThemeProvider>
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </StrictMode>
   )
 }
