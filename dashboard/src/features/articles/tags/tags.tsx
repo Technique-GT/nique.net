@@ -6,10 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Search, FileText, RefreshCw } from "lucide-react";
-import { Header } from "@/components/layout/header";
 import { Main } from "@/components/layout/main";
 import { PageHeader } from "@/components/layout/page-header";
-import { ThemeSwitch } from "@/components/theme-switch";
 import {
   useTags,
   useTagStats,
@@ -94,47 +92,33 @@ export default function Tags() {
 
   if (isLoading) {
     return (
-      <>
-        <Header>
-          <div className='ml-auto flex items-center space-x-4'>
-            <ThemeSwitch />
-          </div>
-        </Header>
-        <Main>
-          <PageHeader title="Tags" description="Loading tags..." />
-          <Card>
-            <CardContent>
-              <div className="flex items-center justify-center h-32">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
-                  <p className="text-muted-foreground">Loading tags...</p>
-                </div>
+      <Main>
+        <PageHeader title="Tags" description="Loading tags..." />
+        <Card>
+          <CardContent>
+            <div className="flex items-center justify-center h-32">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+                <p className="text-muted-foreground">Loading tags...</p>
               </div>
-            </CardContent>
-          </Card>
-        </Main>
-      </>
+            </div>
+          </CardContent>
+        </Card>
+      </Main>
     );
   }
 
   return (
-    <>
-      <Header>
-        <div className='ml-auto flex items-center space-x-4'>
-          <ThemeSwitch />
+    <Main>
+      {/* Error Display */}
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md">
+          {error}
         </div>
-      </Header>
+      )}
 
-      <Main>
-        {/* Error Display */}
-        {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md">
-            {error}
-          </div>
-        )}
-
-        <PageHeader
-          title="Tags"
+      <PageHeader
+        title="Tags"
           description="Organize your content with tags"
           actions={
             <>
@@ -303,6 +287,5 @@ export default function Tags() {
           </CardContent>
         </Card>
       </Main>
-    </>
   );
 }

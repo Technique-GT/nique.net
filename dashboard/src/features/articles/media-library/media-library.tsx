@@ -7,10 +7,8 @@ import { Upload, Search, File, Trash2, Loader2, Download, Image as ImageIcon } f
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Header } from "@/components/layout/header";
 import { Main } from "@/components/layout/main";
 import { PageHeader } from "@/components/layout/page-header";
-import { ThemeSwitch } from "@/components/theme-switch";
 import {
   useInfiniteMedia,
   useUploadMedia,
@@ -157,16 +155,9 @@ export default function MediaLibrary() {
   };
 
   return (
-    <>
-      <Header>
-        <div className='ml-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-        </div>
-      </Header>
-
-      <Main>
-        <PageHeader
-          title="Media Library"
+    <Main>
+      <PageHeader
+        title="Media Library"
           description="Upload and manage your media files"
         />
 
@@ -342,7 +333,6 @@ export default function MediaLibrary() {
           </div>
         </CardContent>
       </Card>
-      </Main>
-    </>
+    </Main>
   );
 }

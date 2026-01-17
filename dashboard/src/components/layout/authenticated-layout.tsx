@@ -4,6 +4,9 @@ import { cn } from '@/lib/utils'
 import { SearchProvider } from '@/context/search-context'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
+import { Header } from '@/components/layout/header'
+import { Search } from '@/components/search'
+import { ThemeSwitch } from '@/components/theme-switch'
 import SkipToMain from '@/components/skip-to-main'
 
 interface Props {
@@ -29,6 +32,12 @@ export function AuthenticatedLayout({ children }: Props) {
             'has-[main.fixed-main]:group-data-[scroll-locked=1]/body:h-svh'
           )}
         >
+          <Header>
+            <div className='ml-auto flex items-center space-x-4'>
+              <Search />
+              <ThemeSwitch />
+            </div>
+          </Header>
           {children ? children : <Outlet />}
         </div>
       </SidebarProvider>

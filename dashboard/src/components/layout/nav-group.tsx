@@ -87,7 +87,7 @@ const SidebarMenuCollapsible = ({
   return (
     <Collapsible
       asChild
-      defaultOpen={checkIsActive(href, item, true)}
+      defaultOpen={true}
       className='group/collapsible'
     >
       <SidebarMenuItem>

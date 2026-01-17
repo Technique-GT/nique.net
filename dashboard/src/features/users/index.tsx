@@ -1,7 +1,4 @@
-import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { columns } from './components/users-columns'
 import { UsersDialogs } from './components/users-dialogs'
 import { UsersPrimaryButtons } from './components/users-primary-buttons'
@@ -14,35 +11,20 @@ function UsersContent() {
 
   if (loading) {
     return (
-      <>
-        <Header fixed>
-          <Search />
-          <div className='ml-auto flex items-center space-x-4'>
-            <ThemeSwitch />
-          </div>
-        </Header>
-        <Main>
-          <div className="flex items-center justify-center h-64">
-            <div className="text-lg">Loading users...</div>
-          </div>
-        </Main>
-      </>
+      <Main>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Loading users...</div>
+        </div>
+      </Main>
     )
   }
 
   return (
     <>
-      <Header fixed>
-        <Search />
-        <div className='ml-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-        </div>
-      </Header>
-
       <Main>
         <div className='mb-2 flex flex-wrap items-center justify-between space-y-2'>
           <div>
-            <h2 className='text-2xl font-bold tracking-tight'>User List</h2>
+            <h2 className='text-2xl font-bold tracking-tight'>Staff Members</h2>
             <p className='text-muted-foreground'>
               Manage your users and access details here.
             </p>

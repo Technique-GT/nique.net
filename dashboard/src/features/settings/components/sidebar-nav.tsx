@@ -73,8 +73,8 @@ export default function SidebarNav({
               className={cn(
                 buttonVariants({ variant: 'ghost' }),
                 pathname === item.href
-                  ? 'bg-muted hover:bg-muted'
-                  : 'hover:bg-transparent hover:underline',
+                  ? 'bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)]'
+                  : 'hover:bg-transparent hover:underline hover:text-foreground',
                 'justify-start'
               )}
             >

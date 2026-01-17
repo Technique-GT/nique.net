@@ -7,9 +7,7 @@ import {
   IconLibrary,
   IconMessage,
   IconMusic,
-  IconPalette,
   IconPhoto,
-  IconSettings,
   IconTag,
   IconUsers,
 } from '@tabler/icons-react'
@@ -92,22 +90,6 @@ export const sidebarData: SidebarData = {
             },
           ],
         },
-      ],
-    },
-    {
-      title: 'Support',
-      items: [
-        {
-          title: 'Settings',
-          icon: IconSettings,
-          items: [
-            {
-              title: 'Appearance',
-              url: '/settings/appearance',
-              icon: IconPalette,
-            }
-          ],
-        }
       ],
     },
   ],

@@ -1,11 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
-import { TopNav } from '@/components/layout/top-nav'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { Overview } from './components/overview'
 import { RecentSales } from './components/recent-sales'
 import { useDashboardMetrics } from './components/useDashboardMetrics'
@@ -22,17 +18,8 @@ export default function Dashboard() {
   const kpis = data?.kpis
 
   return (
-    <>
-      <Header>
-        <TopNav links={topNav} />
-        <div className='ml-auto flex items-center space-x-4'>
-          <Search />
-          <ThemeSwitch />
-        </div>
-      </Header>
-
-      <Main>
-        <div className='mb-2 flex items-center justify-between space-y-2'>
+    <Main>
+      <div className='mb-2 flex items-center justify-between space-y-2'>
           <h1 className='text-2xl font-bold tracking-tight'>Editorial Dashboard</h1>
           <div className='flex items-center space-x-2'>
             <Button onClick={handleNewArticle}>New Article</Button>
@@ -169,33 +156,5 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
       </Main>
-    </>
   )
 }
-
-const topNav = [
-  {
-    title: 'News Desk',
-    href: '/dash',
-    isActive: true,
-    disabled: false,
-  },
-  {
-    title: 'Article Management',
-    href: '/articles',
-    isActive: false,
-    disabled: false,
-  },
-  {
-    title: 'Analytics',
-    href: '/maintenance',
-    isActive: false,
-    disabled: false,
-  },
-  {
-    title: 'Settings',
-    href: '/settings',
-    isActive: false,
-    disabled: false,
-  },
-];

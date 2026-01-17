@@ -5,10 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { Eye, MessageSquare, RefreshCw, BarChart3 } from "lucide-react";
-import { Header } from "@/components/layout/header";
 import { Main } from "@/components/layout/main";
 import { PageHeader } from "@/components/layout/page-header";
-import { ThemeSwitch } from "@/components/theme-switch";
 import { useAnalyticsData } from "./useAnalyticsData";
 
 export default function Analytics() {
@@ -17,55 +15,34 @@ export default function Analytics() {
 
   if (isLoading) {
     return (
-      <>
-        <Header>
-          <div className='ml-auto flex items-center space-x-4'>
-            <ThemeSwitch />
+      <Main>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <RefreshCw className="animate-spin h-8 w-8 mx-auto mb-2 text-primary" />
+            <p className="text-muted-foreground">Loading analytics...</p>
           </div>
-        </Header>
-        <Main>
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <RefreshCw className="animate-spin h-8 w-8 mx-auto mb-2 text-primary" />
-              <p className="text-muted-foreground">Loading analytics...</p>
-            </div>
-          </div>
-        </Main>
-      </>
+        </div>
+      </Main>
     );
   }
 
   if (isError || !data) {
     return (
-      <>
-        <Header>
-          <div className='ml-auto flex items-center space-x-4'>
-            <ThemeSwitch />
-          </div>
-        </Header>
-        <Main>
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center h-64">
-              <p className="text-destructive mb-4">Failed to load analytics data.</p>
-              <Button onClick={() => refetch()}>Retry</Button>
-            </CardContent>
-          </Card>
-        </Main>
-      </>
+      <Main>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center h-64">
+            <p className="text-destructive mb-4">Failed to load analytics data.</p>
+            <Button onClick={() => refetch()}>Retry</Button>
+          </CardContent>
+        </Card>
+      </Main>
     );
   }
 
   return (
-    <>
-      <Header>
-        <div className='ml-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-        </div>
-      </Header>
-
-      <Main>
-        <PageHeader
-          title="Analytics Dashboard"
+    <Main>
+      <PageHeader
+        title="Analytics Dashboard"
           description="Content performance and engagement metrics"
           actions={
             <>
@@ -211,8 +188,7 @@ export default function Analytics() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+        </Tabs>
       </Main>
-    </>
   );
 }

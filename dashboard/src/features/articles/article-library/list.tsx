@@ -5,10 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, RefreshCw } from "lucide-react";
-import { Header } from "@/components/layout/header";
 import { Main } from "@/components/layout/main";
 import { PageHeader } from "@/components/layout/page-header";
-import { ThemeSwitch } from "@/components/theme-switch";
 import { useArticles } from "./useArticles";
 import { ArticleTable } from "./ArticleTable";
 import { ArticleDialogs } from "./ArticleDialogs";
@@ -390,16 +388,9 @@ const handleSaveEdit = async () => {
   };
 
   return (
-    <>
-      <Header>
-        <div className='ml-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-        </div>
-      </Header>
-
-      <Main>
-        {/* Message Display */}
-        {message && (
+    <Main>
+      {/* Message Display */}
+      {message && (
           <div className={`mb-4 p-4 rounded-md ${
             message.type === 'success' 
               ? 'bg-green-50 border border-green-200 text-green-800' 
@@ -514,7 +505,7 @@ const handleSaveEdit = async () => {
           </CardContent>
         </Card>
 
-        <ArticleDialogs
+      <ArticleDialogs
         // Edit Dialog
         editSlug={editSlug}
         setEditSlug={setEditSlug}
@@ -581,7 +572,6 @@ const handleSaveEdit = async () => {
         handleCollaboratorRemove={handleCollaboratorRemove}
         isEditLoading={isEditLoading}
       />
-      </Main>
-    </>
+    </Main>
   );
 }

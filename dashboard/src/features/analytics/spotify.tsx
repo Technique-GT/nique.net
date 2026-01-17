@@ -8,10 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Play, Pause, Music, ExternalLink } from "lucide-react";
-import { Header } from "@/components/layout/header";
 import { Main } from "@/components/layout/main";
 import { PageHeader } from "@/components/layout/page-header";
-import { ThemeSwitch } from "@/components/theme-switch";
 import {
   usePlaylists,
   useCreatePlaylist,
@@ -105,35 +103,21 @@ export default function SpotifyPlaylistManager() {
 
   if (isLoading) {
     return (
-      <>
-        <Header>
-          <div className='ml-auto flex items-center space-x-4'>
-            <ThemeSwitch />
+      <Main>
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <Music className="w-12 h-12 animate-pulse mx-auto mb-4 text-muted-foreground" />
+            <p className="text-muted-foreground">Loading playlists...</p>
           </div>
-        </Header>
-        <Main>
-          <div className="flex items-center justify-center min-h-96">
-            <div className="text-center">
-              <Music className="w-12 h-12 animate-pulse mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">Loading playlists...</p>
-            </div>
-          </div>
-        </Main>
-      </>
+        </div>
+      </Main>
     );
   }
 
   return (
-    <>
-      <Header>
-        <div className='ml-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-        </div>
-      </Header>
-
-      <Main>
-        <PageHeader
-          title="Spotify Playlist Manager"
+    <Main>
+      <PageHeader
+        title="Spotify Playlist Manager"
           description="Manage your Spotify playlists and set active playlists for your app"
           actions={
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -418,8 +402,7 @@ export default function SpotifyPlaylistManager() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+        </Tabs>
       </Main>
-    </>
   );
 }
