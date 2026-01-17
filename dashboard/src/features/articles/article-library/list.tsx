@@ -33,7 +33,11 @@ export default function ArticleList() {
     tags,
     authors,
     fetchArticles,
-    getAuthorName
+    getAuthorName,
+    pagination,
+    currentPage,
+    handlePageChange,
+    mediaLibrary
   } = useArticles();
 
   // Dialog states
@@ -190,27 +194,28 @@ export default function ArticleList() {
 
   // Edit handlers - UPDATED TO POPULATE ALL FIELDS
 // In your ArticleList.tsx - update the handleEdit function
-const handleEdit = async (article: Article) => {
-  setCurrentArticle(article);
-  
-  // Populate ONLY fields that exist in the schema
-  setEditTitle(article.title);
-  setEditContent(article.content);
-  setEditExcerpt(article.excerpt);
-  setEditCategory(article.category._id);
-  setEditSubcategory(article.subcategory?._id || "");
-  setEditSelectedTags(article.tags.map(tag => tag._id));
-  setEditSelectedAuthors(article.authors);
-  setEditSelectedCollaborators(article.collaborators?.map(collab => collab._id) || []);
-  setEditFeaturedMediaAlt(article.featuredMedia?.alt || "");
-  setEditIsPublished(article.status === 'published');
-  setEditIsFeatured(article.isFeatured);
-  setEditIsSticky(article.isSticky);
-  setEditAllowComments(article.allowComments ?? true);
-  setEditSlug(article.slug);
-  
-  setEditDialogOpen(true);
-};
+  const handleEdit = async (article: Article) => {
+    setCurrentArticle(article);
+    
+    // Populate ONLY fields that exist in the schema
+    setEditTitle(article.title);
+    setEditContent(article.content);
+    setEditExcerpt(article.excerpt);
+    setEditCategory(article.category._id);
+    setEditSubcategory(article.subcategory?._id || "");
+    setEditSelectedTags(article.tags.map(tag => tag._id));
+    setEditSelectedAuthors(article.authors);
+    setEditSelectedCollaborators(article.collaborators?.map(collab => collab._id) || []);
+    setEditFeaturedMediaId(article.featuredMedia?.id || "");
+    setEditFeaturedMediaAlt(article.featuredMedia?.alt || "");
+    setEditIsPublished(article.status === 'published');
+    setEditIsFeatured(article.isFeatured);
+    setEditIsSticky(article.isSticky);
+    setEditAllowComments(article.allowComments ?? true);
+    setEditSlug(article.slug);
+    
+    setEditDialogOpen(true);
+  };
 
 // Update the state to remove unused fields and add slug
 const [editSlug, setEditSlug] = useState("");
@@ -231,15 +236,12 @@ const handleSaveEdit = async () => {
       title: editTitle,
       content: editContent,
       excerpt: editExcerpt,
-      category: editCategory,
-      subcategory: editSubcategory || undefined,
-      tags: editSelectedTags,
+      categoryId: editCategory,
+      subcategoryId: editSubcategory || undefined,
+      tagIds: editSelectedTags,
       authors: editSelectedAuthors.map(author => author._id),
-      collaborators: editSelectedCollaborators,
-      featuredMedia: {
-        alt: editFeaturedMediaAlt
-      },
-      status: editIsPublished ? 'published' : 'draft',
+      featuredMediaId: editFeaturedMediaId || currentArticle.featuredMedia?.id,
+      published: editIsPublished,
       isFeatured: editIsFeatured,
       isSticky: editIsSticky,
       allowComments: editAllowComments,
@@ -399,7 +401,7 @@ const handleSaveEdit = async () => {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Article Management</h1>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={fetchArticles} disabled={loading}>
+          <Button variant="outline" onClick={() => fetchArticles()} disabled={loading}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
@@ -471,6 +473,30 @@ const handleSaveEdit = async () => {
             onDelete={handleDelete}
             onNewArticle={handleNewArticle}
           />
+
+          {pagination && pagination.pages > 1 && (
+            <div className="flex justify-center gap-2 mt-6">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <div className="flex items-center px-4 text-sm font-medium">
+                Page {currentPage} of {pagination.pages}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === pagination.pages}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -494,6 +520,8 @@ const handleSaveEdit = async () => {
         editSelectedTags={editSelectedTags}
         editSelectedAuthors={editSelectedAuthors}
         editSelectedCollaborators={editSelectedCollaborators}
+        editFeaturedMediaId={editFeaturedMediaId}
+        setEditFeaturedMediaId={setEditFeaturedMediaId}
         editFeaturedMediaAlt={editFeaturedMediaAlt}
         setEditFeaturedMediaAlt={setEditFeaturedMediaAlt}
         editIsPublished={editIsPublished}
@@ -521,6 +549,7 @@ const handleSaveEdit = async () => {
         tags={tags}
         authors={authors}
         collaborators={collaborators}
+        mediaLibrary={mediaLibrary}
         
         // Functions
         getAuthorName={getAuthorName}

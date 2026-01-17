@@ -1,11 +1,5 @@
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -14,19 +8,21 @@ import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Overview } from './components/overview'
 import { RecentSales } from './components/recent-sales'
-import { useRouter } from '@tanstack/react-router' // Import useRouter from TanStack
-
+import { useDashboardMetrics } from './components/useDashboardMetrics'
+import { useRouter } from '@tanstack/react-router'
 
 export default function Dashboard() {
-  const router = useRouter() // Initialize TanStack router
+  const router = useRouter()
+  const { data, isLoading, isError } = useDashboardMetrics()
 
   const handleNewArticle = () => {
-    router.navigate({ to: '/articles' }) // Navigate to /articles using TanStack Router
+    router.navigate({ to: '/articles' })
   }
-  
+
+  const kpis = data?.kpis
+
   return (
     <>
-      {/* ===== Top Heading ===== */}
       <Header>
         <TopNav links={topNav} />
         <div className='ml-auto flex items-center space-x-4'>
@@ -35,7 +31,6 @@ export default function Dashboard() {
         </div>
       </Header>
 
-      {/* ===== Main ===== */}
       <Main>
         <div className='mb-2 flex items-center justify-between space-y-2'>
           <h1 className='text-2xl font-bold tracking-tight'>Editorial Dashboard</h1>
@@ -43,11 +38,8 @@ export default function Dashboard() {
             <Button onClick={handleNewArticle}>New Article</Button>
           </div>
         </div>
-        <Tabs
-          orientation='vertical'
-          defaultValue='overview'
-          className='space-y-4'
-        >
+
+        <Tabs orientation='vertical' defaultValue='overview' className='space-y-4'>
           <div className='w-full overflow-x-auto pb-2'>
             <TabsList>
               <TabsTrigger value='overview'>Overview</TabsTrigger>
@@ -55,13 +47,16 @@ export default function Dashboard() {
               <TabsTrigger value='calendar'>Schedule</TabsTrigger>
             </TabsList>
           </div>
+
           <TabsContent value='overview' className='space-y-4'>
+            {isError && (
+              <div className='text-muted-foreground text-sm'>Failed to load dashboard metrics.</div>
+            )}
+
             <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
               <Card>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Articles Published
-                  </CardTitle>
+                  <CardTitle className='text-sm font-medium'>Articles Published (30d)</CardTitle>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
                     viewBox='0 0 24 24'
@@ -77,18 +72,14 @@ export default function Dashboard() {
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className='text-2xl font-bold'>84</div>
-                  <p className='text-muted-foreground text-xs'>
-                    +12.5% from last month
-                  </p>
+                  <div className='text-2xl font-bold'>{isLoading ? '—' : (kpis?.publishedLast30d ?? 0)}</div>
+                  <p className='text-muted-foreground text-xs'>Published in the last 30 days</p>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Drafts in Progress
-                  </CardTitle>
+                  <CardTitle className='text-sm font-medium'>Drafts</CardTitle>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
                     viewBox='0 0 24 24'
@@ -105,45 +96,14 @@ export default function Dashboard() {
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className='text-2xl font-bold'>23</div>
-                  <p className='text-muted-foreground text-xs'>
-                    5 awaiting review
-                  </p>
+                  <div className='text-2xl font-bold'>{isLoading ? '—' : (kpis?.drafts ?? 0)}</div>
+                  <p className='text-muted-foreground text-xs'>Currently unpublished articles</p>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Avg. Read Time
-                  </CardTitle>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    className='text-muted-foreground h-4 w-4'
-                  >
-                    <line x1='12' y1='1' x2='12' y2='23' />
-                    <path d='M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className='text-2xl font-bold'>4.2 min</div>
-                  <p className='text-muted-foreground text-xs'>
-                    +0.3 min from last week
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Active Writers
-                  </CardTitle>
+                  <CardTitle className='text-sm font-medium'>Total Views</CardTitle>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
                     viewBox='0 0 24 24'
@@ -159,28 +119,48 @@ export default function Dashboard() {
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className='text-2xl font-bold'>18</div>
-                  <p className='text-muted-foreground text-xs'>
-                    12 on deadline, 6 available
-                  </p>
+                  <div className='text-2xl font-bold'>{isLoading ? '—' : (kpis?.totalViews ?? 0).toLocaleString('en-US')}</div>
+                  <p className='text-muted-foreground text-xs'>Sum of article viewCount</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                  <CardTitle className='text-sm font-medium'>Pending Comments</CardTitle>
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    viewBox='0 0 24 24'
+                    fill='none'
+                    stroke='currentColor'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2'
+                    className='text-muted-foreground h-4 w-4'
+                  >
+                    <path d='M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z' />
+                  </svg>
+                </CardHeader>
+                <CardContent>
+                  <div className='text-2xl font-bold'>{isLoading ? '—' : (kpis?.pendingComments ?? 0)}</div>
+                  <p className='text-muted-foreground text-xs'>Awaiting approval</p>
                 </CardContent>
               </Card>
             </div>
+
             <div className='grid grid-cols-1 gap-4 lg:grid-cols-7'>
               <Card className='col-span-1 lg:col-span-4'>
                 <CardHeader>
-                  <CardTitle>Publication Viewers</CardTitle>
+                  <CardTitle>Published Articles (12 mo)</CardTitle>
                 </CardHeader>
                 <CardContent className='pl-2'>
                   <Overview />
                 </CardContent>
               </Card>
+
               <Card className='col-span-1 lg:col-span-3'>
                 <CardHeader>
                   <CardTitle>Recent Articles</CardTitle>
-                  <CardDescription>
-                    Latest published pieces with engagement metrics
-                  </CardDescription>
+                  <CardDescription>Latest published pieces with engagement metrics</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <RecentSales />

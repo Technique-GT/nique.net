@@ -4,38 +4,21 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Upload, Search, Image, File, Video, Trash2, Loader2, Download } from "lucide-react";
-import { API_BASE_URL } from '../../../config';
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-interface MediaItem {
-  _id: string;
-  filename: string;
-  originalName: string;
-  mimeType: string;
-  size: number;
-  url: string;
-  path: string;
-  createdAt: string;
-  uploader: {
-    firstName: string;
-    lastName: string;
-    username: string;
-  };
-}
+import { getMedia, deleteMedia, uploadMedia, type MediaItem as ServiceMediaItem } from "@/services/media";
+import { toast } from "sonner";
 
 export default function MediaLibrary() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [mediaItems, setMediaItems] = useState<ServiceMediaItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [uploadingFileName, setUploadingFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  
 
   // Fetch media items
   const fetchMedia = async () => {
@@ -43,20 +26,12 @@ export default function MediaLibrary() {
       setIsLoading(true);
       setError(null);
       
-      const params = new URLSearchParams();
-      if (searchTerm) params.append('search', searchTerm);
-      
-      const response = await fetch(`${API_BASE_URL}/media?${params}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setMediaItems(data.data);
-      } else {
-        setError(data.message || 'Failed to fetch media');
-      }
+      const data = await getMedia({ search: searchTerm, limit: 100 });
+      setMediaItems(data.data);
     } catch (error: any) {
       console.error('Error fetching media:', error);
       setError('Network error. Please check your connection.');
+      toast.error("Failed to load media");
     } finally {
       setIsLoading(false);
     }
@@ -80,56 +55,23 @@ export default function MediaLibrary() {
   };
 
   const uploadSingleFile = async (file: File) => {
-    setSelectedFile(file);
     setIsUploading(true);
-    setUploadProgress(0);
+    setUploadingFileName(file.name);
+    setUploadProgress(10); // Mock progress for UI feedback
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const xhr = new XMLHttpRequest();
-      
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const percentComplete = (e.loaded / e.total) * 100;
-          setUploadProgress(percentComplete);
-        }
-      });
-
-      xhr.addEventListener('load', () => {
-        if (xhr.status === 201) {
-          const response = JSON.parse(xhr.responseText);
-          if (response.success) {
-            setMediaItems(prev => [response.data, ...prev]);
-            setSuccess(`"${file.name}" uploaded successfully!`);
-          } else {
-            setError(response.message || `Failed to upload "${file.name}"`);
-          }
-        } else {
-          setError(`Upload failed for "${file.name}"`);
-        }
-        setIsUploading(false);
-        setUploadProgress(0);
-        setSelectedFile(null);
-      });
-
-      xhr.addEventListener('error', () => {
-        setError(`Upload failed for "${file.name}". Please try again.`);
-        setIsUploading(false);
-        setUploadProgress(0);
-        setSelectedFile(null);
-      });
-
-      xhr.open('POST', `${API_BASE_URL}/media/upload`);
-      xhr.send(formData);
-
+      const result = await uploadMedia(file);
+      setMediaItems(prev => [result, ...prev]);
+      setSuccess(`"${file.name}" uploaded successfully!`);
+      toast.success(`"${file.name}" uploaded`);
     } catch (error: any) {
       console.error('Upload error:', error);
       setError(`Upload failed for "${file.name}". Please try again.`);
+      toast.error(`Failed to upload "${file.name}"`);
+    } finally {
       setIsUploading(false);
       setUploadProgress(0);
-      setSelectedFile(null);
+      setUploadingFileName(null);
     }
   };
 
@@ -137,26 +79,18 @@ export default function MediaLibrary() {
     if (!confirm(`Are you sure you want to delete "${mediaName}"?`)) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/media/${mediaId}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setMediaItems(prev => prev.filter(item => item._id !== mediaId));
-        setSuccess(`"${mediaName}" deleted successfully!`);
-      } else {
-        setError(data.message || 'Failed to delete media');
-      }
+      await deleteMedia(mediaId);
+      setMediaItems(prev => prev.filter(item => item._id !== mediaId));
+      setSuccess(`"${mediaName}" deleted successfully!`);
+      toast.success(`"${mediaName}" deleted`);
     } catch (error: any) {
       console.error('Delete error:', error);
       setError('Failed to delete media');
+      toast.error("Failed to delete media");
     }
   };
 
   const handleDownloadMedia = (mediaUrl: string, fileName: string) => {
-    // Create a temporary link to trigger download
     const link = document.createElement('a');
     link.href = mediaUrl;
     link.download = fileName;
@@ -165,14 +99,15 @@ export default function MediaLibrary() {
     document.body.removeChild(link);
   };
 
-  const getFileType = (mimeType: string) => {
-    if (mimeType.startsWith('image/')) return 'image';
-    if (mimeType.startsWith('video/')) return 'video';
+  const getFileType = (url: string) => {
+    const ext = url.split('.').pop()?.toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext || '')) return 'image';
+    if (['mp4', 'webm', 'ogg'].includes(ext || '')) return 'video';
     return 'document';
   };
 
-  const getFileIcon = (mimeType: string) => {
-    const type = getFileType(mimeType);
+  const getFileIcon = (url: string) => {
+    const type = getFileType(url);
     switch (type) {
       case "image":
         return <Image className="w-8 h-8 text-blue-500" />;
@@ -181,14 +116,6 @@ export default function MediaLibrary() {
       default:
         return <File className="w-8 h-8 text-gray-500" />;
     }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   const formatDate = (dateString: string) => {
@@ -238,7 +165,6 @@ export default function MediaLibrary() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {/* Success/Error Messages */}
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -250,7 +176,6 @@ export default function MediaLibrary() {
               </Alert>
             )}
 
-            {/* Upload Section */}
             <div 
               className="border-2 border-dashed rounded-lg p-6 text-center transition-colors hover:border-primary bg-muted/50"
               onDragOver={handleDragOver}
@@ -266,7 +191,7 @@ export default function MediaLibrary() {
                     ></div>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Uploading {selectedFile?.name}... {Math.round(uploadProgress)}%
+                    Uploading {uploadingFileName}... {Math.round(uploadProgress)}%
                   </p>
                 </div>
               ) : (
@@ -296,7 +221,6 @@ export default function MediaLibrary() {
               )}
             </div>
 
-            {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -307,7 +231,6 @@ export default function MediaLibrary() {
               />
             </div>
 
-            {/* Media Grid */}
             {isLoading ? (
               <div className="flex items-center justify-center h-32">
                 <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mr-2" />
@@ -321,27 +244,27 @@ export default function MediaLibrary() {
                       <Card key={item._id} className="overflow-hidden hover:shadow-lg transition-shadow">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-center mb-3 h-16">
-                            {getFileIcon(item.mimeType)}
+                            {getFileIcon(item.url)}
                           </div>
                           <div className="text-center space-y-1 mb-3">
-                            <p className="text-sm font-medium truncate" title={item.originalName}>
-                              {item.originalName}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatFileSize(item.size)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatDate(item.createdAt)}
-                            </p>
-                            <Badge variant="secondary" className="text-xs">
-                              {getFileType(item.mimeType)}
-                            </Badge>
+                            <p className="text-sm font-medium truncate" title={item.altText}>
+                               {item.altText}
+                             </p>
+                             <p className="text-xs text-muted-foreground">
+                               {item.url.split('/').pop()}
+                             </p>
+                             <p className="text-xs text-muted-foreground">
+                               {formatDate(item.createdAt)}
+                             </p>
+                             <Badge variant="secondary" className="text-xs">
+                               {getFileType(item.url)}
+                             </Badge>
                           </div>
                           <div className="flex justify-center gap-2">
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => handleDownloadMedia(item.url, item.originalName)}
+                              onClick={() => handleDownloadMedia(item.url, item.altText || 'download')}
                               title="Download"
                             >
                               <Download className="w-4 h-4" />
@@ -357,7 +280,7 @@ export default function MediaLibrary() {
                             <Button 
                               variant="destructive" 
                               size="sm"
-                              onClick={() => handleDeleteMedia(item._id, item.originalName)}
+                              onClick={() => handleDeleteMedia(item._id, item.altText || 'media')}
                               title="Delete"
                             >
                               <Trash2 className="w-4 h-4" />

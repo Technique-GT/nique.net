@@ -13,15 +13,24 @@ export const apiClient = axios.create({
 // Response interceptor to unwrap the backend envelope
 apiClient.interceptors.response.use(
   (response) => {
-    // If the backend sends { success: true, data: ... }, return data.
-    // Otherwise return the response data as is.
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data;
-    } else if (response.data && response.data.success) {
-      // Sometimes just success: true without data
-      return response.data;
+    const body = response.data
+
+    // Most backend endpoints return: { success: true, data: ... }
+    // Some also include: pagination (and other metadata). For those, we keep the envelope
+    // so callers can read `data` + `pagination`.
+    if (body && body.success === true) {
+      if (Object.prototype.hasOwnProperty.call(body, 'pagination')) {
+        return body
+      }
+
+      if (Object.prototype.hasOwnProperty.call(body, 'data')) {
+        return body.data
+      }
+
+      return body
     }
-    return response.data;
+
+    return body
   },
   (error) => {
     // Handle 401 Unauthorized globally if needed, or pass it down

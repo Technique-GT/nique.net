@@ -15,6 +15,7 @@ import {
   IconVideo,
 } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -77,9 +78,10 @@ export default function Chats() {
           <div className='flex w-full flex-col gap-2 sm:w-56 lg:w-72 2xl:w-80'>
             <div className='bg-background sticky top-0 z-10 -mx-4 px-4 pb-3 shadow-md sm:static sm:z-auto sm:mx-0 sm:p-0 sm:shadow-none'>
               <div className='flex items-center justify-between py-2'>
-                <div className='flex gap-2'>
+                <div className='flex gap-2 items-center'>
                   <h1 className='text-2xl font-bold'>Inbox</h1>
                   <IconMessages size={20} />
+                  <Badge variant='outline' className='text-[10px] font-normal px-1 h-4'>Demo data</Badge>
                 </div>
 
                 <Button

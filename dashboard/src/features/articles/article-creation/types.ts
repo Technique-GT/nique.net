@@ -79,6 +79,13 @@ export interface Article {
   updatedAt: string;
 }
 
+export interface MediaItem {
+  id: string;
+  title: string;
+  url: string;
+  description?: string;
+}
+
 // Define SerializedEditorState type based on Lexical's structure
 export interface SerializedEditorState {
   root: {

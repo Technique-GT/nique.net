@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Search, X } from "lucide-react";
+import { MediaPicker } from "@/components/media/media-picker";
 
 interface ArticleDialogsProps {
   // Edit Dialog
@@ -31,6 +32,8 @@ interface ArticleDialogsProps {
   editSelectedTags: string[];
   editSelectedAuthors: PopulatedAuthor[];
   editSelectedCollaborators: string[];
+  editFeaturedMediaId: string;
+  setEditFeaturedMediaId: (id: string) => void;
   editFeaturedMediaAlt: string;
   setEditFeaturedMediaAlt: (alt: string) => void;
   editIsPublished: boolean;
@@ -62,6 +65,7 @@ interface ArticleDialogsProps {
   tags: PopulatedTag[];
   authors: PopulatedAuthor[];
   collaborators: any[];
+  mediaLibrary: any[];
   
   // Functions
   getAuthorName: (author: PopulatedAuthor) => string;
@@ -97,6 +101,8 @@ export function ArticleDialogs({
   editSelectedTags,
   editSelectedAuthors,
   editSelectedCollaborators,
+  editFeaturedMediaId,
+  setEditFeaturedMediaId,
   editFeaturedMediaAlt,
   setEditFeaturedMediaAlt,
   editIsPublished,
@@ -121,6 +127,7 @@ export function ArticleDialogs({
   tags,
   authors,
   collaborators,
+  mediaLibrary,
   getAuthorName,
   getStatusVariant,
   formatDate,
@@ -439,14 +446,25 @@ export function ArticleDialogs({
               
               <div className="space-y-4">
                 {/* Featured Media */}
-                <div className="space-y-2">
-                  <Label htmlFor="edit-featured-media-alt">Featured Media Alt Text</Label>
-                  <Input
-                    id="edit-featured-media-alt"
-                    value={editFeaturedMediaAlt}
-                    onChange={(e) => setEditFeaturedMediaAlt(e.target.value)}
-                    placeholder="Enter alt text for featured image"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Featured Media</Label>
+                    <MediaPicker
+                      value={editFeaturedMediaId || undefined}
+                      items={mediaLibrary}
+                      onChange={(id) => setEditFeaturedMediaId(id || "")}
+                      placeholder="Choose featured media"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-featured-media-alt">Featured Media Alt Text</Label>
+                    <Input
+                      id="edit-featured-media-alt"
+                      value={editFeaturedMediaAlt}
+                      onChange={(e) => setEditFeaturedMediaAlt(e.target.value)}
+                      placeholder="Enter alt text for featured image"
+                    />
+                  </div>
                 </div>
 
                 {/* Publication Settings */}

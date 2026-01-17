@@ -10,8 +10,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Author, Collaborator, SerializedEditorState } from "./types";
-
-import { API_BASE_URL } from '../../../config';
+import { apiClient } from "@/lib/api-client";
+import { toast } from "sonner";
 
 interface ArticleSubmissionProps {
   title: string;
@@ -37,14 +37,13 @@ interface ArticleSubmissionProps {
   pendingSubmission?: {
     title: string;
     content: string;
-    category: string;
-    subcategory: string;
-    tags: string[];
+    categoryId: string;
+    subcategoryId: string;
+    tagIds: string[];
     authors: string[];
-    collaborators: string[];
     featuredMediaId: string;
-    excerpt: string;
-    isPublished: boolean;
+    imageCaption: string;
+    published: boolean;
     isFeatured: boolean;
     isSticky: boolean;
   } | null;
@@ -96,13 +95,12 @@ export default function ArticleSubmission({
       const articleData: any = {
         title,
         content: htmlContent,
-        excerpt,
-        category,
-        tags: selectedTags,
+        imageCaption: excerpt,
+        categoryId: category,
+        tagIds: selectedTags,
         authors: selectedAuthors.map(author => author._id),
-        collaborators: selectedCollaborators.map(collaborator => collaborator._id),
-        featuredImage: featuredMediaId,
-        status: 'draft',
+        featuredMediaId: featuredMediaId,
+        published: false,
         isSticky: false,
         isFeatured: false,
         allowComments: true,
@@ -110,36 +108,25 @@ export default function ArticleSubmission({
 
       // Add subcategory if selected
       if (subcategory) {
-        articleData.subcategory = subcategory;
+        articleData.subcategoryId = subcategory;
       }
 
-      console.log('Saving draft data:', articleData);
+      const result: any = await apiClient.post('/articles', articleData);
 
-      const response = await fetch(`${API_BASE_URL}/articles`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(articleData),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
+      if (result && (result._id || result.success)) {
         setSubmitMessage({
           type: 'success',
           message: `Draft "${title}" has been saved successfully!`
         });
-
+        toast.success(`Draft "${title}" saved`);
         resetForm();
       } else {
-        console.error('Backend error:', result);
         setSubmitMessage({
           type: 'error',
-          message: result.message || result.errors?.join(', ') || "Failed to save draft. Please try again."
+          message: result?.message || "Failed to save draft. Please try again."
         });
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Error saving draft:', error);
       setSubmitMessage({
         type: 'error',
@@ -163,50 +150,38 @@ export default function ArticleSubmission({
       const articleData: any = {
         title: pendingSubmission.title,
         content: pendingSubmission.content,
-        excerpt: pendingSubmission.excerpt,
-        category: pendingSubmission.category,
-        tags: pendingSubmission.tags,
+        imageCaption: pendingSubmission.imageCaption,
+        categoryId: pendingSubmission.categoryId,
+        tagIds: pendingSubmission.tagIds,
         authors: pendingSubmission.authors,
-        collaborators: pendingSubmission.collaborators,
-        featuredImage: pendingSubmission.featuredMediaId,
-        status: pendingSubmission.isPublished ? 'published' : 'draft',
+        featuredMediaId: pendingSubmission.featuredMediaId,
+        published: pendingSubmission.published,
         isSticky: pendingSubmission.isSticky,
         isFeatured: pendingSubmission.isFeatured,
         allowComments: true,
       };
 
       // Add subcategory if selected
-      if (pendingSubmission.subcategory) {
-        articleData.subcategory = pendingSubmission.subcategory;
+      if (pendingSubmission.subcategoryId) {
+        articleData.subcategoryId = pendingSubmission.subcategoryId;
       }
 
-      console.log('Submitting article data:', articleData);
+      const result: any = await apiClient.post('/articles', articleData);
 
-      const response = await fetch(`${API_BASE_URL}/articles`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(articleData),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
+      if (result && (result._id || result.success)) {
         setSubmitMessage({
           type: 'success',
-          message: `Article "${pendingSubmission.title}" has been ${pendingSubmission.isPublished ? 'published' : 'saved as draft'} successfully!`
+          message: `Article "${pendingSubmission.title}" has been ${pendingSubmission.published ? 'published' : 'saved as draft'} successfully!`
         });
-
+        toast.success(`Article ${pendingSubmission.published ? 'published' : 'saved'}`);
         resetForm();
       } else {
-        console.error('Backend error:', result);
         setSubmitMessage({
           type: 'error',
-          message: result.message || result.errors?.join(', ') || "Failed to create article. Please try again."
+          message: result?.message || "Failed to create article. Please try again."
         });
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Error creating article:', error);
       setSubmitMessage({
         type: 'error',
@@ -248,11 +223,11 @@ export default function ArticleSubmission({
         <AlertDialogHeader>
           <AlertDialogTitle>Submit this article?</AlertDialogTitle>
           <AlertDialogDescription>
-            Once confirmed, the article will be {pendingSubmission?.isPublished ? 'published immediately' : 'saved as draft'}.
+            Once confirmed, the article will be {pendingSubmission?.published ? 'published immediately' : 'saved as draft'}.
             {pendingSubmission?.isFeatured && " It will be featured."}
             {pendingSubmission?.isSticky && " It will be pinned to the top."}
-            {pendingSubmission?.subcategory && " It will be assigned to the selected sub-category."}
-            {pendingSubmission?.collaborators && pendingSubmission.collaborators.length > 0 && ` It will have ${pendingSubmission.collaborators.length} collaborator(s).`}
+            {pendingSubmission?.subcategoryId && " It will be assigned to the selected sub-category."}
+            {selectedCollaborators && selectedCollaborators.length > 0 && ` It will have ${selectedCollaborators.length} collaborator(s).`}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

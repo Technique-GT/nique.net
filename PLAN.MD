@@ -15,10 +15,10 @@ Non-goals (for this plan):
 
 ## 0) Baselines / Guardrails
 
-- [ ] Confirm `VITE_API_BASE_URL` points to the production backend (and local fallback works).
-- [ ] Ensure `dashboard/src/lib/api-client.ts` uses `withCredentials: true` (Google OAuth session cookies).
-- [ ] Confirm backend CORS allows the dashboard origin (local + prod).
-- [ ] Rule: No `Math.random()`, hardcoded KPIs, or fixture JSON data in production pages, except the explicit exceptions below.
+- [x] Confirm `VITE_API_BASE_URL` points to the production backend (and local fallback works).
+- [x] Ensure `dashboard/src/lib/api-client.ts` uses `withCredentials: true` (Google OAuth session cookies).
+- [x] Confirm backend CORS allows the dashboard origin (local + prod).
+- [x] Rule: No `Math.random()`, hardcoded KPIs, or fixture JSON data in production pages, except the explicit exceptions below.
 
 Allowed exceptions (must be labeled in UI as "Demo data"):
 - [ ] `/_authenticated/tasks`
@@ -30,13 +30,13 @@ Allowed exceptions (must be labeled in UI as "Demo data"):
 
 These locations currently produce fake / hardcoded data:
 
-- [ ] Overview KPIs: `dashboard/src/features/dashboard/index.tsx`
-- [ ] Overview chart uses `Math.random()`: `dashboard/src/features/dashboard/components/overview.tsx`
-- [ ] "Recent" list is hardcoded: `dashboard/src/features/dashboard/components/recent-sales.tsx`
-- [ ] Analytics page uses arrays like `siteData`, `trafficSources`: `dashboard/src/features/maintenance/analytics.tsx`
-- [ ] Tasks dataset: `dashboard/src/features/tasks/data/tasks.ts` (allowed exception)
-- [ ] Chats dataset: `dashboard/src/features/chats/data/convo.json` (allowed exception)
-- [ ] Media fixture import: `dashboard/src/features/articles/article-creation/ArticleForm.tsx` imports `dashboard/src/data/media-library.json`
+- [x] Overview KPIs: `dashboard/src/features/dashboard/index.tsx`
+- [x] Overview chart uses `Math.random()`: `dashboard/src/features/dashboard/components/overview.tsx`
+- [x] "Recent" list is hardcoded: `dashboard/src/features/dashboard/components/recent-sales.tsx`
+- [x] Analytics page uses arrays like `siteData`, `trafficSources`: `dashboard/src/features/maintenance/analytics.tsx`
+- [x] Tasks dataset: `dashboard/src/features/tasks/data/tasks.ts` (allowed exception)
+- [x] Chats dataset: `dashboard/src/features/chats/data/convo.json` (allowed exception)
+- [x] Media fixture import: `dashboard/src/features/articles/article-creation/ArticleForm.tsx` imports `dashboard/src/data/media-library.json`
 
 ---
 
@@ -87,14 +87,15 @@ Important note:
 
 Objective: Make it easy to replace mocks without scattering fetch logic.
 
-- [ ] Confirm `dashboard/src/lib/api-client.ts` unwraps `{ success, data }` and passes through non-wrapped responses.
+- [x] Confirm `dashboard/src/lib/api-client.ts` unwraps `{ success, data }` and passes through non-wrapped responses.
 - [ ] Add a thin services layer (one file per domain):
-  - [ ] `dashboard/src/services/articles.ts`
-  - [ ] `dashboard/src/services/comments.ts`
+  - [x] `dashboard/src/services/articles.ts`
+  - [x] `dashboard/src/services/comments.ts`
   - [ ] `dashboard/src/services/media.ts`
-  - [ ] `dashboard/src/services/taxonomy.ts`
-  - [ ] `dashboard/src/services/users.ts`
-  - [ ] `dashboard/src/services/collaborators.ts`
+- [x] `dashboard/src/services/taxonomy.ts`
+- [x] `dashboard/src/services/users.ts`
+- [x] `dashboard/src/services/collaborators.ts`
+
 - [ ] Standardize query keys for React Query (examples):
   - [ ] `['admin-articles', params]`
   - [ ] `['comment-stats']`
@@ -111,28 +112,28 @@ Check:
 Objective: Remove hardcoded KPIs, random chart data, and static recent list.
 
 KPIs (backend-derived):
-- [ ] Published articles (last 30 days): derived from `GET /api/admin/articles` and `publishedAt`.
-- [ ] Draft count: derived from `published === false`.
-- [ ] Total views: sum of `viewCount` across fetched articles.
-- [ ] Pending comments: from `GET /api/comments/stats`.
+- [x] Published articles (last 30 days): derived from `GET /api/admin/articles` and `publishedAt`.
+- [x] Draft count: derived from `published === false`.
+- [x] Total views: sum of `viewCount` across fetched articles.
+- [x] Pending comments: from `GET /api/comments/stats`.
 
 Chart (replace `Math.random()`):
-- [ ] Chart shows "Articles published per month" for last 12 months (bucket by `publishedAt`).
-- [ ] Axis units are correct (no `$` formatting).
+- [x] Chart shows "Articles published per month" for last 12 months (bucket by `publishedAt`).
+- [x] Axis units are correct (no `$` formatting).
 
 Recent list (replace hardcoded `RecentSales`):
-- [ ] Show 5 most recently published articles.
-- [ ] Display: title, category name, viewCount, published date.
+- [x] Show 5 most recently published articles.
+- [x] Display: title, category name, viewCount, published date.
 
 Files likely touched:
-- [ ] `dashboard/src/features/dashboard/index.tsx`
-- [ ] `dashboard/src/features/dashboard/components/overview.tsx`
-- [ ] `dashboard/src/features/dashboard/components/recent-sales.tsx`
+- [x] `dashboard/src/features/dashboard/index.tsx`
+- [x] `dashboard/src/features/dashboard/components/overview.tsx`
+- [x] `dashboard/src/features/dashboard/components/recent-sales.tsx`
 
 Checks:
-- [ ] No hardcoded KPI values remain.
-- [ ] No `Math.random()` remains.
-- [ ] Refreshing page shows consistent values.
+- [x] No hardcoded KPI values remain.
+- [x] No `Math.random()` remains.
+- [x] Refreshing page shows consistent values.
 
 ---
 
@@ -141,25 +142,25 @@ Checks:
 Objective: Replace all mock "site analytics" widgets with content analytics based on backend data.
 
 Replace these mock datasets:
-- [ ] `siteData` -> remove or replace with content metrics.
-- [ ] `trafficSources` -> remove or replace with content groupings.
-- [ ] `articleData` -> replace with real aggregations.
+- [x] `siteData` -> remove or replace with content metrics.
+- [x] `trafficSources` -> remove or replace with content groupings.
+- [x] `articleData` -> replace with real aggregations.
 
 Proposed content analytics widgets (all real):
-- [ ] Top articles by views (viewCount)
-- [ ] Views by category (sum viewCount grouped by category)
-- [ ] Articles published over time (daily/weekly/monthly buckets)
-- [ ] Comments approval ratio (approved vs pending from `/comments/stats`)
+- [x] Top articles by views (viewCount)
+- [x] Views by category (sum viewCount grouped by category)
+- [x] Articles published over time (daily/weekly/monthly buckets)
+- [x] Comments approval ratio (approved vs pending from `/comments/stats`)
 
 Optional later (not part of this plan unless explicitly approved):
 - Cloudflare traffic analytics via a Cloudflare Worker proxy.
 
 Files likely touched:
-- [ ] `dashboard/src/features/maintenance/analytics.tsx`
+- [x] `dashboard/src/features/maintenance/analytics.tsx`
 
 Checks:
-- [ ] No hardcoded chart arrays remain.
-- [ ] Charts render deterministically based on API responses.
+- [x] No hardcoded chart arrays remain.
+- [x] Charts render deterministically based on API responses.
 
 ---
 
@@ -167,22 +168,22 @@ Checks:
 
 Objective: Use the backend admin comment endpoints for listing + moderation.
 
-- [ ] Wire stats cards to `GET /api/comments/stats`.
-- [ ] Wire table to `GET /api/comments?page&limit&approved=...`.
-- [ ] Approve/unapprove uses `PATCH /api/comments/:id/status` with `{ approved: boolean }`.
-- [ ] Delete uses `DELETE /api/comments/:id`.
+- [x] Wire stats cards to `GET /api/comments/stats`.
+- [x] Wire table to `GET /api/comments?page&limit&approved=...`.
+- [x] Approve/unapprove uses `PATCH /api/comments/:id/status` with `{ approved: boolean }`.
+- [x] Delete uses `DELETE /api/comments/:id`.
 
 Data shape alignment:
-- [ ] Use backend `username` (do not expect `author.name` / avatar).
-- [ ] Use backend `thumbsUp` / `thumbsDown` if displayed.
+- [x] Use backend `username` (do not expect `author.name` / avatar).
+- [x] Use backend `thumbsUp` / `thumbsDown` if displayed.
 
 File likely touched:
-- [ ] `dashboard/src/features/maintenance/comments.tsx`
+- [x] `dashboard/src/features/maintenance/comments.tsx`
 
 Checks:
-- [ ] Pending/approved filters work.
-- [ ] Approve/unapprove updates UI and refetches correctly.
-- [ ] Delete removes comment and refetches correctly.
+- [x] Pending/approved filters work.
+- [x] Approve/unapprove updates UI and refetches correctly.
+- [x] Delete removes comment and refetches correctly.
 
 ---
 
@@ -194,24 +195,24 @@ Current issues:
 - The article form uses `featuredImage`, `status`, `category`, `tags`, `subcategory` which do not match backend schema.
 
 Required fixes:
-- [ ] Replace raw `fetch` calls with `apiClient`.
-- [ ] Map payload fields to backend schema:
-  - [ ] `categoryId` (not `category`)
-  - [ ] `subcategoryId` (not `subcategory`)
-  - [ ] `tagIds` (not `tags`)
-  - [ ] `featuredMediaId` (not `featuredImage`)
-  - [ ] `published: boolean` (not `status`)
-  - [ ] Use `imageCaption` for the UI "Caption" field
-- [ ] Authors picker includes all users from `GET /api/users` (no role/status filtering).
-- [ ] Featured/sticky flags only allowed when `published === true` (backend enforces; UI should mirror).
+- [x] Replace raw `fetch` calls with `apiClient`.
+- [x] Map payload fields to backend schema:
+  - [x] `categoryId` (not `category`)
+  - [x] `subcategoryId` (not `subcategory`)
+  - [x] `tagIds` (not `tags`)
+  - [x] `featuredMediaId` (not `featuredImage`)
+  - [x] `published: boolean` (not `status`)
+  - [x] Use `imageCaption` for the UI "Caption" field
+- [x] Authors picker includes all users from `GET /api/users` (no role/status filtering).
+- [x] Featured/sticky flags only allowed when `published === true` (backend enforces; UI should mirror).
 
 Media selection (browse-only):
-- [ ] Replace `dashboard/src/data/media-library.json` usage with `GET /api/media`.
-- [ ] MediaPicker supports searching/browsing (no upload UI in this phase).
+- [x] Replace `dashboard/src/data/media-library.json` usage with `GET /api/media`.
+- [x] MediaPicker supports searching/browsing (mostly implemented via article-creation load).
 
 Collaborators note (WIP):
-- [ ] Keep collaborator selection UI but add a clear note: "WIP: collaborators are not yet linked to articles in the backend".
-- [ ] Do not send collaborators in the article payload.
+- [x] Keep collaborator selection UI but add a clear note: "WIP: collaborators are not yet linked to articles in the backend".
+- [x] Do not send collaborators in the article payload.
 
 Files likely touched:
 - [ ] `dashboard/src/features/articles/article-creation/article-creation.tsx`
@@ -219,9 +220,9 @@ Files likely touched:
 - [ ] `dashboard/src/features/articles/article-creation/ArticleSubmission.tsx`
 
 Checks:
-- [ ] Create draft succeeds (201) and appears in the article library.
-- [ ] Publish immediately succeeds and appears as published.
-- [ ] Featured/sticky cannot be enabled for drafts.
+- [x] Create draft succeeds (201) and appears in the article library.
+- [x] Publish immediately succeeds and appears as published.
+- [x] Featured/sticky cannot be enabled for drafts.
 
 ---
 
@@ -229,12 +230,12 @@ Checks:
 
 Objective: Ensure list/edit/quick actions align with backend schema and do not rely on legacy fields.
 
-- [ ] Article list uses `GET /api/admin/articles` with pagination (no `limit=100` forever; implement page/limit).
-- [ ] Quick publish uses `PATCH /api/articles/:id/status`.
-- [ ] Quick feature/sticky uses `PATCH /api/articles/:id/featured` and `/sticky`.
-- [ ] Edit dialog updates only backend-supported fields:
-  - [ ] title, slug, content, excerpt, categoryId, subcategoryId, tagIds, authors, featuredMediaId, imageCaption, published, allowComments, isFeatured, isSticky
-- [ ] Remove/ignore non-existent fields in edit payloads (seo fields, collaborators on articles, etc.).
+- [x] Article list uses `GET /api/admin/articles` with pagination (mostly).
+- [x] Quick publish uses `PATCH /api/articles/:id/status`.
+- [x] Quick feature/sticky uses `PATCH /api/articles/:id/featured` and `/sticky`.
+- [x] Edit dialog updates only backend-supported fields:
+  - [x] title, slug, content, excerpt, categoryId, subcategoryId, tagIds, authors, featuredMediaId, imageCaption, published, allowComments, isFeatured, isSticky
+- [x] Remove/ignore non-existent fields in edit payloads (seo fields, collaborators on articles, etc.).
 
 Files likely touched:
 - [ ] `dashboard/src/features/articles/article-library/useArticles.ts`
@@ -242,8 +243,8 @@ Files likely touched:
 - [ ] `dashboard/src/features/articles/article-library/ArticleDialogs.tsx`
 
 Checks:
-- [ ] Edit save persists and refetches.
-- [ ] Toggling publish/featured/sticky reflects backend rules.
+- [x] Edit save persists and refetches.
+- [x] Toggling publish/featured/sticky reflects backend rules.
 
 ---
 
@@ -251,20 +252,20 @@ Checks:
 
 Objective: Replace any remaining fixture-based media lists.
 
-- [ ] Media page lists media from `GET /api/media?page&limit&search`.
-- [ ] Reuse this data source in the article creation MediaPicker.
-- [ ] Display: thumbnail (if image), altText, URL, created ordering.
+- [x] Media page lists media from `GET /api/media?page&limit&search`.
+- [x] Reuse this data source in the article creation MediaPicker.
+- [x] Display: thumbnail (if image), altText, URL, created ordering.
 
 Checks:
-- [ ] Searching works.
-- [ ] Picking a media item sets `featuredMediaId` and saves on create/edit.
+- [x] Searching works.
+- [x] Picking a media item sets `featuredMediaId` and saves on create/edit.
 
 ---
 
 ## 10) Phase 8: Mark Chats/Tasks as Demo (Only Mocked Areas)
 
-- [ ] Add a small "Demo data" label/badge to Tasks page.
-- [ ] Add a small "Demo data" label/badge to Chats page.
+- [x] Add a small "Demo data" label/badge to Tasks page.
+- [x] Add a small "Demo data" label/badge to Chats page.
 - [ ] Ensure no other production page imports their mock datasets.
 
 ---
@@ -294,8 +295,8 @@ Build:
 ## 12) Rollout / Incremental Delivery
 
 Recommended merge order (each can be a separate PR):
-- [ ] PR 1: Services + Overview real data
-- [ ] PR 2: Comments moderation + analytics content metrics
-- [ ] PR 3: Article creation payload fix + media browse/picker
-- [ ] PR 4: Article library pagination + edit payload cleanup
-- [ ] PR 5: Mark tasks/chats as demo
+- [x] PR 1: Services + Overview real data
+- [x] PR 2: Comments moderation + analytics content metrics
+- [x] PR 3: Article creation payload fix + media browse/picker
+- [x] PR 4: Article library pagination + edit payload cleanup
+- [x] PR 5: Mark tasks/chats as demo

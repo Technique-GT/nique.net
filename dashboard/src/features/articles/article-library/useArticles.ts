@@ -1,9 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Article, PopulatedCategory, PopulatedSubCategory, PopulatedTag, PopulatedAuthor, MessageType } from "./article";
 import { apiClient } from '@/lib/api-client';
+import { getAdminArticlesPage, Pagination } from "@/services/articles";
 
 export const useArticles = () => {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -15,6 +18,7 @@ export const useArticles = () => {
   const [subcategories, setSubcategories] = useState<PopulatedSubCategory[]>([]);
   const [tags, setTags] = useState<PopulatedTag[]>([]);
   const [authors, setAuthors] = useState<PopulatedAuthor[]>([]);
+  const [mediaLibrary, setMediaLibrary] = useState<any[]>([]);
 
   // Helper to transform User to PopulatedAuthor
   const transformAuthor = (user: any): PopulatedAuthor => {
@@ -38,28 +42,28 @@ export const useArticles = () => {
       content: article.content || '',
       excerpt: article.excerpt || '',
       category: article.categoryId ? {
-        _id: article.categoryId._id,
-        name: article.categoryId.name,
-        slug: article.categoryId.slug,
+        _id: article.categoryId._id || article.categoryId,
+        name: article.categoryId.name || 'Unknown',
+        slug: article.categoryId.slug || '',
         isActive: true // Fallback as backend doesn't populate this
       } : { _id: '', name: '', slug: '', isActive: false },
       subcategory: article.subcategoryId ? {
-         _id: article.subcategoryId._id,
-         name: article.subcategoryId.name,
-         slug: article.subcategoryId.slug,
+         _id: article.subcategoryId._id || article.subcategoryId,
+         name: article.subcategoryId.name || 'Unknown',
+         slug: article.subcategoryId.slug || '',
          category: article.categoryId,
          isActive: true
       } : undefined,
       tags: Array.isArray(article.tagIds) ? article.tagIds.map((t: any) => ({
-        _id: t._id,
-        name: t.name,
-        slug: t.slug,
+        _id: t._id || t,
+        name: t.name || 'Unknown',
+        slug: t.slug || '',
         isActive: true
       })) : [],
       authors: Array.isArray(article.authors) ? article.authors.map((a: any) => transformAuthor(a.authorId)) : [],
       collaborators: [], // Backend might not populated collaborators or different structure
       featuredMedia: {
-        id: article.featuredMediaId?._id || '',
+        id: article.featuredMediaId?._id || article.featuredMediaId || '',
         url: article.featuredMediaId?.url || '',
         alt: article.featuredMediaId?.altText || ''
       },
@@ -78,42 +82,46 @@ export const useArticles = () => {
   };
 
   // Fetch articles from backend
-  const fetchArticles = useCallback(async () => {
+  const fetchArticles = useCallback(async (page = currentPage) => {
     try {
       setLoading(true);
-      // Use admin route, limit to 100 for now to get a good chunk
-      const response = await apiClient.get('/admin/articles?limit=100');
-      const rawArticles = Array.isArray(response) ? response : (response as any).data || [];
+      const response = await getAdminArticlesPage({ 
+        page, 
+        limit: 10,
+        search: searchTerm || undefined 
+      });
       
-      const transformedArticles = rawArticles.map(transformArticleData);
+      const transformedArticles = response.data.map(transformArticleData);
       setArticles(transformedArticles);
+      setPagination(response.pagination || null);
     } catch (error) {
       console.error('Error fetching articles:', error);
       setMessage({ type: 'error', text: 'Network error. Please check your connection.' });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage, searchTerm]);
 
   // Fetch data for edit form
   const fetchEditData = async () => {
     try {
-      const [categoriesData, subcategoriesData, tagsData, usersData] = await Promise.all([
-        apiClient.get('/categories?isActive=true'),
-        apiClient.get('/sub-categories?isActive=true'),
-        apiClient.get('/tags?isActive=true'),
-        apiClient.get('/users')
+      const [categoriesData, subcategoriesData, tagsData, usersData, mediaData] = await Promise.all([
+        apiClient.get('/categories'),
+        apiClient.get('/sub-categories'),
+        apiClient.get('/tags'),
+        apiClient.get('/users'),
+        apiClient.get('/media')
       ]);
 
       // apiClient returns array directly if success
       if (Array.isArray(categoriesData)) setCategories(categoriesData as any);
       if (Array.isArray(subcategoriesData)) setSubcategories(subcategoriesData as any);
       if (Array.isArray(tagsData)) setTags(tagsData as any);
+      if (Array.isArray(mediaData)) setMediaLibrary(mediaData as any);
       
       // Filter authors from users
       const rawUsers = Array.isArray(usersData) ? usersData : [];
       const activeAuthors = rawUsers.map(transformAuthor); 
-      // Filter logic if needed, e.g. isAdmin
       setAuthors(activeAuthors);
 
     } catch (error) {
@@ -125,6 +133,11 @@ export const useArticles = () => {
     fetchArticles();
     fetchEditData();
   }, [fetchArticles]);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   // Get unique categories for filter
   const availableCategories = useMemo(() => 
@@ -188,6 +201,10 @@ export const useArticles = () => {
     tags,
     authors,
     fetchArticles,
-    getAuthorName
+    getAuthorName,
+    pagination,
+    currentPage,
+    handlePageChange,
+    mediaLibrary
   };
 };

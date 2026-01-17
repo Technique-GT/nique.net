@@ -15,11 +15,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils";
-import { Search, X } from "lucide-react";
+import { Search, X, Info } from "lucide-react";
 
-import { MediaPicker, type MediaItem } from "@/components/media/media-picker";
-import mediaLibraryData from "@/data/media-library.json";
-import { Category, SubCategory, Tag, Author, Collaborator, SerializedEditorState, FieldErrorKey } from "./types";
+import { MediaPicker } from "@/components/media/media-picker";
+import { Category, SubCategory, Tag, Author, Collaborator, SerializedEditorState, FieldErrorKey, MediaItem } from "./types";
 import ArticleSubmission from "./ArticleSubmission";
 
 
@@ -29,9 +28,10 @@ interface ArticleFormProps {
   tags: Tag[];
   authors: Author[];
   collaborators: Collaborator[];
+  mediaLibrary: MediaItem[];
 }
 
-export default function ArticleForm({ categories, subcategories, tags, authors, collaborators }: ArticleFormProps) {
+export default function ArticleForm({ categories, subcategories, tags, authors, collaborators, mediaLibrary }: ArticleFormProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState<SerializedEditorState | undefined>();
   const [contentText, setContentText] = useState("");
@@ -52,14 +52,13 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
   const [pendingSubmission, setPendingSubmission] = useState<{
     title: string;
     content: string;
-    category: string;
-    subcategory: string;
-    tags: string[];
+    categoryId: string;
+    subcategoryId: string;
+    tagIds: string[];
     authors: string[];
-    collaborators: string[];
     featuredMediaId: string;
-    excerpt: string;
-    isPublished: boolean;
+    imageCaption: string;
+    published: boolean;
     isFeatured: boolean;
     isSticky: boolean;
   } | null>(null);
@@ -128,14 +127,15 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
       slug: cat.slug
     })), [categories]);
 
-  const mediaLibrary = useMemo(() => mediaLibraryData as MediaItem[], []);
-
   // Get subcategories for the selected category
   const availableSubcategories = useMemo(() => {
     if (!category) return [];
     
     return subcategories
-      .filter(sub => sub.category._id === category && sub.isActive)
+      .filter(sub => {
+        const catId = typeof sub.category === 'object' ? sub.category?._id : sub.category;
+        return catId === category;
+      })
       .map(sub => ({
         id: sub._id,
         name: sub.name,
@@ -447,14 +447,13 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
     setPendingSubmission({
       title,
       content: htmlContent,
-      category,
-      subcategory,
-      tags: selectedTags,
+      categoryId: category,
+      subcategoryId: subcategory,
+      tagIds: selectedTags,
       authors: selectedAuthors.map(author => author._id),
-      collaborators: selectedCollaborators.map(collaborator => collaborator._id),
       featuredMediaId,
-      excerpt,
-      isPublished,
+      imageCaption: excerpt,
+      published: isPublished,
       isFeatured: isPublished ? isFeatured : false,
       isSticky: isPublished ? isSticky : false,
     });
@@ -651,9 +650,20 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                   </div>
                 </div>
                 
-                {/* Collaborators Section */}
+                 {/* Collaborators Section */}
                 <div className="space-y-2">
-                  <Label htmlFor="collaborators">Collaborators</Label>
+                  <Label htmlFor="collaborators" className="flex items-center gap-2">
+                    Collaborators
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="w-3 h-3 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        WIP: Collaborators are not yet linked to articles in the backend.
+                      </TooltipContent>
+                    </Tooltip>
+                  </Label>
+
                   
                   {/* Selected Collaborators */}
                   <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-10">
@@ -850,7 +860,7 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                   <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting ? "Creating..." : "Create Article"}
                   </Button>
-                  <ArticleSubmission 
+                   <ArticleSubmission 
                     title={title}
                     content={content}
                     contentText={contentText}
@@ -940,6 +950,7 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
         pendingSubmission={pendingSubmission}
         setPendingSubmission={setPendingSubmission}
       />
+
     </div>
   );
 }

@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
-import { Category, SubCategory, Tag, Author, Collaborator } from "./types";
 import ArticleForm from "./ArticleForm";
-
-import { API_BASE_URL } from '../../../config';
+import { getCategories, getSubCategories, getTags } from "@/services/taxonomy";
+import { getUsers } from "@/services/users";
+import { getCollaborators } from "@/services/collaborators";
+import { getMedia } from "@/services/media";
+import type { Category, SubCategory, Tag, Author, Collaborator, MediaItem } from "./types";
+import { toast } from "sonner";
 
 export default function ArticleCreation() {
   // State for fetched data
@@ -11,6 +14,7 @@ export default function ArticleCreation() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [authors, setAuthors] = useState<Author[]>([]);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
@@ -21,84 +25,36 @@ export default function ArticleCreation() {
         setIsLoading(true);
         setFetchError(null);
 
-        // Fetch categories, subcategories, tags, and collaborators
-        const [categoriesResponse, subcategoriesResponse, tagsResponse, collaboratorsResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/categories`),
-          fetch(`${API_BASE_URL}/sub-categories`),
-          fetch(`${API_BASE_URL}/tags`),
-          fetch(`${API_BASE_URL}/collaborators`)
+        const [catData, subCatData, tagData, collabData, userData, mediaData] = await Promise.all([
+          getCategories(),
+          getSubCategories(),
+          getTags(),
+          getCollaborators(),
+          getUsers(),
+          getMedia({ limit: 100 })
         ]);
 
-        const [categoriesData, subcategoriesData, tagsData, collaboratorsData] = await Promise.all([
-          categoriesResponse.json(),
-          subcategoriesResponse.json(),
-          tagsResponse.json(),
-          collaboratorsResponse.json()
-        ]);
+        setCategories(catData as any);
+        setSubcategories(subCatData as any);
+        setTags(tagData as any);
+        setCollaborators(collabData as any);
+        setAuthors(userData as any);
+        
+        // Map backend media to UI media picker shape
+        const mappedMedia: MediaItem[] = (mediaData.data || []).map(m => ({
+          id: m._id,
+          title: m.altText || 'Untitled',
+          url: m.url,
+          description: m.altText
+        }));
+        setMediaItems(mappedMedia);
 
-        if (categoriesData.success) {
-          setCategories(categoriesData.data);
-        } else {
-          throw new Error(categoriesData.message || 'Failed to fetch categories');
-        }
-
-        if (subcategoriesData.success) {
-          setSubcategories(subcategoriesData.data);
-        } else {
-          console.warn('Failed to fetch subcategories:', subcategoriesData.message);
-        }
-
-        if (tagsData.success) {
-          setTags(tagsData.data);
-        } else {
-          throw new Error(tagsData.message || 'Failed to fetch tags');
-        }
-
-        if (collaboratorsData.success) {
-          setCollaborators(collaboratorsData.data);
-        } else {
-          console.warn('Failed to fetch collaborators:', collaboratorsData.message);
-          setCollaborators([]);
-        }
-
-        // Fetch authors
-        await fetchAuthors();
-
-      } catch (error: unknown) {
-        console.error('Error fetching data:', error);
-        setFetchError(error instanceof Error ? error.message : 'Failed to load form data');
+      } catch (error: any) {
+        console.error('Error fetching form data:', error);
+        setFetchError(error?.message || 'Failed to load form data');
+        toast.error("Error loading form data");
       } finally {
         setIsLoading(false);
-      }
-    };
-
-    const fetchAuthors = async () => {
-      try {
-        console.log('Fetching authors from /api/users...');
-        
-        const allUsersResponse = await fetch(`${API_BASE_URL}/users`);
-        const allUsersData = await allUsersResponse.json();
-        
-        console.log('All users response:', allUsersData);
-        
-        if (allUsersData.success) {
-          console.log('All users found:', allUsersData.data.length);
-          
-          // Filter for active authors with appropriate roles
-          const activeAuthors = allUsersData.data.filter((user: Author) => 
-            user.status === 'active' && 
-            ['writer', 'editor', 'admin', 'superadmin'].includes(user.role)
-          );
-          
-          console.log('Filtered active authors:', activeAuthors);
-          setAuthors(activeAuthors);
-        } else {
-          console.warn('Failed to fetch users:', allUsersData.message);
-          setAuthors([]);
-        }
-      } catch (error: unknown) {
-        console.error('Error fetching authors:', error);
-        setAuthors([]);
       }
     };
 
@@ -146,6 +102,7 @@ export default function ArticleCreation() {
       tags={tags}
       authors={authors}
       collaborators={collaborators}
+      mediaLibrary={mediaItems}
     />
   );
 }

@@ -2,6 +2,7 @@ import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { Badge } from '@/components/ui/badge'
 import { columns } from './components/columns'
 import { DataTable } from './components/data-table'
 import { TasksDialogs } from './components/tasks-dialogs'
@@ -22,7 +23,10 @@ export default function Tasks() {
       <Main>
         <div className='mb-2 flex flex-wrap items-center justify-between space-y-2 gap-x-4'>
           <div>
-            <h2 className='text-2xl font-bold tracking-tight'>Tasks</h2>
+            <div className='flex items-center gap-2'>
+              <h2 className='text-2xl font-bold tracking-tight'>Tasks</h2>
+              <Badge variant='outline' className='text-xs font-normal'>Demo data</Badge>
+            </div>
             <p className='text-muted-foreground'>
               Here&apos;s a list of all the tasks. 
             </p>
