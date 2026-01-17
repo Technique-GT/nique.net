@@ -30,7 +30,7 @@ export default function Otp() {
           <p className='text-muted-foreground px-8 text-center text-sm'>
             Haven't received it?{' '}
             <Link
-              to='/sign-in'
+              to='/login'
               className='hover:text-primary underline underline-offset-4'
             >
               Resend a new code.

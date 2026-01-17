@@ -61,7 +61,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
           auth: { ...state.auth, user: null } 
         }));
         // Force reload to clear any other state
-        window.location.href = '/sign-in';
+        window.location.href = '/login';
       } catch (error) {
         console.error('Logout failed', error);
       }

@@ -1,327 +1,301 @@
-# Frontend -> backend Migration Plan
+# Dashboard Real Data Migration Plan (dashboard/ -> backend/)
 
-Goal: point the existing `frontend/` app at `backend/` without modifying `backend/`.
+Goal: Replace mocked dashboard data with real backend-powered data and statistics, without modifying `backend/`.
 
-**Approach: Contract-Aligned (No Adapters)**
+Scope:
+- In scope: `dashboard/` app.
+- Out of scope: `frontend/` public app migration (separate effort).
+- Backend is source of truth. Do not edit `backend/`.
 
-The frontend types and components will be updated to match `backend` shapes directly.
-This ensures consistency from database -> backend -> frontend with no translation layer.
-
-Constraints / assumptions:
-- Only migrate `frontend/` right now (ignore `dashboard/`).
-- `backend/` is the source of truth for contracts. Do NOT modify it.
-- NO adapter layer — frontend aligns directly to backend shapes.
-- Comments default behavior is acceptable (new comments require approval; no special moderation UX needed yet).
-- `/stories` in the old backend is legacy and can be ignored.
+Non-goals (for this plan):
+- Building a full site-traffic analytics pipeline in the backend.
+- Implementing a chat or task system (these remain mocked for now).
 
 ---
 
-## 1) backend Contract Reference
+## 0) Baselines / Guardrails
 
-### Article shape (from `backend/json-schemas/canonical-contract.json`)
-```
-{
-  _id: ObjectId,
-  title: string,
-  slug: string,
-  content: string,
-  excerpt?: string,
-  categoryId: ObjectId (populated -> { _id, name, slug }),
-  subcategoryId?: ObjectId (populated),
-  tagIds: ObjectId[] (populated -> [{ _id, name, slug }]),
-  authors: [{ authorId: ObjectId (populated -> User), order: number }],
-  featuredMediaId?: ObjectId (populated -> { _id, url, altText }),
-  imageCaption?: string,
-  published: boolean,
-  publishedAt: Date | null,
-  allowComments: boolean,
-  isFeatured: boolean,
-  isSticky: boolean,
-  viewCount: number,
-  createdAt: Date,
-  updatedAt: Date
-}
-```
+- [ ] Confirm `VITE_API_BASE_URL` points to the production backend (and local fallback works).
+- [ ] Ensure `dashboard/src/lib/api-client.ts` uses `withCredentials: true` (Google OAuth session cookies).
+- [ ] Confirm backend CORS allows the dashboard origin (local + prod).
+- [ ] Rule: No `Math.random()`, hardcoded KPIs, or fixture JSON data in production pages, except the explicit exceptions below.
 
-### Comment shape
-```
-{
-  _id: ObjectId,
-  articleId: ObjectId,
-  parentCommentId?: ObjectId,
-  content: string,
-  username: string,
-  thumbsUp: number,
-  thumbsDown: number,
-  approved: boolean,
-  createdAt: Date,
-  updatedAt: Date
-}
-```
-
-### User shape (for populated authors)
-```
-{
-  _id: ObjectId,
-  name: string,
-  bio?: string,
-  isAdmin: boolean,
-  profilePictureMediaId?: ObjectId,
-  socialLinks: [{ platform, url }]
-}
-```
-
-### Media shape
-```
-{
-  _id: ObjectId,
-  url: string,
-  altText: string
-}
-```
-
-### Category / Tag shape
-```
-{
-  _id: ObjectId,
-  name: string,
-  slug: string
-}
-```
+Allowed exceptions (must be labeled in UI as "Demo data"):
+- [ ] `/_authenticated/tasks`
+- [ ] `/_authenticated/chats`
 
 ---
 
-## 2) Frontend Type Updates
+## 1) Inventory: Mock Sources to Remove
 
-Update `frontend/src/types/article.ts` to match backend exactly:
+These locations currently produce fake / hardcoded data:
 
-### Before (legacy)
-- `categories: ArticleReference[]`
-- `tags: ArticleTag[]`
-- `authors: [{ user, position }]`
-- `featuredImage: { id, url, ... }`
-- `status: 'draft' | 'published' | ...`
-
-### After (aligned)
-- `categoryId: { _id, name, slug } | null`
-- `subcategoryId?: { _id, name, slug, categoryId } | null`
-- `tagIds: Array<{ _id, name, slug }>`
-- `authors: Array<{ authorId: User | string, order: number }>`
-- `featuredMediaId: { _id, url, altText } | null`
-- `published: boolean`
-- `publishedAt: Date | string | null`
-
-### User type (for populated authorId)
-```ts
-interface User {
-  _id: string;
-  name: string;
-  isAdmin?: boolean;
-  profilePictureMediaId?: string;
-}
-```
-
-### Media type
-```ts
-interface Media {
-  _id: string;
-  url: string;
-  altText: string;
-}
-```
+- [ ] Overview KPIs: `dashboard/src/features/dashboard/index.tsx`
+- [ ] Overview chart uses `Math.random()`: `dashboard/src/features/dashboard/components/overview.tsx`
+- [ ] "Recent" list is hardcoded: `dashboard/src/features/dashboard/components/recent-sales.tsx`
+- [ ] Analytics page uses arrays like `siteData`, `trafficSources`: `dashboard/src/features/maintenance/analytics.tsx`
+- [ ] Tasks dataset: `dashboard/src/features/tasks/data/tasks.ts` (allowed exception)
+- [ ] Chats dataset: `dashboard/src/features/chats/data/convo.json` (allowed exception)
+- [ ] Media fixture import: `dashboard/src/features/articles/article-creation/ArticleForm.tsx` imports `dashboard/src/data/media-library.json`
 
 ---
 
-## 3) Endpoint Mapping
+## 2) Backend Contracts (What We Can Rely On)
 
-### Articles
-| Old route | New route |
-|-----------|-----------|
-| `GET /articles?status=published` | `GET /articles/published` |
-| `GET /articles?isSticky=true` | `GET /articles/sticky` |
-| `GET /articles/feed/paginated?offset=X` | `GET /articles/feed?page=X&limit=Y` |
-| `GET /articles/category/:id` | `GET /articles/category/:id` (same) |
-| `GET /articles/:id` | `GET /articles/:id` (same) |
+Relevant backend endpoints (mounted under `/api`):
 
-Feed pagination:
-- Switch from offset-based to page-based in `InfiniteScrollModule`.
-- `hasMore = page < pagination.pages`
+Auth/session:
+- [ ] `GET /api/auth/me`
+- [ ] `GET /api/auth/google?redirect=...`
+- [ ] `POST /api/auth/logout`
 
-### Categories
-| Old | New |
-|-----|-----|
-| `GET /categories?limit=50` | `GET /categories` (no limit param) |
+Articles:
+- [ ] `GET /api/admin/articles?page&limit&search` (drafts + published)
+- [ ] `POST /api/articles` (create)
+- [ ] `PUT /api/articles/:id` (update)
+- [ ] `PATCH /api/articles/:id/status` (publish/unpublish + flags)
+- [ ] `PATCH /api/articles/:id/featured` (toggle)
+- [ ] `PATCH /api/articles/:id/sticky` (toggle)
+- [ ] `DELETE /api/articles/:id`
 
-### Comments
-| Old | New |
-|-----|-----|
-| `GET /comments/article/:id` | `GET /comments/article/:id` (same, but response is wrapped) |
-| `POST /comments/article/:id` | `POST /comments` with `{ articleId, content, username }` |
-| `PATCH /comments/:id/thumbs` | `PATCH /comments/:id/like` or `/dislike` |
+Taxonomy:
+- [ ] `GET /api/categories`
+- [ ] `GET /api/sub-categories`
+- [ ] `GET /api/tags`
 
-### Slivers
-| Old | New |
-|-----|-----|
-| `POST /slivers { text }` | `POST /slivers { text }` (same) |
+Users:
+- [ ] `GET /api/users`
 
----
+Media:
+- [ ] `GET /api/media?page&limit&search`
 
-## 4) Files to Update
+Comments (admin):
+- [ ] `GET /api/comments?page&limit&approved&articleId`
+- [ ] `PATCH /api/comments/:id/status` with `{ approved: boolean }`
+- [ ] `DELETE /api/comments/:id`
+- [ ] `GET /api/comments/stats`
 
-### 4.1 Types
-- `frontend/src/types/article.ts`
-  - Rewrite `ArticleDocument` to use `categoryId`, `tagIds`, `authors[].authorId`, `featuredMediaId`, `published`
-  - Remove legacy fields: `categories`, `tags`, `authors[].user`, `featuredImage`, `status`
+Collaborators (standalone resource):
+- [ ] `GET /api/collaborators?search&status`
 
-### 4.2 Mapping utility
-- `frontend/src/utils/articleMapping.ts`
-  - Update `mapArticleToPost` to read from new field names:
-    - `article.categoryId?.name` instead of `article.categories?.[0]?.name`
-    - `article.authors?.[0]?.authorId` instead of `article.authors?.[0]?.user`
-    - `article.featuredMediaId` instead of `article.featuredImage`
-
-### 4.3 Article page
-- `frontend/src/pages/Article.tsx`
-  - Read `article.categoryId` instead of `article.categories`
-  - Read `article.tagIds` instead of `article.tags`
-  - Read `article.authors[].authorId.name` instead of nested user object
-  - Read `article.featuredMediaId` instead of `article.featuredImage`
-  - For comments: use `comment.username` directly, no `author.name/avatar`
-
-### 4.4 Comment component
-- `frontend/src/components/Comment.tsx`
-  - Change props from `name, avatar` to `username`
-  - Use a default/placeholder avatar
-
-### 4.5 Services
-- `frontend/src/services/apiClient.ts` (already created)
-  - Shared axios client with `unwrap()` helper
-
-- `frontend/src/services/articleService.ts`
-  - Use `apiClient`
-  - Update routes: `/articles/published`, `/articles/sticky`, `/articles/feed`, etc.
-  - Unwrap responses
-
-- `frontend/src/services/commentService.ts`
-  - Use `apiClient`
-  - `POST /comments` with `{ articleId, content, username }`
-  - Unwrap responses
-
-- `frontend/src/services/sliverService.ts`
-  - Use `apiClient`
-
-### 4.6 Infinite scroll
-- `frontend/src/components/InfiniteScrollModule.tsx`
-  - Change from offset-based to page-based state
-  - Use `GET /articles/feed?page=N&limit=M`
-  - Compute `hasMore` from `pagination.page < pagination.pages`
-
-### 4.7 Cleanup
-- Remove `frontend/src/services/adapters/` directory (not needed)
-- Remove or leave `frontend/src/services/storyService.ts` (unused)
+Important note:
+- Articles in the backend do NOT have a `collaborators` field. Keep collaborator selection UI as "WIP" (not persisted to articles).
 
 ---
 
-## 5) Implementation Order
+## 3) Phase 1: Standardize Data Fetching (Services + React Query)
 
-1. Update `frontend/src/types/article.ts`
-2. Update `frontend/src/utils/articleMapping.ts`
-3. Update `frontend/src/services/articleService.ts`
-4. Update `frontend/src/services/commentService.ts`
-5. Update `frontend/src/services/sliverService.ts`
-6. Update `frontend/src/pages/Article.tsx`
-7. Update `frontend/src/components/Comment.tsx`
-8. Update `frontend/src/components/InfiniteScrollModule.tsx`
-9. Verify build: `cd frontend && npm run build`
-10. Manual test against running `backend`
+Objective: Make it easy to replace mocks without scattering fetch logic.
+
+- [ ] Confirm `dashboard/src/lib/api-client.ts` unwraps `{ success, data }` and passes through non-wrapped responses.
+- [ ] Add a thin services layer (one file per domain):
+  - [ ] `dashboard/src/services/articles.ts`
+  - [ ] `dashboard/src/services/comments.ts`
+  - [ ] `dashboard/src/services/media.ts`
+  - [ ] `dashboard/src/services/taxonomy.ts`
+  - [ ] `dashboard/src/services/users.ts`
+  - [ ] `dashboard/src/services/collaborators.ts`
+- [ ] Standardize query keys for React Query (examples):
+  - [ ] `['admin-articles', params]`
+  - [ ] `['comment-stats']`
+  - [ ] `['comments', params]`
+  - [ ] `['media', params]`
+
+Check:
+- [ ] Pages show loading + error + empty states (no silent failures).
 
 ---
 
-## 6) Verification Checklist
+## 4) Phase 2: Replace Overview (/dash)
+
+Objective: Remove hardcoded KPIs, random chart data, and static recent list.
+
+KPIs (backend-derived):
+- [ ] Published articles (last 30 days): derived from `GET /api/admin/articles` and `publishedAt`.
+- [ ] Draft count: derived from `published === false`.
+- [ ] Total views: sum of `viewCount` across fetched articles.
+- [ ] Pending comments: from `GET /api/comments/stats`.
+
+Chart (replace `Math.random()`):
+- [ ] Chart shows "Articles published per month" for last 12 months (bucket by `publishedAt`).
+- [ ] Axis units are correct (no `$` formatting).
+
+Recent list (replace hardcoded `RecentSales`):
+- [ ] Show 5 most recently published articles.
+- [ ] Display: title, category name, viewCount, published date.
+
+Files likely touched:
+- [ ] `dashboard/src/features/dashboard/index.tsx`
+- [ ] `dashboard/src/features/dashboard/components/overview.tsx`
+- [ ] `dashboard/src/features/dashboard/components/recent-sales.tsx`
+
+Checks:
+- [ ] No hardcoded KPI values remain.
+- [ ] No `Math.random()` remains.
+- [ ] Refreshing page shows consistent values.
+
+---
+
+## 5) Phase 3: Replace Maintenance Analytics (/maintenance/analytics)
+
+Objective: Replace all mock "site analytics" widgets with content analytics based on backend data.
+
+Replace these mock datasets:
+- [ ] `siteData` -> remove or replace with content metrics.
+- [ ] `trafficSources` -> remove or replace with content groupings.
+- [ ] `articleData` -> replace with real aggregations.
+
+Proposed content analytics widgets (all real):
+- [ ] Top articles by views (viewCount)
+- [ ] Views by category (sum viewCount grouped by category)
+- [ ] Articles published over time (daily/weekly/monthly buckets)
+- [ ] Comments approval ratio (approved vs pending from `/comments/stats`)
+
+Optional later (not part of this plan unless explicitly approved):
+- Cloudflare traffic analytics via a Cloudflare Worker proxy.
+
+Files likely touched:
+- [ ] `dashboard/src/features/maintenance/analytics.tsx`
+
+Checks:
+- [ ] No hardcoded chart arrays remain.
+- [ ] Charts render deterministically based on API responses.
+
+---
+
+## 6) Phase 4: Fix Comments Moderation (/maintenance/comments)
+
+Objective: Use the backend admin comment endpoints for listing + moderation.
+
+- [ ] Wire stats cards to `GET /api/comments/stats`.
+- [ ] Wire table to `GET /api/comments?page&limit&approved=...`.
+- [ ] Approve/unapprove uses `PATCH /api/comments/:id/status` with `{ approved: boolean }`.
+- [ ] Delete uses `DELETE /api/comments/:id`.
+
+Data shape alignment:
+- [ ] Use backend `username` (do not expect `author.name` / avatar).
+- [ ] Use backend `thumbsUp` / `thumbsDown` if displayed.
+
+File likely touched:
+- [ ] `dashboard/src/features/maintenance/comments.tsx`
+
+Checks:
+- [ ] Pending/approved filters work.
+- [ ] Approve/unapprove updates UI and refetches correctly.
+- [ ] Delete removes comment and refetches correctly.
+
+---
+
+## 7) Phase 5: Article Creation + Submission (Critical Contract Fix)
+
+Objective: Ensure new articles can be created as drafts or published immediately using backend field names.
+
+Current issues:
+- The article form uses `featuredImage`, `status`, `category`, `tags`, `subcategory` which do not match backend schema.
+
+Required fixes:
+- [ ] Replace raw `fetch` calls with `apiClient`.
+- [ ] Map payload fields to backend schema:
+  - [ ] `categoryId` (not `category`)
+  - [ ] `subcategoryId` (not `subcategory`)
+  - [ ] `tagIds` (not `tags`)
+  - [ ] `featuredMediaId` (not `featuredImage`)
+  - [ ] `published: boolean` (not `status`)
+  - [ ] Use `imageCaption` for the UI "Caption" field
+- [ ] Authors picker includes all users from `GET /api/users` (no role/status filtering).
+- [ ] Featured/sticky flags only allowed when `published === true` (backend enforces; UI should mirror).
+
+Media selection (browse-only):
+- [ ] Replace `dashboard/src/data/media-library.json` usage with `GET /api/media`.
+- [ ] MediaPicker supports searching/browsing (no upload UI in this phase).
+
+Collaborators note (WIP):
+- [ ] Keep collaborator selection UI but add a clear note: "WIP: collaborators are not yet linked to articles in the backend".
+- [ ] Do not send collaborators in the article payload.
+
+Files likely touched:
+- [ ] `dashboard/src/features/articles/article-creation/article-creation.tsx`
+- [ ] `dashboard/src/features/articles/article-creation/ArticleForm.tsx`
+- [ ] `dashboard/src/features/articles/article-creation/ArticleSubmission.tsx`
+
+Checks:
+- [ ] Create draft succeeds (201) and appears in the article library.
+- [ ] Publish immediately succeeds and appears as published.
+- [ ] Featured/sticky cannot be enabled for drafts.
+
+---
+
+## 8) Phase 6: Article Library + Edit Dialog Consistency
+
+Objective: Ensure list/edit/quick actions align with backend schema and do not rely on legacy fields.
+
+- [ ] Article list uses `GET /api/admin/articles` with pagination (no `limit=100` forever; implement page/limit).
+- [ ] Quick publish uses `PATCH /api/articles/:id/status`.
+- [ ] Quick feature/sticky uses `PATCH /api/articles/:id/featured` and `/sticky`.
+- [ ] Edit dialog updates only backend-supported fields:
+  - [ ] title, slug, content, excerpt, categoryId, subcategoryId, tagIds, authors, featuredMediaId, imageCaption, published, allowComments, isFeatured, isSticky
+- [ ] Remove/ignore non-existent fields in edit payloads (seo fields, collaborators on articles, etc.).
+
+Files likely touched:
+- [ ] `dashboard/src/features/articles/article-library/useArticles.ts`
+- [ ] `dashboard/src/features/articles/article-library/list.tsx`
+- [ ] `dashboard/src/features/articles/article-library/ArticleDialogs.tsx`
+
+Checks:
+- [ ] Edit save persists and refetches.
+- [ ] Toggling publish/featured/sticky reflects backend rules.
+
+---
+
+## 9) Phase 7: Media Library (Browse + Pick)
+
+Objective: Replace any remaining fixture-based media lists.
+
+- [ ] Media page lists media from `GET /api/media?page&limit&search`.
+- [ ] Reuse this data source in the article creation MediaPicker.
+- [ ] Display: thumbnail (if image), altText, URL, created ordering.
+
+Checks:
+- [ ] Searching works.
+- [ ] Picking a media item sets `featuredMediaId` and saves on create/edit.
+
+---
+
+## 10) Phase 8: Mark Chats/Tasks as Demo (Only Mocked Areas)
+
+- [ ] Add a small "Demo data" label/badge to Tasks page.
+- [ ] Add a small "Demo data" label/badge to Chats page.
+- [ ] Ensure no other production page imports their mock datasets.
+
+---
+
+## 11) Verification Checklist (Manual + Commands)
 
 Local run:
-1. Start backend: `cd backend && npm run dev`
-2. Start frontend: `cd frontend && npm run dev`
+- [ ] Backend: `cd backend && npm run dev`
+- [ ] Dashboard: `cd dashboard && npm run dev`
 
-Test flows:
-- Home page loads categories + article sections
-- Article page shows content, author, category, tags, featured image
-- Comments load and display usernames
-- New comment submission works
-- Infinite scroll loads more articles
+Manual flows:
+- [ ] Login with Google works; `GET /api/auth/me` returns user.
+- [ ] `/dash` loads real KPIs + chart + recent.
+- [ ] `/maintenance/analytics` shows real content analytics.
+- [ ] `/maintenance/comments` can approve/unapprove and delete.
+- [ ] Article create (draft) works.
+- [ ] Article create (publish) works.
+- [ ] Article edit works.
+- [ ] Media browse works and featured media selection persists.
+- [ ] Only tasks/chats remain mocked and labeled.
+
+Build:
+- [ ] `cd dashboard && npm run build`
 
 ---
 
-## 7) Non-Goals / Future Work
+## 12) Rollout / Incremental Delivery
 
-- Dashboard migration (separate effort)
-- Auth/login (not used by public frontend)
-- Voting on comments (UI is commented out; defer)
-- `/stories` endpoint (legacy, unused)
-
-# Dashboard -> Backend Migration Plan
-
-**Goal**: Connect `dashboard/` to `backend/` using real data and Google Authentication.
-
-## 1. Infrastructure: API Client
-
-Create `dashboard/src/lib/api-client.ts`:
-- **Library**: `axios`
-- **Base URL**: `import.meta.env.VITE_API_BASE_URL` (default: `http://localhost:5050/api`)
-- **Credentials**: `withCredentials: true` (Critical for auth cookies)
-- **Interceptors**: 
-  - Unwrap `{ success: true, data: ... }` responses.
-  - **Correction**: `GET /auth/me` returns raw user data. The interceptor must return `response.data` if the `success` envelope is missing.
-
-## 2. Authentication: Session Management
-
-The backend uses HttpOnly cookies set via Google OAuth. The dashboard needs to check this session on load.
-
-- **Store**: `dashboard/src/stores/authStore.ts`
-  - Remove demo credentials and mock logic.
-  - Add `checkAuth()` action calling `GET /auth/me`.
-  - Handle 401 (unauthorized) -> redirect to login.
-  - Handle 200 (OK) -> hydrate user state.
-  - **Mapping**: Backend `User` has `isAdmin`, not `role`. Map `isAdmin: true` -> `['admin']`.
-
-- **App Entry**: `dashboard/src/routes/__root.tsx` (or `main.tsx`)
-  - Call `checkAuth()` on mount.
-
-- **Login Page**: `dashboard/src/features/auth/sign-in`
-  - Ensure "Sign in with Google" button points to `${API_BASE_URL}/auth/google?redirect=${window.location.origin}/dash`.
-  - **Note**: This must be a full page navigation (`<a href>`), not an AJAX call.
-
-## 3. Features: Connect Real Data
-
-### A. Users (`dashboard/src/features/users`)
-- **Route**: `GET /users`
-- **Data Source**: Replace Faker in `data/users.ts` with `apiClient.get('/users')`.
-- **Schema Mapping**:
-  - Backend: `_id`, `name`, `isAdmin` (No email, no status)
-  - Frontend Table: 
-    - `id` <- `_id`
-    - `username` <- `name`
-    - `role` <- `isAdmin ? 'admin' : 'user'`
-    - `status` <- 'active' (placeholder)
-    - `email` <- 'N/A' (placeholder)
-
-### B. Articles (`dashboard/src/features/articles`)
-- **Route**: `GET /admin/articles` (Admin-specific route)
-- **Refactor**: `dashboard/src/features/articles/article-libary/useArticles.ts`
-- **Changes**:
-  - Replace `fetch` with `apiClient`.
-  - Update `transformArticleData` to map:
-    - `_id` -> `id`
-    - `categoryId` (populated object) -> `category`
-    - `tagIds` (populated array) -> `tags`
-    - `featuredMediaId` (populated object) -> `featuredMedia`
-
-### C. Categories/Tags
-- **Routes**: `GET /categories`, `GET /tags`
-- **Usage**: Verify `ArticleDialogs.tsx` (edit forms) uses `apiClient`.
-
-## 4. Cleanup
-
-- Uninstall/Remove usage of `@faker-js/faker`.
-- Remove hardcoded "Demo Credentials" from UI.
-- **Port Check**: Ensure `dashboard/vite.config.ts` uses port 5173 (or added to backend CORS allowlist).
+Recommended merge order (each can be a separate PR):
+- [ ] PR 1: Services + Overview real data
+- [ ] PR 2: Comments moderation + analytics content metrics
+- [ ] PR 3: Article creation payload fix + media browse/picker
+- [ ] PR 4: Article library pagination + edit payload cleanup
+- [ ] PR 5: Mark tasks/chats as demo

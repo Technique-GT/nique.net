@@ -52,7 +52,7 @@ export function Navbar() {
       <div className="flex h-16 items-center justify-between px-6">
         {/* Logo - Left Aligned */}
         <div className="flex items-center">
-          <Link to="/" className="flex-shrink-0 font-bold text-xl">Technique</Link>
+          <Link to="/dash" className="flex-shrink-0 font-bold text-xl">Technique</Link>
         </div>
 
         {/* Desktop Navigation - Centered */}
@@ -104,7 +104,7 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-2">
             <Button variant="ghost" asChild>
-              <Link to="/sign-in">Login</Link>
+              <Link to="/login">Login</Link>
             </Button>
             <Button asChild>
               <Link to="/sign-up">Sign Up</Link>
@@ -189,7 +189,7 @@ export function Navbar() {
 
               <div className="flex flex-col gap-2 pt-2 border-t border-foreground/10">
                 <Button variant="outline" className="w-full" asChild>
-                  <Link to="/sign-in" onClick={() => setMobileMenuOpen(false)}>
+                  <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
                     Login
                   </Link>
                 </Button>

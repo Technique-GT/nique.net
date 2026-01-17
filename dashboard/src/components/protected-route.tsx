@@ -6,7 +6,7 @@ interface ProtectedRouteProps {
   fallback?: string;
 }
 
-export function ProtectedRoute({ children, fallback = '/sign-in' }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, fallback = '/login' }: ProtectedRouteProps) {
   const { user, isLoading } = useAuthStore((state) => state.auth);
   const location = useLocation();
 
