@@ -3,7 +3,6 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import LongText from '@/components/long-text'
-import { callTypes, userTypes } from '../data/data'
 import { User } from '../data/schema'
 import { DataTableColumnHeader } from './data-table-column-header'
 import { DataTableRowActions } from './data-table-row-actions'
@@ -40,12 +39,12 @@ export const columns: ColumnDef<User>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: 'username',
+    accessorKey: 'name',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Username' />
+      <DataTableColumnHeader column={column} title='Name' />
     ),
     cell: ({ row }) => (
-      <LongText className='max-w-36'>{row.getValue('username')}</LongText>
+      <LongText className='max-w-40'>{row.getValue('name')}</LongText>
     ),
     meta: {
       className: cn(
@@ -57,83 +56,65 @@ export const columns: ColumnDef<User>[] = [
     enableHiding: false,
   },
   {
-    id: 'fullName',
+    accessorKey: 'bio',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Name' />
-    ),
-    cell: ({ row }) => {
-      const { firstName, lastName } = row.original
-      const fullName = `${firstName} ${lastName}`
-      return <LongText className='max-w-36'>{fullName}</LongText>
-    },
-    meta: { className: 'w-36' },
-  },
-  {
-    accessorKey: 'email',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Email' />
+      <DataTableColumnHeader column={column} title='Bio' />
     ),
     cell: ({ row }) => (
-      <div className='w-fit text-nowrap'>{row.getValue('email')}</div>
+      <LongText className='max-w-56 text-muted-foreground'>
+        {row.getValue('bio') || '—'}
+      </LongText>
     ),
-  },
-  {
-    accessorKey: 'phoneNumber',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Phone Number' />
-    ),
-    cell: ({ row }) => <div>{row.getValue('phoneNumber')}</div>,
     enableSorting: false,
   },
   {
-    accessorKey: 'status',
+    accessorFn: (row) => String(row.isAdmin),
+    id: 'isAdmin',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Status' />
+      <DataTableColumnHeader column={column} title='Admin' />
     ),
     cell: ({ row }) => {
-      const { status } = row.original
-      const badgeColor = callTypes.get(status)
+      const isAdmin = row.original.isAdmin
       return (
         <div className='flex space-x-2'>
-          <Badge variant='outline' className={cn('capitalize', badgeColor)}>
-            {row.getValue('status')}
+          <Badge
+            variant='outline'
+            className={cn(isAdmin ? 'border-emerald-200 text-emerald-700' : 'border-muted')}
+          >
+            {isAdmin ? 'Admin' : 'User'}
           </Badge>
         </div>
       )
     },
     filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
+      return value.includes(String(row.getValue(id)))
     },
     enableHiding: false,
     enableSorting: false,
   },
   {
-    accessorKey: 'role',
+    accessorKey: 'googleSub',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Role' />
+      <DataTableColumnHeader column={column} title='Google Sub' />
     ),
-    cell: ({ row }) => {
-      const { role } = row.original
-      const userType = userTypes.find(({ value }) => value === role)
-
-      if (!userType) {
-        return null
-      }
-
-      return (
-        <div className='flex items-center gap-x-2'>
-          {userType.icon && (
-            <userType.icon size={16} className='text-muted-foreground' />
-          )}
-          <span className='text-sm capitalize'>{row.getValue('role')}</span>
-        </div>
-      )
-    },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
-    },
+    cell: ({ row }) => (
+      <LongText className='max-w-48 font-mono text-xs'>
+        {row.getValue('googleSub') || '—'}
+      </LongText>
+    ),
     enableSorting: false,
     enableHiding: false,
+  },
+  {
+    accessorKey: 'socialLinks',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Social Links' />
+    ),
+    cell: ({ row }) => {
+      const links = row.getValue('socialLinks') as Array<{ platform: string; url: string }>
+      return <div>{links?.length ? links.length : '—'}</div>
+    },
+    enableSorting: false,
   },
   {
     id: 'actions',

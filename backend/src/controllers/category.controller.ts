@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Category from '../models/Category';
+import SubCategory from '../models/Subcategory';
 
 const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId | null => {
   if (!id || Array.isArray(id) || !mongoose.Types.ObjectId.isValid(id)) return null;
@@ -149,6 +150,8 @@ export const deleteCategory = async (req: Request, res: Response): Promise<void>
       res.status(404).json({ success: false, message: 'Category not found' });
       return;
     }
+
+    await SubCategory.deleteMany({ categoryId: objectId });
 
     res.status(200).json({ success: true, message: 'Category deleted successfully' });
   } catch (error: any) {

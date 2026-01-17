@@ -23,54 +23,18 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { PasswordInput } from '@/components/password-input'
-import { SelectDropdown } from '@/components/select-dropdown'
-import { userTypes } from '../data/data'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 import { User } from '../data/schema'
 import { useUsers } from '../context/users-context'
 
-const formSchema = z
-  .object({
-    firstName: z.string().min(1, 'First Name is required.'),
-    lastName: z.string().min(1, 'Last Name is required.'),
-    username: z.string().min(1, 'Username is required.'),
-    phoneNumber: z.string().min(1, 'Phone number is required.'),
-    email: z.string().email('Please enter a valid email.'),
-    password: z.string().transform((pwd) => pwd.trim()),
-    role: z.string().min(1, 'Role is required.'),
-    confirmPassword: z.string().transform((pwd) => pwd.trim()),
-    isEdit: z.boolean(),
-  })
-  .refine(
-    (data) => {
-      if (data.isEdit && !data.password) return true
-      return data.password.length > 0
-    },
-    {
-      message: 'Password is required.',
-      path: ['password'],
-    }
-  )
-  .refine(
-    ({ isEdit, password }) => {
-      if (isEdit && !password) return true
-      return password.length >= 8
-    },
-    {
-      message: 'Password must be at least 8 characters long.',
-      path: ['password'],
-    }
-  )
-  .refine(
-    ({ isEdit, password, confirmPassword }) => {
-      if (isEdit && !password) return true
-      return password === confirmPassword
-    },
-    {
-      message: "Passwords don't match.",
-      path: ['confirmPassword'],
-    }
-  )
+const formSchema = z.object({
+  name: z.string().min(1, 'Name is required.'),
+  bio: z.string().optional(),
+  isAdmin: z.boolean(),
+  googleSub: z.string().optional(),
+  profilePictureMediaId: z.string().optional(),
+})
 type UserForm = z.infer<typeof formSchema>
 
 interface Props {
@@ -88,26 +52,18 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
     resolver: zodResolver(formSchema),
     defaultValues: isEdit
       ? {
-          firstName: currentRow.firstName,
-          lastName: currentRow.lastName,
-          username: currentRow.username,
-          email: currentRow.email,
-          phoneNumber: currentRow.phoneNumber,
-          role: currentRow.role,
-          password: '',
-          confirmPassword: '',
-          isEdit,
+          name: currentRow.name,
+          bio: currentRow.bio || '',
+          isAdmin: currentRow.isAdmin,
+          googleSub: currentRow.googleSub || '',
+          profilePictureMediaId: currentRow.profilePictureMediaId || '',
         }
       : {
-          firstName: '',
-          lastName: '',
-          username: '',
-          email: '',
-          role: '',
-          phoneNumber: '',
-          password: '',
-          confirmPassword: '',
-          isEdit,
+          name: '',
+          bio: '',
+          isAdmin: false,
+          googleSub: '',
+          profilePictureMediaId: '',
         },
   })
 
@@ -115,15 +71,14 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
     setSubmitting(true)
     try {
       if (isEdit && currentRow) {
-        // Update user - use _id from backend
         const userData = {
-          firstName: values.firstName,
-          lastName: values.lastName,
-          username: values.username,
-          email: values.email,
-          phoneNumber: values.phoneNumber,
-          role: values.role,
-          ...(values.password && { password: values.password })
+          name: values.name.trim(),
+          ...(values.bio?.trim() ? { bio: values.bio.trim() } : {}),
+          isAdmin: values.isAdmin,
+          ...(values.googleSub?.trim() ? { googleSub: values.googleSub.trim() } : {}),
+          ...(values.profilePictureMediaId?.trim()
+            ? { profilePictureMediaId: values.profilePictureMediaId.trim() }
+            : {}),
         }
         
         const response = await fetch(`${API_BASE_URL}/users/${currentRow._id}`, {
@@ -140,13 +95,13 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
       } else {
         // Create user
         const userData = {
-          firstName: values.firstName,
-          lastName: values.lastName,
-          username: values.username,
-          email: values.email,
-          phoneNumber: values.phoneNumber,
-          password: values.password,
-          role: values.role,
+          name: values.name.trim(),
+          ...(values.bio?.trim() ? { bio: values.bio.trim() } : {}),
+          isAdmin: values.isAdmin,
+          ...(values.googleSub?.trim() ? { googleSub: values.googleSub.trim() } : {}),
+          ...(values.profilePictureMediaId?.trim()
+            ? { profilePictureMediaId: values.profilePictureMediaId.trim() }
+            : {}),
         }
         
         const response = await fetch(`${API_BASE_URL}/users`, {
@@ -173,8 +128,6 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
     }
   }
 
-  const isPasswordTouched = !!form.formState.dirtyFields.password
-
   return (
     <Dialog
       open={open}
@@ -200,15 +153,15 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
             >
               <FormField
                 control={form.control}
-                name='firstName'
+                name='name'
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-right'>
-                      First Name
+                      Name
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='John'
+                        placeholder='Jane Doe'
                         className='col-span-4'
                         autoComplete='off'
                         {...field}
@@ -220,15 +173,15 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               />
               <FormField
                 control={form.control}
-                name='lastName'
+                name='bio'
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-right'>
-                      Last Name
+                      Bio
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder='Doe'
+                      <Textarea
+                        placeholder='Short bio (optional)'
                         className='col-span-4'
                         autoComplete='off'
                         {...field}
@@ -240,15 +193,15 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               />
               <FormField
                 control={form.control}
-                name='username'
+                name='googleSub'
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-right'>
-                      Username
+                      Google Sub
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='john_doe'
+                        placeholder='Google subject (optional)'
                         className='col-span-4'
                         {...field}
                       />
@@ -259,15 +212,15 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               />
               <FormField
                 control={form.control}
-                name='email'
+                name='profilePictureMediaId'
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-right'>
-                      Email
+                      Profile Media ID
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='john.doe@gmail.com'
+                        placeholder='Media ID (optional)'
                         className='col-span-4'
                         {...field}
                       />
@@ -278,79 +231,16 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               />
               <FormField
                 control={form.control}
-                name='phoneNumber'
+                name='isAdmin'
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-right'>
-                      Phone Number
+                      Admin
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder='+123456789'
-                        className='col-span-4'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='role'
-                render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-right'>
-                      Role
-                    </FormLabel>
-                    <SelectDropdown
-                      defaultValue={field.value}
-                      onValueChange={field.onChange}
-                      placeholder='Select a role'
-                      className='col-span-4'
-                      items={userTypes.map(({ label, value }) => ({
-                        label,
-                        value,
-                      }))}
-                    />
-                    <FormMessage className='col-span-4 col-start-3' />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='password'
-                render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-right'>
-                      Password
-                    </FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        placeholder='e.g., S3cur3P@ssw0rd'
-                        className='col-span-4'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='confirmPassword'
-                render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-right'>
-                      Confirm Password
-                    </FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        disabled={!isPasswordTouched}
-                        placeholder='e.g., S3cur3P@ssw0rd'
-                        className='col-span-4'
-                        {...field}
-                      />
+                      <div className='col-span-4 flex items-center justify-start'>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </div>
                     </FormControl>
                     <FormMessage className='col-span-4 col-start-3' />
                   </FormItem>

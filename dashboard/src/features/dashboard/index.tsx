@@ -44,7 +44,6 @@ export default function Dashboard() {
             <TabsList>
               <TabsTrigger value='overview'>Overview</TabsTrigger>
               <TabsTrigger value='analytics'>Analytics</TabsTrigger>
-              <TabsTrigger value='calendar'>Schedule</TabsTrigger>
             </TabsList>
           </div>
 

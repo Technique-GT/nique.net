@@ -2,7 +2,7 @@ import { Cross2Icon } from '@radix-ui/react-icons'
 import { Table } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { userTypes } from '../data/data'
+import { adminOptions } from '../data/data'
 import { DataTableFacetedFilter } from './data-table-faceted-filter'
 import { DataTableViewOptions } from './data-table-view-options'
 
@@ -21,31 +21,19 @@ export function DataTableToolbar<TData>({
         <Input
           placeholder='Filter users...'
           value={
-            (table.getColumn('username')?.getFilterValue() as string) ?? ''
+            (table.getColumn('name')?.getFilterValue() as string) ?? ''
           }
           onChange={(event) =>
-            table.getColumn('username')?.setFilterValue(event.target.value)
+            table.getColumn('name')?.setFilterValue(event.target.value)
           }
           className='h-8 w-[150px] lg:w-[250px]'
         />
         <div className='flex gap-x-2'>
-          {table.getColumn('status') && (
+          {table.getColumn('isAdmin') && (
             <DataTableFacetedFilter
-              column={table.getColumn('status')}
-              title='Status'
-              options={[
-                { label: 'Active', value: 'active' },
-                { label: 'Inactive', value: 'inactive' },
-                { label: 'Invited', value: 'invited' },
-                { label: 'Suspended', value: 'suspended' },
-              ]}
-            />
-          )}
-          {table.getColumn('role') && (
-            <DataTableFacetedFilter
-              column={table.getColumn('role')}
-              title='Role'
-              options={userTypes.map((t) => ({ ...t }))}
+              column={table.getColumn('isAdmin')}
+              title='Admin'
+              options={adminOptions.map((t) => ({ ...t }))}
             />
           )}
         </div>

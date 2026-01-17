@@ -197,7 +197,7 @@ export default function MediaLibrary() {
               ) : (
                 <>
                   <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <Label htmlFor="file-upload" className="cursor-pointer">
+                  <Label htmlFor="file-upload" className="cursor-pointer align-center inline-flex gap-2">
                     <Button variant="outline" asChild>
                       <span>Choose files</span>
                     </Button>
@@ -242,25 +242,33 @@ export default function MediaLibrary() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {mediaItems.map((item) => (
                       <Card key={item._id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-center mb-3 h-16">
-                            {getFileIcon(item.url)}
+                        <CardContent className="px-4">
+                          <div className="mb-3 overflow-hidden rounded-lg bg-muted/30">
+                            <img
+                              src={item.url}
+                              alt={item.altText || "Media preview"}
+                              className="h-40 w-full object-cover"
+                              loading="lazy"
+                              decoding="async"
+                            />
                           </div>
-                          <div className="text-center space-y-1 mb-3">
-                            <p className="text-sm font-medium truncate" title={item.altText}>
-                               {item.altText}
-                             </p>
-                             <p className="text-xs text-muted-foreground">
-                               {item.url.split('/').pop()}
-                             </p>
-                             <p className="text-xs text-muted-foreground">
-                               {formatDate(item.createdAt)}
-                             </p>
-                             <Badge variant="secondary" className="text-xs">
-                               {getFileType(item.url)}
-                             </Badge>
+                          <div className="space-y-1.5 mb-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-medium truncate" title={item.altText}>
+                                {item.altText}
+                              </p>
+                              <Badge variant="secondary" className="text-xs shrink-0">
+                                {getFileType(item.url)}
+                              </Badge>
+                            </div>
+                            <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground truncate overflow-hidden block hover:underline">
+                              {item.url.split('/').pop()}
+                            </a>
+                            <p className="text-xs text-muted-foreground">
+                              {formatDate(item.createdAt)}
+                            </p>
                           </div>
-                          <div className="flex justify-center gap-2">
+                          <div className="flex justify-end gap-2">
                             <Button 
                               variant="outline" 
                               size="sm"
@@ -268,14 +276,6 @@ export default function MediaLibrary() {
                               title="Download"
                             >
                               <Download className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => navigator.clipboard.writeText(item.url)}
-                              title="Copy URL"
-                            >
-                              Copy URL
                             </Button>
                             <Button 
                               variant="destructive" 

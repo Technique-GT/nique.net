@@ -45,15 +45,12 @@ export default function UsersProvider({ children }: Props) {
       const mappedUsers = rawUsers.map((u: any) => ({
         _id: u._id,
         id: u._id,
-        firstName: u.name ? u.name.split(' ')[0] : 'Unknown',
-        lastName: u.name ? u.name.split(' ').slice(1).join(' ') : '',
-        username: u.name || 'Unknown',
-        email: 'N/A', // Backend does not expose email
-        phoneNumber: 'N/A',
-        status: 'active', // Backend does not have status
-        role: u.isAdmin ? 'superadmin' : 'writer', // Simple mapping
-        createdAt: new Date().toISOString(), // Backend User has no timestamps
-        updatedAt: new Date().toISOString(),
+        name: typeof u.name === 'string' ? u.name : 'Unknown',
+        bio: typeof u.bio === 'string' ? u.bio : undefined,
+        isAdmin: !!u.isAdmin,
+        googleSub: typeof u.googleSub === 'string' ? u.googleSub : undefined,
+        profilePictureMediaId: typeof u.profilePictureMediaId === 'string' ? u.profilePictureMediaId : undefined,
+        socialLinks: Array.isArray(u.socialLinks) ? u.socialLinks : [],
       }))
 
       // Validate against schema to be safe, or just trust the mapping

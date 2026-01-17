@@ -5,9 +5,9 @@ import {
   SidebarHeader,
   SidebarRail,
 } from '@/components/ui/sidebar'
+import { CardTitle } from '@/components/ui/card'
 import { NavGroup } from '@/components/layout/nav-group'
 import { NavUser } from '@/components/layout/nav-user'
-import { TeamSwitcher } from '@/components/layout/team-switcher'
 import { sidebarData } from './data/sidebar-data'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -24,7 +24,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible='icon' variant='floating' {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={sidebarData.teams} />
+        <CardTitle className="text-lg p-2 overflow-hidden whitespace-nowrap text-ellipsis">Technique</CardTitle>
       </SidebarHeader>
       <SidebarContent>
         {sidebarData.navGroups.map((props) => (

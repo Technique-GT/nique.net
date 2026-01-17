@@ -29,23 +29,6 @@ export const sidebarData: SidebarData = {
     email: 'johndoe@gmail.com',
     avatar: '/avatars/shadcn.jpg',
   },
-  teams: [
-    {
-      name: 'News Team',
-      logo: Command,
-      plan: 'Basic',
-    },
-    {
-      name: 'Sports Team',
-      logo: GalleryVerticalEnd,
-      plan: 'Pro',
-    },
-    {
-      name: 'Opinion Team',
-      logo: AudioWaveform,
-      plan: 'Pro',
-    },
-  ],
   navGroups: [
     {
       title: 'Core',
@@ -54,11 +37,6 @@ export const sidebarData: SidebarData = {
           title: 'Dashboard',
           url: '/dash',
           icon: IconLayoutDashboard,
-        },
-        {
-          title: 'Tasks',
-          url: '/tasks',
-          icon: IconChecklist,
         },
         {
           title: 'Staff Members',
@@ -80,7 +58,7 @@ export const sidebarData: SidebarData = {
               icon: IconLibrary,
             },
             {
-              title: 'New Article',
+              title: 'Create New Article',
               url: '/articles/new',
               icon: IconArticle,
             },
@@ -102,27 +80,22 @@ export const sidebarData: SidebarData = {
           ],
         },
         {
-          title: 'Maintenance',
+          title: 'Statistics & Moderation',
           icon: IconBarrierBlock,
           items: [
             {
-              title: 'Site Analytics',
-              url: '/maintenance',
+              title: 'Statistics',
+              url: '/stats',
               icon: IconChartBar,
             },
             {
               title: 'Comments List',
-              url: '/maintenance/comments',
+              url: '/comments',
               icon: IconMessage,
             },
             {
-              title: 'Collaborators',
-              url: '/maintenance/collaborators',
-              icon: IconUsersGroup,
-            },
-            {
               title: 'Spotify',
-              url: '/maintenance/spotify',
+              url: '/spotify',
               icon: IconMusic,
             },
           ],
@@ -137,37 +110,12 @@ export const sidebarData: SidebarData = {
           icon: IconSettings,
           items: [
             {
-              title: 'Profile',
-              url: '/settings',
-              icon: IconUserCog,
-            },
-            {
-              title: 'Account',
-              url: '/settings/account',
-              icon: IconTool,
-            },
-            {
               title: 'Appearance',
               url: '/settings/appearance',
               icon: IconPalette,
-            },
-            {
-              title: 'Notifications',
-              url: '/settings/notifications',
-              icon: IconNotification,
-            },
-            {
-              title: 'Display',
-              url: '/settings/display',
-              icon: IconBrowserCheck,
-            },
+            }
           ],
-        },
-        {
-          title: 'Help Center',
-          url: '/help-center',
-          icon: IconHelp,
-        },
+        }
       ],
     },
   ],

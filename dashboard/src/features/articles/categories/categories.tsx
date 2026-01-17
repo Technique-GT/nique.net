@@ -11,13 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Edit, Trash2, Search, Eye, EyeOff, FolderOpen, FolderTree, ChevronDown, ChevronRight } from "lucide-react";
 import { API_BASE_URL } from '../../../config';
+import { ca } from "date-fns/locale";
 
 interface Category {
   _id: string;
   name: string;
   slug: string;
-  description?: string;
-  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -26,8 +25,6 @@ interface SubCategory {
   _id: string;
   name: string;
   slug: string;
-  description?: string;
-  isActive: boolean;
   category: {
     _id: string;
     name: string;
@@ -41,7 +38,6 @@ export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [allSubCategories, setAllSubCategories] = useState<SubCategory[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showInactive, setShowInactive] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const didInitFetchRef = useRef(false);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -51,15 +47,11 @@ export default function Categories() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   
   const [categoryFormData, setCategoryFormData] = useState({
-    name: "",
-    description: "",
-    isActive: true
+    name: ""
   });
 
   const [subCategoryFormData, setSubCategoryFormData] = useState({
     name: "",
-    description: "",
-    isActive: true,
     category: ""
   });
 
@@ -75,41 +67,60 @@ export default function Categories() {
 
   // Fetch categories and subcategories on component mount
   useEffect(() => {
-    fetchCategories();
-    fetchSubCategories();
-    fetchStats();
+    const loadData = async () => {
+      setIsLoading(true);
+      setError(null);
+      const categoryList = await fetchCategories();
+      await fetchSubCategories(categoryList);
+      await fetchStats();
+      setIsLoading(false);
+    };
+    loadData();
   }, []);
 
   const fetchCategories = async () => {
     try {
-      setIsLoading(true);
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
-      if (showInactive) params.append('isActive', 'false');
 
       const response = await fetch(`${API_BASE_URL}/categories?${params}`);
       const data = await response.json();
       
       if (data.success) {
-        setCategories(data.data);
+        const normalized = (data.data || []).map((category: Category) => ({
+          ...category
+        }));
+        setCategories(normalized);
+        return normalized;
       } else {
         setError(data.message || 'Failed to fetch categories');
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
       setError('Network error. Please check your connection.');
-    } finally {
-      setIsLoading(false);
     }
+    return [];
   };
 
-  const fetchSubCategories = async () => {
+  const fetchSubCategories = async (categoryList: Category[] = categories) => {
     try {
       const response = await fetch(`${API_BASE_URL}/sub-categories`);
       const data = await response.json();
       
       if (data.success) {
-        setAllSubCategories(data.data);
+        const categoryMap = new Map(categoryList.map((category) => [category._id, category]));
+        const normalized = (data.data || []).map((subCategory: any) => {
+          const categoryId = subCategory.categoryId || subCategory.category?._id || "";
+          const category = categoryMap.get(categoryId) || { _id: categoryId, name: "Unknown", slug: "" };
+          return {
+            ...subCategory,
+            categoryId,
+            category,
+            description: subCategory.description || "",
+            isActive: subCategory.isActive ?? true
+          };
+        });
+        setAllSubCategories(normalized);
       }
     } catch (error) {
       console.error('Error fetching sub-categories:', error);
@@ -127,13 +138,15 @@ export default function Categories() {
       const subCategoriesData = await subCategoriesResponse.json();
       
       if (categoriesData.success && subCategoriesData.success) {
+        const totalCategories = categoriesData.data.totalCategories || 0;
+        const totalSubCategories = subCategoriesData.data.totalSubCategories || 0;
         setStats({
-          totalCategories: categoriesData.data.totalCategories || 0,
-          activeCategories: categoriesData.data.activeCategories || 0,
-          inactiveCategories: categoriesData.data.inactiveCategories || 0,
-          totalSubCategories: subCategoriesData.data.totalSubCategories || 0,
-          activeSubCategories: subCategoriesData.data.activeSubCategories || 0,
-          inactiveSubCategories: subCategoriesData.data.inactiveSubCategories || 0
+          totalCategories,
+          activeCategories: totalCategories,
+          inactiveCategories: 0,
+          totalSubCategories,
+          activeSubCategories: totalSubCategories,
+          inactiveSubCategories: 0
         });
       }
     } catch (error) {
@@ -161,9 +174,7 @@ export default function Categories() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: categoryFormData.name.trim(),
-          description: categoryFormData.description.trim() || undefined,
-          isActive: categoryFormData.isActive
+          name: categoryFormData.name.trim()
         }),
       });
 
@@ -209,9 +220,7 @@ export default function Categories() {
         },
         body: JSON.stringify({
           name: subCategoryFormData.name.trim(),
-          description: subCategoryFormData.description.trim() || undefined,
-          isActive: subCategoryFormData.isActive,
-          category: subCategoryFormData.category
+          categoryId: subCategoryFormData.category
         }),
       });
 
@@ -232,74 +241,17 @@ export default function Categories() {
   };
 
   const handleDeleteCategory = async (category: Category) => {
-    if (!confirm(`Are you sure you want to ${category.isActive ? 'deactivate' : 'activate'} this category?`)) return;
+    if (!confirm('Are you sure you want to delete this category? This will also delete all associated sub-categories.')) return;
 
     try {
       const response = await fetch(`${API_BASE_URL}/categories/${category._id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          isActive: !category.isActive
-        }),
+        method: 'DELETE'
       });
 
       const data = await response.json();
       
       if (data.success) {
         await fetchCategories();
-        await fetchStats();
-      } else {
-        alert(data.message || `Error ${category.isActive ? 'deactivating' : 'activating'} category`);
-      }
-    } catch (error) {
-      console.error(`Error ${category.isActive ? 'deactivating' : 'activating'} category:`, error);
-      alert(`Error ${category.isActive ? 'deactivating' : 'activating'} category`);
-    }
-  };
-
-  const handleDeleteSubCategory = async (subCategory: SubCategory) => {
-    if (!confirm(`Are you sure you want to ${subCategory.isActive ? 'deactivate' : 'activate'} this sub-category?`)) return;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/sub-categories/${subCategory._id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          isActive: !subCategory.isActive
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        await fetchSubCategories();
-        await fetchStats();
-      } else {
-        alert(data.message || `Error ${subCategory.isActive ? 'deactivating' : 'activating'} sub-category`);
-      }
-    } catch (error) {
-      console.error(`Error ${subCategory.isActive ? 'deactivating' : 'activating'} sub-category:`, error);
-      alert(`Error ${subCategory.isActive ? 'deactivating' : 'activating'} sub-category`);
-    }
-  };
-
-  const handleHardDeleteCategory = async (categoryId: string) => {
-    if (!confirm('Are you sure you want to permanently delete this category? This will also delete all associated sub-categories.')) return;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/categories/${categoryId}/hard`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        await fetchCategories();
-        await fetchSubCategories();
         await fetchStats();
       } else {
         alert(data.message || 'Error deleting category');
@@ -310,12 +262,12 @@ export default function Categories() {
     }
   };
 
-  const handleHardDeleteSubCategory = async (subCategoryId: string) => {
-    if (!confirm('Are you sure you want to permanently delete this sub-category? This action cannot be undone.')) return;
+  const handleDeleteSubCategory = async (subCategory: SubCategory) => {
+    if (!confirm('Are you sure you want to delete this sub-category?')) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/sub-categories/${subCategoryId}/hard`, {
-        method: 'DELETE',
+      const response = await fetch(`${API_BASE_URL}/sub-categories/${subCategory._id}`, {
+        method: 'DELETE'
       });
 
       const data = await response.json();
@@ -334,9 +286,7 @@ export default function Categories() {
 
   const openEditCategoryDialog = (category: Category) => {
     setCategoryFormData({
-      name: category.name,
-      description: category.description || "",
-      isActive: category.isActive
+      name: category.name
     });
     setEditingCategory(category);
     setError(null);
@@ -346,8 +296,6 @@ export default function Categories() {
   const openEditSubCategoryDialog = (subCategory: SubCategory) => {
     setSubCategoryFormData({
       name: subCategory.name,
-      description: subCategory.description || "",
-      isActive: subCategory.isActive,
       category: subCategory.category._id
     });
     setEditingSubCategory(subCategory);
@@ -367,9 +315,7 @@ export default function Categories() {
 
   const resetCategoryForm = () => {
     setCategoryFormData({
-      name: "",
-      description: "",
-      isActive: true
+      name: ""
     });
     setEditingCategory(null);
     setError(null);
@@ -378,8 +324,6 @@ export default function Categories() {
   const resetSubCategoryForm = () => {
     setSubCategoryFormData({
       name: "",
-      description: "",
-      isActive: true,
       category: ""
     });
     setEditingSubCategory(null);
@@ -403,23 +347,16 @@ export default function Categories() {
 
   // Filter categories and subcategories based on search term
   const filteredCategories = categories.filter(category => {
-    const matchesSearch = !searchTerm || 
-      category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      category.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = !searchTerm || category.name.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesActiveFilter = showInactive || category.isActive;
-    
-    return matchesSearch && matchesActiveFilter;
+    return matchesSearch;
   });
 
   const filteredSubCategories = allSubCategories.filter(subCategory => {
     const matchesSearch = !searchTerm || 
-      subCategory.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      subCategory.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      subCategory.name.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesActiveFilter = showInactive || subCategory.isActive;
-    
-    return matchesSearch && matchesActiveFilter;
+    return matchesSearch;
   });
 
   // Debounced search (skip initial mount; it already fetches)
@@ -430,12 +367,13 @@ export default function Categories() {
     }
 
     const timer = setTimeout(() => {
-      fetchCategories();
-      fetchSubCategories();
+      fetchCategories().then((categoryList) => {
+        fetchSubCategories(categoryList);
+      });
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, showInactive]);
+  }, [searchTerm]);
 
   if (isLoading) {
     return (
@@ -467,7 +405,7 @@ export default function Categories() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Categories</CardTitle>
@@ -481,56 +419,12 @@ export default function Categories() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Categories</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeCategories}</div>
-            <p className="text-xs text-muted-foreground">Currently active</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inactive Categories</CardTitle>
-            <EyeOff className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.inactiveCategories}</div>
-            <p className="text-xs text-muted-foreground">Currently inactive</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Subcategories</CardTitle>
             <FolderTree className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalSubCategories}</div>
             <p className="text-xs text-muted-foreground">All subcategories</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Subcategories</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeSubCategories}</div>
-            <p className="text-xs text-muted-foreground">Currently active</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inactive Subcategories</CardTitle>
-            <EyeOff className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.inactiveSubCategories}</div>
-            <p className="text-xs text-muted-foreground">Currently inactive</p>
           </CardContent>
         </Card>
       </div>
@@ -568,17 +462,6 @@ export default function Categories() {
                     className="pl-10 w-full sm:w-64"
                   />
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-inactive"
-                    checked={showInactive}
-                    onCheckedChange={setShowInactive}
-                  />
-                  <Label htmlFor="show-inactive" className="text-sm">
-                    Show Inactive
-                  </Label>
                 </div>
 
                 {/* Category Dialog */}
@@ -619,27 +502,6 @@ export default function Categories() {
                           required
                         />
                       </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="description">Description (Optional)</Label>
-                        <Input
-                          id="description"
-                          value={categoryFormData.description}
-                          onChange={(e) => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
-                          placeholder="Enter category description"
-                        />
-                      </div>
-                      {editingCategory && (
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="isActive"
-                            checked={categoryFormData.isActive}
-                            onCheckedChange={(checked) => setCategoryFormData({ ...categoryFormData, isActive: checked })}
-                          />
-                          <Label htmlFor="isActive" className="text-sm">
-                            Active Category
-                          </Label>
-                        </div>
-                      )}
                     </div>
                     <DialogFooter>
                       <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>
@@ -691,15 +553,6 @@ export default function Categories() {
                         />
                       </div>
                       <div className="grid gap-2">
-                        <Label htmlFor="subcategory-description">Description (Optional)</Label>
-                        <Input
-                          id="subcategory-description"
-                          value={subCategoryFormData.description}
-                          onChange={(e) => setSubCategoryFormData({ ...subCategoryFormData, description: e.target.value })}
-                          placeholder="Enter subcategory description"
-                        />
-                      </div>
-                      <div className="grid gap-2">
                         <Label htmlFor="parent-category">Parent Category *</Label>
                         <Select
                           value={subCategoryFormData.category}
@@ -710,7 +563,6 @@ export default function Categories() {
                           </SelectTrigger>
                           <SelectContent>
                             {categories
-                              .filter(cat => cat.isActive)
                               .map((category) => (
                               <SelectItem key={category._id} value={category._id}>
                                 {category.name}
@@ -719,18 +571,6 @@ export default function Categories() {
                           </SelectContent>
                         </Select>
                       </div>
-                      {editingSubCategory && (
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="subcategory-isActive"
-                            checked={subCategoryFormData.isActive}
-                            onCheckedChange={(checked) => setSubCategoryFormData({ ...subCategoryFormData, isActive: checked })}
-                          />
-                          <Label htmlFor="subcategory-isActive" className="text-sm">
-                            Active Subcategory
-                          </Label>
-                        </div>
-                      )}
                     </div>
                     <DialogFooter>
                       <Button type="button" variant="outline" onClick={() => setIsSubCategoryDialogOpen(false)}>
@@ -752,10 +592,8 @@ export default function Categories() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12"></TableHead>
-                      <TableHead>Status</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Slug</TableHead>
-                      <TableHead>Description</TableHead>
                       <TableHead>Subcategories</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -768,7 +606,7 @@ export default function Categories() {
                       
                       return (
                         <>
-                          <TableRow key={category._id} className={!category.isActive ? "bg-muted/50" : ""}>
+                          <TableRow key={category._id} >
                             <TableCell>
                               {categorySubCategories.length > 0 && (
                                 <Button
@@ -784,11 +622,6 @@ export default function Categories() {
                                 </Button>
                               )}
                             </TableCell>
-                            <TableCell>
-                              <Badge variant={category.isActive ? "default" : "secondary"}>
-                                {category.isActive ? "Active" : "Inactive"}
-                              </Badge>
-                            </TableCell>
                             <TableCell className="font-medium">
                               <div className="flex items-center gap-2">
                                 <FolderOpen className="w-4 h-4" />
@@ -797,9 +630,6 @@ export default function Categories() {
                             </TableCell>
                             <TableCell className="text-muted-foreground font-mono text-sm">
                               {category.slug}
-                            </TableCell>
-                            <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                              {category.description || "—"}
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline">
@@ -819,18 +649,10 @@ export default function Categories() {
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button
-                                  variant={category.isActive ? "secondary" : "default"}
-                                  size="sm"
-                                  onClick={() => handleDeleteCategory(category)}
-                                  title={category.isActive ? "Deactivate category" : "Activate category"}
-                                >
-                                  {category.isActive ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                </Button>
-                                <Button
                                   variant="destructive"
                                   size="sm"
-                                  onClick={() => handleHardDeleteCategory(category._id)}
-                                  title="Permanently delete category"
+                                  onClick={() => handleDeleteCategory(category)}
+                                  title="Delete category"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
@@ -853,9 +675,6 @@ export default function Categories() {
                                             <div className="font-medium text-sm">{subCategory.name}</div>
                                             <div className="text-xs text-muted-foreground">{subCategory.slug}</div>
                                           </div>
-                                          <Badge variant={subCategory.isActive ? "default" : "secondary"} className="text-xs">
-                                            {subCategory.isActive ? "Active" : "Inactive"}
-                                          </Badge>
                                         </div>
                                         <div className="flex gap-2">
                                           <Button 
@@ -866,18 +685,10 @@ export default function Categories() {
                                             <Edit className="w-3 h-3" />
                                           </Button>
                                           <Button
-                                            variant={subCategory.isActive ? "secondary" : "default"}
-                                            size="sm"
-                                            onClick={() => handleDeleteSubCategory(subCategory)}
-                                            title={subCategory.isActive ? "Deactivate subcategory" : "Activate subcategory"}
-                                          >
-                                            {subCategory.isActive ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                                          </Button>
-                                          <Button
                                             variant="destructive"
                                             size="sm"
-                                            onClick={() => handleHardDeleteSubCategory(subCategory._id)}
-                                            title="Permanently delete subcategory"
+                                            onClick={() => handleDeleteSubCategory(subCategory)}
+                                            title="Delete subcategory"
                                           >
                                             <Trash2 className="w-3 h-3" />
                                           </Button>
@@ -925,10 +736,8 @@ export default function Categories() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Status</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Slug</TableHead>
-                      <TableHead>Description</TableHead>
                       <TableHead>Parent Category</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -936,12 +745,7 @@ export default function Categories() {
                   </TableHeader>
                   <TableBody>
                     {filteredSubCategories.map((subCategory) => (
-                      <TableRow key={subCategory._id} className={!subCategory.isActive ? "bg-muted/50" : ""}>
-                        <TableCell>
-                          <Badge variant={subCategory.isActive ? "default" : "secondary"}>
-                            {subCategory.isActive ? "Active" : "Inactive"}
-                          </Badge>
-                        </TableCell>
+                      <TableRow key={subCategory._id}>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             <FolderTree className="w-4 h-4" />
@@ -950,9 +754,6 @@ export default function Categories() {
                         </TableCell>
                         <TableCell className="text-muted-foreground font-mono text-sm">
                           {subCategory.slug}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                          {subCategory.description || "—"}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
@@ -972,18 +773,10 @@ export default function Categories() {
                               <Edit className="w-4 h-4" />
                             </Button>
                             <Button
-                              variant={subCategory.isActive ? "secondary" : "default"}
-                              size="sm"
-                              onClick={() => handleDeleteSubCategory(subCategory)}
-                              title={subCategory.isActive ? "Deactivate subcategory" : "Activate subcategory"}
-                            >
-                              {subCategory.isActive ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </Button>
-                            <Button
                               variant="destructive"
                               size="sm"
-                              onClick={() => handleHardDeleteSubCategory(subCategory._id)}
-                              title="Permanently delete subcategory"
+                              onClick={() => handleDeleteSubCategory(subCategory)}
+                              title="Delete subcategory"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>

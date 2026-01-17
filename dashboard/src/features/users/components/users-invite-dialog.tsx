@@ -23,14 +23,11 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { SelectDropdown } from '@/components/select-dropdown'
-import { userTypes } from '../data/data'
 import { useUsers } from '../context/users-context'
 import { API_BASE_URL } from '../../../config'
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email.'),
-  role: z.string().min(1, 'Role is required.'),
   desc: z.string().optional(),
 })
 type UserInviteForm = z.infer<typeof formSchema>
@@ -46,7 +43,7 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
   
   const form = useForm<UserInviteForm>({
     resolver: zodResolver(formSchema),
-    defaultValues: { email: '', role: '', desc: '' },
+    defaultValues: { email: '', desc: '' },
   })
 
   const onSubmit = async (values: UserInviteForm) => {
@@ -59,7 +56,6 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
         },
         body: JSON.stringify({
           email: values.email,
-          role: values.role,
         }),
       })
       
@@ -93,7 +89,7 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
           </DialogTitle>
           <DialogDescription>
             Invite new user to join your team by sending them an email
-            invitation. Assign a role to define their access level.
+            invitation.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -115,25 +111,6 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='role'
-              render={({ field }) => (
-                <FormItem className='space-y-1'>
-                  <FormLabel>Role</FormLabel>
-                  <SelectDropdown
-                    defaultValue={field.value}
-                    onValueChange={field.onChange}
-                    placeholder='Select a role'
-                    items={userTypes.map(({ label, value }) => ({
-                      label,
-                      value,
-                    }))}
-                  />
                   <FormMessage />
                 </FormItem>
               )}
