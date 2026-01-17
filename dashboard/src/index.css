@@ -33,8 +33,8 @@
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: var(--accent);
-  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-accent: #e7eef5;
+  --sidebar-accent-foreground: #003057;
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
 }

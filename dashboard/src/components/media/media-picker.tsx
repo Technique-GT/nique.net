@@ -1,10 +1,10 @@
 "use client"
 
-import { useMemo, useState, forwardRef } from "react"
-import { ImageIcon, X, Loader2, Search, Check } from "lucide-react"
+import { useCallback, useDeferredValue, useMemo, useState } from "react"
+import { Check, ImageIcon, Loader2, Search } from "lucide-react"
+import { Virtuoso } from "react-virtuoso"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   Dialog,
   DialogContent,
@@ -12,9 +12,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { cn } from "@/lib/utils"
-import { VirtuosoGrid } from 'react-virtuoso'
+import { Input } from "@/components/ui/input"
 import { useInfiniteMedia } from "@/hooks/use-queries"
+import { cn } from "@/lib/utils"
 
 export type MediaItem = {
   id: string
@@ -25,16 +25,23 @@ export type MediaItem = {
 
 type MediaPickerProps = {
   value?: string
-  // Items are now optional as we fetch internally, but kept for backward compat if needed
-  items?: MediaItem[] 
+  // Optional legacy list for instant label display
+  items?: MediaItem[]
   onChange: (mediaId: string | null) => void
   placeholder?: string
   className?: string
   error?: boolean
 }
 
+type BackendMedia = {
+  _id: string
+  url: string
+  altText?: string
+}
+
 export function MediaPicker({
   value,
+  items,
   onChange,
   placeholder = "Select media",
   className,
@@ -42,60 +49,77 @@ export function MediaPicker({
 }: MediaPickerProps) {
   const [open, setOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const deferredSearch = useDeferredValue(searchTerm)
+
+  // For large originals (multi-MB), thumbnail grids will always be janky.
+  // So the picker uses a fast virtualized *list* and loads at most one image
+  // in the preview pane.
+  const [activeId, setActiveId] = useState<string | null>(value ?? null)
   const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set())
 
-  // Fetch media internally using infinite query
-  const { 
-    data: mediaData, 
-    isLoading, 
-    fetchNextPage, 
-    hasNextPage, 
-    isFetchingNextPage 
-  } = useInfiniteMedia({ search: searchTerm, limit: 20 })
+  const {
+    data: mediaData,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteMedia({ search: deferredSearch, limit: 50 })
 
-  const allMediaItems = useMemo(() => {
-    return mediaData?.pages.flatMap((page) => 
-      page.data.map((item: any) => ({
-        id: item._id,
-        title: item.altText || 'Untitled',
-        url: item.url,
-        description: item.altText
-      }))
-    ) ?? []
+  const fetchedItems = useMemo<MediaItem[]>(() => {
+    return (
+      mediaData?.pages.flatMap((page) =>
+        page.data.map((m: BackendMedia) => ({
+          id: m._id,
+          title: m.altText || "Untitled",
+          url: m.url,
+          description: m.altText,
+        }))
+      ) ?? []
+    )
   }, [mediaData])
 
-  const selectedItem = useMemo(
-    () => allMediaItems.find((item) => item.id === value) ?? null,
-    [allMediaItems, value]
-  )
+  const selectedItem = useMemo(() => {
+    const inFetched = fetchedItems.find((i) => i.id === value) ?? null
+    if (inFetched) return inFetched
 
-  const handleSelect = (itemId: string) => {
-    onChange(itemId)
-    setOpen(false)
-  }
+    const inProvided = (items ?? []).find((i) => i.id === value) ?? null
+    if (inProvided) return inProvided
 
-  const handleClear = (event: React.MouseEvent<HTMLSpanElement>) => {
-    event.stopPropagation()
-    onChange(null)
-  }
+    return null
+  }, [fetchedItems, items, value])
 
-  const handleImageError = (id: string) => {
+  const activeItem = useMemo(() => {
+    if (!activeId) return null
+    return fetchedItems.find((i) => i.id === activeId) ?? (items ?? []).find((i) => i.id === activeId) ?? null
+  }, [activeId, fetchedItems, items])
+
+  const handleImageError = useCallback((id: string) => {
     setBrokenImages((prev) => {
       const next = new Set(prev)
       next.add(id)
       return next
     })
+  }, [])
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen)
+    if (nextOpen) {
+      setActiveId((prev) => prev ?? value ?? null)
+    }
+  }
+
+  const handleConfirm = () => {
+    onChange(activeId)
+    setOpen(false)
   }
 
   return (
     <div className={cn("space-y-2", className)}>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
           <Button
             type="button"
             variant="outline"
-            role="combobox"
-            aria-expanded={open}
             aria-invalid={error}
             className={cn(
               "w-full justify-between h-auto py-2",
@@ -107,9 +131,9 @@ export function MediaPicker({
                 <>
                   <div className="relative size-10 shrink-0 rounded-md overflow-hidden bg-muted border">
                     {brokenImages.has(selectedItem.id) ? (
-                       <div className="flex h-full w-full items-center justify-center">
-                         <ImageIcon className="size-5 text-muted-foreground opacity-50" />
-                       </div>
+                      <div className="flex h-full w-full items-center justify-center">
+                        <ImageIcon className="size-5 text-muted-foreground opacity-50" />
+                      </div>
                     ) : (
                       <img
                         src={selectedItem.url}
@@ -117,14 +141,14 @@ export function MediaPicker({
                         className="h-full w-full object-cover"
                         loading="lazy"
                         decoding="async"
+                        fetchPriority="low"
+                        draggable={false}
                         onError={() => handleImageError(selectedItem.id)}
                       />
                     )}
                   </div>
                   <div className="flex min-w-0 flex-col text-left flex-1">
-                    <span className="truncate text-sm font-medium">
-                      {selectedItem.title}
-                    </span>
+                    <span className="truncate text-sm font-medium">{selectedItem.title}</span>
                   </div>
                 </>
               ) : (
@@ -136,25 +160,15 @@ export function MediaPicker({
                 </div>
               )}
             </div>
-            {selectedItem && (
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={handleClear}
-                className="ml-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-                aria-label="Clear selected media"
-              >
-                <X className="h-3 w-3" />
-              </span>
-            )}
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[700px] h-[80vh] flex flex-col p-0 gap-0">
+
+        <DialogContent className="sm:max-w-[980px] h-[80vh] flex flex-col p-0 gap-0">
           <DialogHeader className="px-6 py-4 border-b">
             <DialogTitle>Select Media</DialogTitle>
           </DialogHeader>
-          
-          <div className="p-4 border-b">
+
+          <div className="px-6 py-4 border-b">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -166,81 +180,133 @@ export function MediaPicker({
             </div>
           </div>
 
-          <div className="flex-1 overflow-hidden p-4 min-h-0 bg-background">
-            {isLoading ? (
-               <div className="flex h-full items-center justify-center">
-                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-               </div>
-            ) : allMediaItems.length === 0 ? (
-               <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
-                 <ImageIcon className="h-12 w-12 opacity-20 mb-2" />
-                 <p>No media found</p>
-               </div>
-            ) : (
-              <VirtuosoGrid
-                style={{ height: '100%', width: '100%' }}
-                totalCount={allMediaItems.length}
-                data={allMediaItems}
-                endReached={() => {
-                   if (hasNextPage && !isFetchingNextPage) {
-                     fetchNextPage()
-                   }
-                }}
-                components={{
-                  List: forwardRef(({ style, children, ...props }: any, ref) => (
-                    <div
-                      ref={ref}
-                      {...props}
-                      style={style}
-                      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-                    >
-                      {children}
-                    </div>
-                  )),
-                  Footer: () => (
-                    isFetchingNextPage ? (
-                      <div className="col-span-full flex justify-center py-4">
-                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                      </div>
-                    ) : null
-                  )
-                }}
-                itemContent={(index, item) => {
-                  void index; // suppress unused var warning
-                  const isSelected = item.id === value
-                  return (
-                    <div
-                      key={item.id}
-                      className={cn(
-                        "group relative aspect-square rounded-lg border bg-muted cursor-pointer overflow-hidden transition-all hover:ring-2 hover:ring-primary hover:ring-offset-2",
-                        isSelected && "ring-2 ring-primary ring-offset-2"
-                      )}
-                      onClick={() => handleSelect(item.id)}
-                    >
-                       {brokenImages.has(item.id) ? (
-                          <div className="flex h-full w-full items-center justify-center">
-                            <ImageIcon className="h-8 w-8 text-muted-foreground opacity-50" />
-                          </div>
-                        ) : (
-                          <img
-                            src={item.url}
-                            alt={item.title}
-                            className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                            loading="lazy"
-                            decoding="async"
-                            onError={() => handleImageError(item.id)}
-                          />
+          <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-5">
+            {/* Left: fast list (no thumbnails) */}
+            <div className="md:col-span-2 border-r min-h-0">
+              {isLoading ? (
+                <div className="flex h-full items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <Virtuoso
+                  style={{ height: "100%" }}
+                  data={fetchedItems}
+                  computeItemKey={(index, item) => {
+                    void index
+                    return item.id
+                  }}
+                  endReached={() => {
+                    if (hasNextPage && !isFetchingNextPage) fetchNextPage()
+                  }}
+                  itemContent={(index, item) => {
+                    void index
+                    const isActive = item.id === activeId
+                    const isSelected = item.id === value
+                    return (
+                      <button
+                        type="button"
+                        className={cn(
+                          "w-full px-4 py-3 text-left flex items-start gap-3 border-b",
+                          "hover:bg-muted/50",
+                          isActive && "bg-muted"
                         )}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 pt-8 opacity-0 group-hover:opacity-100 transition-opacity flex justify-between items-end">
-                            <span className="text-xs text-white truncate w-full">{item.title}</span>
-                            {isSelected && <div className="bg-primary text-primary-foreground rounded-full p-0.5 absolute top-2 right-2 opacity-100"><Check className="w-3 h-3" /></div>}
+                        onClick={() => setActiveId(item.id)}
+                        onDoubleClick={() => {
+                          setActiveId(item.id)
+                          onChange(item.id)
+                          setOpen(false)
+                        }}
+                      >
+                        <div className={cn(
+                          "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border bg-background",
+                          isActive ? "border-primary" : "border-muted-foreground/30"
+                        )}>
+                          {isSelected ? (
+                            <Check className="h-4 w-4 text-primary" />
+                          ) : (
+                            <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                          )}
                         </div>
-                         {isSelected && <div className="bg-primary text-primary-foreground rounded-full p-1 absolute top-2 right-2 shadow-sm"><Check className="w-3 h-3" /></div>}
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-medium">{item.title}</div>
+                          <div className="truncate text-xs text-muted-foreground">{item.url.split("/").pop()}</div>
+                        </div>
+                      </button>
+                    )
+                  }}
+                  components={{
+                    Footer: () =>
+                      isFetchingNextPage ? (
+                        <div className="flex justify-center py-3">
+                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : null,
+                  }}
+                />
+              )}
+            </div>
+
+            {/* Right: single preview */}
+            <div className="md:col-span-3 min-h-0 flex flex-col">
+              <div className="flex-1 min-h-0 p-6">
+                {!activeItem ? (
+                  <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
+                    <ImageIcon className="h-12 w-12 opacity-20 mb-2" />
+                    <p>Select an item to preview</p>
+                    <p className="text-xs mt-1">(Preview loads the full image)</p>
+                  </div>
+                ) : brokenImages.has(activeItem.id) ? (
+                  <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
+                    <ImageIcon className="h-12 w-12 opacity-20 mb-2" />
+                    <p>Preview unavailable</p>
+                  </div>
+                ) : (
+                  <div className="h-full flex flex-col gap-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="truncate text-base font-medium">{activeItem.title}</div>
+                        <div className="truncate text-xs text-muted-foreground">{activeItem.url}</div>
+                      </div>
+                      {activeItem.id === value && (
+                        <span className="text-xs text-muted-foreground">Currently selected</span>
+                      )}
                     </div>
-                  )
-                }}
-              />
-            )}
+                    <div className="flex-1 min-h-0 rounded-lg border bg-muted/20 overflow-hidden flex items-center justify-center">
+                      <img
+                        src={activeItem.url}
+                        alt={activeItem.title}
+                        className="max-h-full max-w-full object-contain"
+                        decoding="async"
+                        fetchPriority="low"
+                        onError={() => handleImageError(activeItem.id)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t px-6 py-4 flex items-center justify-between gap-3">
+                <div className="text-xs text-muted-foreground">
+                  Tip: double-click an item to select quickly.
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleConfirm}
+                    disabled={!activeId}
+                  >
+                    Select
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
