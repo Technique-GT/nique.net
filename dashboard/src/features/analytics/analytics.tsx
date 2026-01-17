@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { Eye, MessageSquare, RefreshCw, BarChart3 } from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Main } from "@/components/layout/main";
+import { PageHeader } from "@/components/layout/page-header";
+import { ThemeSwitch } from "@/components/theme-switch";
 import { useAnalyticsData } from "./useAnalyticsData";
 
 export default function Analytics() {
@@ -13,57 +17,81 @@ export default function Analytics() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <RefreshCw className="animate-spin h-8 w-8 mx-auto mb-2 text-primary" />
-            <p className="text-muted-foreground">Loading analytics...</p>
+      <>
+        <Header>
+          <div className='ml-auto flex items-center space-x-4'>
+            <ThemeSwitch />
           </div>
-        </div>
-      </div>
+        </Header>
+        <Main>
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <RefreshCw className="animate-spin h-8 w-8 mx-auto mb-2 text-primary" />
+              <p className="text-muted-foreground">Loading analytics...</p>
+            </div>
+          </div>
+        </Main>
+      </>
     );
   }
 
   if (isError || !data) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center h-64">
-            <p className="text-destructive mb-4">Failed to load analytics data.</p>
-            <Button onClick={() => refetch()}>Retry</Button>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <Header>
+          <div className='ml-auto flex items-center space-x-4'>
+            <ThemeSwitch />
+          </div>
+        </Header>
+        <Main>
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center h-64">
+              <p className="text-destructive mb-4">Failed to load analytics data.</p>
+              <Button onClick={() => refetch()}>Retry</Button>
+            </CardContent>
+          </Card>
+        </Main>
+      </>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
-        <div className="flex gap-2">
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Time range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Last 7 days (WIP)</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days (WIP)</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
+    <>
+      <Header>
+        <div className='ml-auto flex items-center space-x-4'>
+          <ThemeSwitch />
         </div>
-      </div>
+      </Header>
 
-      <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="articles">Content Performance</TabsTrigger>
-        </TabsList>
+      <Main>
+        <PageHeader
+          title="Analytics Dashboard"
+          description="Content performance and engagement metrics"
+          actions={
+            <>
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Time range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7d">Last 7 days (WIP)</SelectItem>
+                  <SelectItem value="30d">Last 30 days</SelectItem>
+                  <SelectItem value="90d">Last 90 days (WIP)</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" onClick={() => refetch()}>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </Button>
+            </>
+          }
+        />
+
+        <Tabs defaultValue="overview">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="articles">Content Performance</TabsTrigger>
+          </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -184,6 +212,7 @@ export default function Analytics() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </Main>
+    </>
   );
 }

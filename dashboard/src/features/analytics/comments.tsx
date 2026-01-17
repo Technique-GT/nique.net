@@ -7,6 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Search, Check, X, Trash2, RefreshCw } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import { Header } from "@/components/layout/header";
+import { Main } from "@/components/layout/main";
+import { PageHeader } from "@/components/layout/page-header";
+import { ThemeSwitch } from "@/components/theme-switch";
 import {
   useComments,
   useCommentStats,
@@ -73,21 +77,46 @@ export default function CommentsManagement() {
 
   if (isLoading && comments.length === 0) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <RefreshCw className="animate-spin h-8 w-8 mx-auto mb-2 text-primary" />
-            <p className="text-muted-foreground">Loading comments...</p>
+      <>
+        <Header>
+          <div className='ml-auto flex items-center space-x-4'>
+            <ThemeSwitch />
           </div>
-        </div>
-      </div>
+        </Header>
+        <Main>
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <RefreshCw className="animate-spin h-8 w-8 mx-auto mb-2 text-primary" />
+              <p className="text-muted-foreground">Loading comments...</p>
+            </div>
+          </div>
+        </Main>
+      </>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <>
+      <Header>
+        <div className='ml-auto flex items-center space-x-4'>
+          <ThemeSwitch />
+        </div>
+      </Header>
+
+      <Main>
+        <PageHeader
+          title="Comments"
+          description="Moderate and manage user comments"
+          actions={
+            <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          }
+        />
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Comments</CardTitle>
@@ -121,13 +150,7 @@ export default function CommentsManagement() {
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <CardTitle>Manage Comments</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
-              <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </div>
+          <CardTitle>Manage Comments</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -215,6 +238,7 @@ export default function CommentsManagement() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </Main>
+    </>
   );
 }

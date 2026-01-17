@@ -4,7 +4,7 @@ import { $getRoot } from "lexical";
 import { Editor } from "@/components/blocks/editor-00/editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -47,6 +47,7 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
   const [isSticky, setIsSticky] = useState(false);
   const [formErrors, setFormErrors] = useState<Partial<Record<FieldErrorKey, string>>>({});
   const [confirmOpen, setConfirmOpen] = useState(false);
+  void confirmOpen; // silence unused variable warning
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [pendingSubmission, setPendingSubmission] = useState<{
@@ -62,6 +63,7 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
     isFeatured: boolean;
     isSticky: boolean;
   } | null>(null);
+  void pendingSubmission; // silence unused variable warning
   const [editorResetKey, setEditorResetKey] = useState(0);
   
   // Search functionality
@@ -470,7 +472,7 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <>
       {/* Success/Error Message */}
       {submitMessage && (
         <div className={`mb-4 p-4 rounded-md ${
@@ -483,9 +485,6 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
       )}
 
       <Card>
-        <CardHeader>
-          <CardTitle>Create New Article</CardTitle>
-        </CardHeader>
         <CardContent>
           <form onSubmit={checkValidity} className="space-y-6">
             <div className="space-y-2">
@@ -870,22 +869,26 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                     {isSubmitting ? "Creating..." : "Create Article"}
                   </Button>
                    <ArticleSubmission 
-                    title={title}
-                    content={content}
-                    contentText={contentText}
-                    excerpt={excerpt}
-                    category={category}
-                    subcategory={subcategory}
-                    selectedTags={selectedTags}
-                    selectedAuthors={selectedAuthors}
-                    selectedCollaborators={selectedCollaborators}
-                    featuredMediaId={featuredMediaId}
-                    isSubmitting={isSubmitting}
-                    setIsSubmitting={setIsSubmitting}
-                    setSubmitMessage={setSubmitMessage}
-                    resetForm={resetForm}
-                    convertLexicalToHtml={convertLexicalToHtml}
-                  />
+                     title={title}
+                     content={content}
+                     contentText={contentText}
+                     excerpt={excerpt}
+                     category={category}
+                     subcategory={subcategory}
+                     selectedTags={selectedTags}
+                     selectedAuthors={selectedAuthors}
+                     selectedCollaborators={selectedCollaborators}
+                     featuredMediaId={featuredMediaId}
+                     isSubmitting={isSubmitting}
+                     setIsSubmitting={setIsSubmitting}
+                     setSubmitMessage={setSubmitMessage}
+                     resetForm={resetForm}
+                     convertLexicalToHtml={convertLexicalToHtml}
+                     confirmOpen={confirmOpen}
+                     setConfirmOpen={setConfirmOpen}
+                     pendingSubmission={pendingSubmission}
+                     setPendingSubmission={setPendingSubmission}
+                   />
                 </div>
               </div>
 
@@ -934,32 +937,6 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
           </form>
         </CardContent>
       </Card>
-
-      <ArticleSubmission 
-        title={title}
-        content={content}
-        contentText={contentText}
-        excerpt={excerpt}
-        category={category}
-        subcategory={subcategory}
-        selectedTags={selectedTags}
-        selectedAuthors={selectedAuthors}
-        selectedCollaborators={selectedCollaborators}
-        featuredMediaId={featuredMediaId}
-        isPublished={isPublished}
-        isFeatured={isFeatured}
-        isSticky={isSticky}
-        isSubmitting={isSubmitting}
-        setIsSubmitting={setIsSubmitting}
-        setSubmitMessage={setSubmitMessage}
-        resetForm={resetForm}
-        convertLexicalToHtml={convertLexicalToHtml}
-        confirmOpen={confirmOpen}
-        setConfirmOpen={setConfirmOpen}
-        pendingSubmission={pendingSubmission}
-        setPendingSubmission={setPendingSubmission}
-      />
-
-    </div>
+    </>
   );
 }

@@ -8,6 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Play, Pause, Music, ExternalLink } from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Main } from "@/components/layout/main";
+import { PageHeader } from "@/components/layout/page-header";
+import { ThemeSwitch } from "@/components/theme-switch";
 import {
   usePlaylists,
   useCreatePlaylist,
@@ -101,112 +105,121 @@ export default function SpotifyPlaylistManager() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 flex items-center justify-center min-h-96">
-        <div className="text-center">
-          <Music className="w-12 h-12 animate-pulse mx-auto mb-4 text-muted-foreground" />
-          <p className="text-muted-foreground">Loading playlists...</p>
-        </div>
-      </div>
+      <>
+        <Header>
+          <div className='ml-auto flex items-center space-x-4'>
+            <ThemeSwitch />
+          </div>
+        </Header>
+        <Main>
+          <div className="flex items-center justify-center min-h-96">
+            <div className="text-center">
+              <Music className="w-12 h-12 animate-pulse mx-auto mb-4 text-muted-foreground" />
+              <p className="text-muted-foreground">Loading playlists...</p>
+            </div>
+          </div>
+        </Main>
+      </>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-      >
-        <div>
-          <h1 className="text-3xl font-bold">Spotify Playlist Manager</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage your Spotify playlists and set active playlists for your app
-          </p>
+    <>
+      <Header>
+        <div className='ml-auto flex items-center space-x-4'>
+          <ThemeSwitch />
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={openCreateDialog}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Playlist
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingPlaylist ? 'Edit Playlist' : 'Add New Playlist'}
-              </DialogTitle>
-              <DialogDescription>
-                {editingPlaylist 
-                  ? 'Update your Spotify playlist information.' 
-                  : 'Add a new Spotify playlist to your collection.'
-                }
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Playlist Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="My Awesome Playlist"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Perfect for coding sessions"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="spotifyUrl">Spotify Playlist URL</Label>
-                <Input
-                  id="spotifyUrl"
-                  type="url"
-                  value={formData.spotifyUrl}
-                  onChange={(e) => setFormData({ ...formData, spotifyUrl: e.target.value })}
-                  placeholder="https://open.spotify.com/playlist/..."
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="image">Cover Image URL</Label>
-                <Input
-                  id="image"
-                  type="url"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  placeholder="https://example.com/playlist-cover.jpg"
-                />
-                <p className="text-sm text-muted-foreground">
-                  Leave empty to use default music icon
-                </p>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit"
-                  disabled={createPlaylist.isPending || updatePlaylist.isPending}
-                >
-                  {(createPlaylist.isPending || updatePlaylist.isPending) 
-                    ? 'Saving...' 
-                    : (editingPlaylist ? 'Update Playlist' : 'Create Playlist')
-                  }
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </motion.div>
+      </Header>
 
-      <Tabs defaultValue="playlists" className="w-full">
+      <Main>
+        <PageHeader
+          title="Spotify Playlist Manager"
+          description="Manage your Spotify playlists and set active playlists for your app"
+          actions={
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={openCreateDialog}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Playlist
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingPlaylist ? 'Edit Playlist' : 'Add New Playlist'}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {editingPlaylist 
+                      ? 'Update your Spotify playlist information.' 
+                      : 'Add a new Spotify playlist to your collection.'
+                    }
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Playlist Name</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="My Awesome Playlist"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Input
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Perfect for coding sessions"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="spotifyUrl">Spotify Playlist URL</Label>
+                    <Input
+                      id="spotifyUrl"
+                      type="url"
+                      value={formData.spotifyUrl}
+                      onChange={(e) => setFormData({ ...formData, spotifyUrl: e.target.value })}
+                      placeholder="https://open.spotify.com/playlist/..."
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="image">Cover Image URL</Label>
+                    <Input
+                      id="image"
+                      type="url"
+                      value={formData.image}
+                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                      placeholder="https://example.com/playlist-cover.jpg"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Leave empty to use default music icon
+                    </p>
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit"
+                      disabled={createPlaylist.isPending || updatePlaylist.isPending}
+                    >
+                      {(createPlaylist.isPending || updatePlaylist.isPending) 
+                        ? 'Saving...' 
+                        : (editingPlaylist ? 'Update Playlist' : 'Create Playlist')
+                      }
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          }
+        />
+
+        <Tabs defaultValue="playlists" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="playlists">Playlists</TabsTrigger>
           <TabsTrigger value="player">Player</TabsTrigger>
@@ -406,6 +419,7 @@ export default function SpotifyPlaylistManager() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </Main>
+    </>
   );
 }

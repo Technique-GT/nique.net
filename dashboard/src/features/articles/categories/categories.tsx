@@ -9,6 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Edit, Trash2, Search, FolderOpen, FolderTree, ChevronDown, ChevronRight } from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Main } from "@/components/layout/main";
+import { PageHeader } from "@/components/layout/page-header";
+import { ThemeSwitch } from "@/components/theme-switch";
 import {
   useCategories,
   useSubCategories,
@@ -219,35 +223,176 @@ export default function Categories() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Manage Categories & Subcategories</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center h-32">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
-                <p className="text-muted-foreground">Loading categories...</p>
+      <>
+        <Header>
+          <div className='ml-auto flex items-center space-x-4'>
+            <ThemeSwitch />
+          </div>
+        </Header>
+        <Main>
+          <PageHeader title="Categories" description="Loading categories..." />
+          <Card>
+            <CardContent>
+              <div className="flex items-center justify-center h-32">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+                  <p className="text-muted-foreground">Loading categories...</p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </Main>
+      </>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Error Display */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md">
-          {error}
+    <>
+      <Header>
+        <div className='ml-auto flex items-center space-x-4'>
+          <ThemeSwitch />
         </div>
-      )}
+      </Header>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+      <Main>
+        {/* Error Display */}
+        {error && (
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md">
+            {error}
+          </div>
+        )}
+
+        <PageHeader
+          title="Categories"
+          description="Organize your content with categories and subcategories"
+          actions={
+            <>
+              <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" onClick={openCreateCategoryDialog}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Category
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingCategory ? 'Edit Category' : 'Add New Category'}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {editingCategory 
+                        ? 'Update your category information.' 
+                        : 'Create a new category to organize your content.'
+                      }
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="category-name">Category Name *</Label>
+                      <Input
+                        id="category-name"
+                        value={categoryFormData.name}
+                        onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+                        placeholder="Enter category name"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleAddCategory} 
+                      disabled={createCategory.isPending || updateCategory.isPending}
+                    >
+                      {(createCategory.isPending || updateCategory.isPending) ? 'Saving...' : (editingCategory ? 'Update' : 'Create')}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              <Dialog open={isSubCategoryDialogOpen} onOpenChange={setIsSubCategoryDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={openCreateSubCategoryDialog}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Subcategory
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingSubCategory ? 'Edit Subcategory' : 'Add New Subcategory'}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {editingSubCategory 
+                        ? 'Update your subcategory information.' 
+                        : 'Create a new subcategory under an existing category.'
+                      }
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="subcategory-name">Subcategory Name *</Label>
+                      <Input
+                        id="subcategory-name"
+                        value={subCategoryFormData.name}
+                        onChange={(e) => setSubCategoryFormData({ ...subCategoryFormData, name: e.target.value })}
+                        placeholder="Enter subcategory name"
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="parent-category">Parent Category *</Label>
+                      <Select 
+                        value={subCategoryFormData.category} 
+                        onValueChange={(value) => setSubCategoryFormData({ ...subCategoryFormData, category: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((category) => (
+                            <SelectItem key={category._id} value={category._id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsSubCategoryDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleAddSubCategory} 
+                      disabled={createSubCategory.isPending || updateSubCategory.isPending}
+                    >
+                      {(createSubCategory.isPending || updateSubCategory.isPending) ? 'Saving...' : (editingSubCategory ? 'Update' : 'Create')}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </>
+          }
+        />
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Categories</CardTitle>
@@ -661,6 +806,7 @@ export default function Categories() {
           </Tabs>
         </CardContent>
       </Card>
-    </div>
+      </Main>
+    </>
   );
 }

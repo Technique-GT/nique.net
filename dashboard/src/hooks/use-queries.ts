@@ -7,7 +7,7 @@
  * - Do NOT persist: auth, large/fast-changing lists (articles, comments, users).
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
 import {
   getCategories,
   getSubCategories,
@@ -199,6 +199,22 @@ export function useMedia(query?: MediaQuery) {
     queryFn: () => getMedia(query),
     staleTime: 30 * 1000,
     // No meta.persist
+  })
+}
+
+export function useInfiniteMedia(query?: Omit<MediaQuery, 'page'>) {
+  return useInfiniteQuery({
+    queryKey: ['media-infinite', query],
+    queryFn: ({ pageParam = 1 }) => getMedia({ ...query, page: pageParam }),
+    getNextPageParam: (lastPage) => {
+      if (!lastPage.pagination) return undefined
+      if (lastPage.pagination.page < lastPage.pagination.pages) {
+        return lastPage.pagination.page + 1
+      }
+      return undefined
+    },
+    initialPageParam: 1,
+    staleTime: 30 * 1000,
   })
 }
 

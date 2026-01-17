@@ -1,4 +1,9 @@
+import { useMemo } from "react";
 import ArticleForm from "./ArticleForm";
+import { Header } from "@/components/layout/header";
+import { Main } from "@/components/layout/main";
+import { PageHeader } from "@/components/layout/page-header";
+import { ThemeSwitch } from "@/components/theme-switch";
 import {
   useTaxonomy,
   useUsers,
@@ -6,7 +11,6 @@ import {
   useMedia,
 } from "@/hooks/use-queries";
 import type { Category, SubCategory, Tag, Author, Collaborator, MediaItem } from "./types";
-import { useMemo } from "react";
 
 export default function ArticleCreation() {
   // TanStack Query hooks - all taxonomy data is persisted
@@ -110,46 +114,74 @@ export default function ArticleCreation() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="border rounded-lg p-6">
-          <div className="flex items-center justify-center h-32">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
-              <p className="text-muted-foreground">Loading form data...</p>
+      <>
+        <Header>
+          <div className='ml-auto flex items-center space-x-4'>
+            <ThemeSwitch />
+          </div>
+        </Header>
+        <Main>
+          <PageHeader title="Create New Article" description="Loading form data..." />
+          <div className="border rounded-lg p-6">
+            <div className="flex items-center justify-center h-32">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+                <p className="text-muted-foreground">Loading form data...</p>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </Main>
+      </>
     );
   }
 
   if (taxonomyError) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="border rounded-lg p-6">
+      <>
+        <Header>
+          <div className='ml-auto flex items-center space-x-4'>
+            <ThemeSwitch />
+          </div>
+        </Header>
+        <Main>
+          <PageHeader title="Create New Article" description="Fix the errors and retry" />
           <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md">
             <p className="font-medium">Error loading form data</p>
             <p className="text-sm mt-1">Failed to load taxonomy data. Please try again.</p>
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="mt-2 px-3 py-1 border border-red-300 rounded text-sm hover:bg-red-100"
             >
               Retry
             </button>
           </div>
-        </div>
-      </div>
+        </Main>
+      </>
     );
   }
 
   return (
-    <ArticleForm
-      categories={categories}
-      subcategories={subcategories}
-      tags={tags}
-      authors={authors}
-      collaborators={collaborators}
-      mediaLibrary={mediaItems}
-    />
+    <>
+      <Header>
+        <div className='ml-auto flex items-center space-x-4'>
+          <ThemeSwitch />
+        </div>
+      </Header>
+
+      <Main>
+        <PageHeader
+          title="Create New Article"
+          description="Draft, schedule, or publish a new post"
+        />
+        <ArticleForm
+          categories={categories}
+          subcategories={subcategories}
+          tags={tags}
+          authors={authors}
+          collaborators={collaborators}
+          mediaLibrary={mediaItems}
+        />
+      </Main>
+    </>
   );
 }

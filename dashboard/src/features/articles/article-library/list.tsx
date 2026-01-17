@@ -5,6 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, RefreshCw } from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Main } from "@/components/layout/main";
+import { PageHeader } from "@/components/layout/page-header";
+import { ThemeSwitch } from "@/components/theme-switch";
 import { useArticles } from "./useArticles";
 import { ArticleTable } from "./ArticleTable";
 import { ArticleDialogs } from "./ArticleDialogs";
@@ -386,121 +390,131 @@ const handleSaveEdit = async () => {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Message Display */}
-      {message && (
-        <div className={`p-4 rounded-md ${
-          message.type === 'success' 
-            ? 'bg-green-50 border border-green-200 text-green-800' 
-            : 'bg-red-50 border border-red-200 text-red-800'
-        }`}>
-          {message.text}
+    <>
+      <Header>
+        <div className='ml-auto flex items-center space-x-4'>
+          <ThemeSwitch />
         </div>
-      )}
+      </Header>
 
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Article Management</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => fetchArticles()} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button onClick={handleNewArticle}>
-            <Plus className="w-4 h-4 mr-2" />
-            New Article
-          </Button>
-        </div>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Articles</CardTitle>
-          <CardDescription>
-            Manage your articles with full CRUD operations
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search articles by title or author..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {availableCategories.map(category => (
-                  <SelectItem key={category._id} value={category._id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      <Main>
+        {/* Message Display */}
+        {message && (
+          <div className={`mb-4 p-4 rounded-md ${
+            message.type === 'success' 
+              ? 'bg-green-50 border border-green-200 text-green-800' 
+              : 'bg-red-50 border border-red-200 text-red-800'
+          }`}>
+            {message.text}
           </div>
+        )}
 
-          <ArticleTable
-            articles={articles}
-            filteredArticles={filteredArticles}
-            loading={loading}
-            getAuthorName={getAuthorName}
-            getStatusVariant={getStatusVariant}
-            formatDate={formatDate}
-            publishingArticle={publishingArticle}
-            featuringArticle={featuringArticle}
-            stickingArticle={stickingArticle}
-            onQuickPublish={handleQuickPublish}
-            onQuickFeature={handleQuickFeature}
-            onQuickSticky={handleQuickSticky}
-            onView={handleView}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onNewArticle={handleNewArticle}
-          />
-
-          {pagination && pagination.pages > 1 && (
-            <div className="flex justify-center gap-2 mt-6">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                Previous
+        <PageHeader
+          title="Article Management"
+          description="Manage your articles with full CRUD operations"
+          actions={
+            <>
+              <Button variant="outline" onClick={() => fetchArticles()} disabled={loading}>
+                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
               </Button>
-              <div className="flex items-center px-4 text-sm font-medium">
-                Page {currentPage} of {pagination.pages}
+              <Button onClick={handleNewArticle}>
+                <Plus className="w-4 h-4 mr-2" />
+                New Article
+              </Button>
+            </>
+          }
+        />
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Articles</CardTitle>
+            <CardDescription>
+              Browse and filter your content library
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search articles by title or author..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === pagination.pages}
-              >
-                Next
-              </Button>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {availableCategories.map(category => (
+                    <SelectItem key={category._id} value={category._id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          )}
-        </CardContent>
-      </Card>
 
-      <ArticleDialogs
+            <ArticleTable
+              articles={articles}
+              filteredArticles={filteredArticles}
+              loading={loading}
+              getAuthorName={getAuthorName}
+              getStatusVariant={getStatusVariant}
+              formatDate={formatDate}
+              publishingArticle={publishingArticle}
+              featuringArticle={featuringArticle}
+              stickingArticle={stickingArticle}
+              onQuickPublish={handleQuickPublish}
+              onQuickFeature={handleQuickFeature}
+              onQuickSticky={handleQuickSticky}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onNewArticle={handleNewArticle}
+            />
+
+            {pagination && pagination.pages > 1 && (
+              <div className="flex justify-center gap-2 mt-6">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center px-4 text-sm font-medium">
+                  Page {currentPage} of {pagination.pages}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === pagination.pages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <ArticleDialogs
         // Edit Dialog
         editSlug={editSlug}
         setEditSlug={setEditSlug}
@@ -567,6 +581,7 @@ const handleSaveEdit = async () => {
         handleCollaboratorRemove={handleCollaboratorRemove}
         isEditLoading={isEditLoading}
       />
-    </div>
+      </Main>
+    </>
   );
 }

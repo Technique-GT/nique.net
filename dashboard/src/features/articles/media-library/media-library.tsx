@@ -1,14 +1,18 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Upload, Search, File, Trash2, Loader2, Download } from "lucide-react";
+import { Upload, Search, File, Trash2, Loader2, Download, Image as ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { Header } from "@/components/layout/header";
+import { Main } from "@/components/layout/main";
+import { PageHeader } from "@/components/layout/page-header";
+import { ThemeSwitch } from "@/components/theme-switch";
 import {
-  useMedia,
+  useInfiniteMedia,
   useUploadMedia,
   useDeleteMedia,
 } from "@/hooks/use-queries";
@@ -20,14 +24,45 @@ export default function MediaLibrary() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [uploadingFileName, setUploadingFileName] = useState<string | null>(null);
+  const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   // TanStack Query hooks
-  const { data: mediaData, isLoading } = useMedia({ search: searchTerm, limit: 100 });
+  const { 
+    data: mediaData, 
+    isLoading, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage 
+  } = useInfiniteMedia({ search: searchTerm, limit: 20 });
+  
   const uploadMediaMutation = useUploadMedia();
   const deleteMediaMutation = useDeleteMedia();
 
-  const mediaItems = mediaData?.data ?? [];
+  const mediaItems = mediaData?.pages.flatMap((page) => page.data) ?? [];
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [hasNextPage, fetchNextPage]);
+
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -113,18 +148,38 @@ export default function MediaLibrary() {
     }
   };
 
+  const handleImageError = (id: string) => {
+    setBrokenImages((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  };
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Media Library</span>
-            <Badge variant="secondary" className="ml-2">
-              {mediaItems.length} items
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+    <>
+      <Header>
+        <div className='ml-auto flex items-center space-x-4'>
+          <ThemeSwitch />
+        </div>
+      </Header>
+
+      <Main>
+        <PageHeader
+          title="Media Library"
+          description="Upload and manage your media files"
+        />
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Files</span>
+              <Badge variant="secondary" className="ml-2">
+                {mediaItems.length} items
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
           <div className="space-y-6">
             {error && (
               <Alert variant="destructive">
@@ -205,13 +260,20 @@ export default function MediaLibrary() {
                       <Card key={item._id} className="overflow-hidden hover:shadow-lg transition-shadow">
                         <CardContent className="px-4">
                           <div className="mb-3 overflow-hidden rounded-lg bg-muted/30">
-                            <img
-                              src={item.url}
-                              alt={item.altText || "Media preview"}
-                              className="h-40 w-full object-cover"
-                              loading="lazy"
-                              decoding="async"
-                            />
+                            {brokenImages.has(item._id) ? (
+                              <div className="flex h-40 w-full items-center justify-center bg-muted text-muted-foreground">
+                                <ImageIcon className="h-12 w-12 opacity-50" />
+                              </div>
+                            ) : (
+                              <img
+                                src={item.url}
+                                alt={item.altText || "Media preview"}
+                                className="h-40 w-full object-cover"
+                                loading="lazy"
+                                decoding="async"
+                                onError={() => handleImageError(item._id)}
+                              />
+                            )}
                           </div>
                           <div className="space-y-1.5 mb-3">
                             <div className="flex items-center justify-between gap-2">
@@ -251,6 +313,12 @@ export default function MediaLibrary() {
                         </CardContent>
                       </Card>
                     ))}
+                    <div ref={observerTarget} className="col-span-full h-10 w-full" />
+                    {isFetchingNextPage && (
+                      <div className="col-span-full flex justify-center p-4">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-12">
@@ -274,6 +342,7 @@ export default function MediaLibrary() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </Main>
+    </>
   );
 }
