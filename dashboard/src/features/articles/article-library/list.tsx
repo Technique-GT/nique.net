@@ -325,7 +325,7 @@ const handleSaveEdit = async () => {
 
   // Navigation
   const handleNewArticle = () => {
-    navigate({ to: '/articles' });
+    navigate({ to: '/articles/new' });
   };
 
   // Helper functions

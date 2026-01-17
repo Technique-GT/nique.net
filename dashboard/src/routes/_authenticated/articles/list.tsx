@@ -1,6 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
-import List from '@/features/articles/article-library/list'
+import { createFileRoute, Navigate } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_authenticated/articles/list')({
-  component: List,
+  component: () => <Navigate to="/articles" replace />,
 })

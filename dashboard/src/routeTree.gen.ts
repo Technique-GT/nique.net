@@ -41,6 +41,7 @@ import { Route as AuthenticatedMaintenanceSpotifyRouteImport } from './routes/_a
 import { Route as AuthenticatedMaintenanceCommentsRouteImport } from './routes/_authenticated/maintenance/comments'
 import { Route as AuthenticatedMaintenanceCollaboratorsRouteImport } from './routes/_authenticated/maintenance/collaborators'
 import { Route as AuthenticatedArticlesTagsRouteImport } from './routes/_authenticated/articles/tags'
+import { Route as AuthenticatedArticlesNewRouteImport } from './routes/_authenticated/articles/new'
 import { Route as AuthenticatedArticlesMediaRouteImport } from './routes/_authenticated/articles/media'
 import { Route as AuthenticatedArticlesListRouteImport } from './routes/_authenticated/articles/list'
 import { Route as AuthenticatedArticlesCategoriesRouteImport } from './routes/_authenticated/articles/categories'
@@ -216,6 +217,12 @@ const AuthenticatedArticlesTagsRoute =
     path: '/articles/tags',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedArticlesNewRoute =
+  AuthenticatedArticlesNewRouteImport.update({
+    id: '/articles/new',
+    path: '/articles/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedArticlesMediaRoute =
   AuthenticatedArticlesMediaRouteImport.update({
     id: '/articles/media',
@@ -252,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/articles/categories': typeof AuthenticatedArticlesCategoriesRoute
   '/articles/list': typeof AuthenticatedArticlesListRoute
   '/articles/media': typeof AuthenticatedArticlesMediaRoute
+  '/articles/new': typeof AuthenticatedArticlesNewRoute
   '/articles/tags': typeof AuthenticatedArticlesTagsRoute
   '/maintenance/collaborators': typeof AuthenticatedMaintenanceCollaboratorsRoute
   '/maintenance/comments': typeof AuthenticatedMaintenanceCommentsRoute
@@ -286,6 +294,7 @@ export interface FileRoutesByTo {
   '/articles/categories': typeof AuthenticatedArticlesCategoriesRoute
   '/articles/list': typeof AuthenticatedArticlesListRoute
   '/articles/media': typeof AuthenticatedArticlesMediaRoute
+  '/articles/new': typeof AuthenticatedArticlesNewRoute
   '/articles/tags': typeof AuthenticatedArticlesTagsRoute
   '/maintenance/collaborators': typeof AuthenticatedMaintenanceCollaboratorsRoute
   '/maintenance/comments': typeof AuthenticatedMaintenanceCommentsRoute
@@ -324,6 +333,7 @@ export interface FileRoutesById {
   '/_authenticated/articles/categories': typeof AuthenticatedArticlesCategoriesRoute
   '/_authenticated/articles/list': typeof AuthenticatedArticlesListRoute
   '/_authenticated/articles/media': typeof AuthenticatedArticlesMediaRoute
+  '/_authenticated/articles/new': typeof AuthenticatedArticlesNewRoute
   '/_authenticated/articles/tags': typeof AuthenticatedArticlesTagsRoute
   '/_authenticated/maintenance/collaborators': typeof AuthenticatedMaintenanceCollaboratorsRoute
   '/_authenticated/maintenance/comments': typeof AuthenticatedMaintenanceCommentsRoute
@@ -361,6 +371,7 @@ export interface FileRouteTypes {
     | '/articles/categories'
     | '/articles/list'
     | '/articles/media'
+    | '/articles/new'
     | '/articles/tags'
     | '/maintenance/collaborators'
     | '/maintenance/comments'
@@ -395,6 +406,7 @@ export interface FileRouteTypes {
     | '/articles/categories'
     | '/articles/list'
     | '/articles/media'
+    | '/articles/new'
     | '/articles/tags'
     | '/maintenance/collaborators'
     | '/maintenance/comments'
@@ -432,6 +444,7 @@ export interface FileRouteTypes {
     | '/_authenticated/articles/categories'
     | '/_authenticated/articles/list'
     | '/_authenticated/articles/media'
+    | '/_authenticated/articles/new'
     | '/_authenticated/articles/tags'
     | '/_authenticated/maintenance/collaborators'
     | '/_authenticated/maintenance/comments'
@@ -693,6 +706,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedArticlesTagsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/articles/new': {
+      id: '/_authenticated/articles/new'
+      path: '/articles/new'
+      fullPath: '/articles/new'
+      preLoaderRoute: typeof AuthenticatedArticlesNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/articles/media': {
       id: '/_authenticated/articles/media'
       path: '/articles/media'
@@ -745,6 +765,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedArticlesCategoriesRoute: typeof AuthenticatedArticlesCategoriesRoute
   AuthenticatedArticlesListRoute: typeof AuthenticatedArticlesListRoute
   AuthenticatedArticlesMediaRoute: typeof AuthenticatedArticlesMediaRoute
+  AuthenticatedArticlesNewRoute: typeof AuthenticatedArticlesNewRoute
   AuthenticatedArticlesTagsRoute: typeof AuthenticatedArticlesTagsRoute
   AuthenticatedMaintenanceCollaboratorsRoute: typeof AuthenticatedMaintenanceCollaboratorsRoute
   AuthenticatedMaintenanceCommentsRoute: typeof AuthenticatedMaintenanceCommentsRoute
@@ -764,6 +785,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedArticlesCategoriesRoute: AuthenticatedArticlesCategoriesRoute,
   AuthenticatedArticlesListRoute: AuthenticatedArticlesListRoute,
   AuthenticatedArticlesMediaRoute: AuthenticatedArticlesMediaRoute,
+  AuthenticatedArticlesNewRoute: AuthenticatedArticlesNewRoute,
   AuthenticatedArticlesTagsRoute: AuthenticatedArticlesTagsRoute,
   AuthenticatedMaintenanceCollaboratorsRoute:
     AuthenticatedMaintenanceCollaboratorsRoute,

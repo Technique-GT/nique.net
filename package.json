@@ -3,15 +3,24 @@
   "private": true,
   "workspaces": [
     "frontend",
-    "backend"
+    "backend",
+    "dashboard"
   ],
   "scripts": {
-    "dev": "npx concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\" \"npm --prefix dashboard run dev\"",
     "dev:api": "npm --prefix backend run dev",
     "dev:web": "npm --prefix frontend run dev",
-    "build": "npm --prefix backend run build && npm --prefix frontend run build",
-    "start": "npx concurrently \"npm run start:api\" \"npm run start:web\"",
+    "dev:dash": "npm --prefix dashboard run dev",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build && npm --prefix dashboard run build",
+    "start": "concurrently \"npm run start:api\" \"npm run start:web\" \"npm run start:dash\"",
     "start:api": "npm --prefix backend run start",
-    "start:web": "npm --prefix frontend run preview"
+    "start:web": "npm --prefix frontend run preview",
+    "start:dash": "npm --prefix dashboard run preview"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "overrides": {
+    "esbuild": "0.25.12"
   }
 }

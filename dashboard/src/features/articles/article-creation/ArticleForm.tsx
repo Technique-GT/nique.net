@@ -73,14 +73,23 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
   // Filter authors based on search
   const filteredAuthors = useMemo(() => {
     if (!authorSearch.trim()) return [];
-    
+
+    const list = Array.isArray(authors) ? authors : [];
     const searchTerm = authorSearch.toLowerCase();
-    return authors.filter(author => 
-      author.firstName.toLowerCase().includes(searchTerm) ||
-      author.lastName.toLowerCase().includes(searchTerm) ||
-      author.username.toLowerCase().includes(searchTerm) ||
-      author.email.toLowerCase().includes(searchTerm)
-    );
+
+    return list.filter((author) => {
+      const firstName = typeof author?.firstName === 'string' ? author.firstName : '';
+      const lastName = typeof author?.lastName === 'string' ? author.lastName : '';
+      const username = typeof author?.username === 'string' ? author.username : '';
+      const email = typeof author?.email === 'string' ? author.email : '';
+
+      return (
+        firstName.toLowerCase().includes(searchTerm) ||
+        lastName.toLowerCase().includes(searchTerm) ||
+        username.toLowerCase().includes(searchTerm) ||
+        email.toLowerCase().includes(searchTerm)
+      );
+    });
   }, [authorSearch, authors]);
 
   // Filter collaborators based on search

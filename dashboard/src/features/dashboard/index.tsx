@@ -16,7 +16,7 @@ export default function Dashboard() {
   const { data, isLoading, isError } = useDashboardMetrics()
 
   const handleNewArticle = () => {
-    router.navigate({ to: '/articles' })
+    router.navigate({ to: '/articles/new' })
   }
 
   const kpis = data?.kpis
@@ -183,7 +183,7 @@ const topNav = [
   },
   {
     title: 'Article Management',
-    href: '/articles/list',
+    href: '/articles',
     isActive: false,
     disabled: false,
   },

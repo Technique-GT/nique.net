@@ -38,7 +38,26 @@ export default function ArticleCreation() {
         setSubcategories(subCatData as any);
         setTags(tagData as any);
         setCollaborators(collabData as any);
-        setAuthors(userData as any);
+
+        // Map canonical backend User -> UI Author shape expected by ArticleForm
+        const mappedAuthors: Author[] = (Array.isArray(userData) ? userData : []).map((u: any) => {
+          const fullName = typeof u?.name === 'string' ? u.name.trim() : ''
+          const parts = fullName.split(/\s+/).filter(Boolean)
+          const firstName = parts[0] || 'Unknown'
+          const lastName = parts.slice(1).join(' ')
+
+          return {
+            _id: u._id,
+            firstName,
+            lastName,
+            username: fullName || 'Unknown',
+            email: 'N/A',
+            role: u.isAdmin ? 'admin' : 'writer',
+            status: 'active',
+          }
+        })
+
+        setAuthors(mappedAuthors);
         
         // Map backend media to UI media picker shape
         const mappedMedia: MediaItem[] = (mediaData.data || []).map(m => ({

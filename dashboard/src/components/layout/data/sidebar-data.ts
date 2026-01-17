@@ -75,8 +75,13 @@ export const sidebarData: SidebarData = {
           icon: IconArticle,
           items: [
             {
-              title: 'Article Creation',
+              title: 'Article Library',
               url: '/articles',
+              icon: IconLibrary,
+            },
+            {
+              title: 'New Article',
+              url: '/articles/new',
               icon: IconArticle,
             },
             {
@@ -93,11 +98,6 @@ export const sidebarData: SidebarData = {
               title: 'Media Library',
               url: '/articles/media',
               icon: IconPhoto,
-            },
-            {
-              title: 'Article Library',
-              url: '/articles/list',
-              icon: IconLibrary,
             },
           ],
         },

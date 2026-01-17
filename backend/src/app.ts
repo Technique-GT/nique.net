@@ -35,6 +35,7 @@ export function createApp() {
 
   const allowedOrigins = [
     'http://localhost:5173',
+    'http://localhost:5174',
     'http://localhost:4173',
     'http://localhost:3000',
     'https://technique-dash-5men.vercel.app',
