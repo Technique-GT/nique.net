@@ -26,6 +26,10 @@ export interface IArticle extends Document {
   isFeatured: boolean;
   isSticky: boolean;
 
+  ownerId: mongoose.Types.ObjectId;
+  editorState?: any;
+  reviewStatus: 'draft' | 'in_review' | 'published';
+
   viewCount: number;
 
   createdAt: Date;
@@ -49,7 +53,7 @@ const ArticleSchema = new Schema<IArticle>(
 
     authors: { type: [AuthorRefSchema], required: true, default: [] },
 
-    categoryId: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
+    categoryId: { type: Schema.Types.ObjectId, ref: 'Category', required: false },
     subcategoryId: { type: Schema.Types.ObjectId, ref: 'SubCategory', required: false },
     tagIds: { type: [Schema.Types.ObjectId], ref: 'Tag', required: true, default: [] },
 
@@ -57,11 +61,20 @@ const ArticleSchema = new Schema<IArticle>(
     imageCaption: { type: String, required: false },
 
     published: { type: Boolean, required: true, default: false },
-    publishedAt: { type: Date, required: true, default: null },
+    publishedAt: { type: Date, required: false, default: null },
 
     allowComments: { type: Boolean, required: true, default: true },
     isFeatured: { type: Boolean, required: true, default: false },
     isSticky: { type: Boolean, required: true, default: false },
+
+    ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    editorState: { type: Schema.Types.Mixed, required: false },
+    reviewStatus: { 
+      type: String, 
+      enum: ['draft', 'in_review', 'published'], 
+      required: true, 
+      default: 'draft' 
+    },
 
     viewCount: { type: Number, required: true, default: 0 },
   },

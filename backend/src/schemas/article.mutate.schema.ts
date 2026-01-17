@@ -27,6 +27,9 @@ export const createArticleBodySchema = z.object({
   featuredMediaId: objectIdString.optional(),
   imageCaption: z.string().optional(),
 
+  editorState: z.any().optional(),
+  reviewStatus: z.enum(['draft', 'in_review', 'published']).optional(),
+
   published: z.boolean().optional(),
   allowComments: z.boolean().optional(),
   isFeatured: z.boolean().optional(),

@@ -1,6 +1,12 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Article, { IArticle } from '../models/Article';
+import { 
+  canEditArticle, 
+  canManageAuthors, 
+  canDeleteArticle, 
+  canPublishArticle 
+} from '../utils/permissions';
 
 const slugify = (value: string) =>
   value
@@ -99,6 +105,9 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
   const isFeatured = typeof body?.isFeatured === 'boolean' ? body.isFeatured : undefined;
   const isSticky = typeof body?.isSticky === 'boolean' ? body.isSticky : undefined;
 
+  const editorState = body?.editorState;
+  const reviewStatus = body?.reviewStatus;
+
   const publishedAt = parsePublishedAt(body, published, existing?.publishedAt ?? null);
 
   const update: Partial<IArticle> = {};
@@ -115,6 +124,9 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
 
   if (featuredMediaId !== undefined) update.featuredMediaId = featuredMediaId;
   if (imageCaption !== undefined) update.imageCaption = imageCaption;
+
+  if (editorState !== undefined) update.editorState = editorState;
+  if (reviewStatus !== undefined) update.reviewStatus = reviewStatus;
 
   update.published = published;
   update.publishedAt = publishedAt;
@@ -380,7 +392,7 @@ export const getArticleBySlug = async (req: Request, res: Response): Promise<voi
   }
 };
 
-export const updateArticle = async (req: Request, res: Response): Promise<void> => {
+export const updateArticle = async (req: any, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
 
@@ -390,7 +402,31 @@ export const updateArticle = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    if (!canEditArticle(req.user, existing)) {
+      res.status(403).json({ success: false, message: 'Not authorized to edit this article' });
+      return;
+    }
+
+    // Check lock state
+    if (existing.reviewStatus === 'in_review' && !req.user.isAdmin) {
+      res.status(403).json({ success: false, message: 'Article is locked for review' });
+      return;
+    }
+
+    // Handle author changes (requires canManageAuthors)
+    if (req.body.authors && !canManageAuthors(req.user, existing)) {
+      res.status(403).json({ success: false, message: 'Only owner or admin can manage authors' });
+      return;
+    }
+
     const update = await buildArticleUpdate({ body: req.body, existing });
+
+    // Prevent non-admin from publishing directly via updateArticle
+    if (!req.user.isAdmin) {
+      delete update.published;
+      delete update.isFeatured;
+      delete update.isSticky;
+    }
 
     const article = await Article.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     if (!article) {
@@ -406,13 +442,20 @@ export const updateArticle = async (req: Request, res: Response): Promise<void> 
   }
 };
 
-export const deleteArticle = async (req: Request, res: Response): Promise<void> => {
+export const deleteArticle = async (req: any, res: Response): Promise<void> => {
   try {
-    const article = await Article.findByIdAndDelete(req.params.id);
+    const article = await Article.findById(req.params.id);
     if (!article) {
       res.status(404).json({ success: false, message: 'Article not found' });
       return;
     }
+
+    if (!canDeleteArticle(req.user, article)) {
+      res.status(403).json({ success: false, message: 'Not authorized to delete this article' });
+      return;
+    }
+
+    await Article.findByIdAndDelete(req.params.id);
 
     res.json({ success: true, message: 'Article deleted successfully' });
   } catch (error: any) {
@@ -528,5 +571,170 @@ export const updateArticleStatus = async (req: Request, res: Response): Promise<
     res.json({ success: true, message: 'Article status updated successfully', data: populatedArticle });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'Failed to update article status', error: error?.message });
+  }
+};
+
+export const createDraft = async (req: any, res: Response): Promise<void> => {
+  try {
+    const ownerId = req.user.id;
+    const title = 'Untitled Article';
+    const slug = `untitled-${Date.now()}`;
+
+    const article = await Article.create({
+      title,
+      slug,
+      content: '<p></p>',
+      ownerId,
+      authors: [{ authorId: ownerId, order: 0 }],
+      published: false,
+      reviewStatus: 'draft',
+      viewCount: 0,
+      // categoryId will be undefined/null, which is allowed now
+    });
+
+    res.status(201).json({ success: true, data: article });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Failed to create draft', error: error.message });
+  }
+};
+
+export const getAdminArticleById = async (req: any, res: Response): Promise<void> => {
+  try {
+    const article = await populateArticle(Article.findById(req.params.id));
+
+    if (!article) {
+      res.status(404).json({ success: false, message: 'Article not found' });
+      return;
+    }
+
+    if (!canEditArticle(req.user, article)) {
+      res.status(403).json({ success: false, message: 'Not authorized to edit this article' });
+      return;
+    }
+
+    res.json({ success: true, data: article });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Failed to fetch article', error: error.message });
+  }
+};
+
+export const requestReview = async (req: any, res: Response): Promise<void> => {
+  try {
+    const article = await Article.findById(req.params.id);
+    if (!article) {
+      res.status(404).json({ success: false, message: 'Article not found' });
+      return;
+    }
+
+    if (article.ownerId.toString() !== req.user.id && !req.user.isAdmin) {
+      res.status(403).json({ success: false, message: 'Only the owner can request review' });
+      return;
+    }
+
+    article.reviewStatus = 'in_review';
+    await article.save();
+
+    res.json({ success: true, message: 'Review requested', data: article });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Error requesting review', error: error.message });
+  }
+};
+
+export const unrequestReview = async (req: any, res: Response): Promise<void> => {
+  try {
+    const article = await Article.findById(req.params.id);
+    if (!article) {
+      res.status(404).json({ success: false, message: 'Article not found' });
+      return;
+    }
+
+    if (article.ownerId.toString() !== req.user.id && !req.user.isAdmin) {
+      res.status(403).json({ success: false, message: 'Only the owner can unrequest review' });
+      return;
+    }
+
+    article.reviewStatus = 'draft';
+    await article.save();
+
+    res.json({ success: true, message: 'Review cancelled', data: article });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Error cancelling review', error: error.message });
+  }
+};
+
+export const adminPublish = async (req: any, res: Response): Promise<void> => {
+  try {
+    if (!canPublishArticle(req.user)) {
+      res.status(403).json({ success: false, message: 'Only admins can publish' });
+      return;
+    }
+
+    const article = await Article.findById(req.params.id);
+    if (!article) {
+      res.status(404).json({ success: false, message: 'Article not found' });
+      return;
+    }
+
+    article.published = true;
+    article.reviewStatus = 'published';
+    article.publishedAt = article.publishedAt || new Date();
+    await article.save();
+
+    res.json({ success: true, message: 'Article published', data: article });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Error publishing article', error: error.message });
+  }
+};
+
+export const adminUnpublish = async (req: any, res: Response): Promise<void> => {
+  try {
+    if (!canPublishArticle(req.user)) {
+      res.status(403).json({ success: false, message: 'Only admins can unpublish' });
+      return;
+    }
+
+    const article = await Article.findById(req.params.id);
+    if (!article) {
+      res.status(404).json({ success: false, message: 'Article not found' });
+      return;
+    }
+
+    article.published = false;
+    article.reviewStatus = 'draft';
+    article.isFeatured = false;
+    article.isSticky = false;
+    await article.save();
+
+    res.json({ success: true, message: 'Article unpublished', data: article });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Error unpublishing article', error: error.message });
+  }
+};
+
+export const transferOwnership = async (req: any, res: Response): Promise<void> => {
+  try {
+    if (!req.user.isAdmin) {
+      res.status(403).json({ success: false, message: 'Only admins can transfer ownership' });
+      return;
+    }
+
+    const { newOwnerId } = req.body;
+    if (!newOwnerId) {
+      res.status(400).json({ success: false, message: 'newOwnerId is required' });
+      return;
+    }
+
+    const article = await Article.findById(req.params.id);
+    if (!article) {
+      res.status(404).json({ success: false, message: 'Article not found' });
+      return;
+    }
+
+    article.ownerId = new mongoose.Types.ObjectId(newOwnerId);
+    await article.save();
+
+    res.json({ success: true, message: 'Ownership transferred', data: article });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Error transferring ownership', error: error.message });
   }
 };

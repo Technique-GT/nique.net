@@ -24,6 +24,8 @@ interface ArticleTableProps {
   onEdit: (article: Article) => void;
   onDelete: (article: Article) => void;
   onNewArticle: () => void;
+  isAdmin: boolean;
+  currentUserId: string | null;
 }
 
 export function ArticleTable({
@@ -42,7 +44,9 @@ export function ArticleTable({
   onView,
   onEdit,
   onDelete,
-  onNewArticle
+  onNewArticle,
+  isAdmin,
+  currentUserId,
 }: ArticleTableProps) {
   if (loading) {
     return (
@@ -84,11 +88,17 @@ export function ArticleTable({
             <TableHead className="text-center">Quick Actions</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
-        </TableHeader>
+          </TableHeader>
         <TableBody>
-          {filteredArticles.map((article) => (
-            <TableRow key={article._id}>
-              <TableCell className="font-medium max-w-xs truncate">
+          {filteredArticles.map((article) => {
+            const isOwner = !!currentUserId && article.ownerId === currentUserId
+            const isAuthor = !!currentUserId && Array.isArray(article.authors) && article.authors.some((a) => a?._id === currentUserId)
+            const canEdit = isAdmin || isOwner || isAuthor
+
+            return (
+              <TableRow key={article._id}>
+
+                <TableCell className="font-medium max-w-xs truncate">
                 <div className="flex items-center gap-2">
                   {article.title}
                   {article.isFeatured && (
@@ -152,7 +162,7 @@ export function ArticleTable({
                         variant="ghost"
                         size="icon"
                         onClick={() => onQuickPublish(article)}
-                        disabled={publishingArticle === article._id}
+                        disabled={!isAdmin || publishingArticle === article._id}
                         className={cn(
                           "h-8 w-8",
                           article.status === 'published' 
@@ -179,7 +189,7 @@ export function ArticleTable({
                         variant="ghost"
                         size="icon"
                         onClick={() => onQuickFeature(article)}
-                        disabled={featuringArticle === article._id || article.status !== 'published'}
+                        disabled={!isAdmin || featuringArticle === article._id || article.status !== 'published'}
                         className={cn(
                           "h-8 w-8",
                           article.isFeatured 
@@ -195,10 +205,11 @@ export function ArticleTable({
                         )}
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      {article.isFeatured ? 'Unfeature' : 'Feature'}
-                      {article.status !== 'published' && ' (Published only)'}
-                    </TooltipContent>
+                     <TooltipContent>
+                       {article.isFeatured ? 'Unfeature' : 'Feature'}
+                       {article.status !== 'published' && ' (Published only)'}
+                     </TooltipContent>
+
                   </Tooltip>
 
                   {/* Sticky/Unsticky Button */}
@@ -208,7 +219,7 @@ export function ArticleTable({
                         variant="ghost"
                         size="icon"
                         onClick={() => onQuickSticky(article)}
-                        disabled={stickingArticle === article._id || article.status !== 'published'}
+                        disabled={!isAdmin || stickingArticle === article._id || article.status !== 'published'}
                         className={cn(
                           "h-8 w-8",
                           article.isSticky 
@@ -224,10 +235,11 @@ export function ArticleTable({
                         )}
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      {article.isSticky ? 'Unpin' : 'Pin to top'}
-                      {article.status !== 'published' && ' (Published only)'}
-                    </TooltipContent>
+                     <TooltipContent>
+                       {article.isSticky ? 'Unpin' : 'Pin to top'}
+                       {article.status !== 'published' && ' (Published only)'}
+                     </TooltipContent>
+
                   </Tooltip>
                 </div>
               </TableCell>
@@ -245,44 +257,55 @@ export function ArticleTable({
                       <Eye className="w-4 h-4 mr-2" />
                       View
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onEdit(article)}>
+                    <DropdownMenuItem 
+                      onClick={() => onEdit(article)}
+                      disabled={!canEdit}
+                    >
                       <Edit className="w-4 h-4 mr-2" />
                       Edit
                     </DropdownMenuItem>
                     
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => onQuickPublish(article)}
-                      disabled={publishingArticle === article._id}
-                    >
-                      {publishingArticle === article._id ? (
-                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Send className="w-4 h-4 mr-2" />
-                      )}
-                      {article.status === 'published' ? 'Unpublish' : 'Publish'}
-                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem 
+                        onClick={() => onQuickPublish(article)}
+                        disabled={publishingArticle === article._id}
+                      >
+                        {publishingArticle === article._id ? (
+                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Send className="w-4 h-4 mr-2" />
+                        )}
+                        {article.status === 'published' ? 'Unpublish' : 'Publish'}
+                      </DropdownMenuItem>
+                    )}
                     
-                    <DropdownMenuItem 
-                      onClick={() => onQuickFeature(article)}
-                      disabled={featuringArticle === article._id || article.status !== 'published'}
-                    >
-                      <Star className={cn("w-4 h-4 mr-2", article.isFeatured && "fill-current")} />
-                      {article.isFeatured ? 'Unfeature' : 'Feature'}
-                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem 
+                        onClick={() => onQuickFeature(article)}
+                        disabled={featuringArticle === article._id || article.status !== 'published'}
+                      >
+                        <Star className={cn("w-4 h-4 mr-2", article.isFeatured && "fill-current")} />
+                        {article.isFeatured ? 'Unfeature' : 'Feature'}
+                      </DropdownMenuItem>
+                    )}
+
                     
-                    <DropdownMenuItem 
-                      onClick={() => onQuickSticky(article)}
-                      disabled={stickingArticle === article._id || article.status !== 'published'}
-                    >
-                      <Pin className={cn("w-4 h-4 mr-2", article.isSticky && "fill-current")} />
-                      {article.isSticky ? 'Unpin' : 'Pin to top'}
-                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem 
+                        onClick={() => onQuickSticky(article)}
+                        disabled={stickingArticle === article._id || article.status !== 'published'}
+                      >
+                        <Pin className={cn("w-4 h-4 mr-2", article.isSticky && "fill-current")} />
+                        {article.isSticky ? 'Unpin' : 'Pin to top'}
+                      </DropdownMenuItem>
+                    )}
 
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-destructive"
                       onClick={() => onDelete(article)}
+                      disabled={!canEdit}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Delete
@@ -290,8 +313,10 @@ export function ArticleTable({
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
-            </TableRow>
-          ))}
+              </TableRow>
+            );
+          })}
+
         </TableBody>
       </Table>
     </div>

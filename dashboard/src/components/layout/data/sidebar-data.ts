@@ -48,11 +48,6 @@ export const sidebarData: SidebarData = {
               icon: IconLibrary,
             },
             {
-              title: 'Create New Article',
-              url: '/articles/new',
-              icon: IconArticle,
-            },
-            {
               title: 'Categories',
               url: '/articles/categories',
               icon: IconCategory,

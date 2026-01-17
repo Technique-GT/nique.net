@@ -44,6 +44,7 @@ export interface Article {
   tags: PopulatedTag[];
   authors: PopulatedAuthor[];
   collaborators: PopulatedAuthor[]; // Assuming collaborators are also authors
+  ownerId?: string;
   featuredMedia: {
     id?: string;
     url?: string;

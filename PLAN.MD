@@ -1,11 +1,11 @@
 # Dashboard Real Data Migration Plan (dashboard/ -> backend/)
 
-Goal: Replace mocked dashboard data with real backend-powered data and statistics, without modifying `backend/`.
+Goal: Replace mocked dashboard data with real backend-powered data and statistics.
 
 Scope:
-- In scope: `dashboard/` app.
+- In scope: `dashboard/` app and any minimal `backend/` changes required to support dashboard workflows.
 - Out of scope: `frontend/` public app migration (separate effort).
-- Backend is source of truth. Do not edit `backend/`.
+- Backend is the source of truth; adjust it when needed to support editing/review flows.
 
 Non-goals (for this plan):
 - Building a full site-traffic analytics pipeline in the backend.
@@ -271,25 +271,67 @@ Checks:
 
 ---
 
-## 8) Phase 6: Article Library + Edit Dialog Consistency
+## 8) Phase 6: Article Editor + Review Workflow + Permissions
 
-Objective: Ensure list/edit/quick actions align with backend schema and do not rely on legacy fields.
+Objective: Move editing out of modals into a dedicated editor route, support drafts + autosave, and enforce a permissions model with owner/admin review flow.
 
-- [x] Article list uses `GET /api/admin/articles` with pagination (mostly).
-- [x] Quick publish uses `PATCH /api/articles/:id/status`.
-- [x] Quick feature/sticky uses `PATCH /api/articles/:id/featured` and `/sticky`.
-- [x] Edit dialog updates only backend-supported fields:
-  - [x] title, slug, content, excerpt, categoryId, subcategoryId, tagIds, authors, featuredMediaId, imageCaption, published, allowComments, isFeatured, isSticky
-- [x] Remove/ignore non-existent fields in edit payloads (seo fields, collaborators on articles, etc.).
+URL + navigation:
+- [x] Remove `/articles/new` route entirely (and sidebar entry).
+- [x] Add editor route: `/articles/:id/edit`.
+- [x] “New Article” button creates a draft immediately, then navigates to `/articles/:id/edit`.
+- [x] “Edit” from library navigates to `/articles/:id/edit` (no modal flyout).
+
+Permissions + roles (backend):
+- [x] Keep `User.isAdmin: boolean`.
+- [x] Add `Article.ownerId` (immutable owner).
+- [x] Owner/admin can manage authors; non-owner authors can edit but cannot change author list.
+- [x] Only admin can publish/unpublish.
+- [x] Review workflow:
+- [x] owner can request review; while in review the article is locked for edits.
+- [x] owner can unrequest review (returns to draft/unlocked).
+- [x] admin can approve publish; admin unpublish returns to draft.
+- [x] Admin can transfer ownership.
+
+Rich text persistence:
+- [x] Store Lexical state in the backend as `Article.editorState` in addition to HTML `Article.content`.
+- [x] Editor loads from `editorState` (preferred) and generates `content` HTML for rendering.
+
+Backend endpoints (suggested under `/api/admin`):
+- [x] `POST /api/admin/articles/draft` -> creates draft with `ownerId` and returns new article.
+- [x] `GET /api/admin/articles/:id` -> full article (drafts included), does NOT increment viewCount.
+- [x] `PATCH /api/admin/articles/:id` -> save updates (autosave + manual save).
+- [x] `PATCH /api/admin/articles/:id/authors` -> owner/admin only.
+- [x] `POST /api/admin/articles/:id/request-review` -> owner/admin.
+- [x] `POST /api/admin/articles/:id/unrequest-review` -> owner/admin.
+- [x] `POST /api/admin/articles/:id/publish` -> admin only.
+- [x] `POST /api/admin/articles/:id/unpublish` -> admin only.
+- [x] `POST /api/admin/articles/:id/transfer-ownership` -> admin only.
+
+Dashboard changes:
+- [x] Remove edit dialog state and `ArticleDialogs` edit UI.
+- [x] Implement editor page that:
+- [x] loads article via admin endpoint
+- [x] initializes Lexical from `editorState`
+- [x] autosaves (debounced)
+- [x] shows “Request review” for owners, publish/unpublish for admins.
 
 Files likely touched:
-- [ ] `dashboard/src/features/articles/article-library/useArticles.ts`
-- [ ] `dashboard/src/features/articles/article-library/list.tsx`
-- [ ] `dashboard/src/features/articles/article-library/ArticleDialogs.tsx`
+- [x] `dashboard/src/features/articles/article-library/list.tsx`
+- [x] `dashboard/src/components/layout/data/sidebar-data.ts`
+- [x] `dashboard/src/routes/_authenticated/articles/$articleId/edit.tsx` (new)
+- [x] `dashboard/src/features/articles/article-creation/*` (refactor to support edit route)
+- [x] `backend/src/models/Article.ts`
+- [x] `backend/src/routes/admin.articles.routes.ts`
+- [x] `backend/src/controllers/article.controller.ts` (or new admin controller)
+- [x] `backend/src/middleware/auth.middleware.ts` + new authorizer helper
 
 Checks:
-- [x] Edit save persists and refetches.
-- [x] Toggling publish/featured/sticky reflects backend rules.
+- [ ] Non-admin can create draft, edit, manage authors (if owner), delete draft.
+- [ ] Non-owner author can edit/save draft but cannot change authors.
+- [ ] Owner can request review, article becomes locked.
+- [ ] Owner can unrequest review, unlocks.
+- [ ] Admin can publish/unpublish and transfer ownership.
+
 
 ---
 

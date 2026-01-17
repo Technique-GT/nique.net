@@ -7,17 +7,84 @@ import {
   useUsers,
   useCollaborators,
   useMedia,
+  useAdminArticle,
 } from "@/hooks/use-queries";
 import type { Category, SubCategory, Tag, Author, Collaborator, MediaItem } from "./types";
+import { useParams } from "@tanstack/react-router";
 
 export default function ArticleCreation() {
+  const { articleId } = useParams({ strict: false }) as { articleId?: string };
+
+  const {
+    data: initialArticle,
+    isLoading: articleLoading,
+  } = useAdminArticle(articleId || "");
+
+  // Transform backend article to frontend shape
+  const transformedArticle = useMemo(() => {
+    if (!initialArticle) return null;
+    const backendArticle = initialArticle as any;
+
+    // Helper to map backend user to frontend Author
+    const mapUserToAuthor = (u: any) => {
+      if (!u) return null;
+      const fullName = typeof u.name === 'string' ? u.name.trim() : 'Unknown';
+      const parts = fullName.split(/\s+/).filter(Boolean);
+      const firstName = parts[0] || 'Unknown';
+      const lastName = parts.slice(1).join(' ');
+
+      return {
+        _id: u._id,
+        firstName,
+        lastName,
+        username: fullName,
+        email: u.email || '', // Email might not be populated, default to empty
+        role: u.isAdmin ? 'admin' : 'writer',
+        status: 'active',
+      };
+    };
+
+      return {
+        ...backendArticle,
+        // Map populated fields to expected frontend props
+        category: backendArticle.categoryId,
+        subcategory: backendArticle.subcategoryId,
+        tags: backendArticle.tagIds,
+
+        // Dashboard caption field maps to backend imageCaption (fallback to excerpt)
+        excerpt: backendArticle.imageCaption ?? backendArticle.excerpt ?? "",
+
+      
+      // Map authors array structure
+      authors: Array.isArray(backendArticle.authors)
+        ? backendArticle.authors
+            .map((a: any) => mapUserToAuthor(a.authorId))
+            .filter((a: any) => a !== null)
+        : [],
+
+      // Map featured media
+      featuredMedia: backendArticle.featuredMediaId
+        ? {
+            id: backendArticle.featuredMediaId._id,
+            url: backendArticle.featuredMediaId.url,
+            alt: backendArticle.featuredMediaId.altText,
+          }
+        : undefined,
+    };
+  }, [initialArticle]);
+
   // TanStack Query hooks - all taxonomy data is persisted
   const { categories: rawCategories, subCategories: rawSubCategories, tags: rawTags, isLoading: taxonomyLoading, isError: taxonomyError } = useTaxonomy();
   const { data: rawUsers = [], isLoading: usersLoading } = useUsers();
   const { data: collaboratorsData = [], isLoading: collabLoading } = useCollaborators();
   const { data: mediaData, isLoading: mediaLoading } = useMedia({ limit: 100 });
 
-  const isLoading = taxonomyLoading || usersLoading || collabLoading || mediaLoading;
+  const isLoading =
+    taxonomyLoading ||
+    usersLoading ||
+    collabLoading ||
+    mediaLoading ||
+    articleLoading;
 
   // Map to UI shapes with default values for missing fields
   const categories: Category[] = useMemo(() => {
@@ -147,8 +214,8 @@ export default function ArticleCreation() {
   return (
     <Main>
       <PageHeader
-        title="Create New Article"
-        description="Draft, schedule, or publish a new post"
+        title={initialArticle?._id ? "Edit Article" : "Create New Article"}
+        description={initialArticle?._id ? `Editing: ${initialArticle.title}` : "Draft, schedule, or publish a new post"}
       />
       <ArticleForm
         categories={categories}
@@ -157,6 +224,8 @@ export default function ArticleCreation() {
         authors={authors}
         collaborators={collaborators}
         mediaLibrary={mediaItems}
+        initialArticle={transformedArticle as any}
+        isLoadingData={isLoading}
       />
     </Main>
   );

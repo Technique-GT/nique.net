@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { $getRoot } from "lexical";
 
 import { Editor } from "@/components/blocks/editor-00/editor";
@@ -6,21 +6,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Search, X, Info } from "lucide-react";
+import { Info, Search, X } from "lucide-react";
 
 import { MediaPicker } from "@/components/media/media-picker";
-import { Category, SubCategory, Tag, Author, Collaborator, SerializedEditorState, FieldErrorKey, MediaItem } from "./types";
-import ArticleSubmission from "./ArticleSubmission";
-
+import { toast } from "sonner";
+import { useAuthStore } from "@/stores/authStore";
+import {
+  type Article,
+  type Author,
+  type Category,
+  type Collaborator,
+  type FieldErrorKey,
+  type MediaItem,
+  type SerializedEditorState,
+  type SubCategory,
+  type Tag,
+} from "./types";
+import { apiClient } from "@/lib/api-client";
 
 interface ArticleFormProps {
   categories: Category[];
@@ -29,183 +42,74 @@ interface ArticleFormProps {
   authors: Author[];
   collaborators: Collaborator[];
   mediaLibrary: MediaItem[];
+  initialArticle?: Article | null;
+  isLoadingData?: boolean;
 }
 
-export default function ArticleForm({ categories, subcategories, tags, authors, collaborators, mediaLibrary }: ArticleFormProps) {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState<SerializedEditorState | undefined>();
-  const [contentText, setContentText] = useState("");
-  const [excerpt, setExcerpt] = useState("");
-  const [category, setCategory] = useState("");
-  const [subcategory, setSubcategory] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedAuthors, setSelectedAuthors] = useState<Author[]>([]);
-  const [selectedCollaborators, setSelectedCollaborators] = useState<Collaborator[]>([]);
-  const [featuredMediaId, setFeaturedMediaId] = useState<string>("");
-  const [isPublished, setIsPublished] = useState(false);
-  const [isFeatured, setIsFeatured] = useState(false);
-  const [isSticky, setIsSticky] = useState(false);
-  const [formErrors, setFormErrors] = useState<Partial<Record<FieldErrorKey, string>>>({});
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  void confirmOpen; // silence unused variable warning
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-  const [pendingSubmission, setPendingSubmission] = useState<{
-    title: string;
-    content: string;
-    categoryId: string;
-    subcategoryId: string;
-    tagIds: string[];
-    authors: string[];
-    featuredMediaId: string;
-    imageCaption: string;
-    published: boolean;
-    isFeatured: boolean;
-    isSticky: boolean;
-  } | null>(null);
-  void pendingSubmission; // silence unused variable warning
-  const [editorResetKey, setEditorResetKey] = useState(0);
-  
-  // Search functionality
-  const [authorSearch, setAuthorSearch] = useState("");
-  const [showAuthorResults, setShowAuthorResults] = useState(false);
-  const [collaboratorSearch, setCollaboratorSearch] = useState("");
-  const [showCollaboratorResults, setShowCollaboratorResults] = useState(false);
+export default function ArticleForm({
+  categories,
+  subcategories,
+  tags,
+  authors,
+  collaborators,
+  mediaLibrary,
+  initialArticle,
+  isLoadingData,
+}: ArticleFormProps) {
+  const { user: me } = useAuthStore((state) => state.auth);
 
-  // Filter authors based on search
-  const filteredAuthors = useMemo(() => {
-    if (!authorSearch.trim()) return [];
-
-    const list = Array.isArray(authors) ? authors : [];
-    const searchTerm = authorSearch.toLowerCase();
-
-    return list.filter((author) => {
-      const firstName = typeof author?.firstName === 'string' ? author.firstName : '';
-      const lastName = typeof author?.lastName === 'string' ? author.lastName : '';
-      const username = typeof author?.username === 'string' ? author.username : '';
-      const email = typeof author?.email === 'string' ? author.email : '';
-
-      return (
-        firstName.toLowerCase().includes(searchTerm) ||
-        lastName.toLowerCase().includes(searchTerm) ||
-        username.toLowerCase().includes(searchTerm) ||
-        email.toLowerCase().includes(searchTerm)
-      );
-    });
-  }, [authorSearch, authors]);
-
-  // Filter collaborators based on search
-  const filteredCollaborators = useMemo(() => {
-    if (!collaboratorSearch.trim()) return [];
-    
-    const searchTerm = collaboratorSearch.toLowerCase();
-    return collaborators.filter(collaborator => 
-      collaborator.name.toLowerCase().includes(searchTerm) ||
-      collaborator.title.toLowerCase().includes(searchTerm) ||
-      (collaborator.email && collaborator.email.toLowerCase().includes(searchTerm))
-    );
-  }, [collaboratorSearch, collaborators]);
-
-  // Get display names for selected items
-  const selectedCategoryName = useMemo(() => {
-    const found = categories.find(cat => cat._id === category);
-    return found ? found.name : "";
-  }, [category, categories]);
-
-  const selectedSubcategoryName = useMemo(() => {
-    const found = subcategories.find(sub => sub._id === subcategory);
-    return found ? found.name : "";
-  }, [subcategory, subcategories]);
-
-  const selectedTagNames = useMemo(() => {
-    return selectedTags.map(tagId => {
-      const found = tags.find(tag => tag._id === tagId);
-      return found ? found.name : tagId;
-    });
-  }, [selectedTags, tags]);
-
-  // Transform data for frontend use
-  const availableTags = useMemo(() => 
-    tags.map(tag => ({
-      id: tag._id,
-      name: tag.name
-    })), [tags]);
-
-  const categoriesData = useMemo(() => 
-    categories.map(cat => ({
-      id: cat._id,
-      name: cat.name,
-      slug: cat.slug
-    })), [categories]);
-
-  // Get subcategories for the selected category
-  const availableSubcategories = useMemo(() => {
-    if (!category) return [];
-    
-    return subcategories
-      .filter(sub => {
-        const catId = typeof sub.category === 'object' ? sub.category?._id : sub.category;
-        return catId === category;
-      })
-      .map(sub => ({
-        id: sub._id,
-        name: sub.name,
-        slug: sub.slug
-      }));
-  }, [category, subcategories]);
-
-  const isSubcategoryRequired = availableSubcategories.length > 0;
-  const subcategoryPlaceholder = useMemo(() => {
-    if (!category) {
-      return "Select a category first";
-    }
-    if (!isSubcategoryRequired) {
-      return "No sub-categories available";
-    }
-    return "Select sub-category";
-  }, [category, isSubcategoryRequired]);
-
-  const isContentEmpty = useMemo(
-    () => contentText.trim().length === 0,
-    [contentText],
+  const [title, setTitle] = useState(initialArticle?.title || "");
+  const [content, setContent] = useState<SerializedEditorState | undefined>(
+    initialArticle?.editorState,
   );
+  const [contentText, setContentText] = useState("");
+  const [excerpt, setExcerpt] = useState(initialArticle?.excerpt || "");
+  const [category, setCategory] = useState(initialArticle?.category?._id || "");
+  const [subcategory, setSubcategory] = useState(
+    initialArticle?.subcategory?._id || "",
+  );
+  const [selectedTags, setSelectedTags] = useState<string[]>(
+    initialArticle?.tags?.map((t) => t._id) || [],
+  );
+  const [selectedAuthors, setSelectedAuthors] = useState<Author[]>(
+    initialArticle?.authors || [],
+  );
+  const [selectedCollaborators, setSelectedCollaborators] = useState<Collaborator[]>(
+    initialArticle?.collaborators || [],
+  );
+  const [featuredMediaId, setFeaturedMediaId] = useState<string>(
+    initialArticle?.featuredMedia?.id || "",
+  );
+  const [isPublished, setIsPublished] = useState(initialArticle?.isPublished || false);
+  const [isFeatured, setIsFeatured] = useState(initialArticle?.isFeatured || false);
+  const [isSticky, setIsSticky] = useState(initialArticle?.isSticky || false);
+  const [reviewStatus, setReviewStatus] = useState<
+    "draft" | "in_review" | "published"
+  >(initialArticle?.reviewStatus || "draft");
 
-  const clearFieldError = (field: FieldErrorKey) => {
-    setFormErrors((prev) => {
-      if (!prev[field]) {
-        return prev;
-      }
+  const isOwner = me?.id === initialArticle?.ownerId;
+  const isAdmin = !!me?.isAdmin;
+  const isLocked = reviewStatus === "in_review" && !isAdmin;
+  const canManageAuthorsPerm = isAdmin || isOwner;
 
-      const next = { ...prev };
-      delete next[field];
-      return next;
-    });
-  };
-
-  const resetForm = () => {
-    setTitle("");
-    setContent(undefined);
-    setContentText("");
-    setExcerpt("");
-    setCategory("");
-    setSubcategory("");
-    setSelectedTags([]);
-    setSelectedAuthors([]);
-    setSelectedCollaborators([]);
-    setFeaturedMediaId("");
-    setIsPublished(false);
-    setIsFeatured(false);
-    setIsSticky(false);
-    setAuthorSearch("");
-    setShowAuthorResults(false);
-    setCollaboratorSearch("");
-    setShowCollaboratorResults(false);
-    setEditorResetKey((prev) => prev + 1);
-    setFormErrors({});
-    setPendingSubmission(null);
-    setConfirmOpen(false);
-    setSubmitMessage(null);
-  };
+  // Sync state with initialArticle when it's loaded
+  useEffect(() => {
+    if (initialArticle) {
+      setTitle(initialArticle.title || "");
+      setContent(initialArticle.editorState);
+      setExcerpt(initialArticle.excerpt || "");
+      setCategory(initialArticle.category?._id || "");
+      setSubcategory(initialArticle.subcategory?._id || "");
+      setSelectedTags(initialArticle.tags?.map((t) => t._id) || []);
+      setSelectedAuthors(initialArticle.authors || []);
+      setFeaturedMediaId(initialArticle.featuredMedia?.id || "");
+      setIsPublished(initialArticle.isPublished || false);
+      setIsFeatured(initialArticle.isFeatured || false);
+      setIsSticky(initialArticle.isSticky || false);
+      setReviewStatus(initialArticle.reviewStatus || "draft");
+      setEditorResetKey((prev) => prev + 1);
+    }
+  }, [initialArticle]);
 
   // Enhanced Lexical to HTML conversion that preserves all formatting
   const convertLexicalToHtml = (editorState: SerializedEditorState): string => {
@@ -346,7 +250,227 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
     }
   };  
 
-  // Author search and selection functions
+  // Autosave logic
+   useEffect(() => {
+     if (!initialArticle?._id || reviewStatus === 'in_review') return;
+
+     // Don't autosave until required backend validators will pass
+     // Relaxed for drafts: allow saving even with partial data
+     // if (!category) return;
+     // if (!excerpt?.trim()) return;
+     // if (!selectedAuthors?.some((a) => !!a?._id)) return;
+
+     const timer = setTimeout(async () => {
+       try {
+         const htmlContent = content ? convertLexicalToHtml(content) : ""
+         const articleData = {
+           title,
+           content: htmlContent,
+           editorState: content,
+           ...(excerpt?.trim() ? { excerpt: excerpt.trim() } : {}),
+           ...(category ? { categoryId: category } : {}),
+           ...(subcategory ? { subcategoryId: subcategory } : {}),
+           ...(selectedTags?.length ? { tagIds: selectedTags } : {}),
+           // Only include authors if user has permission to manage them
+           ...(canManageAuthorsPerm && selectedAuthors?.length
+             ? { authors: selectedAuthors.filter((a) => !!a?._id).map((a) => ({ authorId: a._id })) }
+             : {}),
+           ...(featuredMediaId ? { featuredMediaId } : {}),
+         };
+
+         await apiClient.put(`/admin/articles/${initialArticle._id}`, articleData);
+       } catch (error) {
+         console.error('Autosave failed:', error);
+       }
+     }, 2000); // 2 second debounce
+
+     return () => clearTimeout(timer);
+   }, [title, content, excerpt, category, subcategory, selectedTags, selectedAuthors, featuredMediaId, initialArticle?._id, reviewStatus]);
+
+  const [formErrors, setFormErrors] = useState<Partial<Record<FieldErrorKey, string>>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [editorResetKey, setEditorResetKey] = useState(0);
+  
+  // Search functionality
+  const [authorSearch, setAuthorSearch] = useState("");
+  const [showAuthorResults, setShowAuthorResults] = useState(false);
+  const [collaboratorSearch, setCollaboratorSearch] = useState("");
+  const [showCollaboratorResults, setShowCollaboratorResults] = useState(false);
+
+  // Filter authors based on search
+  const filteredAuthors = useMemo(() => {
+    if (!authorSearch.trim()) return [];
+
+    const list = Array.isArray(authors) ? authors : [];
+    const searchTerm = authorSearch.toLowerCase();
+
+    return list.filter((author) => {
+      const firstName = typeof author?.firstName === 'string' ? author.firstName : '';
+      const lastName = typeof author?.lastName === 'string' ? author.lastName : '';
+      const username = typeof author?.username === 'string' ? author.username : '';
+      const email = typeof author?.email === 'string' ? author.email : '';
+
+      return (
+        firstName.toLowerCase().includes(searchTerm) ||
+        lastName.toLowerCase().includes(searchTerm) ||
+        username.toLowerCase().includes(searchTerm) ||
+        email.toLowerCase().includes(searchTerm)
+      );
+    });
+  }, [authorSearch, authors]);
+
+  // Filter collaborators based on search
+  const filteredCollaborators = useMemo(() => {
+    if (!collaboratorSearch.trim()) return [];
+    
+    const searchTerm = collaboratorSearch.toLowerCase();
+    return collaborators.filter(collaborator => 
+      collaborator.name.toLowerCase().includes(searchTerm) ||
+      collaborator.title.toLowerCase().includes(searchTerm) ||
+      (collaborator.email && collaborator.email.toLowerCase().includes(searchTerm))
+    );
+  }, [collaboratorSearch, collaborators]);
+
+  const handleRequestReview = async () => {
+    if (!initialArticle?._id) return;
+    try {
+      setIsSubmitting(true);
+      await apiClient.post(`/admin/articles/${initialArticle._id}/request-review`);
+      setReviewStatus('in_review');
+      toast.success("Review requested");
+    } catch (error) {
+      console.error('Failed to request review:', error);
+      toast.error("Failed to request review");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUnrequestReview = async () => {
+    if (!initialArticle?._id) return;
+    try {
+      setIsSubmitting(true);
+      await apiClient.post(`/admin/articles/${initialArticle._id}/unrequest-review`);
+      setReviewStatus('draft');
+      toast.success("Review cancelled");
+    } catch (error) {
+      console.error('Failed to cancel review:', error);
+      toast.error("Failed to cancel review");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAdminPublish = async () => {
+    if (!initialArticle?._id) return;
+    try {
+      setIsSubmitting(true);
+      await apiClient.post(`/admin/articles/${initialArticle._id}/publish`);
+      setReviewStatus('published');
+      setIsPublished(true);
+      toast.success("Article published");
+    } catch (error) {
+      console.error('Failed to publish:', error);
+      toast.error("Failed to publish");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAdminUnpublish = async () => {
+    if (!initialArticle?._id) return;
+    try {
+      setIsSubmitting(true);
+      await apiClient.post(`/admin/articles/${initialArticle._id}/unpublish`);
+      setReviewStatus('draft');
+      setIsPublished(false);
+      toast.success("Article unpublished");
+    } catch (error) {
+      console.error('Failed to unpublish:', error);
+      toast.error("Failed to unpublish");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Get display names for selected items
+  const selectedCategoryName = useMemo(() => {
+    const found = categories.find(cat => cat._id === category);
+    return found ? found.name : "";
+  }, [category, categories]);
+
+  const selectedSubcategoryName = useMemo(() => {
+    const found = subcategories.find(sub => sub._id === subcategory);
+    return found ? found.name : "";
+  }, [subcategory, subcategories]);
+
+  const selectedTagNames = useMemo(() => {
+    return selectedTags.map(tagId => {
+      const found = tags.find(tag => tag._id === tagId);
+      return found ? found.name : tagId;
+    });
+  }, [selectedTags, tags]);
+
+  // Transform data for frontend use
+  const availableTags = useMemo(() => 
+    tags.map(tag => ({
+      id: tag._id,
+      name: tag.name
+    })), [tags]);
+
+  const categoriesData = useMemo(() => 
+    categories.map(cat => ({
+      id: cat._id,
+      name: cat.name,
+      slug: cat.slug
+    })), [categories]);
+
+  // Get subcategories for the selected category
+  const availableSubcategories = useMemo(() => {
+    if (!category) return [];
+    
+    return subcategories
+      .filter(sub => {
+        const catId = typeof sub.category === 'object' ? sub.category?._id : sub.category;
+        return catId === category;
+      })
+      .map(sub => ({
+        id: sub._id,
+        name: sub.name,
+        slug: sub.slug
+      }));
+  }, [category, subcategories]);
+
+  const isSubcategoryRequired = availableSubcategories.length > 0;
+  const subcategoryPlaceholder = useMemo(() => {
+    if (!category) {
+      return "Select a category first";
+    }
+    if (!isSubcategoryRequired) {
+      return "No sub-categories available";
+    }
+    return "Select sub-category";
+  }, [category, isSubcategoryRequired]);
+
+  const isContentEmpty = useMemo(
+    () => contentText.trim().length === 0,
+    [contentText],
+  );
+
+  const clearFieldError = (field: FieldErrorKey) => {
+    setFormErrors((prev) => {
+      if (!prev[field]) {
+        return prev;
+      }
+
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  // Author selection functions
   const handleAuthorSearch = (searchTerm: string) => {
     setAuthorSearch(searchTerm);
     setShowAuthorResults(searchTerm.length > 0);
@@ -367,7 +491,7 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
     setSelectedAuthors(prev => prev.filter(a => a._id !== authorId));
   };
 
-  // Collaborator search and selection functions
+  // Collaborator selection functions
   const handleCollaboratorSearch = (searchTerm: string) => {
     setCollaboratorSearch(searchTerm);
     setShowCollaboratorResults(searchTerm.length > 0);
@@ -408,9 +532,7 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
     return `${collaborator.name} - ${collaborator.title}`;
   };
 
-  const checkValidity = (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const validateRequiredFields = () => {
     const errors: Partial<Record<FieldErrorKey, string>> = {};
 
     if (!title.trim()) {
@@ -429,7 +551,7 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
       errors.excerpt = "Caption is required.";
     }
 
-    if (selectedAuthors.length === 0) {
+    if (!selectedAuthors.some((a) => !!a?._id)) {
       errors.authors = "At least one author must be selected.";
     }
 
@@ -441,6 +563,78 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
       errors.tags = "At least one tag must be selected.";
     }
 
+    return errors;
+  };
+
+  const handleSaveChanges = async () => {
+    if (!initialArticle?._id) return;
+    if (isLocked && !isAdmin) {
+      toast.error("This article is locked for review.");
+      return;
+    }
+
+    // const errors = validateRequiredFields(); // Used for final publish check or highlighting, but not blocking save
+    // Only block saving if title is missing (minimal requirement)
+    if (!title.trim()) {
+      setFormErrors({ title: "Title is required." });
+      return;
+    }
+    // if (Object.keys(errors).length > 0) {
+    //   setFormErrors(errors);
+    //   return;
+    // }
+
+    setFormErrors({});
+    setIsSubmitting(true);
+    setSubmitMessage(null);
+
+    try {
+      const htmlContent = content ? convertLexicalToHtml(content) : "<p></p>";
+
+      const articleData = {
+        title: title.trim(),
+        content: htmlContent,
+        editorState: content,
+        excerpt: excerpt.trim(),
+        ...(category ? { categoryId: category } : {}),
+        ...(subcategory ? { subcategoryId: subcategory } : {}),
+        tagIds: selectedTags,
+        // Only include authors if user has permission to manage them
+        ...(canManageAuthorsPerm ? { 
+          authors: selectedAuthors.filter((a) => !!a?._id).map((a) => a._id) 
+        } : {}),
+        ...(featuredMediaId ? { featuredMediaId } : {}),
+        published: isPublished,
+        isFeatured: isPublished ? isFeatured : false,
+        isSticky: isPublished ? isSticky : false,
+      };
+
+      await apiClient.put(`/admin/articles/${initialArticle._id}`, articleData);
+
+      setSubmitMessage({ type: 'success', message: 'Changes saved.' });
+    } catch (error: any) {
+      console.error('Save failed:', error);
+      const msg = error?.response?.data?.message || 'Failed to save changes.';
+      setSubmitMessage({ type: 'error', message: msg });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+
+    // Existing articles: Save immediately (no confirm dialog flow)
+    if (initialArticle?._id) {
+      if (isLocked && !isAdmin) {
+        toast.error("This article is locked for review.");
+        return;
+      }
+      handleSaveChanges();
+      return;
+    }
+
+    const errors = validateRequiredFields();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
@@ -449,27 +643,34 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
     setFormErrors({});
 
     // Convert Lexical content to HTML using enhanced conversion
-    let htmlContent = "";
-    if (content) {
-      htmlContent = convertLexicalToHtml(content);
-      console.log('Generated HTML:', htmlContent); // For debugging
-    }
+    // const htmlContent = content ? convertLexicalToHtml(content) : "";
 
-    setPendingSubmission({
-      title,
-      content: htmlContent,
-      categoryId: category,
-      subcategoryId: subcategory,
-      tagIds: selectedTags,
-      authors: selectedAuthors.map(author => author._id),
-      featuredMediaId,
-      imageCaption: excerpt,
-      published: isPublished,
-      isFeatured: isPublished ? isFeatured : false,
-      isSticky: isPublished ? isSticky : false,
-    });
-    setConfirmOpen(true);
+    // setPendingSubmission({
+    //   title,
+    //   content: htmlContent,
+    //   categoryId: category,
+    //   subcategoryId: subcategory,
+    //   tagIds: selectedTags,
+    //   authors: selectedAuthors.filter((a) => !!a?._id).map((author) => author._id),
+    //   featuredMediaId,
+    //   imageCaption: excerpt,
+    //   published: isPublished,
+    //   isFeatured: isPublished ? isFeatured : false,
+    //   isSticky: isPublished ? isSticky : false,
+    // });
+    // setConfirmOpen(true);
+    // Since we are not using ArticleSubmission anymore, we just call handleSaveChanges or maybe a prompt?
+    // But draft-first flow means we just save.
+    handleSaveChanges();
   };
+
+  if (isLoadingData) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -486,12 +687,19 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
 
       <Card>
         <CardContent>
-          <form onSubmit={checkValidity} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6 pt-6">
+            {isLocked && (
+              <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-2 rounded-md flex items-center gap-2">
+                <Info className="w-4 h-4" />
+                <span className="text-sm">This article is currently locked for review.</span>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="title" className='gap-0'><span className='text-destructive'>*</span>Title</Label>
               <Input
                 id="title"
                 value={title}
+                disabled={isLocked}
                 onChange={(e) => {
                   const value = e.target.value;
                   setTitle(value);
@@ -516,6 +724,8 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
               <div role="group" aria-labelledby="content-label">
                 <Editor
                   key={editorResetKey}
+                  editorSerializedState={content}
+                  initialHtml={!content && initialArticle?.content ? initialArticle.content : undefined}
                   onSerializedChange={setContent}
                   onChange={(editorState) => {
                     editorState.read(() => {
@@ -543,6 +753,7 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                 <MediaPicker
                   value={featuredMediaId || undefined}
                   items={mediaLibrary}
+                  disabled={isLocked}
                   onChange={(id) => {
                     setFeaturedMediaId(id || "");
                     if (formErrors.featuredMedia && id) {
@@ -563,6 +774,7 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                 <Input
                   id="excerpt"
                   value={excerpt}
+                  disabled={isLocked}
                   onChange={(e) => {
                     const value = e.target.value;
                     setExcerpt(value);
@@ -594,20 +806,22 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                     "flex flex-wrap gap-2 p-2 border rounded-md min-h-10",
                     formErrors.authors && "border-destructive"
                   )}>
-                    {selectedAuthors.map((author) => (
-                      <Badge
-                        key={author._id}
-                        variant="secondary"
-                        className="px-3 py-1 text-sm flex items-center gap-1"
-                      >
+                     {selectedAuthors.map((author, idx) => (
+                       <Badge
+                         key={author._id || `${idx}`}
+                         variant="secondary"
+                         className="px-3 py-1 text-sm flex items-center gap-1"
+                       >
                         {getAuthorDisplayName(author)}
-                        <button
-                          type="button"
-                          onClick={() => handleAuthorRemove(author._id)}
-                          className="ml-1 hover:text-destructive"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
+                        {!isLocked && canManageAuthorsPerm && (
+                          <button
+                            type="button"
+                            onClick={() => handleAuthorRemove(author._id)}
+                            className="ml-1 hover:text-destructive"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
                       </Badge>
                     ))}
                     {selectedAuthors.length === 0 && (
@@ -619,43 +833,45 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                   )}
 
                   {/* Author Search */}
-                  <div className="relative">
+                  {!isLocked && canManageAuthorsPerm && (
                     <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        value={authorSearch}
-                        onChange={(e) => handleAuthorSearch(e.target.value)}
-                        placeholder="Search for authors by name, username, or email..."
-                        className="pl-10"
-                      />
-                    </div>
-                    
-                    {/* Search Results */}
-                    {showAuthorResults && (
-                      <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
-                        {filteredAuthors.length > 0 ? (
-                          filteredAuthors.map((author) => (
-                            <div
-                              key={author._id}
-                              className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
-                              onClick={() => handleAuthorSelect(author)}
-                            >
-                              <div className="font-medium">
-                                {getAuthorDisplayName(author)}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                {author.username} • {author.email}
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="p-3 text-muted-foreground text-center">
-                            No authors found
-                          </div>
-                        )}
+                      <div className="relative">
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          value={authorSearch}
+                          onChange={(e) => handleAuthorSearch(e.target.value)}
+                          placeholder="Search for authors by name, username, or email..."
+                          className="pl-10"
+                        />
                       </div>
-                    )}
-                  </div>
+                      
+                      {/* Search Results */}
+                      {showAuthorResults && (
+                        <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+                          {filteredAuthors.length > 0 ? (
+                            filteredAuthors.map((author) => (
+                              <div
+                                key={author._id}
+                                className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
+                                onClick={() => handleAuthorSelect(author)}
+                              >
+                                <div className="font-medium">
+                                  {getAuthorDisplayName(author)}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {author.username} • {author.email}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-3 text-muted-foreground text-center">
+                              No authors found
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                  {/* Collaborators Section */}
@@ -682,13 +898,15 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                         className="px-3 py-1 text-sm flex items-center gap-1"
                       >
                         {getCollaboratorDisplayName(collaborator)}
-                        <button
-                          type="button"
-                          onClick={() => handleCollaboratorRemove(collaborator._id)}
-                          className="ml-1 hover:text-destructive"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
+                        {!isLocked && (
+                          <button
+                            type="button"
+                            onClick={() => handleCollaboratorRemove(collaborator._id)}
+                            className="ml-1 hover:text-destructive"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
                       </Badge>
                     ))}
                     {selectedCollaborators.length === 0 && (
@@ -697,43 +915,45 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                   </div>
 
                   {/* Collaborator Search */}
-                  <div className="relative">
+                  {!isLocked && (
                     <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        value={collaboratorSearch}
-                        onChange={(e) => handleCollaboratorSearch(e.target.value)}
-                        placeholder="Search for collaborators by name, title, or email..."
-                        className="pl-10"
-                      />
-                    </div>
-                    
-                    {/* Search Results */}
-                    {showCollaboratorResults && (
-                      <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
-                        {filteredCollaborators.length > 0 ? (
-                          filteredCollaborators.map((collaborator) => (
-                            <div
-                              key={collaborator._id}
-                              className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
-                              onClick={() => handleCollaboratorSelect(collaborator)}
-                            >
-                              <div className="font-medium">
-                                {getCollaboratorDisplayName(collaborator)}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                {collaborator.email || "No email"} • {collaborator.status}
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="p-3 text-muted-foreground text-center">
-                            No collaborators found
-                          </div>
-                        )}
+                      <div className="relative">
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          value={collaboratorSearch}
+                          onChange={(e) => handleCollaboratorSearch(e.target.value)}
+                          placeholder="Search for collaborators by name, title, or email..."
+                          className="pl-10"
+                        />
                       </div>
-                    )}
-                  </div>
+                      
+                      {/* Search Results */}
+                      {showCollaboratorResults && (
+                        <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+                          {filteredCollaborators.length > 0 ? (
+                            filteredCollaborators.map((collaborator) => (
+                              <div
+                                key={collaborator._id}
+                                className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
+                                onClick={() => handleCollaboratorSelect(collaborator)}
+                              >
+                                <div className="font-medium">
+                                  {getCollaboratorDisplayName(collaborator)}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {collaborator.email || "No email"} • {collaborator.status}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-3 text-muted-foreground text-center">
+                              No collaborators found
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Category & sub-category */}
@@ -742,6 +962,7 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                     <Label htmlFor="category" className='gap-0'><span className='text-destructive'>*</span>Category</Label>
                     <Select
                       value={category}
+                      disabled={isLocked}
                       onValueChange={(value) => {
                         setCategory(value);
                         setSubcategory(""); // Reset subcategory when category changes
@@ -799,7 +1020,7 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                           clearFieldError("subcategory");
                         }
                       }}
-                      disabled={!isSubcategoryRequired}
+                      disabled={!isSubcategoryRequired || isLocked}
                     >
                       <SelectTrigger
                         className={cn(
@@ -808,7 +1029,7 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                           !isSubcategoryRequired && "text-muted-foreground"
                         )}
                         aria-invalid={Boolean(formErrors.subcategory)}
-                        disabled={!isSubcategoryRequired}
+                        disabled={!isSubcategoryRequired || isLocked}
                       >
                         <SelectValue placeholder={subcategory ? selectedSubcategoryName : subcategoryPlaceholder} />
                       </SelectTrigger>
@@ -832,9 +1053,11 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                     <Switch
                       id="publish"
                       checked={isPublished}
+                      disabled={!isAdmin}
                       onCheckedChange={setIsPublished}
                     />
-                    <Label htmlFor="publish">Publish immediately</Label>
+                    <Label htmlFor="publish">Published</Label>
+                    {!isAdmin && <span className="text-xs text-muted-foreground ml-1">(Admin only)</span>}
                   </div>
 
                   <div className="flex items-center space-x-2">
@@ -842,11 +1065,11 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                       id="featured"
                       checked={isFeatured}
                       onCheckedChange={setIsFeatured}
-                      disabled={!isPublished}
+                      disabled={!isPublished || !isAdmin}
                     />
-                    <Label htmlFor="featured" className={!isPublished ? "text-muted-foreground" : ""}>
+                    <Label htmlFor="featured" className={(!isPublished || !isAdmin) ? "text-muted-foreground" : ""}>
                       Featured article
-                      {!isPublished && <span className="text-xs text-muted-foreground ml-1">(requires publishing)</span>}
+                      {(!isPublished || !isAdmin) && <span className="text-xs text-muted-foreground ml-1">(requires publishing & admin)</span>}
                     </Label>
                   </div>
 
@@ -855,40 +1078,59 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                       id="sticky"
                       checked={isSticky}
                       onCheckedChange={setIsSticky}
-                      disabled={!isPublished}
+                      disabled={!isPublished || !isAdmin}
                     />
-                    <Label htmlFor="sticky" className={!isPublished ? "text-muted-foreground" : ""}>
+                    <Label htmlFor="sticky" className={(!isPublished || !isAdmin) ? "text-muted-foreground" : ""}>
                       Sticky article (pinned to top)
-                      {!isPublished && <span className="text-xs text-muted-foreground ml-1">(requires publishing)</span>}
+                      {(!isPublished || !isAdmin) && <span className="text-xs text-muted-foreground ml-1">(requires publishing & admin)</span>}
                     </Label>
                   </div>
                 </div>
 
-                <div className="flex gap-4">
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Creating..." : "Create Article"}
-                  </Button>
-                   <ArticleSubmission 
-                     title={title}
-                     content={content}
-                     contentText={contentText}
-                     excerpt={excerpt}
-                     category={category}
-                     subcategory={subcategory}
-                     selectedTags={selectedTags}
-                     selectedAuthors={selectedAuthors}
-                     selectedCollaborators={selectedCollaborators}
-                     featuredMediaId={featuredMediaId}
-                     isSubmitting={isSubmitting}
-                     setIsSubmitting={setIsSubmitting}
-                     setSubmitMessage={setSubmitMessage}
-                     resetForm={resetForm}
-                     convertLexicalToHtml={convertLexicalToHtml}
-                     confirmOpen={confirmOpen}
-                     setConfirmOpen={setConfirmOpen}
-                     pendingSubmission={pendingSubmission}
-                     setPendingSubmission={setPendingSubmission}
-                   />
+                <div className="flex flex-wrap gap-4">
+                  {/* Common Save/Create button (only for drafts/published, not in_review unless admin) */}
+                  {(!isLocked || isAdmin) && (
+                    <Button
+                      type={initialArticle?._id ? "button" : "submit"}
+                      onClick={initialArticle?._id ? handleSaveChanges : undefined}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Saving..." : (initialArticle?._id ? "Save Changes" : "Create Article")}
+                    </Button>
+                  )}
+
+                  {/* Workflow buttons */}
+                  {initialArticle?._id && (
+                    <>
+                      {reviewStatus === 'draft' && (isOwner || isAdmin) && (
+                        <Button type="button" variant="outline" onClick={handleRequestReview} disabled={isSubmitting}>
+                          Request Review
+                        </Button>
+                      )}
+                      
+                      {reviewStatus === 'in_review' && (isOwner || isAdmin) && (
+                        <Button type="button" variant="outline" onClick={handleUnrequestReview} disabled={isSubmitting}>
+                          Cancel Review Request
+                        </Button>
+                      )}
+
+                      {isAdmin && reviewStatus !== 'published' && (
+                        <Button type="button" variant="default" className="bg-green-600 hover:bg-green-700 text-white" onClick={handleAdminPublish} disabled={isSubmitting}>
+                          Approve & Publish
+                        </Button>
+                      )}
+
+                      {isAdmin && reviewStatus === 'published' && (
+                        <Button type="button" variant="destructive" onClick={handleAdminUnpublish} disabled={isSubmitting}>
+                          Unpublish
+                        </Button>
+                      )}
+                    </>
+                  )}
+
+                  {!initialArticle?._id && (
+                    <div className="text-muted-foreground">Initializing draft...</div>
+                  )}
                 </div>
               </div>
 
@@ -903,9 +1145,9 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                       key={selectedTags[index]}
                       variant="secondary"
                       className="px-3 py-1 text-sm cursor-pointer"
-                      onClick={() => handleTagRemove(selectedTags[index])}
+                      onClick={() => !isLocked && handleTagRemove(selectedTags[index])}
                     >
-                      {tagName} ×
+                      {tagName} {!isLocked && "×"}
                     </Badge>
                   ))}
                   {selectedTags.length === 0 && (
@@ -915,23 +1157,25 @@ export default function ArticleForm({ categories, subcategories, tags, authors, 
                 {formErrors.tags && (
                   <p className="text-xs text-destructive">{formErrors.tags}</p>
                 )}
-                <div className="flex flex-wrap gap-2">
-                  {availableTags
-                    .filter((tag) => !selectedTags.includes(tag.id))
-                    .map((tag) => (
-                      <Badge
-                        key={tag.id}
-                        variant="outline"
-                        className="cursor-pointer px-3 py-1 text-sm"
-                        onClick={() => handleTagSelect(tag.id)}
-                      >
-                        {tag.name}
-                      </Badge>
-                    ))}
-                  {availableTags.length === 0 && (
-                    <p className="text-muted-foreground">No tags available</p>
-                  )}
-                </div>
+                {!isLocked && (
+                  <div className="flex flex-wrap gap-2">
+                    {availableTags
+                      .filter((tag) => !selectedTags.includes(tag.id))
+                      .map((tag) => (
+                        <Badge
+                          key={tag.id}
+                          variant="outline"
+                          className="cursor-pointer px-3 py-1 text-sm hover:bg-secondary"
+                          onClick={() => handleTagSelect(tag.id)}
+                        >
+                          {tag.name}
+                        </Badge>
+                      ))}
+                    {availableTags.length === 0 && (
+                      <p className="text-muted-foreground">No tags available</p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </form>

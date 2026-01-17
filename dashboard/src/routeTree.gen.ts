@@ -32,12 +32,14 @@ import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedDashIndexRouteImport } from './routes/_authenticated/dash/index'
 import { Route as AuthenticatedCommentsIndexRouteImport } from './routes/_authenticated/comments/index'
 import { Route as AuthenticatedArticlesIndexRouteImport } from './routes/_authenticated/articles/index'
+import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings/profile'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedArticlesTagsRouteImport } from './routes/_authenticated/articles/tags'
 import { Route as AuthenticatedArticlesNewRouteImport } from './routes/_authenticated/articles/new'
 import { Route as AuthenticatedArticlesMediaRouteImport } from './routes/_authenticated/articles/media'
 import { Route as AuthenticatedArticlesListRouteImport } from './routes/_authenticated/articles/list'
 import { Route as AuthenticatedArticlesCategoriesRouteImport } from './routes/_authenticated/articles/categories'
+import { Route as AuthenticatedArticlesArticleIdEditRouteImport } from './routes/_authenticated/articles/$articleId/edit'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -158,6 +160,12 @@ const AuthenticatedArticlesIndexRoute =
     path: '/articles/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsProfileRoute =
+  AuthenticatedSettingsProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
 const AuthenticatedSettingsAppearanceRoute =
   AuthenticatedSettingsAppearanceRouteImport.update({
     id: '/appearance',
@@ -194,6 +202,12 @@ const AuthenticatedArticlesCategoriesRoute =
     path: '/articles/categories',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedArticlesArticleIdEditRoute =
+  AuthenticatedArticlesArticleIdEditRouteImport.update({
+    id: '/articles/$articleId/edit',
+    path: '/articles/$articleId/edit',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
@@ -215,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/articles/new': typeof AuthenticatedArticlesNewRoute
   '/articles/tags': typeof AuthenticatedArticlesTagsRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
+  '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/articles': typeof AuthenticatedArticlesIndexRoute
   '/comments': typeof AuthenticatedCommentsIndexRoute
   '/dash': typeof AuthenticatedDashIndexRoute
@@ -223,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/spotify': typeof AuthenticatedSpotifyIndexRoute
   '/stats': typeof AuthenticatedStatsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/articles/$articleId/edit': typeof AuthenticatedArticlesArticleIdEditRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -243,6 +259,7 @@ export interface FileRoutesByTo {
   '/articles/new': typeof AuthenticatedArticlesNewRoute
   '/articles/tags': typeof AuthenticatedArticlesTagsRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
+  '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/articles': typeof AuthenticatedArticlesIndexRoute
   '/comments': typeof AuthenticatedCommentsIndexRoute
   '/dash': typeof AuthenticatedDashIndexRoute
@@ -251,6 +268,7 @@ export interface FileRoutesByTo {
   '/spotify': typeof AuthenticatedSpotifyIndexRoute
   '/stats': typeof AuthenticatedStatsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/articles/$articleId/edit': typeof AuthenticatedArticlesArticleIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -275,6 +293,7 @@ export interface FileRoutesById {
   '/_authenticated/articles/new': typeof AuthenticatedArticlesNewRoute
   '/_authenticated/articles/tags': typeof AuthenticatedArticlesTagsRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
+  '/_authenticated/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/_authenticated/articles/': typeof AuthenticatedArticlesIndexRoute
   '/_authenticated/comments/': typeof AuthenticatedCommentsIndexRoute
   '/_authenticated/dash/': typeof AuthenticatedDashIndexRoute
@@ -283,6 +302,7 @@ export interface FileRoutesById {
   '/_authenticated/spotify/': typeof AuthenticatedSpotifyIndexRoute
   '/_authenticated/stats/': typeof AuthenticatedStatsIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/articles/$articleId/edit': typeof AuthenticatedArticlesArticleIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -306,6 +326,7 @@ export interface FileRouteTypes {
     | '/articles/new'
     | '/articles/tags'
     | '/settings/appearance'
+    | '/settings/profile'
     | '/articles'
     | '/comments'
     | '/dash'
@@ -314,6 +335,7 @@ export interface FileRouteTypes {
     | '/spotify'
     | '/stats'
     | '/users'
+    | '/articles/$articleId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -334,6 +356,7 @@ export interface FileRouteTypes {
     | '/articles/new'
     | '/articles/tags'
     | '/settings/appearance'
+    | '/settings/profile'
     | '/articles'
     | '/comments'
     | '/dash'
@@ -342,6 +365,7 @@ export interface FileRouteTypes {
     | '/spotify'
     | '/stats'
     | '/users'
+    | '/articles/$articleId/edit'
   id:
     | '__root__'
     | '/_authenticated'
@@ -365,6 +389,7 @@ export interface FileRouteTypes {
     | '/_authenticated/articles/new'
     | '/_authenticated/articles/tags'
     | '/_authenticated/settings/appearance'
+    | '/_authenticated/settings/profile'
     | '/_authenticated/articles/'
     | '/_authenticated/comments/'
     | '/_authenticated/dash/'
@@ -373,6 +398,7 @@ export interface FileRouteTypes {
     | '/_authenticated/spotify/'
     | '/_authenticated/stats/'
     | '/_authenticated/users/'
+    | '/_authenticated/articles/$articleId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -554,6 +580,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedArticlesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/profile': {
+      id: '/_authenticated/settings/profile'
+      path: '/profile'
+      fullPath: '/settings/profile'
+      preLoaderRoute: typeof AuthenticatedSettingsProfileRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/appearance': {
       id: '/_authenticated/settings/appearance'
       path: '/appearance'
@@ -596,17 +629,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedArticlesCategoriesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/articles/$articleId/edit': {
+      id: '/_authenticated/articles/$articleId/edit'
+      path: '/articles/$articleId/edit'
+      fullPath: '/articles/$articleId/edit'
+      preLoaderRoute: typeof AuthenticatedArticlesArticleIdEditRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedSettingsRouteRouteChildren {
   AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute
+  AuthenticatedSettingsProfileRoute: typeof AuthenticatedSettingsProfileRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
 const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteChildren =
   {
     AuthenticatedSettingsAppearanceRoute: AuthenticatedSettingsAppearanceRoute,
+    AuthenticatedSettingsProfileRoute: AuthenticatedSettingsProfileRoute,
     AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   }
 
@@ -629,6 +671,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSpotifyIndexRoute: typeof AuthenticatedSpotifyIndexRoute
   AuthenticatedStatsIndexRoute: typeof AuthenticatedStatsIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
+  AuthenticatedArticlesArticleIdEditRoute: typeof AuthenticatedArticlesArticleIdEditRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -645,6 +688,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSpotifyIndexRoute: AuthenticatedSpotifyIndexRoute,
   AuthenticatedStatsIndexRoute: AuthenticatedStatsIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
+  AuthenticatedArticlesArticleIdEditRoute:
+    AuthenticatedArticlesArticleIdEditRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

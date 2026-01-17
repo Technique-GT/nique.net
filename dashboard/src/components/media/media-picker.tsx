@@ -31,6 +31,7 @@ type MediaPickerProps = {
   placeholder?: string
   className?: string
   error?: boolean
+  disabled?: boolean
 }
 
 type BackendMedia = {
@@ -46,6 +47,7 @@ export function MediaPicker({
   placeholder = "Select media",
   className,
   error = false,
+  disabled = false,
 }: MediaPickerProps) {
   const [open, setOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -121,6 +123,7 @@ export function MediaPicker({
             type="button"
             variant="outline"
             aria-invalid={error}
+            disabled={disabled}
             className={cn(
               "w-full justify-between h-auto py-2",
               error && "border-destructive focus-visible:ring-destructive"

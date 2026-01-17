@@ -236,9 +236,6 @@ export default function Tags() {
                         onClick={() => openEditDialog(tag)}
                       >
                         {tag.name}
-                        <span className="ml-1 text-xs opacity-90">
-                          {tag.slug}
-                        </span>
                       </Badge>
                       <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                         <button

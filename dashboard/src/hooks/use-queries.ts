@@ -44,6 +44,10 @@ import {
   type CommentsQuery,
   type CommentStats,
 } from '@/services/comments'
+import {
+  getAdminArticleById,
+  createAdminArticleDraft,
+} from '@/services/articles'
 import { apiClient } from '@/lib/api-client'
 
 // ============================================================================
@@ -51,6 +55,9 @@ import { apiClient } from '@/lib/api-client'
 // ============================================================================
 
 export const queryKeys = {
+  // Articles
+  adminArticle: (id: string) => ['admin-article', id] as const,
+
   // Taxonomy - persisted
   categories: ['categories'] as const,
   subCategories: ['sub-categories'] as const,
@@ -526,6 +533,33 @@ export function useSubCategoryStats() {
     },
     staleTime: 5 * 60 * 1000,
     meta: { persist: true },
+  })
+}
+
+// ============================================================================
+// Article Hooks
+// ============================================================================
+
+export function useAdminArticle(id: string) {
+  return useQuery({
+    queryKey: queryKeys.adminArticle(id),
+    queryFn: () => getAdminArticleById(id),
+    enabled: !!id,
+    // We want the editor to always reflect current server state (review lock, latest content)
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+  })
+}
+
+export function useCreateArticleDraft() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: createAdminArticleDraft,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-articles'] })
+      return data
+    },
   })
 }
 

@@ -63,6 +63,7 @@ export const useArticles = () => {
       })) : [],
       authors: Array.isArray(article.authors) ? article.authors.map((a: any) => transformAuthor(a.authorId)) : [],
       collaborators: [],
+      ownerId: typeof article.ownerId === 'string' ? article.ownerId : (article.ownerId?._id || article.ownerId?.$oid),
       featuredMedia: {
         id: article.featuredMediaId?._id || article.featuredMediaId || '',
         url: article.featuredMediaId?.url || '',
@@ -178,11 +179,11 @@ export const useArticles = () => {
   };
 
   // Get unique categories for filter
-  const availableCategories = useMemo(() => 
-    Array.from(new Set(articles.map(article => article.category?._id)))
-      .map(id => articles.find(article => article.category?._id === id)?.category)
-      .filter((cat): cat is PopulatedCategory => cat !== undefined),
-    [articles]
+  const availableCategories = useMemo(() =>
+    Array.from(new Set(articles.map((article) => article.category?._id)))
+      .map((id) => articles.find((article) => article.category?._id === id)?.category)
+      .filter((cat): cat is PopulatedCategory => !!cat && typeof cat._id === 'string' && cat._id.length > 0),
+    [articles],
   );
 
   // Helper function to get author display name

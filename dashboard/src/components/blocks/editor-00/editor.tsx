@@ -12,6 +12,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 
 import { nodes } from "./nodes"
 import { Plugins } from "./plugins"
+import { InitialHtmlPlugin } from "./initial-html-plugin"
 
 const editorConfig: InitialConfigType = {
   namespace: "Editor",
@@ -25,11 +26,13 @@ const editorConfig: InitialConfigType = {
 export function Editor({
   editorState,
   editorSerializedState,
+  initialHtml,
   onChange,
   onSerializedChange,
 }: {
   editorState?: EditorState
   editorSerializedState?: SerializedEditorState
+  initialHtml?: string
   onChange?: (editorState: EditorState) => void
   onSerializedChange?: (editorSerializedState: SerializedEditorState) => void
 }) {
@@ -46,6 +49,9 @@ export function Editor({
       >
         <TooltipProvider>
           <Plugins />
+          {initialHtml && !editorState && !editorSerializedState && (
+            <InitialHtmlPlugin html={initialHtml} />
+          )}
 
           <OnChangePlugin
             ignoreSelectionChange={true}

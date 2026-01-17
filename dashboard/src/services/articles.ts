@@ -86,3 +86,13 @@ export async function getAdminArticlesAll(params: {
 
   return all
 }
+
+export async function createAdminArticleDraft(): Promise<BackendArticle> {
+  const res = await apiClient.post('/admin/articles/draft')
+  return res as unknown as BackendArticle
+}
+
+export async function getAdminArticleById(id: string): Promise<BackendArticle & { content?: string, editorState?: any }> {
+  const res = await apiClient.get(`/admin/articles/${id}`)
+  return res as unknown as any
+}

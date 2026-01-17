@@ -15,6 +15,7 @@
   "dependencies": {
     "@clerk/clerk-react": "^5.35.3",
     "@hookform/resolvers": "^5.1.1",
+    "@lexical/html": "^0.35.0",
     "@lexical/react": "^0.35.0",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-avatar": "^1.1.10",

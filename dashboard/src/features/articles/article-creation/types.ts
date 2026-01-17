@@ -60,6 +60,9 @@ export interface Article {
   tags: Tag[];
   authors: Author[];
   collaborators: Collaborator[];
+  ownerId?: string;
+  editorState?: any;
+  reviewStatus?: 'draft' | 'in_review' | 'published';
   featuredMedia: {
     id: string;
     url: string;
@@ -90,8 +93,8 @@ export interface MediaItem {
 export interface SerializedEditorState {
   root: {
     children: any[];
-    direction: string | null;
-    format: string;
+    direction: "ltr" | "rtl" | null;
+    format: any;
     indent: number;
     type: string;
     version: number;

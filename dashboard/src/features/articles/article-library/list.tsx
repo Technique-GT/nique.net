@@ -10,11 +10,18 @@ import { PageHeader } from "@/components/layout/page-header";
 import { useArticles } from "./useArticles";
 import { ArticleTable } from "./ArticleTable";
 import { ArticleDialogs } from "./ArticleDialogs";
-import { Article, PopulatedAuthor } from "./article";
+import { Article } from "./article";
 import { apiClient } from "@/lib/api-client";
+import { useCreateArticleDraft } from "@/hooks/use-queries";
+import { toast } from "sonner";
+import { useAuthStore } from "@/stores/authStore";
 
 export default function ArticleList() {
   const navigate = useNavigate();
+  const createDraftMutation = useCreateArticleDraft();
+  const { user: me } = useAuthStore((state) => state.auth);
+  const isAdmin = !!me?.isAdmin;
+  const currentUserId = me?.id || null;
   
   // Use custom hook for article state management
   const {
@@ -43,42 +50,14 @@ export default function ArticleList() {
   } = useArticles();
 
   // Dialog states
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [currentArticle, setCurrentArticle] = useState<Article | null>(null);
-
-  // Edit form state - UPDATED WITH ALL FIELDS
-  const [editTitle, setEditTitle] = useState("");
-  const [editContent, setEditContent] = useState("");
-  const [editExcerpt, setEditExcerpt] = useState("");
-  const [editCategory, setEditCategory] = useState("");
-  const [editSubcategory, setEditSubcategory] = useState("");
-  const [editSelectedTags, setEditSelectedTags] = useState<string[]>([]);
-  const [editSelectedAuthors, setEditSelectedAuthors] = useState<PopulatedAuthor[]>([]);
-  const [editSelectedCollaborators, setEditSelectedCollaborators] = useState<string[]>([]);
-  const [editFeaturedMediaId, setEditFeaturedMediaId] = useState("");
-  const [editFeaturedMediaUrl, setEditFeaturedMediaUrl] = useState("");
-  const [editFeaturedMediaAlt, setEditFeaturedMediaAlt] = useState("");
-  const [editIsPublished, setEditIsPublished] = useState(false);
-  const [editIsFeatured, setEditIsFeatured] = useState(false);
-  const [editIsSticky, setEditIsSticky] = useState(false);
-  const [editAllowComments, setEditAllowComments] = useState(true);
-  const [editSeoTitle, setEditSeoTitle] = useState("");
-  const [editSeoDescription, setEditSeoDescription] = useState("");
-  const [editAuthorSearch, setEditAuthorSearch] = useState("");
-  const [showAuthorResults, setShowAuthorResults] = useState(false);
-
-  editFeaturedMediaId;
-  editFeaturedMediaUrl;
-  editSeoTitle;
-  editSeoDescription;
 
   // Quick action states
   const [publishingArticle, setPublishingArticle] = useState<string | null>(null);
   const [featuringArticle, setFeaturingArticle] = useState<string | null>(null);
   const [stickingArticle, setStickingArticle] = useState<string | null>(null);
-  const [isEditLoading, setIsEditLoading] = useState(false);
 
   // Add collaborators data
   const [collaborators, setCollaborators] = useState<any[]>([]);
@@ -101,14 +80,19 @@ export default function ArticleList() {
 
   // Quick action handlers
   const handleQuickPublish = async (article: Article) => {
+    if (!isAdmin) {
+      toast.error('Only admins can publish/unpublish');
+      return;
+    }
+
     setPublishingArticle(article._id);
     try {
       const newIsPublished = !article.isPublished;
       
-      const result: any = await apiClient.patch(`/articles/${article._id}/status`, { 
+      const result: any = await apiClient.patch(`/admin/articles/${article._id}/status`, {
         status: newIsPublished ? 'published' : 'draft',
         isFeatured: newIsPublished ? article.isFeatured : false,
-        isSticky: newIsPublished ? article.isSticky : false
+        isSticky: newIsPublished ? article.isSticky : false,
       });
 
       // result is { success: true, message: ... } because it has no data?
@@ -139,6 +123,11 @@ export default function ArticleList() {
   };
 
   const handleQuickFeature = async (article: Article) => {
+    if (!isAdmin) {
+      toast.error('Only admins can feature/unfeature');
+      return;
+    }
+
     if (article.status !== 'published') {
       setMessage({ type: 'error', text: 'Only published articles can be featured' });
       return;
@@ -146,7 +135,7 @@ export default function ArticleList() {
 
     setFeaturingArticle(article._id);
     try {
-      const result: any = await apiClient.patch(`/articles/${article._id}/featured`);
+      const result: any = await apiClient.patch(`/admin/articles/${article._id}/featured`);
 
       // toggleFeatured returns { success: true, message, data: article }
       if (result && (result._id || result.success)) {
@@ -167,6 +156,11 @@ export default function ArticleList() {
   };
 
   const handleQuickSticky = async (article: Article) => {
+    if (!isAdmin) {
+      toast.error('Only admins can pin/unpin');
+      return;
+    }
+
     if (article.status !== 'published') {
       setMessage({ type: 'error', text: 'Only published articles can be pinned' });
       return;
@@ -174,7 +168,7 @@ export default function ArticleList() {
 
     setStickingArticle(article._id);
     try {
-      const result: any = await apiClient.patch(`/articles/${article._id}/sticky`);
+      const result: any = await apiClient.patch(`/admin/articles/${article._id}/sticky`);
 
       // toggleSticky returns { success: true, message, data: article }
       if (result && (result._id || result.success)) {
@@ -194,102 +188,12 @@ export default function ArticleList() {
     }
   };
 
-  // Edit handlers - UPDATED TO POPULATE ALL FIELDS
-// In your ArticleList.tsx - update the handleEdit function
+  // Edit handlers - UPDATED TO NAVIGATE TO EDIT PAGE
   const handleEdit = async (article: Article) => {
-    setCurrentArticle(article);
-    
-    // Populate ONLY fields that exist in the schema
-    setEditTitle(article.title);
-    setEditContent(article.content);
-    setEditExcerpt(article.excerpt);
-    setEditCategory(article.category._id);
-    setEditSubcategory(article.subcategory?._id || "");
-    setEditSelectedTags(article.tags.map(tag => tag._id));
-    setEditSelectedAuthors(article.authors);
-    setEditSelectedCollaborators(article.collaborators?.map(collab => collab._id) || []);
-    setEditFeaturedMediaId(article.featuredMedia?.id || "");
-    setEditFeaturedMediaAlt(article.featuredMedia?.alt || "");
-    setEditIsPublished(article.status === 'published');
-    setEditIsFeatured(article.isFeatured);
-    setEditIsSticky(article.isSticky);
-    setEditAllowComments(article.allowComments ?? true);
-    setEditSlug(article.slug);
-    
-    setEditDialogOpen(true);
-  };
-
-// Update the state to remove unused fields and add slug
-const [editSlug, setEditSlug] = useState("");
-
-// Remove these unused states from your component:
-// editFeaturedMediaId, setEditFeaturedMediaId
-// editFeaturedMediaUrl, setEditFeaturedMediaUrl  
-// editSeoTitle, setEditSeoTitle
-// editSeoDescription, setEditSeoDescription
-
-// Update the handleSaveEdit to only send actual schema fields
-const handleSaveEdit = async () => {
-  if (!currentArticle) return;
-
-  try {
-    setIsEditLoading(true);
-    const articleData = {
-      title: editTitle,
-      content: editContent,
-      excerpt: editExcerpt,
-      categoryId: editCategory,
-      subcategoryId: editSubcategory || undefined,
-      tagIds: editSelectedTags,
-      authors: editSelectedAuthors.map(author => author._id),
-      featuredMediaId: editFeaturedMediaId || currentArticle.featuredMedia?.id,
-      published: editIsPublished,
-      isFeatured: editIsFeatured,
-      isSticky: editIsSticky,
-      allowComments: editAllowComments,
-      slug: editSlug,
-    };
-
-    const result: any = await apiClient.put(`/articles/${currentArticle._id}`, articleData);
-
-    // updateArticle returns { success: true, message, data: article }
-    if (result && (result._id || result.success)) {
-      setMessage({ type: 'success', text: 'Article updated successfully!' });
-      fetchArticles();
-      setEditDialogOpen(false);
-      resetEditForm();
-    } else {
-      setMessage({ type: 'error', text: result?.message || 'Failed to update article' });
-    }
-  } catch (error) {
-    console.error('Error updating article:', error);
-    setMessage({ type: 'error', text: 'Network error. Please try again.' });
-  } finally {
-    setIsEditLoading(false);
-  }
-};
-
-  const resetEditForm = () => {
-    setEditTitle("");
-    setEditContent("");
-    setEditExcerpt("");
-    setEditCategory("");
-    setEditSubcategory("");
-    setEditSelectedTags([]);
-    setEditSelectedAuthors([]);
-    setEditSelectedCollaborators([]);
-    setEditFeaturedMediaId("");
-    setEditFeaturedMediaUrl("");
-    setEditFeaturedMediaAlt("");
-    setEditIsPublished(false);
-    setEditIsFeatured(false);
-    setEditIsSticky(false);
-    setEditAllowComments(true);
-    setEditSeoTitle("");
-    setEditSeoDescription("");
-    setEditAuthorSearch("");
-    setShowAuthorResults(false);
-    setCurrentArticle(null);
+    navigate({ 
+      to: '/articles/$articleId/edit' as any, 
+      params: { articleId: article._id } as any 
+    });
   };
 
   // Delete handlers
@@ -302,7 +206,7 @@ const handleSaveEdit = async () => {
     if (!currentArticle) return;
 
     try {
-      const result: any = await apiClient.delete(`/articles/${currentArticle._id}`);
+      const result: any = await apiClient.delete(`/admin/articles/${currentArticle._id}`);
       
       // deleteArticle returns { success: true, message: ... }
       if (result && result.success) {
@@ -326,8 +230,18 @@ const handleSaveEdit = async () => {
   };
 
   // Navigation
-  const handleNewArticle = () => {
-    navigate({ to: '/articles/new' });
+  const handleNewArticle = async () => {
+    try {
+      const draft = await createDraftMutation.mutateAsync();
+      navigate({ 
+        to: '/articles/$articleId/edit' as any, 
+        params: { articleId: draft._id } as any
+      });
+      toast.success("Draft created successfully");
+    } catch (error) {
+      console.error('Failed to create draft:', error);
+      toast.error("Failed to create draft");
+    }
   };
 
   // Helper functions
@@ -345,46 +259,6 @@ const handleSaveEdit = async () => {
       month: 'short',
       day: 'numeric'
     });
-  };
-
-  // Author search and selection functions
-  const handleAuthorSearch = (searchTerm: string) => {
-    setEditAuthorSearch(searchTerm);
-    setShowAuthorResults(searchTerm.length > 0);
-  };
-
-  const handleAuthorSelect = (author: PopulatedAuthor) => {
-    if (!editSelectedAuthors.find(a => a._id === author._id)) {
-      setEditSelectedAuthors(prev => [...prev, author]);
-    }
-    setEditAuthorSearch("");
-    setShowAuthorResults(false);
-  };
-
-  const handleAuthorRemove = (authorId: string) => {
-    setEditSelectedAuthors(prev => prev.filter(a => a._id !== authorId));
-  };
-
-  // Tag selection functions
-  const handleTagSelect = (tagId: string) => {
-    setEditSelectedTags((prev) =>
-      prev.includes(tagId) ? prev : [...prev, tagId]
-    );
-  };
-
-  const handleTagRemove = (tagId: string) => {
-    setEditSelectedTags((prev) => prev.filter(id => id !== tagId));
-  };
-
-  // Collaborator selection functions
-  const handleCollaboratorSelect = (collaboratorId: string) => {
-    setEditSelectedCollaborators((prev) =>
-      prev.includes(collaboratorId) ? prev : [...prev, collaboratorId]
-    );
-  };
-
-  const handleCollaboratorRemove = (collaboratorId: string) => {
-    setEditSelectedCollaborators((prev) => prev.filter(id => id !== collaboratorId));
   };
 
   return (
@@ -460,24 +334,27 @@ const handleSaveEdit = async () => {
               </Select>
             </div>
 
-            <ArticleTable
-              articles={articles}
-              filteredArticles={filteredArticles}
-              loading={loading}
-              getAuthorName={getAuthorName}
-              getStatusVariant={getStatusVariant}
-              formatDate={formatDate}
-              publishingArticle={publishingArticle}
-              featuringArticle={featuringArticle}
-              stickingArticle={stickingArticle}
-              onQuickPublish={handleQuickPublish}
-              onQuickFeature={handleQuickFeature}
-              onQuickSticky={handleQuickSticky}
-              onView={handleView}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onNewArticle={handleNewArticle}
-            />
+              <ArticleTable
+                articles={articles}
+                filteredArticles={filteredArticles}
+                loading={loading}
+                getAuthorName={getAuthorName}
+                getStatusVariant={getStatusVariant}
+                formatDate={formatDate}
+                publishingArticle={publishingArticle}
+                featuringArticle={featuringArticle}
+                stickingArticle={stickingArticle}
+                onQuickPublish={handleQuickPublish}
+                onQuickFeature={handleQuickFeature}
+                onQuickSticky={handleQuickSticky}
+                onView={handleView}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onNewArticle={handleNewArticle}
+                isAdmin={isAdmin}
+                currentUserId={currentUserId}
+              />
+
 
             {pagination && pagination.pages > 1 && (
               <div className="flex justify-center gap-2 mt-6">
@@ -506,47 +383,12 @@ const handleSaveEdit = async () => {
         </Card>
 
       <ArticleDialogs
-        // Edit Dialog
-        editSlug={editSlug}
-        setEditSlug={setEditSlug}
-        editDialogOpen={editDialogOpen}
-        setEditDialogOpen={setEditDialogOpen}
-        currentArticle={currentArticle}
-        editTitle={editTitle}
-        setEditTitle={setEditTitle}
-        editContent={editContent}
-        setEditContent={setEditContent}
-        editExcerpt={editExcerpt}
-        setEditExcerpt={setEditExcerpt}
-        editCategory={editCategory}
-        setEditCategory={setEditCategory}
-        editSubcategory={editSubcategory}
-        setEditSubcategory={setEditSubcategory}
-        editSelectedTags={editSelectedTags}
-        editSelectedAuthors={editSelectedAuthors}
-        editSelectedCollaborators={editSelectedCollaborators}
-        editFeaturedMediaId={editFeaturedMediaId}
-        setEditFeaturedMediaId={setEditFeaturedMediaId}
-        editFeaturedMediaAlt={editFeaturedMediaAlt}
-        setEditFeaturedMediaAlt={setEditFeaturedMediaAlt}
-        editIsPublished={editIsPublished}
-        setEditIsPublished={setEditIsPublished}
-        editIsFeatured={editIsFeatured}
-        setEditIsFeatured={setEditIsFeatured}
-        editIsSticky={editIsSticky}
-        setEditIsSticky={setEditIsSticky}
-        editAllowComments={editAllowComments}
-        setEditAllowComments={setEditAllowComments}
-        editAuthorSearch={editAuthorSearch}
-        setEditAuthorSearch={setEditAuthorSearch}
-        showAuthorResults={showAuthorResults}
-        setShowAuthorResults={setShowAuthorResults}
-        
         // Other dialogs
         deleteDialogOpen={deleteDialogOpen}
         setDeleteDialogOpen={setDeleteDialogOpen}
         viewDialogOpen={viewDialogOpen}
         setViewDialogOpen={setViewDialogOpen}
+        currentArticle={currentArticle}
         
         // Data
         categories={categories}
@@ -560,17 +402,7 @@ const handleSaveEdit = async () => {
         getAuthorName={getAuthorName}
         getStatusVariant={getStatusVariant}
         formatDate={formatDate}
-        handleSaveEdit={handleSaveEdit}
         confirmDelete={confirmDelete}
-        resetEditForm={resetEditForm}
-        handleAuthorSearch={handleAuthorSearch}
-        handleAuthorSelect={handleAuthorSelect}
-        handleAuthorRemove={handleAuthorRemove}
-        handleTagSelect={handleTagSelect}
-        handleTagRemove={handleTagRemove}
-        handleCollaboratorSelect={handleCollaboratorSelect}
-        handleCollaboratorRemove={handleCollaboratorRemove}
-        isEditLoading={isEditLoading}
       />
     </Main>
   );
