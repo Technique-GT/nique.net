@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { API_BASE_URL } from '../../../config';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ export default function Tags() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showInactive, setShowInactive] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const didInitFetchRef = useRef(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const [formData, setFormData] = useState({
@@ -203,8 +204,13 @@ export default function Tags() {
     setError(null);
   };
 
-  // Debounced search
+  // Debounced search (skip initial mount; it already fetches)
   useEffect(() => {
+    if (!didInitFetchRef.current) {
+      didInitFetchRef.current = true;
+      return;
+    }
+
     const timer = setTimeout(() => {
       fetchTags();
     }, 300);

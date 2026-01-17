@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +43,7 @@ export default function Categories() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showInactive, setShowInactive] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const didInitFetchRef = useRef(false);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isSubCategoryDialogOpen, setIsSubCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -421,8 +422,13 @@ export default function Categories() {
     return matchesSearch && matchesActiveFilter;
   });
 
-  // Debounced search
+  // Debounced search (skip initial mount; it already fetches)
   useEffect(() => {
+    if (!didInitFetchRef.current) {
+      didInitFetchRef.current = true;
+      return;
+    }
+
     const timer = setTimeout(() => {
       fetchCategories();
       fetchSubCategories();
