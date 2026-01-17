@@ -7,9 +7,14 @@ export const Route = createFileRoute('/_unauthenticated')({
 })
 
 function UnauthenticatedLayout() {
-  const { user, accessToken } = useAuthStore((state) => state.auth);
+  const { user, isLoading } = useAuthStore((state) => state.auth);
   
-  const isAuthenticated = !!(user && accessToken);
+  // Wait for hydration
+  if (isLoading) {
+    return null; // Or spinner
+  }
+
+  const isAuthenticated = !!user;
 
   // If user is already authenticated, redirect to dashboard
   if (isAuthenticated) {

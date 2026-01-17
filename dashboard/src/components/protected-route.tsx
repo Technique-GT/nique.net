@@ -6,20 +6,19 @@ interface ProtectedRouteProps {
   fallback?: string;
 }
 
-export function ProtectedRoute({ children, fallback = '/login' }: ProtectedRouteProps) {
-  const { user, accessToken } = useAuthStore((state) => state.auth);
+export function ProtectedRoute({ children, fallback = '/sign-in' }: ProtectedRouteProps) {
+  const { user, isLoading } = useAuthStore((state) => state.auth);
   const location = useLocation();
 
-  const isAuthenticated = !!(user && accessToken);
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
-  // For demo purposes - you can remove this loading state if not needed
-  // if (isLoading) {
-  //   return (
-  //     <div className="flex items-center justify-center min-h-screen">
-  //       <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-  //     </div>
-  //   );
-  // }
+  const isAuthenticated = !!user;
 
   if (!isAuthenticated) {
     return <Navigate to={fallback} search={{ redirect: location.pathname }} replace />;

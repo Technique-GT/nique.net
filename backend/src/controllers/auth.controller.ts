@@ -48,37 +48,40 @@ export const register = async (req: AuthRequest, res: Response): Promise<void> =
     res.cookie('jwt', token, getCookieOptions());
 
     res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      isAdmin: user.isAdmin,
-      token,
+      success: true,
+      data: {
+        _id: user._id,
+        name: user.name,
+        isAdmin: user.isAdmin,
+        token,
+      },
     });
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const logout = (_req: Request, res: Response): void => {
   res.clearCookie('jwt');
-  res.json({ message: 'Logged out successfully' });
+  res.json({ success: true, message: 'Logged out successfully' });
 };
 
 export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ message: 'Not authenticated' });
+      res.status(401).json({ success: false, message: 'Not authenticated' });
       return;
     }
 
     const user = await AuthUser.findById(req.user.id).select('-password');
     if (!user) {
-      res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ success: false, message: 'User not found' });
       return;
     }
 
-    res.json(user);
+    res.json({ success: true, data: user });
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

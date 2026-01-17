@@ -7,4 +7,4 @@ const apiOrigin = import.meta.env.DEV
   ? ((import.meta.env.VITE_DEV_API_URL as string | undefined)?.trim() || 'http://localhost:5050')
   : ((import.meta.env.VITE_API_URL as string | undefined)?.trim() || window.location.origin)
 
-export const API_BASE_URL = `${stripTrailingSlash(apiOrigin)}`
+export const API_BASE_URL = `${stripTrailingSlash(apiOrigin)}/api`

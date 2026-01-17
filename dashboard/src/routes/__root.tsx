@@ -6,11 +6,19 @@ import { Toaster } from '@/components/ui/sonner'
 import { NavigationProgress } from '@/components/navigation-progress'
 import GeneralError from '@/features/errors/general-error'
 import NotFoundError from '@/features/errors/not-found-error'
+import { useEffect } from 'react'
+import { useAuthStore } from '@/stores/authStore'
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
 }>()({
   component: () => {
+    const checkAuth = useAuthStore((state) => state.auth.checkAuth)
+
+    useEffect(() => {
+      checkAuth()
+    }, [checkAuth])
+
     return (
       <>
         <NavigationProgress />

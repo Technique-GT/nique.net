@@ -258,3 +258,70 @@ Test flows:
 - Auth/login (not used by public frontend)
 - Voting on comments (UI is commented out; defer)
 - `/stories` endpoint (legacy, unused)
+
+# Dashboard -> Backend Migration Plan
+
+**Goal**: Connect `dashboard/` to `backend/` using real data and Google Authentication.
+
+## 1. Infrastructure: API Client
+
+Create `dashboard/src/lib/api-client.ts`:
+- **Library**: `axios`
+- **Base URL**: `import.meta.env.VITE_API_BASE_URL` (default: `http://localhost:5050/api`)
+- **Credentials**: `withCredentials: true` (Critical for auth cookies)
+- **Interceptors**: 
+  - Unwrap `{ success: true, data: ... }` responses.
+  - **Correction**: `GET /auth/me` returns raw user data. The interceptor must return `response.data` if the `success` envelope is missing.
+
+## 2. Authentication: Session Management
+
+The backend uses HttpOnly cookies set via Google OAuth. The dashboard needs to check this session on load.
+
+- **Store**: `dashboard/src/stores/authStore.ts`
+  - Remove demo credentials and mock logic.
+  - Add `checkAuth()` action calling `GET /auth/me`.
+  - Handle 401 (unauthorized) -> redirect to login.
+  - Handle 200 (OK) -> hydrate user state.
+  - **Mapping**: Backend `User` has `isAdmin`, not `role`. Map `isAdmin: true` -> `['admin']`.
+
+- **App Entry**: `dashboard/src/routes/__root.tsx` (or `main.tsx`)
+  - Call `checkAuth()` on mount.
+
+- **Login Page**: `dashboard/src/features/auth/sign-in`
+  - Ensure "Sign in with Google" button points to `${API_BASE_URL}/auth/google?redirect=${window.location.origin}/dash`.
+  - **Note**: This must be a full page navigation (`<a href>`), not an AJAX call.
+
+## 3. Features: Connect Real Data
+
+### A. Users (`dashboard/src/features/users`)
+- **Route**: `GET /users`
+- **Data Source**: Replace Faker in `data/users.ts` with `apiClient.get('/users')`.
+- **Schema Mapping**:
+  - Backend: `_id`, `name`, `isAdmin` (No email, no status)
+  - Frontend Table: 
+    - `id` <- `_id`
+    - `username` <- `name`
+    - `role` <- `isAdmin ? 'admin' : 'user'`
+    - `status` <- 'active' (placeholder)
+    - `email` <- 'N/A' (placeholder)
+
+### B. Articles (`dashboard/src/features/articles`)
+- **Route**: `GET /admin/articles` (Admin-specific route)
+- **Refactor**: `dashboard/src/features/articles/article-libary/useArticles.ts`
+- **Changes**:
+  - Replace `fetch` with `apiClient`.
+  - Update `transformArticleData` to map:
+    - `_id` -> `id`
+    - `categoryId` (populated object) -> `category`
+    - `tagIds` (populated array) -> `tags`
+    - `featuredMediaId` (populated object) -> `featuredMedia`
+
+### C. Categories/Tags
+- **Routes**: `GET /categories`, `GET /tags`
+- **Usage**: Verify `ArticleDialogs.tsx` (edit forms) uses `apiClient`.
+
+## 4. Cleanup
+
+- Uninstall/Remove usage of `@faker-js/faker`.
+- Remove hardcoded "Demo Credentials" from UI.
+- **Port Check**: Ensure `dashboard/vite.config.ts` uses port 5173 (or added to backend CORS allowlist).

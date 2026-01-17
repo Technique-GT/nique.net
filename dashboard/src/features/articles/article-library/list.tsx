@@ -9,7 +9,7 @@ import { useArticles } from "./useArticles";
 import { ArticleTable } from "./ArticleTable";
 import { ArticleDialogs } from "./ArticleDialogs";
 import { Article, PopulatedAuthor } from "./article";
-import { API_BASE_URL } from '../../../config';
+import { apiClient } from "@/lib/api-client";
 
 export default function ArticleList() {
   const navigate = useNavigate();
@@ -81,10 +81,10 @@ export default function ArticleList() {
   useEffect(() => {
     const fetchCollaborators = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/collaborators`);
-        const result = await response.json();
-        if (result.success) {
-          setCollaborators(result.data);
+        const result = await apiClient.get('/collaborators');
+        // apiClient unwraps data if success=true, returning array
+        if (Array.isArray(result)) {
+          setCollaborators(result);
         }
       } catch (error) {
         console.error('Error fetching collaborators:', error);
@@ -99,28 +99,30 @@ export default function ArticleList() {
     try {
       const newIsPublished = !article.isPublished;
       
-      const response = await fetch(`${API_BASE_URL}/articles/${article._id}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          status: newIsPublished ? 'published' : 'draft',
-          isFeatured: newIsPublished ? article.isFeatured : false,
-          isSticky: newIsPublished ? article.isSticky : false
-        }),
+      const result: any = await apiClient.patch(`/articles/${article._id}/status`, { 
+        status: newIsPublished ? 'published' : 'draft',
+        isFeatured: newIsPublished ? article.isFeatured : false,
+        isSticky: newIsPublished ? article.isSticky : false
       });
 
-      const result = await response.json();
-
-      if (result.success) {
+      // result is { success: true, message: ... } because it has no data?
+      // Actually updateArticleStatus return { success: true, message: ..., data: article }?
+      // Check backend: updateArticleStatus returns { success: true, message, data }
+      // So apiClient returns data (article object).
+      // So checking result.success will fail.
+      
+      // Wait, let's just check if it returns an object or success.
+      // If unwrapped, it's the article object.
+      // If it failed, it threw error or returned something else.
+      
+      if (result && (result._id || result.success)) {
         setMessage({ 
           type: 'success', 
           text: `Article ${newIsPublished ? 'published' : 'unpublished'} successfully!` 
         });
         fetchArticles();
       } else {
-        setMessage({ type: 'error', text: result.message || 'Failed to update article status' });
+        setMessage({ type: 'error', text: result?.message || 'Failed to update article status' });
       }
     } catch (error) {
       console.error('Error updating article status:', error);
@@ -138,23 +140,17 @@ export default function ArticleList() {
 
     setFeaturingArticle(article._id);
     try {
-      const response = await fetch(`${API_BASE_URL}/articles/${article._id}/featured`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const result: any = await apiClient.patch(`/articles/${article._id}/featured`);
 
-      const result = await response.json();
-
-      if (result.success) {
+      // toggleFeatured returns { success: true, message, data: article }
+      if (result && (result._id || result.success)) {
         setMessage({ 
           type: 'success', 
           text: `Article ${!article.isFeatured ? 'featured' : 'unfeatured'} successfully!` 
         });
         fetchArticles();
       } else {
-        setMessage({ type: 'error', text: result.message || 'Failed to update featured status' });
+        setMessage({ type: 'error', text: result?.message || 'Failed to update featured status' });
       }
     } catch (error) {
       console.error('Error updating featured status:', error);
@@ -172,23 +168,17 @@ export default function ArticleList() {
 
     setStickingArticle(article._id);
     try {
-      const response = await fetch(`${API_BASE_URL}/articles/${article._id}/sticky`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const result: any = await apiClient.patch(`/articles/${article._id}/sticky`);
 
-      const result = await response.json();
-
-      if (result.success) {
+      // toggleSticky returns { success: true, message, data: article }
+      if (result && (result._id || result.success)) {
         setMessage({ 
           type: 'success', 
           text: `Article ${!article.isSticky ? 'pinned' : 'unpinned'} successfully!` 
         });
         fetchArticles();
       } else {
-        setMessage({ type: 'error', text: result.message || 'Failed to update sticky status' });
+        setMessage({ type: 'error', text: result?.message || 'Failed to update sticky status' });
       }
     } catch (error) {
       console.error('Error updating sticky status:', error);
@@ -256,23 +246,16 @@ const handleSaveEdit = async () => {
       slug: editSlug,
     };
 
-    const response = await fetch(`${API_BASE_URL}/articles/${currentArticle._id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(articleData),
-    });
+    const result: any = await apiClient.put(`/articles/${currentArticle._id}`, articleData);
 
-    const result = await response.json();
-
-    if (result.success) {
+    // updateArticle returns { success: true, message, data: article }
+    if (result && (result._id || result.success)) {
       setMessage({ type: 'success', text: 'Article updated successfully!' });
       fetchArticles();
       setEditDialogOpen(false);
       resetEditForm();
     } else {
-      setMessage({ type: 'error', text: result.message || 'Failed to update article' });
+      setMessage({ type: 'error', text: result?.message || 'Failed to update article' });
     }
   } catch (error) {
     console.error('Error updating article:', error);
@@ -315,19 +298,16 @@ const handleSaveEdit = async () => {
     if (!currentArticle) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/articles/${currentArticle._id}`, {
-        method: 'DELETE',
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
+      const result: any = await apiClient.delete(`/articles/${currentArticle._id}`);
+      
+      // deleteArticle returns { success: true, message: ... }
+      if (result && result.success) {
         setMessage({ type: 'success', text: 'Article deleted successfully!' });
         fetchArticles();
         setDeleteDialogOpen(false);
         setCurrentArticle(null);
       } else {
-        setMessage({ type: 'error', text: result.message || 'Failed to delete article' });
+        setMessage({ type: 'error', text: result?.message || 'Failed to delete article' });
       }
     } catch (error) {
       console.error('Error deleting article:', error);

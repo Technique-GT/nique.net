@@ -18,6 +18,7 @@ const userRoleSchema = z.union([
 // Update to use _id from MongoDB and add id for frontend compatibility
 const userSchema = z.object({
   _id: z.string(), // MongoDB _id
+  id: z.string(),  // Frontend ID
   firstName: z.string(),
   lastName: z.string(),
   username: z.string(),
@@ -28,7 +29,7 @@ const userSchema = z.object({
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 })
-// Create a type that includes both _id and id for frontend compatibility
-export type User = z.infer<typeof userSchema> & { id: string }
+
+export type User = z.infer<typeof userSchema>
 
 export const userListSchema = z.array(userSchema)

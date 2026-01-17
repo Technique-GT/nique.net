@@ -7,7 +7,7 @@ type UserAuthFormProps = HTMLAttributes<HTMLFormElement>;
 export function UserAuthForm({ className }: UserAuthFormProps) {
   return (
     <Button className={`mt-2 ${className}`} asChild>
-      <a href={`${API_BASE_URL}/auth/google?redirect=/dash`}>
+      <a href={`${API_BASE_URL}/auth/google?redirect=${encodeURIComponent(window.location.origin + '/dash')}`}>
         Continue with Google
       </a>
     </Button>

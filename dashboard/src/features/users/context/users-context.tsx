@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { API_BASE_URL } from '../../../config'
+import React, { useState, useEffect, useCallback } from 'react'
+import { apiClient } from '@/lib/api-client'
 import useDialogState from '@/hooks/use-dialog-state'
 import { User, userListSchema } from '../data/schema'
 
@@ -27,55 +27,51 @@ export default function UsersProvider({ children }: Props) {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
 
-  const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        ...options,
-      })
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || `HTTP error! status: ${response.status}`)
-      }
-      
-      return data
-    } catch (error) {
-      console.error('API request failed:', error)
-      throw error
-    }
-  }
-
-  // Transform backend data to include both _id and id
-  const transformUserData = (data: any[]): User[] => {
-    return data.map(user => ({
-      ...user,
-      id: user._id // Add id field for frontend compatibility
-    }))
-  }
-
-  const refetchUsers = async () => {
+  const refetchUsers = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await apiRequest('/users')
-      const validatedUsers = userListSchema.parse(data.data)
-      const transformedUsers = transformUserData(validatedUsers)
-      setUsers(transformedUsers)
+      // apiClient response interceptor unwraps { success: true, data: ... } -> returns data
+      // So 'data' here should be the array of users directly, or { users: [], pagination: {} } depending on backend?
+      // Backend GET /users returns { success: true, data: [...], pagination: {...} }
+      // The interceptor returns response.data.data if present.
+      // So 'response' here will be the array of users.
+      // Wait, let's check the interceptor logic again.
+      // if (response.data && response.data.success && response.data.data) -> returns response.data.data
+      // So yes, we get the array.
+      
+      const response = await apiClient.get('/users')
+      const rawUsers = Array.isArray(response) ? response : (response as any).data || []
+
+      const mappedUsers = rawUsers.map((u: any) => ({
+        _id: u._id,
+        id: u._id,
+        firstName: u.name ? u.name.split(' ')[0] : 'Unknown',
+        lastName: u.name ? u.name.split(' ').slice(1).join(' ') : '',
+        username: u.name || 'Unknown',
+        email: 'N/A', // Backend does not expose email
+        phoneNumber: 'N/A',
+        status: 'active', // Backend does not have status
+        role: u.isAdmin ? 'superadmin' : 'writer', // Simple mapping
+        createdAt: new Date().toISOString(), // Backend User has no timestamps
+        updatedAt: new Date().toISOString(),
+      }))
+
+      // Validate against schema to be safe, or just trust the mapping
+      const validatedUsers = userListSchema.parse(mappedUsers)
+      setUsers(validatedUsers)
     } catch (error) {
       console.error('Failed to fetch users:', error)
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     refetchUsers()
-  }, [])
+  }, [refetchUsers])
 
   return (
-    <UsersContext value={{ 
+    <UsersContext.Provider value={{ 
       open, 
       setOpen, 
       currentRow, 
@@ -85,7 +81,7 @@ export default function UsersProvider({ children }: Props) {
       refetchUsers
     }}>
       {children}
-    </UsersContext>
+    </UsersContext.Provider>
   )
 }
 
