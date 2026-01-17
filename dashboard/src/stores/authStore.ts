@@ -7,7 +7,7 @@ export interface AuthUser {
   email?: string; // Backend might not expose email if not in schema, but googleSub implies it might be there implicitly or we just don't have it.
   role: string[]; // Frontend expects roles array
   isAdmin: boolean;
-  profilePictureMediaId?: string;
+  avatar?: string;
 }
 
 interface AuthState {
@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
           name: user.name,
           isAdmin: user.isAdmin,
           role: user.isAdmin ? ['admin', 'superadmin'] : ['user'], // Map boolean to roles
-          profilePictureMediaId: user.profilePictureMediaId,
+          avatar: user.profilePictureMediaId?.url,
         };
         
         set((state) => ({ 

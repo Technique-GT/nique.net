@@ -18,7 +18,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const displayUser = user ? {
     name: user.name,
     email: user.email || 'No email',
-    avatar: user.profilePictureMediaId || '/avatars/shadcn.jpg', // TODO: Resolve media ID to URL
+    avatar: user.avatar || '/avatars/shadcn.jpg',
   } : sidebarData.user
 
   return (
