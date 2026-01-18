@@ -45,8 +45,9 @@ function Entertainment() {
             return;
             }
 
-            const entertainmentResponse = await articleService.fetchArticles(
-                { category: entertainmentCategory._id, status: 'published' },
+            const entertainmentResponse = await articleService.fetchArticlesByCategory(
+                entertainmentCategory._id,
+                undefined,
                 controller.signal
             );
 
@@ -57,10 +58,9 @@ function Entertainment() {
             const stickyPosts = allEntertainment.filter((article) => article.isSticky).sort(sortByPublishedDesc);
             const nonStickyPosts = allEntertainment.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
             const orderedEntertainment = [...stickyPosts, ...nonStickyPosts];
-            const RECENT_COUNT = Math.max(3, stickyPosts.length);
-            const recentSelection = orderedEntertainment.slice(0, RECENT_COUNT);
-            const remainingEntertainment = orderedEntertainment.slice(RECENT_COUNT);
+            const recentSelection = orderedEntertainment.slice(0, 3);
             const recentIds = new Set(recentSelection.map(getArticleId));
+            const remainingEntertainment = orderedEntertainment.filter((article) => !recentIds.has(getArticleId(article)));
 
             const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
                 articles
@@ -131,7 +131,7 @@ function Entertainment() {
             <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                 <div className='lg:col-span-4 m-0'>
                 {recentEntertainment.slice(0, 4).length > 0 && (
-                    <Carousel articles={recentEntertainment.slice(0, 4)} width='70%'/>
+                    <Carousel articles={recentEntertainment.slice(0, 3)} width='70%'/>
                 )}
                 </div>
             </div>

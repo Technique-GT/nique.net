@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import SuccessTick from "../components/SuccessTick";
 import DOMPurify from "dompurify";
 import Navbar from "../components/Navbar";
 import ArticleBlock from "../components/ArticleBlock";
@@ -9,54 +10,69 @@ import articleService from "../services/articleService";
 import commentService from "../services/commentService";
 import { ArticleDocument, User, Comment as CommentType } from "../types/article";
 
+type DisplayComment = {
+  _id: string;
+  commentId: string;
+  content: string;
+  createdAt: string;
+  thumbsUp: number;
+  thumbsDown: number;
+  myReaction: "up" | "down" | null;
+  parentCommentId?: string;
+  username: string;
+  replies: DisplayComment[];
+};
+
 /**
  * Map API comment (backend shape) to display format.
  * backend uses `username` directly, not `author.name/avatar`.
  */
-const mapApiCommentToDisplay = (comment: CommentType) => {
+const mapApiCommentToDisplay = (comment: CommentType): DisplayComment => {
   return {
     _id: comment._id,
+    commentId: comment._id,
     content: comment.content,
-    createdAt: comment.createdAt,
+    createdAt: typeof comment.createdAt === "string" ? comment.createdAt : String(comment.createdAt),
     thumbsUp: comment.thumbsUp ?? 0,
     thumbsDown: comment.thumbsDown ?? 0,
+    myReaction: comment.myReaction ?? null,
+    parentCommentId: comment.parentCommentId,
     username: comment.username || "Anonymous",
+    replies: (comment.replies || []).map(mapApiCommentToDisplay),
   };
 };
 
-type DisplayComment = ReturnType<typeof mapApiCommentToDisplay>;
+const sortRepliesByOldest = (list: DisplayComment[]): DisplayComment[] => {
+  const mapped = list.map((comment) => ({
+    ...comment,
+    replies: sortRepliesByOldest(comment.replies || []),
+  }));
+  return mapped.sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+};
 
 const sortComments = (
   list: DisplayComment[],
   sortMode: "Best" | "Newest" | "Oldest"
 ): DisplayComment[] => {
-  const clone = [...list];
+  const withSortedReplies = list.map((comment) => ({
+    ...comment,
+    replies: sortRepliesByOldest(comment.replies || []),
+  }));
+
   switch (sortMode) {
     case "Oldest":
-      return clone.sort(
+      return [...withSortedReplies].sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
     case "Newest":
-      return clone.sort(
+      return [...withSortedReplies].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     default:
-      return clone.sort((a, b) => (b.thumbsUp || 0) - (a.thumbsUp || 0));
+      return [...withSortedReplies].sort((a, b) => (b.thumbsUp || 0) - (a.thumbsUp || 0));
   }
-};
-
-/**
- * Flatten nested comment replies into a single list (if needed).
- */
-const flattenComments = (comments: CommentType[]): CommentType[] => {
-  const result: CommentType[] = [];
-  for (const comment of comments) {
-    result.push(comment);
-    if (comment.replies && comment.replies.length > 0) {
-      result.push(...flattenComments(comment.replies));
-    }
-  }
-  return result;
 };
 
 export default function Article() {
@@ -76,6 +92,7 @@ export default function Article() {
   const [newCommentName, setNewCommentName] = useState("");
   const [newCommentText, setNewCommentText] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [showSubmitMessage, setShowSubmitMessage] = useState(false);
   const [commentSubmitError, setCommentSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -126,9 +143,7 @@ export default function Article() {
               fetchedArticle._id, // use the real ID from the fetched article
               controller.signal
             );
-            // Flatten any nested replies and map to display format
-            const flattened = flattenComments(fetchedComments);
-            const mappedComments = flattened.map(mapApiCommentToDisplay);
+            const mappedComments = fetchedComments.map(mapApiCommentToDisplay);
             setComments(sortComments(mappedComments, commentsSortBy));
           } catch {
             setComments([]);
@@ -187,8 +202,10 @@ export default function Article() {
         username: newCommentName.trim() || undefined,
       });
 
-      const displayComment = mapApiCommentToDisplay(createdComment);
-      setComments((prev) => sortComments([displayComment, ...prev], commentsSortBy));
+      // const displayComment = mapApiCommentToDisplay(createdComment);
+      // setComments((prev) => sortComments([displayComment, ...prev], commentsSortBy));
+      setShowSubmitMessage(true);
+      setTimeout(() => setShowSubmitMessage(false), 3000);
       setNewCommentText("");
       setNewCommentName("");
     } catch (error) {
@@ -302,12 +319,16 @@ export default function Article() {
         )}
 
         {/* Article Content */}
-        <section className="prose prose-lg max-w-4xl mx-auto text-[#1A1E47] article-body">
+        <section className="prose prose-lg max-w-4xl mx-auto text-nique-blue article-body">
           {sanitizedContent ? (
             <article dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
           ) : (
             <p>{article.excerpt}</p>
           )}
+        </section>
+
+        <section>
+          <p className='text-right text-nique-blue'>Views: {article.viewCount || 0}</p>
         </section>
 
         {/* Related Articles - fetches 4 published articles from the same category */}
@@ -341,13 +362,20 @@ export default function Article() {
               <div className="grid gap-4">
                 {comments.slice(0, numCommentsToView).map((com) => (
                   <Comment
-                    key={com._id}
-                    commentId={com._id}
+                    key={com.commentId}
+                    commentId={com.commentId}
                     username={com.username}
                     content={com.content}
-                    createdAt={new Date(com.createdAt).toLocaleString()}
+                    createdAt={String(com.createdAt)}
                     thumbsDown={com.thumbsDown}
                     thumbsUp={com.thumbsUp}
+                    myReaction={com.myReaction}
+                    replies={com.replies}
+                    articleId={article._id}
+                    onReplySubmitted={() => {
+                      setShowSubmitMessage(true);
+                      setTimeout(() => setShowSubmitMessage(false), 3000);
+                    }}
                   />
                 ))}
               </div>
@@ -379,13 +407,21 @@ export default function Article() {
                 {commentSubmitError && (
                   <p className="text-sm text-red-600">{commentSubmitError}</p>
                 )}
-                <button
-                  onClick={handleSubmitComment}
-                  disabled={!newCommentText.trim() || isSubmittingComment}
-                  className="px-4 py-2 bg-nique-blue text-white rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <h4>{isSubmittingComment ? "Submitting..." : "Submit"}</h4>
-                </button>
+                <div className='flex flex-row'>
+                  <button
+                    onClick={handleSubmitComment}
+                    disabled={!newCommentText.trim() || isSubmittingComment}
+                    className="px-4 py-2 bg-nique-blue text-white rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <h4>{isSubmittingComment ? "Submitting..." : "Submit"}</h4>
+                  </button>
+                  {showSubmitMessage && (
+                    <div className="flex flex-row submit-toast fixed top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 bg-gray-200/70 text-nique-blue backdrop-blur-xs py-2 px-4 gap-2 rounded-md items-center">
+                      <SuccessTick className='text-nique-blue'/>
+                      <p>Your comment has been submitted and is awaiting approval. Check back in a bit!</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </>
           ) : (

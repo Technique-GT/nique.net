@@ -1,5 +1,6 @@
 import apiClient, { unwrap } from './apiClient';
 import type { Comment } from '../types/article';
+import { getDeviceId } from '../utils/deviceId';
 
 // =============================================================================
 // Comment Endpoints (aligned with backend routes)
@@ -14,7 +15,10 @@ const fetchCommentsByArticle = async (
   articleId: string,
   signal?: AbortSignal
 ): Promise<Comment[]> => {
-  const response = await apiClient.get(`/comments/article/${articleId}`, { signal });
+  const response = await apiClient.get(`/comments/article/${articleId}`, {
+    signal,
+    headers: { 'x-device-id': getDeviceId() },
+  });
   return unwrap(response.data);
 };
 
@@ -25,38 +29,36 @@ const fetchCommentsByArticle = async (
  */
 const createComment = async (
   articleId: string,
-  payload: { content: string; username?: string }
+  payload: { content: string; username?: string; parentCommentId?: string }
 ): Promise<Comment> => {
   const body = {
     articleId,
     content: payload.content,
     username: payload.username || 'Anonymous',
+    ...(payload.parentCommentId ? { parentCommentId: payload.parentCommentId } : {}),
   };
   const response = await apiClient.post('/comments', body);
   return unwrap(response.data);
 };
 
 /**
- * Like a comment.
- * backend: PATCH /comments/:id/like
+ * Set comment reaction (persisted per device).
+ * backend: PUT /comments/:id/reaction
  */
-const likeComment = async (commentId: string): Promise<Comment> => {
-  const response = await apiClient.patch(`/comments/${commentId}/like`);
-  return unwrap(response.data);
-};
-
-/**
- * Dislike a comment.
- * backend: PATCH /comments/:id/dislike
- */
-const dislikeComment = async (commentId: string): Promise<Comment> => {
-  const response = await apiClient.patch(`/comments/${commentId}/dislike`);
+const setCommentReaction = async (
+  commentId: string,
+  reaction: 'up' | 'down' | null
+): Promise<Comment> => {
+  const response = await apiClient.put(
+    `/comments/${commentId}/reaction`,
+    { reaction, deviceId: getDeviceId() },
+    { headers: { 'x-device-id': getDeviceId() } }
+  );
   return unwrap(response.data);
 };
 
 export default {
   fetchCommentsByArticle,
   createComment,
-  likeComment,
-  dislikeComment,
+  setCommentReaction,
 };

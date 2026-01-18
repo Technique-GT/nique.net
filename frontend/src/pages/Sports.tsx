@@ -46,8 +46,9 @@ function Sports() {
                     return;
                 }
 
-                const sportsResponse = await articleService.fetchArticles(
-                    { category: sportsCategory._id, status: 'published' },
+                const sportsResponse = await articleService.fetchArticlesByCategory(
+                    sportsCategory._id,
+                    undefined,
                     controller.signal
                 );
 
@@ -58,9 +59,7 @@ function Sports() {
                 const stickyPosts = allSportsArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
                 const nonStickyPosts = allSportsArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
                 const orderedSports = [...stickyPosts, ...nonStickyPosts];
-                const RECENT_COUNT = Math.max(5, stickyPosts.length);
-                const recentSelection = orderedSports.slice(0, RECENT_COUNT);
-                // const remainingSports = orderedSports.slice(RECENT_COUNT);
+                const recentSelection = orderedSports.slice(0, 5);
                 const recentIds = new Set(recentSelection.map(getArticleId));
 
                 const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>

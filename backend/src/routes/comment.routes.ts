@@ -9,6 +9,7 @@ import {
   getCommentStats,
   getCommentsByArticle,
   likeComment,
+  setCommentReaction,
   updateComment,
   updateCommentStatus,
 } from '../controllers/comment.controller';
@@ -32,6 +33,7 @@ router.get('/article/:articleId', validateParams(articleIdParamSchema), validate
 router.get('/', validateQuery(listCommentsQuerySchema), getAllComments);
 router.patch('/:id/like', validateParams(idParamSchema), likeComment);
 router.patch('/:id/dislike', validateParams(idParamSchema), dislikeComment);
+router.put('/:id/reaction', validateParams(idParamSchema), setCommentReaction);
 router.get('/stats', getCommentStats);
 router.get('/:id', validateParams(idParamSchema), getCommentById);
 router.put('/:id', validateParams(idParamSchema), validateBody(updateCommentBodySchema), updateComment);

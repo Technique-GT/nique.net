@@ -37,13 +37,17 @@ export const getArticleCategoryName = (article: ArticleDocument) =>
     : '';
 
 export const getArticleDescription = (article: ArticleDocument) => {
+  // console.log('Article excerpt:', article.excerpt);
+  // console.log('Article content:', article.content);
   const raw = article.excerpt || article.content || '';
+  // console.log('Raw article description:', raw);
   return stripHtml(raw);
 };
 
 export const getArticleImage = (article: ArticleDocument) => {
   const media = article.featuredMediaId;
   if (media && typeof media === 'object' && 'url' in media) {
+    // console.log('Article featured media:', media);
     return media;
   }
   return null;

@@ -46,8 +46,9 @@ function Opinions() {
                 return;
             }
 
-            const opinionResponse = await articleService.fetchArticles(
-            { category: opinionCategory._id, status: 'published' },
+            const opinionResponse = await articleService.fetchArticlesByCategory(
+            opinionCategory._id,
+            undefined,
             controller.signal
             );
 
@@ -56,12 +57,16 @@ function Opinions() {
                 getArticleTimestamp(b) - getArticleTimestamp(a);
 
             const stickyPosts = allOpinions.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+            const featuredPosts = allOpinions.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
             const nonStickyPosts = allOpinions.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
             const orderedOpinion = [...stickyPosts, ...nonStickyPosts];
-            const RECENT_COUNT = Math.max(5, stickyPosts.length);
-            const recentSelection = orderedOpinion.slice(0, RECENT_COUNT);
-            // const remainingOpinion = orderedOpinion.slice(RECENT_COUNT);
-            const recentIds = new Set(recentSelection.map(getArticleId));
+
+            const featured = featuredPosts[0] ?? null;
+            const orderedWithoutFeatured = featured
+              ? orderedOpinion.filter((article) => getArticleId(article) !== getArticleId(featured))
+              : orderedOpinion;
+            const recentSelection = [featured, ...orderedWithoutFeatured].filter(Boolean) as ArticleDocument[];
+            const recentIds = new Set(recentSelection.slice(0, 6).map(getArticleId));
 
             const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
                 articles

@@ -1,5 +1,5 @@
-const SuccessTick = () => (
-    <svg className='w-5 h-5 text-white' viewBox='0 0 26 26'>
+const SuccessTick = ( {className}: {className?: string | null} ) => (
+    <svg className={`${className || ""} w-5 h-5`} viewBox='0 0 26 26'>
         <circle
             cx='12'
             cy='12'

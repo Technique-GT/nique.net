@@ -166,7 +166,7 @@ export function MediaPicker({
           </Button>
         </DialogTrigger>
 
-        <DialogContent className="sm:max-w-[980px] h-[80vh] flex flex-col p-0 gap-0">
+        <DialogContent className="sm:max-w-245 h-[80vh] flex flex-col p-0 gap-0">
           <DialogHeader className="px-6 py-4 border-b">
             <DialogTitle>Select Media</DialogTitle>
           </DialogHeader>

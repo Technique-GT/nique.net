@@ -84,6 +84,7 @@ export interface Comment {
   username: string;
   thumbsUp: number;
   thumbsDown: number;
+  myReaction?: 'up' | 'down' | null;
   approved: boolean;
   createdAt: Date | string;
   updatedAt: Date | string;

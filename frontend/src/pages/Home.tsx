@@ -15,6 +15,7 @@ import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation'
 function Home() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>([]);
+    const [featuredArticle, setFeaturedArticle] = useState<ArticleDocument | null>(null);
     const [lifeArticles, setLifeArticles] = useState<ArticleDocument[]>([]);
     const [newsArticles, setNewsArticles] = useState<ArticleDocument[]>([]);
     const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>([]);
@@ -47,6 +48,7 @@ function Home() {
 
                 const [
                     stickyArticles,
+                    featuredArticles,
                     recentArticlesData,
                     lifeArticlesData,
                     newsArticlesData,
@@ -55,21 +57,22 @@ function Home() {
                     sportsArticlesData,
                 ] = await Promise.all([
                     articleService.fetchStickyArticles(undefined, controller.signal),
+                    articleService.fetchFeaturedArticles(controller.signal),
                     articleService.fetchRecentArticles(5, 'published', controller.signal),
                     lifeCategoryId
-                        ? articleService.fetchArticles({ category: lifeCategoryId, limit: 15, status: 'published' }, controller.signal)
+                        ? articleService.fetchArticlesByCategory(lifeCategoryId, undefined, controller.signal)
                         : Promise.resolve([] as ArticleDocument[]),
                     newsCategoryId
-                        ? articleService.fetchArticles({ category: newsCategoryId, limit: 15, status: 'published' }, controller.signal)
+                        ? articleService.fetchArticlesByCategory(newsCategoryId, undefined, controller.signal)
                         : Promise.resolve([] as ArticleDocument[]),
                     entertainmentCategoryId
-                        ? articleService.fetchArticles({ category: entertainmentCategoryId, limit: 15, status: 'published' }, controller.signal)
+                        ? articleService.fetchArticlesByCategory(entertainmentCategoryId, undefined, controller.signal)
                         : Promise.resolve([] as ArticleDocument[]),
                     opinionCategoryId
-                        ? articleService.fetchArticles({ category: opinionCategoryId, limit: 15, status: 'published' }, controller.signal)
+                        ? articleService.fetchArticlesByCategory(opinionCategoryId, undefined, controller.signal)
                         : Promise.resolve([] as ArticleDocument[]),
                     sportsCategoryId
-                        ? articleService.fetchArticles({ category: sportsCategoryId, limit: 15, status: 'published' }, controller.signal)
+                        ? articleService.fetchArticlesByCategory(sportsCategoryId, undefined, controller.signal)
                         : Promise.resolve([] as ArticleDocument[]),
                 ]);
 
@@ -81,6 +84,8 @@ function Home() {
                     getArticleTimestamp(b) - getArticleTimestamp(a);
 
                 const stickySorted = (stickyArticles || []).filter((article) => article.isSticky).sort(sortByPublishedDesc);
+                const featuredSorted = (featuredArticles || []).filter((article) => article.isFeatured).sort(sortByPublishedDesc);
+                const latestFeatured = featuredSorted[0] ?? null;
                 const stickyIds = new Set(stickySorted.map(getArticleId));
                 const nonStickyRecent = (recentArticlesData || [])
                     .filter((article) => !stickyIds.has(getArticleId(article)))
@@ -91,6 +96,7 @@ function Home() {
                     articles.filter((article) => !recentIds.has(getArticleId(article))).sort(sortByPublishedDesc);
 
                 setRecentArticles(sortedRecent);
+                setFeaturedArticle(latestFeatured);
                 setLifeArticles(filterAndSort(lifeArticlesData));
                 setNewsArticles(filterAndSort(newsArticlesData));
                 setEntertainmentArticles(filterAndSort(entertainmentArticlesData));
@@ -117,7 +123,7 @@ function Home() {
     }, []);
 
     const sideArticles = useMemo(() => { 
-        return opinionArticles.slice(0, 3);
+        return opinionArticles.slice(0, 4);
     }, [opinionArticles]);
 
     if (isLoading) {
@@ -152,7 +158,7 @@ function Home() {
                         </div>
                         <div className='flex flex-col gap-4 row-span-4 h-full'>
                             {recentArticles[0] && <JustInBlock article={recentArticles[0]} />}
-                            {recentArticles[1] && <FeaturedStory article={recentArticles[1]} />}
+                            {featuredArticle && <FeaturedStory article={featuredArticle} />}
                         </div>
                     </div>
 

@@ -102,6 +102,17 @@ const fetchStickyArticles = async (
 };
 
 /**
+ * Fetch featured articles.
+ * backend: GET /articles/featured
+ */
+const fetchFeaturedArticles = async (
+  signal?: AbortSignal
+): Promise<ArticleDocument[]> => {
+  const response = await apiClient.get('/articles/featured', { signal });
+  return unwrap(response.data);
+};
+
+/**
  * Fetch articles by category.
  * backend: GET /articles/category/:category
  */
@@ -206,6 +217,7 @@ export default {
   fetchArticles,
   fetchPublishedArticles,
   fetchStickyArticles,
+  fetchFeaturedArticles,
   fetchArticlesByCategory,
   fetchCategories,
   fetchArticleById,

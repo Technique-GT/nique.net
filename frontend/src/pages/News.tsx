@@ -49,8 +49,9 @@ function News() {
                     return;
                 }
 
-                const newsResponse = await articleService.fetchArticles(
-                    { category: categoryId, status: 'published' },
+                const newsResponse = await articleService.fetchArticlesByCategory(
+                    categoryId,
+                    undefined,
                     controller.signal
                 );
 
@@ -59,12 +60,15 @@ function News() {
                     getArticleTimestamp(b) - getArticleTimestamp(a);
 
                 const stickyPosts = allNewsArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+                const featuredPosts = allNewsArticles.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
                 const nonStickyPosts = allNewsArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
                 const orderedNews = [...stickyPosts, ...nonStickyPosts];
-                const RECENT_COUNT = Math.max(2, stickyPosts.length);
-                const recentSelection = orderedNews.slice(0, RECENT_COUNT);
-                const remainingNews = orderedNews.slice(RECENT_COUNT);
+
+                const justIn = stickyPosts[0] ?? orderedNews[0] ?? null;
+                const featured = featuredPosts.find((article) => getArticleId(article) !== getArticleId(justIn)) ?? null;
+                const recentSelection = [justIn, featured].filter(Boolean) as ArticleDocument[];
                 const recentIds = new Set(recentSelection.map(getArticleId));
+                const remainingNews = orderedNews.filter((article) => !recentIds.has(getArticleId(article)));
 
                 const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
                     articles

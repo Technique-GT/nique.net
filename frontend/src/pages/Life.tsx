@@ -47,8 +47,9 @@ function Life() {
                     return;
                 }
 
-                const lifeResponse = await articleService.fetchArticles(
-                    { category: lifeCategory._id, status: 'published' },
+                const lifeResponse = await articleService.fetchArticlesByCategory(
+                    lifeCategory._id,
+                    undefined,
                     controller.signal
                 );
 
@@ -57,12 +58,15 @@ function Life() {
                     getArticleTimestamp(b) - getArticleTimestamp(a);
 
                 const stickyPosts = allLifeArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+                const featuredPosts = allLifeArticles.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
                 const nonStickyPosts = allLifeArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
                 const orderedLife = [...stickyPosts, ...nonStickyPosts];
-                const RECENT_COUNT = Math.max(7, stickyPosts.length);
-                const recentSelection = orderedLife.slice(0, RECENT_COUNT);
-                const remainingLife = orderedLife.slice(RECENT_COUNT);
+
+                const justIn = stickyPosts[0] ?? orderedLife[0] ?? null;
+                const featured = featuredPosts.find((article) => getArticleId(article) !== getArticleId(justIn)) ?? null;
+                const recentSelection = [justIn, featured].filter(Boolean) as ArticleDocument[];
                 const recentIds = new Set(recentSelection.map(getArticleId));
+                const remainingLife = orderedLife.filter((article) => !recentIds.has(getArticleId(article)));
 
                 const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
                     articles

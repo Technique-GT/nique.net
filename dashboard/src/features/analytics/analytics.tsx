@@ -47,7 +47,7 @@ export default function Analytics() {
           actions={
             <>
               <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-45">
                   <SelectValue placeholder="Time range" />
                 </SelectTrigger>
                 <SelectContent>
@@ -174,7 +174,7 @@ export default function Analytics() {
               <CardDescription>Most engaged content across the platform</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px]">
+              <div className="h-100">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.topArticles} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" />

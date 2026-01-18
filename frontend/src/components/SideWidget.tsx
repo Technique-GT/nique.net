@@ -79,7 +79,7 @@ function SideWidget() {
                 >
                     {isSliverSubmitting && <h4 className='text-sm'>Submitting...</h4>}
                     {!isSliverSubmitting && (sliverSubmitted === 'idle' || sliverSubmitted === 'error') && <h4 className='text-sm'>Submit Sliver</h4>}
-                    {sliverSubmitted === 'success' && <h4 className='text-sm'><SuccessTick /></h4>}
+                    {sliverSubmitted === 'success' && <h4 className='text-sm'><SuccessTick className='text-white'/></h4>}
                 </button>
             </div>
             <h4 className='text-black text-xs mt-2'>The Sliver Box is a way to quickly share vents, thoughts on campus happenings, and more! See your words in print in the News section of every issue.</h4>

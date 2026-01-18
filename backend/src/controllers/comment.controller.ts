@@ -2,10 +2,20 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Comment from '../models/Comment';
 import Article from '../models/Article';
+import CommentReaction from '../models/CommentReaction';
 
 const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId | null => {
   if (!id || Array.isArray(id) || !mongoose.Types.ObjectId.isValid(id)) return null;
   return new mongoose.Types.ObjectId(id);
+};
+
+const getDeviceId = (req: Request): string | null => {
+  const header = req.header('x-device-id');
+  if (typeof header === 'string' && header.trim()) return header.trim();
+  if (typeof req.body?.deviceId === 'string' && req.body.deviceId.trim()) {
+    return req.body.deviceId.trim();
+  }
+  return null;
 };
 
 export const createComment = async (req: Request, res: Response): Promise<void> => {
@@ -44,6 +54,14 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
         res.status(404).json({ success: false, message: 'Parent comment not found' });
         return;
       }
+      if (String(parent.articleId) !== String(articleId)) {
+        res.status(400).json({ success: false, message: 'Parent comment does not match article' });
+        return;
+      }
+      if (!parent.approved) {
+        res.status(400).json({ success: false, message: 'Parent comment is not approved' });
+        return;
+      }
     }
 
     const comment = await Comment.create({
@@ -70,6 +88,7 @@ export const getCommentsByArticle = async (req: Request, res: Response): Promise
   try {
     const articleId = (req.params as any).articleId ?? (req.query as any).articleId;
     const { status = 'approved', includeReplies = 'true', page = '1', limit = '50' } = req.query as any;
+    const deviceId = getDeviceId(req);
 
     const articleObjectId = toObjectId(articleId);
     if (!articleObjectId) {
@@ -95,12 +114,22 @@ export const getCommentsByArticle = async (req: Request, res: Response): Promise
       Comment.countDocuments(query),
     ]);
 
+    const reactionMap = new Map<string, 'up' | 'down'>();
+    if (deviceId && comments.length > 0) {
+      const ids = comments.map((c) => c._id);
+      const reactions = await CommentReaction.find({ commentId: { $in: ids }, deviceId }).lean();
+      for (const reaction of reactions) {
+        reactionMap.set(String(reaction.commentId), reaction.reaction);
+      }
+    }
+
     // Structure comments as a tree (parent with children)
     const byId = new Map<string, any>();
     const roots: any[] = [];
 
     for (const c of comments) {
-      byId.set(String(c._id), { ...c, replies: [] });
+      const myReaction = reactionMap.get(String(c._id)) ?? null;
+      byId.set(String(c._id), { ...c, myReaction, replies: [] });
     }
 
     for (const c of comments) {
@@ -132,14 +161,23 @@ export const getCommentById = async (req: Request, res: Response): Promise<void>
       res.status(400).json({ success: false, message: 'Invalid comment ID' });
       return;
     }
+    const deviceId = getDeviceId(req);
 
-    const comment = await Comment.findById(objectId);
+    const comment = await Comment.findById(objectId).lean();
     if (!comment) {
       res.status(404).json({ success: false, message: 'Comment not found' });
       return;
     }
 
-    res.status(200).json({ success: true, data: comment });
+    let myReaction: 'up' | 'down' | null = null;
+    if (deviceId) {
+      const reaction = await CommentReaction.findOne({ commentId: comment._id, deviceId }).lean();
+      if (reaction?.reaction === 'up' || reaction?.reaction === 'down') {
+        myReaction = reaction.reaction;
+      }
+    }
+
+    res.status(200).json({ success: true, data: { ...comment, myReaction } });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'Error fetching comment', error: error?.message });
   }
@@ -294,6 +332,82 @@ export const dislikeComment = async (req: Request, res: Response): Promise<void>
     res.status(200).json({ success: true, data: comment });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'Error disliking comment', error: error?.message });
+  }
+};
+
+export const setCommentReaction = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const objectId = toObjectId(req.params.id);
+    if (!objectId) {
+      res.status(400).json({ success: false, message: 'Invalid comment ID' });
+      return;
+    }
+
+    const deviceId = getDeviceId(req);
+    if (!deviceId) {
+      res.status(400).json({ success: false, message: 'Missing device ID' });
+      return;
+    }
+
+    const reaction = req.body?.reaction;
+    if (reaction !== 'up' && reaction !== 'down' && reaction !== null) {
+      res.status(400).json({ success: false, message: 'Invalid reaction' });
+      return;
+    }
+
+    const existing = await CommentReaction.findOne({ commentId: objectId, deviceId });
+
+    let incUp = 0;
+    let incDown = 0;
+    let nextReaction: 'up' | 'down' | null = reaction;
+
+    if (!existing) {
+      if (reaction === null) {
+        const comment = await Comment.findById(objectId);
+        if (!comment) {
+          res.status(404).json({ success: false, message: 'Comment not found' });
+          return;
+        }
+        res.status(200).json({ success: true, data: { ...comment.toObject(), myReaction: null } });
+        return;
+      }
+
+      await CommentReaction.create({ commentId: objectId, deviceId, reaction });
+      if (reaction === 'up') incUp = 1;
+      if (reaction === 'down') incDown = 1;
+    } else {
+      const prev = existing.reaction;
+      if (reaction === null) {
+        await CommentReaction.deleteOne({ _id: existing._id });
+        nextReaction = null;
+        if (prev === 'up') incUp = -1;
+        if (prev === 'down') incDown = -1;
+      } else if (prev !== reaction) {
+        existing.reaction = reaction;
+        await existing.save();
+        if (prev === 'up') incUp -= 1;
+        if (prev === 'down') incDown -= 1;
+        if (reaction === 'up') incUp += 1;
+        if (reaction === 'down') incDown += 1;
+      } else {
+        nextReaction = prev;
+      }
+    }
+
+    const comment = await Comment.findByIdAndUpdate(
+      objectId,
+      { $inc: { thumbsUp: incUp, thumbsDown: incDown } },
+      { new: true },
+    );
+
+    if (!comment) {
+      res.status(404).json({ success: false, message: 'Comment not found' });
+      return;
+    }
+
+    res.status(200).json({ success: true, data: { ...comment.toObject(), myReaction: nextReaction } });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Error updating comment reaction', error: error?.message });
   }
 };
 

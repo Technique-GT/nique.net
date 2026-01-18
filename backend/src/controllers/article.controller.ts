@@ -219,7 +219,7 @@ export const getArticles = async (req: Request, res: Response): Promise<void> =>
     const skip = (pageNum - 1) * limitNum;
 
     const [articles, total] = await Promise.all([
-      populateArticle(Article.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum).select('-content')),
+      populateArticle(Article.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum)),
       Article.countDocuments(filter),
     ]);
 
@@ -251,8 +251,7 @@ export const getPublishedArticles = async (req: Request, res: Response): Promise
         Article.find(filter)
           .sort({ isSticky: -1, publishedAt: -1 })
           .skip(skip)
-          .limit(limit)
-          .select('-content'),
+          .limit(limit),
       ),
       Article.countDocuments(filter),
     ]);
@@ -298,8 +297,7 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
         Article.find(filter)
           .sort({ isSticky: -1, publishedAt: -1 })
           .skip(skip)
-          .limit(limit)
-          .select('-content'),
+          .limit(limit),
       ),
       Article.countDocuments(filter),
     ]);
@@ -317,7 +315,7 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
 export const getFeaturedArticles = async (_req: Request, res: Response): Promise<void> => {
   try {
     const articles = await populateArticle(
-      Article.find({ published: true, isFeatured: true }).sort({ publishedAt: -1 }).select('-content').limit(10),
+      Article.find({ published: true, isFeatured: true }).sort({ publishedAt: -1 }).limit(10),
     );
 
     res.json({ success: true, data: articles });
@@ -329,7 +327,7 @@ export const getFeaturedArticles = async (_req: Request, res: Response): Promise
 export const getStickyArticles = async (_req: Request, res: Response): Promise<void> => {
   try {
     const articles = await populateArticle(
-      Article.find({ published: true, isSticky: true }).sort({ publishedAt: -1 }).select('-content'),
+      Article.find({ published: true, isSticky: true }).sort({ publishedAt: -1 }),
     );
 
     res.json({ success: true, data: articles });
@@ -347,7 +345,7 @@ export const getArticlesByCategory = async (req: Request, res: Response): Promis
     }
 
     const articles = await populateArticle(
-      Article.find({ categoryId, published: true }).sort({ isSticky: -1, publishedAt: -1 }).select('-content'),
+      Article.find({ categoryId, published: true }).sort({ isSticky: -1, publishedAt: -1 }),
     );
 
     res.json({ success: true, data: articles });
