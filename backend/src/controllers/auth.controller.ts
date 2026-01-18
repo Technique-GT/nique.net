@@ -173,11 +173,22 @@ export const googleAuthCallback = async (req: Request, res: Response): Promise<v
   try {
     const code = typeof req.query.code === 'string' ? req.query.code : '';
     const state = typeof req.query.state === 'string' ? req.query.state : '';
+    const error = typeof req.query.error === 'string' ? req.query.error : '';
     const storedState = req.cookies?.[OAUTH_STATE_COOKIE] as string | undefined;
     const redirect = req.cookies?.[OAUTH_REDIRECT_COOKIE] as string | undefined;
 
     res.clearCookie(OAUTH_STATE_COOKIE);
     res.clearCookie(OAUTH_REDIRECT_COOKIE);
+
+    if (error) {
+      // User likely canceled the login or access was denied.
+      // Redirect back to the frontend with the error.
+      const appRedirect = redirect || process.env.CLIENT_URL || process.env.APP_BASE_URL || '/';
+      const separator = appRedirect.includes('?') ? '&' : '?';
+      // Append error param so frontend can show a toast/alert
+      res.redirect(`${appRedirect}${separator}error=${encodeURIComponent(error)}`);
+      return;
+    }
 
     if (!code || !state || !storedState || state !== storedState) {
       res.status(400).json({ message: 'Invalid OAuth state' });

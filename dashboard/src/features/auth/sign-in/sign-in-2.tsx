@@ -1,7 +1,26 @@
+import { useEffect } from 'react'
+import { toast } from 'sonner'
 import ViteLogo from '@/assets/logo.svg'
 import { UserAuthForm } from './components/user-auth-form'
 
 export default function SignIn2() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const error = params.get('error')
+    
+    if (error) {
+      toast.error('Authentication Error', {
+        description: error === 'access_denied' 
+          ? 'Access was denied. Please try again.' 
+          : error
+      })
+      
+      // Optional: Clean up URL
+      const newUrl = window.location.pathname + (params.get('redirect') ? `?redirect=${params.get('redirect')}` : '')
+      window.history.replaceState({}, '', newUrl)
+    }
+  }, [])
+
   return (
     <div className='relative container grid h-svh flex-col items-center justify-center lg:max-w-none lg:grid-cols-2 lg:px-0'>
       <div className='bg-muted relative hidden h-full flex-col p-10 text-white lg:flex dark:border-r'>
