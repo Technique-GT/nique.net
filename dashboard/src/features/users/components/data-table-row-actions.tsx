@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useUsers } from '../context/users-context'
 import { User } from '../data/schema'
+import { useAuthStore } from '@/stores/authStore'
+import { canManageStaff } from '@/lib/permissions'
 
 interface DataTableRowActionsProps {
   row: Row<User>
@@ -19,6 +21,11 @@ interface DataTableRowActionsProps {
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const { setOpen, setCurrentRow } = useUsers()
+  const user = useAuthStore((state) => state.auth.user)
+  const isAdmin = canManageStaff(user)
+
+  if (!isAdmin) return null
+
   return (
     <>
       <DropdownMenu modal={false}>

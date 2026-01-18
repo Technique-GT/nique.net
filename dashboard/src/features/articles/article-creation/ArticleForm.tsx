@@ -578,24 +578,12 @@ export default function ArticleForm({
       errors.content = "Content is required.";
     }
 
-    if (!featuredMediaId) {
-      errors.featuredMedia = "Featured media is required.";
-    }
-
-    if (!excerpt.trim()) {
-      errors.excerpt = "Caption is required.";
-    }
-
     if (!selectedAuthors.some((a) => !!a?._id)) {
       errors.authors = "At least one author must be selected.";
     }
 
     if (!category) {
       errors.category = "Category is required.";
-    }
-
-    if (selectedTags.length === 0) {
-      errors.tags = "At least one tag must be selected.";
     }
 
     return errors;
@@ -630,10 +618,10 @@ export default function ArticleForm({
         title: title.trim(),
         content: htmlContent,
         editorState: content,
-        excerpt: excerpt.trim(),
+        ...(excerpt.trim() ? { excerpt: excerpt.trim() } : {}),
         ...(category ? { categoryId: category } : {}),
         ...(subcategory ? { subcategoryId: subcategory } : {}),
-        tagIds: selectedTags,
+        ...(selectedTags.length ? { tagIds: selectedTags } : {}),
         // Only include authors if user has permission to manage them
         ...(canManageAuthorsPerm ? { 
           authors: selectedAuthors.filter((a) => !!a?._id).map((a) => a._id) 
@@ -798,7 +786,7 @@ export default function ArticleForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Featured Media */}
               <div className="space-y-2">
-                <Label htmlFor="featured-media" className='gap-0'><span className='text-destructive'>*</span>Featured Media</Label>
+                <Label htmlFor="featured-media" className='gap-0'>Featured Media</Label>
                 <MediaPicker
                   value={featuredMediaId || undefined}
                   items={mediaLibrary}
@@ -819,7 +807,7 @@ export default function ArticleForm({
               
               {/* Caption */}
               <div className="space-y-2">
-                <Label htmlFor="excerpt" className='gap-0'><span className='text-destructive'>*</span>Caption</Label>
+                <Label htmlFor="excerpt" className='gap-0'>Caption</Label>
                 <Input
                   id="excerpt"
                   value={excerpt}
@@ -848,7 +836,7 @@ export default function ArticleForm({
               <div className="space-y-6">
                 {/* Authors - Searchable Input */}
                 <div className="space-y-2">
-                  <Label htmlFor="authors" className='gap-0'><span className='text-destructive'>*</span>Authors</Label>
+                  <Label htmlFor="authors" className='gap-0'><span className='text-destructive'>*</span>Author(s)</Label>
                   
                   {/* Selected Authors */}
                   <div className={cn(
@@ -1182,7 +1170,7 @@ export default function ArticleForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tags" className='gap-0'><span className='text-destructive'>*</span>Tags</Label>
+                <Label htmlFor="tags" className='gap-0'>Tags</Label>
                 <div className={cn(
                   "flex flex-wrap gap-2 p-2 border rounded-md min-h-10",
                   formErrors.tags && "border-destructive"

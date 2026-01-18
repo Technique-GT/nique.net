@@ -32,7 +32,7 @@ const formSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
   bio: z.string().optional(),
   isAdmin: z.boolean(),
-  email: z.string().email().optional(),
+  email: z.string().trim().email('Please enter a valid email.').optional().or(z.literal('')),
   googleSub: z.string().optional(),
   profilePictureMediaId: z.string().optional(),
 })
@@ -202,7 +202,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-right'>
-                      Email
+                      Email (optional)
                     </FormLabel>
                     <FormControl>
                       <Input

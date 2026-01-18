@@ -14,6 +14,8 @@ import {
   useUploadMedia,
   useDeleteMedia,
 } from "@/hooks/use-queries";
+import { useAuthStore } from "@/stores/authStore";
+import { canManageMedia } from "@/lib/permissions";
 
 export default function MediaLibrary() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -25,6 +27,8 @@ export default function MediaLibrary() {
   const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
+  const user = useAuthStore((state) => state.auth.user);
+  const isAdmin = canManageMedia(user);
 
   // TanStack Query hooks
   const { 
@@ -63,6 +67,10 @@ export default function MediaLibrary() {
 
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isAdmin) {
+      toast.error('You do not have permission to upload media.');
+      return;
+    }
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
@@ -76,6 +84,7 @@ export default function MediaLibrary() {
   };
 
   const uploadSingleFile = async (file: File) => {
+    if (!isAdmin) return;
     setIsUploading(true);
     setUploadingFileName(file.name);
     setUploadProgress(10); // Mock progress for UI feedback
@@ -96,6 +105,10 @@ export default function MediaLibrary() {
   };
 
   const handleDeleteMedia = async (mediaId: string, mediaName: string) => {
+    if (!isAdmin) {
+      toast.error('You do not have permission to delete media.');
+      return;
+    }
     if (!confirm(`Are you sure you want to delete "${mediaName}"?`)) return;
 
     try {
@@ -139,6 +152,7 @@ export default function MediaLibrary() {
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    if (!isAdmin) return;
     const files = e.dataTransfer.files;
     if (files.length > 0 && fileInputRef.current) {
       fileInputRef.current.files = files;
@@ -159,6 +173,13 @@ export default function MediaLibrary() {
       <PageHeader
         title="Media Library"
           description="Upload and manage your media files"
+          badge={
+            !isAdmin ? (
+              <Badge variant="destructive" className="text-xs">
+                View only
+              </Badge>
+            ) : null
+          }
         />
 
         <Card>
@@ -183,50 +204,56 @@ export default function MediaLibrary() {
               </Alert>
             )}
 
-            <div 
-              className="border-2 border-dashed rounded-lg p-6 text-center transition-colors hover:border-primary bg-muted/50"
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-            >
-              {isUploading ? (
-                <div className="space-y-4">
-                  <Loader2 className="w-12 h-12 text-muted-foreground mx-auto mb-4 animate-spin" />
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${uploadProgress}%` }}
-                    ></div>
+            {isAdmin ? (
+              <div 
+                className="border-2 border-dashed rounded-lg p-6 text-center transition-colors hover:border-primary bg-muted/50"
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+              >
+                {isUploading ? (
+                  <div className="space-y-4">
+                    <Loader2 className="w-12 h-12 text-muted-foreground mx-auto mb-4 animate-spin" />
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Uploading {uploadingFileName}... {Math.round(uploadProgress)}%
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Uploading {uploadingFileName}... {Math.round(uploadProgress)}%
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <Label htmlFor="file-upload" className="cursor-pointer align-center inline-flex gap-2">
-                    <Button variant="outline" asChild>
-                      <span>Choose files</span>
-                    </Button>
-                    <Input
-                      id="file-upload"
-                      ref={fileInputRef}
-                      type="file"
-                      className="hidden"
-                      onChange={handleFileUpload}
-                      multiple
-                      accept="image/*,video/*,.pdf,.doc,.docx,.txt"
-                    />
-                  </Label>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    or drag and drop files here
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Supports images, videos, PDFs, and documents (max 50MB)
-                  </p>
-                </>
-              )}
-            </div>
+                ) : (
+                  <>
+                    <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <Label htmlFor="file-upload" className="cursor-pointer align-center inline-flex gap-2">
+                      <Button variant="outline" asChild>
+                        <span>Choose files</span>
+                      </Button>
+                      <Input
+                        id="file-upload"
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        onChange={handleFileUpload}
+                        multiple
+                        accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+                      />
+                    </Label>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      or drag and drop files here
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Supports images, videos, PDFs, and documents (max 50MB)
+                    </p>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                You have view-only access to the media library.
+              </div>
+            )}
 
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -296,7 +323,7 @@ export default function MediaLibrary() {
                               size="sm"
                               onClick={() => handleDeleteMedia(item._id, item.altText || 'media')}
                               title="Delete"
-                              disabled={deleteMediaMutation.isPending}
+                              disabled={!isAdmin || deleteMediaMutation.isPending}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -321,10 +348,12 @@ export default function MediaLibrary() {
                       {searchTerm ? 'Try adjusting your search terms' : 'Upload your first file to get started'}
                     </p>
                     {!searchTerm && (
-                      <Button onClick={() => fileInputRef.current?.click()}>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Files
-                      </Button>
+                      isAdmin && (
+                        <Button onClick={() => fileInputRef.current?.click()}>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Files
+                        </Button>
+                      )
                     )}
                   </div>
                 )}
