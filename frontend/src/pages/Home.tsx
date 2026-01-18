@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import articleService from '../services/articleService';
+import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
 import { ArticleDocument } from '../types/article';
 import FeaturedStory from '../components/FeaturedStory';
@@ -79,6 +80,16 @@ function Home() {
                 if (!isMounted) {
                     return;
                 }
+
+                // Populate cache for instant navigation to category pages
+                categoryCache.setCategories(categories);
+                categoryCache.setStickyArticles(stickyArticles || []);
+                categoryCache.setFeaturedArticles(featuredArticles || []);
+                categoryCache.setCategoryArticles(Categories.LIFE, lifeArticlesData || []);
+                categoryCache.setCategoryArticles(Categories.NEWS, newsArticlesData || []);
+                categoryCache.setCategoryArticles(Categories.ENTERTAINMENT, entertainmentArticlesData || []);
+                categoryCache.setCategoryArticles(Categories.OPINION, opinionArticlesData || []);
+                categoryCache.setCategoryArticles(Categories.SPORTS, sportsArticlesData || []);
 
                 const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
                     getArticleTimestamp(b) - getArticleTimestamp(a);

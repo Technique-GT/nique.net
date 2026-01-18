@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import articleService from '../services/articleService';
+import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
 import { ArticleDocument } from '../types/article';
 import { Categories } from '../types/categories';
@@ -12,27 +13,74 @@ import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
 import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
 
+// Helper to process raw articles into page sections
+const processLifeArticles = (allLifeArticles: ArticleDocument[]) => {
+    const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+        getArticleTimestamp(b) - getArticleTimestamp(a);
+
+    const stickyPosts = allLifeArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+    const featuredPosts = allLifeArticles.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
+    const nonStickyPosts = allLifeArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
+    const orderedLife = [...stickyPosts, ...nonStickyPosts];
+
+    const justIn = stickyPosts[0] ?? orderedLife[0] ?? null;
+    const featured = featuredPosts.find((article) => getArticleId(article) !== getArticleId(justIn)) ?? null;
+    const recentSelection = [justIn, featured].filter(Boolean) as ArticleDocument[];
+    const recentIds = new Set(recentSelection.map(getArticleId));
+    const remainingLife = orderedLife.filter((article) => !recentIds.has(getArticleId(article)));
+
+    const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
+        articles
+            .filter((article) => {
+                if (article.subcategoryId && typeof article.subcategoryId === 'object') {
+                    return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
+                }
+                return false;
+            })
+            .filter((article) => !recentIds.has(getArticleId(article)))
+            .sort(sortByPublishedDesc);
+
+    return {
+        recentLifeArticles: recentSelection,
+        lifeArticles: remainingLife,
+        events: filterBySubcategory(allLifeArticles, 'events'),
+        rsos: filterBySubcategory(allLifeArticles, 'rsos'),
+        featuresArticles: filterBySubcategory(allLifeArticles, 'student features'),
+    };
+};
+
 function Life() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentLifeArticles, setRecentLifeArticles] = useState<ArticleDocument[]>([]);
-    const [lifeArticles, setLifeArticles] = useState<ArticleDocument[]>([]);
-    const [events, setEvents] = useState<ArticleDocument[]>([]);
-    const [rsos, setRsos] = useState<ArticleDocument[]>([]);
-    const [featuresArticles, setFeaturesArticles] = useState<ArticleDocument[]>([]);
+    // Check cache immediately for instant display
+    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.LIFE), []);
+    const initialData = useMemo(() => cachedArticles ? processLifeArticles(cachedArticles) : null, [cachedArticles]);
+
+    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
+    const [recentLifeArticles, setRecentLifeArticles] = useState<ArticleDocument[]>(initialData?.recentLifeArticles || []);
+    const [lifeArticles, setLifeArticles] = useState<ArticleDocument[]>(initialData?.lifeArticles || []);
+    const [events, setEvents] = useState<ArticleDocument[]>(initialData?.events || []);
+    const [rsos, setRsos] = useState<ArticleDocument[]>(initialData?.rsos || []);
+    const [featuresArticles, setFeaturesArticles] = useState<ArticleDocument[]>(initialData?.featuresArticles || []);
     const [error, setError] = useState<string | null>(null);
-    const [lifeCategoryId, setLifeCategoryId] = useState<string | null>(null);
+    const [lifeCategoryId, setLifeCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.LIFE));
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
     
         const loadArticles = async () => {
-            setIsLoading(true);
+            // Only show loading if we don't have cached data
+            if (!cachedArticles) {
+                setIsLoading(true);
+            }
             setError(null);
 
             try {
                 // Services now return unwrapped data directly
-                const categories = await articleService.fetchCategories(50, controller.signal);
+                let categories = categoryCache.getCategories();
+                if (!categories) {
+                    categories = await articleService.fetchCategories(50, controller.signal);
+                    categoryCache.setCategories(categories);
+                }
 
                 const lifeCategory = categories.find((category: any) =>
                     category.name?.toLowerCase() === Categories.LIFE.toLowerCase()
@@ -54,46 +102,28 @@ function Life() {
                 );
 
                 const allLifeArticles = lifeResponse || [];
-                const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
-                    getArticleTimestamp(b) - getArticleTimestamp(a);
-
-                const stickyPosts = allLifeArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
-                const featuredPosts = allLifeArticles.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
-                const nonStickyPosts = allLifeArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
-                const orderedLife = [...stickyPosts, ...nonStickyPosts];
-
-                const justIn = stickyPosts[0] ?? orderedLife[0] ?? null;
-                const featured = featuredPosts.find((article) => getArticleId(article) !== getArticleId(justIn)) ?? null;
-                const recentSelection = [justIn, featured].filter(Boolean) as ArticleDocument[];
-                const recentIds = new Set(recentSelection.map(getArticleId));
-                const remainingLife = orderedLife.filter((article) => !recentIds.has(getArticleId(article)));
-
-                const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
-                    articles
-                        .filter((article) => {
-                            if (article.subcategoryId && typeof article.subcategoryId === 'object') {
-                                return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
-                            }
-
-                            return false;
-                        })
-                        .filter((article) => !recentIds.has(getArticleId(article)))
-                        .sort(sortByPublishedDesc);
+                
+                // Update cache with fresh data
+                categoryCache.setCategoryArticles(Categories.LIFE, allLifeArticles);
 
                 if (!isMounted) {
                     return;
                 }
 
-                setRecentLifeArticles(recentSelection);
-                setLifeArticles(remainingLife);
-                setEvents(filterBySubcategory(lifeResponse || [], 'events'));
-                setRsos(filterBySubcategory(lifeResponse || [], 'rsos'));
-                setFeaturesArticles(filterBySubcategory(lifeResponse || [], 'student features'));
+                const processed = processLifeArticles(allLifeArticles);
+                setRecentLifeArticles(processed.recentLifeArticles);
+                setLifeArticles(processed.lifeArticles);
+                setEvents(processed.events);
+                setRsos(processed.rsos);
+                setFeaturesArticles(processed.featuresArticles);
             } catch (err) {
                 if (!isMounted) {
                     return;
                 }
-                setError('Unable to load articles. Please try again later.');
+                // Only show error if we don't have cached data to display
+                if (!cachedArticles) {
+                    setError('Unable to load articles. Please try again later.');
+                }
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -107,7 +137,7 @@ function Life() {
             isMounted = false;
             controller.abort();
         };
-    }, []);
+    }, [cachedArticles]);
     
     if (isLoading) {
         return (

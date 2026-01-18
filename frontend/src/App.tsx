@@ -5,6 +5,7 @@ import { Suspense, lazy } from "react";
 // import ReactGA from 'react-ga4';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Spinner from "./components/Spinner";
+import DataPrefetcher from "./components/DataPrefetcher";
 
 const Home = lazy(() => import("./pages/Home"));
 const Life = lazy(() => import("./pages/Life"));
@@ -38,6 +39,7 @@ const About = lazy(() => import("./pages/About"));
 function App() {
   return (
     <Router>
+      <DataPrefetcher />
       <div className="App">
         <Suspense fallback={
             <div className="flex justify-center items-center h-screen">

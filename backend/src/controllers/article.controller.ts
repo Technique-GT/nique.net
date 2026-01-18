@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { NotificationService } from '../services/notification.service';
 import mongoose from 'mongoose';
 import Article, { IArticle } from '../models/Article';
 import { 
@@ -782,6 +783,15 @@ export const requestReview = async (req: any, res: Response): Promise<void> => {
     article.reviewStatus = 'in_review';
     await article.save();
 
+    // Notify admins
+    await NotificationService.notifyAdmins(
+      'review_requested',
+      'Review Requested',
+      `${req.user.name || 'An author'} requested a review for "${article.title}"`,
+      `/articles/${article._id}/review`, // Dashboard link (to be verified)
+      { articleId: article._id }
+    );
+
     res.json({ success: true, message: 'Review requested', data: article });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'Error requesting review', error: error.message });
@@ -853,6 +863,18 @@ export const adminPublish = async (req: any, res: Response): Promise<void> => {
     article.reviewedBy = req.user.id;
     await article.save();
 
+    // Notify owner
+    if (article.ownerId.toString() !== req.user.id) {
+      await NotificationService.create(
+        article.ownerId,
+        'published',
+        'Article Published',
+        `Your article "${article.title}" has been published!`,
+        `/articles/${article._id}/edit`,
+        { articleId: article._id }
+      );
+    }
+
     res.json({ success: true, message: 'Article published', data: article });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'Error publishing article', error: error.message });
@@ -907,6 +929,16 @@ export const requestChanges = async (req: any, res: Response): Promise<void> => 
       article.reviewNotes = req.body.reviewNotes;
     }
     await article.save();
+
+    // Notify owner
+    await NotificationService.create(
+      article.ownerId,
+      'changes_requested',
+      'Changes Requested',
+      `Admin requested changes on "${article.title}"`,
+      `/articles/${article._id}/edit`,
+      { articleId: article._id, notes: req.body.reviewNotes }
+    );
 
     res.json({ success: true, message: 'Changes requested', data: article });
   } catch (error: any) {

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import articleService from '../services/articleService';
+import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
 import { ArticleDocument } from '../types/article';
 import { Categories } from '../types/categories';
@@ -14,27 +15,74 @@ import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
 import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
 
+// Helper to process raw articles into page sections
+const processNewsArticles = (allNewsArticles: ArticleDocument[]) => {
+    const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+        getArticleTimestamp(b) - getArticleTimestamp(a);
+
+    const stickyPosts = allNewsArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+    const featuredPosts = allNewsArticles.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
+    const nonStickyPosts = allNewsArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
+    const orderedNews = [...stickyPosts, ...nonStickyPosts];
+
+    const justIn = stickyPosts[0] ?? orderedNews[0] ?? null;
+    const featured = featuredPosts.find((article) => getArticleId(article) !== getArticleId(justIn)) ?? null;
+    const recentSelection = [justIn, featured].filter(Boolean) as ArticleDocument[];
+    const recentIds = new Set(recentSelection.map(getArticleId));
+    const remainingNews = orderedNews.filter((article) => !recentIds.has(getArticleId(article)));
+
+    const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
+        articles
+            .filter((article) => {
+                if (article.subcategoryId && typeof article.subcategoryId === 'object') {
+                    return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
+                }
+                return false;
+            })
+            .filter((article) => !recentIds.has(getArticleId(article)))
+            .sort(sortByPublishedDesc);
+
+    return {
+        recentNews: recentSelection,
+        newsArticles: remainingNews,
+        theInstituteNews: filterBySubcategory(allNewsArticles, 'the institute'),
+        cityStateNews: filterBySubcategory(allNewsArticles, 'city & state'),
+        scienceResearchNews: filterBySubcategory(allNewsArticles, 'science & research'),
+    };
+};
+
 function News() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentNews, setRecentNews] = useState<ArticleDocument[]>([]);
-    const [newsArticles, setNewsArticles] = useState<ArticleDocument[]>([]);
-    const [theInstituteNews, setTheInstituteNews] = useState<ArticleDocument[]>([]);
-    const [cityStateNews, setCityStateNews] = useState<ArticleDocument[]>([]);
-    const [scienceResearchNews, setScienceResearchNews] = useState<ArticleDocument[]>([]);
+    // Check cache immediately for instant display
+    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.NEWS), []);
+    const initialData = useMemo(() => cachedArticles ? processNewsArticles(cachedArticles) : null, [cachedArticles]);
+
+    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
+    const [recentNews, setRecentNews] = useState<ArticleDocument[]>(initialData?.recentNews || []);
+    const [newsArticles, setNewsArticles] = useState<ArticleDocument[]>(initialData?.newsArticles || []);
+    const [theInstituteNews, setTheInstituteNews] = useState<ArticleDocument[]>(initialData?.theInstituteNews || []);
+    const [cityStateNews, setCityStateNews] = useState<ArticleDocument[]>(initialData?.cityStateNews || []);
+    const [scienceResearchNews, setScienceResearchNews] = useState<ArticleDocument[]>(initialData?.scienceResearchNews || []);
     const [error, setError] = useState<string | null>(null);
-    const [newsCategoryId, setNewsCategoryId] = useState<string | null>(null);
+    const [newsCategoryId, setNewsCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.NEWS));
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
     
         const loadArticles = async () => {
-            setIsLoading(true);
+            // Only show loading if we don't have cached data
+            if (!cachedArticles) {
+                setIsLoading(true);
+            }
             setError(null);
 
             try {
-                // Services now return unwrapped data directly
-                const categories = await articleService.fetchCategories(50, controller.signal);
+                // Use cached categories if available
+                let categories = categoryCache.getCategories();
+                if (!categories) {
+                    categories = await articleService.fetchCategories(50, controller.signal);
+                    categoryCache.setCategories(categories);
+                }
 
                 const newsCategory = categories.find((category: any) =>
                     category.name?.toLowerCase() === Categories.NEWS.toLowerCase()
@@ -56,47 +104,28 @@ function News() {
                 );
 
                 const allNewsArticles = newsResponse || [];
-                const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
-                    getArticleTimestamp(b) - getArticleTimestamp(a);
-
-                const stickyPosts = allNewsArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
-                const featuredPosts = allNewsArticles.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
-                const nonStickyPosts = allNewsArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
-                const orderedNews = [...stickyPosts, ...nonStickyPosts];
-
-                const justIn = stickyPosts[0] ?? orderedNews[0] ?? null;
-                const featured = featuredPosts.find((article) => getArticleId(article) !== getArticleId(justIn)) ?? null;
-                const recentSelection = [justIn, featured].filter(Boolean) as ArticleDocument[];
-                const recentIds = new Set(recentSelection.map(getArticleId));
-                const remainingNews = orderedNews.filter((article) => !recentIds.has(getArticleId(article)));
-
-                const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
-                    articles
-                        .filter((article) => {
-                            // new backend shape: article.subcategoryId is a populated object
-                            if (article.subcategoryId && typeof article.subcategoryId === 'object') {
-                                return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
-                            }
-
-                            return false;
-                        })
-                        .filter((article) => !recentIds.has(getArticleId(article)))
-                        .sort(sortByPublishedDesc);
+                
+                // Update cache with fresh data
+                categoryCache.setCategoryArticles(Categories.NEWS, allNewsArticles);
 
                 if (!isMounted) {
                     return;
                 }
 
-                setRecentNews(recentSelection);
-                setNewsArticles(remainingNews);
-                setTheInstituteNews(filterBySubcategory(newsResponse || [], 'the institute'));
-                setCityStateNews(filterBySubcategory(newsResponse || [], 'city & state'));
-                setScienceResearchNews(filterBySubcategory(newsResponse || [], 'science & research'));
+                const processed = processNewsArticles(allNewsArticles);
+                setRecentNews(processed.recentNews);
+                setNewsArticles(processed.newsArticles);
+                setTheInstituteNews(processed.theInstituteNews);
+                setCityStateNews(processed.cityStateNews);
+                setScienceResearchNews(processed.scienceResearchNews);
             } catch (err) {
                 if (!isMounted) {
                     return;
                 }
-                setError('Unable to load articles. Please try again later.');
+                // Only show error if we don't have cached data to display
+                if (!cachedArticles) {
+                    setError('Unable to load articles. Please try again later.');
+                }
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -110,7 +139,7 @@ function News() {
             isMounted = false;
             controller.abort();
         };
-    }, []);
+    }, [cachedArticles]);
     
     if (isLoading) {
         return (
