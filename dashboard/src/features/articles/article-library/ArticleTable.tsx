@@ -75,17 +75,17 @@ export function ArticleTable({
   }
 
   return (
-    <div className="rounded-md border">
-      <Table>
+    <div className="rounded-md border overflow-x-auto">
+      <Table className="min-w-[800px]">
         <TableHeader>
           <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Authors</TableHead>
-            <TableHead>Category</TableHead>
+            <TableHead className="min-w-[200px]">Title</TableHead>
+            <TableHead className="hidden md:table-cell">Authors</TableHead>
+            <TableHead className="hidden lg:table-cell">Category</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead>Views</TableHead>
-            <TableHead className="text-center">Quick Actions</TableHead>
+            <TableHead className="hidden sm:table-cell">Created</TableHead>
+            <TableHead className="hidden lg:table-cell">Views</TableHead>
+            <TableHead className="text-center hidden sm:table-cell">Quick Actions</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
           </TableHeader>
@@ -95,16 +95,35 @@ export function ArticleTable({
             const isAuthor = !!currentUserId && Array.isArray(article.authors) && article.authors.some((a) => a?._id === currentUserId)
             const canEdit = isAdmin || isOwner || isAuthor
 
-            return (
-              <TableRow key={article._id}>
+            const handleRowClick: React.MouseEventHandler<HTMLTableRowElement> = (e) => {
+              // Don't navigate if clicking on interactive elements
+              const target = e.target as HTMLElement
+              if (
+                target.closest('button') ||
+                target.closest('[role="menuitem"]') ||
+                target.closest('[data-radix-collection-item]')
+              ) {
+                return
+              }
+              if (canEdit) {
+                onEdit(article)
+              }
+            }
 
-                <TableCell className="font-medium max-w-xs truncate">
+            return (
+              <TableRow 
+                key={article._id}
+                onClick={handleRowClick}
+                className={cn(canEdit && "cursor-pointer hover:bg-muted/50")}
+              >
+
+                <TableCell className="font-medium min-w-[200px]">
                 <div className="flex items-center gap-2">
-                  {article.title}
+                  <span className="truncate max-w-[180px] sm:max-w-[250px]">{article.title}</span>
                   {article.isFeatured && (
                     <Tooltip>
                       <TooltipTrigger>
-                        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500 shrink-0" />
                       </TooltipTrigger>
                       <TooltipContent>Featured</TooltipContent>
                     </Tooltip>
@@ -112,14 +131,14 @@ export function ArticleTable({
                   {article.isSticky && (
                     <Tooltip>
                       <TooltipTrigger>
-                        <Pin className="w-4 h-4 text-blue-500 fill-blue-500" />
+                        <Pin className="w-4 h-4 text-blue-500 fill-blue-500 shrink-0" />
                       </TooltipTrigger>
                       <TooltipContent>Pinned</TooltipContent>
                     </Tooltip>
                   )}
                 </div>
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden md:table-cell">
                 <div className="flex flex-wrap gap-1">
                   {Array.isArray(article.authors) && article.authors.length > 0 ? (
                     <>
@@ -141,7 +160,7 @@ export function ArticleTable({
                   )}
                 </div>
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden lg:table-cell">
                 {article.category?.name || 'Unknown'}
               </TableCell>
               <TableCell>
@@ -156,11 +175,11 @@ export function ArticleTable({
                   )}
                 </div>
               </TableCell>
-              <TableCell>{formatDate(article.createdAt)}</TableCell>
-              <TableCell>{article.views}</TableCell>
+              <TableCell className="hidden sm:table-cell">{formatDate(article.createdAt)}</TableCell>
+              <TableCell className="hidden lg:table-cell">{article.views}</TableCell>
               
               {/* Quick Actions Column */}
-              <TableCell className="text-center">
+              <TableCell className="text-center hidden sm:table-cell">
                 <div className="flex justify-center gap-1">
                   {/* Publish/Unpublish Button */}
                   <Tooltip>

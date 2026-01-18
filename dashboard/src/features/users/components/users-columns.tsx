@@ -65,6 +65,9 @@ export const columns: ColumnDef<User>[] = [
         {row.getValue('bio') || '—'}
       </LongText>
     ),
+    meta: {
+      className: 'hidden lg:table-cell',
+    },
     enableSorting: false,
   },
   {
@@ -75,6 +78,9 @@ export const columns: ColumnDef<User>[] = [
     cell: ({ row }) => (
       <LongText className='max-w-48'>{row.getValue('email') || '—'}</LongText>
     ),
+    meta: {
+      className: 'hidden sm:table-cell',
+    },
     enableHiding: false,
   },
   {
@@ -111,6 +117,9 @@ export const columns: ColumnDef<User>[] = [
         {row.getValue('googleSub') || '—'}
       </LongText>
     ),
+    meta: {
+      className: 'hidden xl:table-cell',
+    },
     enableSorting: false,
   },
   {
@@ -121,6 +130,9 @@ export const columns: ColumnDef<User>[] = [
     cell: ({ row }) => {
       const links = row.getValue('socialLinks') as Array<{ platform: string; url: string }>
       return <div>{links?.length ? links.length : '—'}</div>
+    },
+    meta: {
+      className: 'hidden xl:table-cell',
     },
     enableSorting: false,
   },

@@ -120,61 +120,65 @@ export default function Analytics() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+            <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle>Publishing Velocity</CardTitle>
                 <CardDescription>Articles published per month (Last 6 months)</CardDescription>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={data.publishingTrend}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="articles" stroke="#0088FE" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
+              <CardContent className="overflow-x-auto">
+                <div className="min-w-[300px]">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={data.publishingTrend}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="articles" stroke="#0088FE" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle>Views by Category</CardTitle>
                 <CardDescription>Distribution of content engagement</CardDescription>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={data.viewsByCategory}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} ${( (percent || 0) * 100).toFixed(0)}%`}
-                    >
-                      {data.viewsByCategory.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+              <CardContent className="overflow-x-auto">
+                <div className="min-w-[300px]">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={data.viewsByCategory}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${( (percent || 0) * 100).toFixed(0)}%`}
+                      >
+                        {data.viewsByCategory.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
         <TabsContent value="articles">
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader>
               <CardTitle>Top Articles by Views</CardTitle>
               <CardDescription>Most engaged content across the platform</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="h-100">
+            <CardContent className="overflow-x-auto">
+              <div className="h-[400px] min-w-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.topArticles} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" />

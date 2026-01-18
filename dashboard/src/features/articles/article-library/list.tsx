@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,13 +13,17 @@ import { ArticleTable } from "./ArticleTable";
 import { ArticleDialogs } from "./ArticleDialogs";
 import { Article } from "./article";
 import { apiClient } from "@/lib/api-client";
-import { useCreateArticleDraft } from "@/hooks/use-queries";
+import { useCreateArticleDraft, queryKeys } from "@/hooks/use-queries";
+import { getAdminArticleById } from "@/services/articles";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/authStore";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 export default function ArticleList() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const createDraftMutation = useCreateArticleDraft();
   const { user: me } = useAuthStore((state) => state.auth);
   const isAdmin = !!me?.isAdmin;
@@ -35,6 +40,8 @@ export default function ArticleList() {
     setStatusFilter,
     categoryFilter,
     setCategoryFilter,
+    hideDrafts,
+    setHideDrafts,
     message,
     setMessage,
     availableCategories,
@@ -189,8 +196,14 @@ export default function ArticleList() {
     }
   };
 
-  // Edit handlers - UPDATED TO NAVIGATE TO EDIT PAGE
+  // Edit handlers - PREFETCH DATA THEN NAVIGATE TO EDIT PAGE
   const handleEdit = async (article: Article) => {
+    // Prefetch the article data before navigating to avoid loading flicker
+    await queryClient.prefetchQuery({
+      queryKey: queryKeys.adminArticle(article._id),
+      queryFn: () => getAdminArticleById(article._id),
+    });
+    
     navigate({ 
       to: '/articles/$articleId/edit' as any, 
       params: { articleId: article._id } as any 
@@ -238,7 +251,7 @@ export default function ArticleList() {
         to: '/articles/$articleId/edit' as any, 
         params: { articleId: draft._id } as any
       });
-      toast.success("Draft created successfully");
+      // toast.success("Draft created successfully");
     } catch (error) {
       console.error('Failed to create draft:', error);
       toast.error("Failed to create draft");
@@ -278,8 +291,8 @@ export default function ArticleList() {
         )}
 
         <PageHeader
-          title="Article Management"
-          description="Manage your articles with full CRUD operations"
+          title="Article Library"
+          description="Browse, search, and manage your content collection"
           badge={
             !isAdmin ? (
               <Badge variant="destructive" className="text-xs">
@@ -309,7 +322,7 @@ export default function ArticleList() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex flex-col gap-4 mb-6">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -319,29 +332,39 @@ export default function ArticleList() {
                   className="pl-10"
                 />
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-45">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-45">
-                  <SelectValue placeholder="Filter by category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {availableCategories.map(category => (
-                    <SelectItem key={category._id} value={category._id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex flex-wrap gap-2 sm:gap-4">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-40">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-full sm:w-40">
+                    <SelectValue placeholder="Filter by category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {availableCategories.map(category => (
+                      <SelectItem key={category._id} value={category._id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="hide-drafts" 
+                    checked={hideDrafts} 
+                    onCheckedChange={(checked) => setHideDrafts(checked as boolean)} 
+                  />
+                  <Label htmlFor="hide-drafts">Hide Drafts</Label>
+                </div>
+              </div>
             </div>
 
               <ArticleTable

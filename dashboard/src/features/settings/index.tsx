@@ -11,19 +11,19 @@ export default function Settings() {
   return (
     <Main fixed>
       <div className='space-y-0.5'>
-          <h1 className='text-2xl font-bold tracking-tight md:text-3xl'>
+          <h1 className='text-xl font-bold tracking-tight sm:text-2xl md:text-3xl'>
             Settings
           </h1>
-          <p className='text-muted-foreground'>
+          <p className='text-muted-foreground text-sm'>
             Manage your preferences.
           </p>
         </div>
         <Separator className='my-4 lg:my-6' />
-        <div className='flex flex-1 flex-col space-y-2 overflow-hidden md:space-y-2 lg:flex-row lg:space-y-0 lg:space-x-12'>
-          <aside className='top-0 lg:sticky lg:w-1/5'>
+        <div className='flex flex-1 flex-col space-y-4 overflow-hidden lg:flex-row lg:space-y-0 lg:space-x-12'>
+          <aside className='shrink-0 lg:sticky lg:top-0 lg:w-1/5'>
             <SidebarNav items={sidebarNavItems} />
           </aside>
-          <div className='flex w-full overflow-y-hidden p-1'>
+          <div className='flex-1 overflow-y-auto p-1'>
             <Outlet />
           </div>
         </div>

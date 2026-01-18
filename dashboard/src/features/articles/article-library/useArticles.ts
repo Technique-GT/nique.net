@@ -17,6 +17,7 @@ export const useArticles = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [hideDrafts, setHideDrafts] = useState(false);
   const [message, setMessage] = useState<MessageType | null>(null);
   
   const queryClient = useQueryClient();
@@ -213,10 +214,12 @@ export const useArticles = () => {
                            (statusFilter === "draft" && article.status === "draft");
       
       const matchesCategory = categoryFilter === "all" || article.category?._id === categoryFilter;
+
+      const matchesDraftVisibility = !hideDrafts || article.reviewStatus !== "draft";
       
-      return matchesSearch && matchesStatus && matchesCategory;
+      return matchesSearch && matchesStatus && matchesCategory && matchesDraftVisibility;
     }),
-    [articles, searchTerm, statusFilter, categoryFilter]
+    [articles, searchTerm, statusFilter, categoryFilter, hideDrafts]
   );
 
   // Clear message after 5 seconds
@@ -239,6 +242,8 @@ export const useArticles = () => {
     setStatusFilter,
     categoryFilter,
     setCategoryFilter,
+    hideDrafts,
+    setHideDrafts,
     message,
     setMessage,
     availableCategories,

@@ -783,7 +783,7 @@ export default function ArticleForm({
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {/* Featured Media */}
               <div className="space-y-2">
                 <Label htmlFor="featured-media" className='gap-0'>Featured Media</Label>
@@ -832,7 +832,7 @@ export default function ArticleForm({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
               <div className="space-y-6">
                 {/* Authors - Searchable Input */}
                 <div className="space-y-2">
@@ -994,7 +994,7 @@ export default function ArticleForm({
                 </div>
 
                 {/* Category & sub-category */}
-                <div className="space-y-2 flex flex-row gap-4">
+                <div className="space-y-4 sm:space-y-0 sm:flex sm:flex-row sm:gap-4">
                   <div className="space-y-2 flex-1">
                     <Label htmlFor="category" className='gap-0'><span className='text-destructive'>*</span>Category</Label>
                     <Select

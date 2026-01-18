@@ -34,7 +34,7 @@ export function AuthenticatedLayout({ children }: Props) {
           )}
         >
           <Header>
-            <div className='ml-auto flex items-center space-x-4'>
+            <div className='ml-auto flex items-center space-x-2 sm:space-x-4'>
               <Search />
               <Notifications />
               <ThemeSwitch />

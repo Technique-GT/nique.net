@@ -135,12 +135,14 @@ export default function Dashboard() {
             </div>
 
             <div className='grid grid-cols-1 gap-4 lg:grid-cols-7'>
-              <Card className='col-span-1 lg:col-span-4'>
+              <Card className='col-span-1 lg:col-span-4 overflow-hidden'>
                 <CardHeader>
                   <CardTitle>Published Articles (12 mo)</CardTitle>
                 </CardHeader>
-                <CardContent className='pl-2'>
-                  <Overview />
+                <CardContent className='pl-2 overflow-x-auto'>
+                  <div className='min-w-[300px]'>
+                    <Overview />
+                  </div>
                 </CardContent>
               </Card>
 

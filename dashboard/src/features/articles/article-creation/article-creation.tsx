@@ -14,6 +14,7 @@ import { useParams } from "@tanstack/react-router";
 
 export default function ArticleCreation() {
   const { articleId } = useParams({ strict: false }) as { articleId?: string };
+  const isEditMode = !!articleId;
 
   const {
     data: initialArticle,
@@ -180,7 +181,10 @@ export default function ArticleCreation() {
   if (isLoading) {
     return (
       <Main>
-        <PageHeader title="Create New Article" description="Loading form data..." />
+        <PageHeader 
+          title={isEditMode ? "Edit Article" : "Create New Article"} 
+          description="Loading form data..." 
+        />
         <div className="border rounded-lg p-6">
           <div className="flex items-center justify-center h-32">
             <div className="text-center">
@@ -196,7 +200,10 @@ export default function ArticleCreation() {
   if (taxonomyError) {
     return (
       <Main>
-        <PageHeader title="Create New Article" description="Fix the errors and retry" />
+        <PageHeader 
+          title={isEditMode ? "Edit Article" : "Create New Article"} 
+          description="Fix the errors and retry" 
+        />
         <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md">
           <p className="font-medium">Error loading form data</p>
           <p className="text-sm mt-1">Failed to load taxonomy data. Please try again.</p>
@@ -214,8 +221,8 @@ export default function ArticleCreation() {
   return (
     <Main>
       <PageHeader
-        title={initialArticle?._id ? "Edit Article" : "Create New Article"}
-        description={initialArticle?._id ? `Editing: ${initialArticle.title}` : "Draft, schedule, or publish a new post"}
+        title={isEditMode ? "Edit Article" : "Create New Article"}
+        description={isEditMode && initialArticle?.title ? `Editing: ${initialArticle.title}` : "Draft, schedule, or publish a new post"}
       />
       <ArticleForm
         categories={categories}

@@ -273,10 +273,10 @@ export default function MediaLibrary() {
             ) : (
               <>
                 {mediaItems.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {mediaItems.map((item) => (
                       <Card key={item._id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                        <CardContent className="px-4">
+                        <CardContent className="p-3 sm:px-4">
                           <div className="mb-3 overflow-hidden rounded-lg bg-muted/30">
                             {brokenImages.has(item._id) ? (
                               <div className="flex h-40 w-full items-center justify-center bg-muted text-muted-foreground">

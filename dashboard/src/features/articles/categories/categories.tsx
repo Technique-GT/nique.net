@@ -588,15 +588,15 @@ export default function Categories() {
 
             {/* Categories Tab */}
             <TabsContent value="categories">
-              <div className="rounded-md border">
-                <Table>
+              <div className="rounded-md border overflow-x-auto">
+                <Table className="min-w-[600px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12"></TableHead>
                       <TableHead>Name</TableHead>
-                      <TableHead>Slug</TableHead>
+                      <TableHead className="hidden sm:table-cell">Slug</TableHead>
                       <TableHead>Subcategories</TableHead>
-                      <TableHead>Created</TableHead>
+                      <TableHead className="hidden md:table-cell">Created</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -629,7 +629,7 @@ export default function Categories() {
                                 {category.name}
                               </div>
                             </TableCell>
-                            <TableCell className="text-muted-foreground font-mono text-sm">
+                            <TableCell className="text-muted-foreground font-mono text-sm hidden sm:table-cell">
                               {category.slug}
                             </TableCell>
                             <TableCell>
@@ -637,7 +637,7 @@ export default function Categories() {
                                 {categorySubCategories.length}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-muted-foreground text-sm">
+                            <TableCell className="text-muted-foreground text-sm hidden md:table-cell">
                               {new Date(category.createdAt).toLocaleDateString()}
                             </TableCell>
                             <TableCell className="text-right">
@@ -743,14 +743,14 @@ export default function Categories() {
 
             {/* Subcategories Tab */}
             <TabsContent value="subcategories">
-              <div className="rounded-md border">
-                <Table>
+              <div className="rounded-md border overflow-x-auto">
+                <Table className="min-w-[500px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
-                      <TableHead>Slug</TableHead>
+                      <TableHead className="hidden sm:table-cell">Slug</TableHead>
                       <TableHead>Parent Category</TableHead>
-                      <TableHead>Created</TableHead>
+                      <TableHead className="hidden md:table-cell">Created</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -763,7 +763,7 @@ export default function Categories() {
                             {subCategory.name}
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground font-mono text-sm">
+                        <TableCell className="text-muted-foreground font-mono text-sm hidden sm:table-cell">
                           {subCategory.slug}
                         </TableCell>
                         <TableCell>
@@ -771,7 +771,7 @@ export default function Categories() {
                             {subCategory.category.name}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
+                        <TableCell className="text-muted-foreground text-sm hidden md:table-cell">
                           {new Date(subCategory.createdAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="text-right">
