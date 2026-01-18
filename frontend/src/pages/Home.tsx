@@ -214,7 +214,7 @@ function Home() {
                 <div className='flex flex-col gap-4'>
                     <SideWidget />
                     <SideArticle articles={sideArticles}/>
-                    <iframe className="rounded-md w-full h-[550px]" src="https://open.spotify.com/embed/playlist/6hWrY7npl9UIbUzlRgpwoo?utm_source=generator" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                    <iframe className="rounded-md w-full h-137.5" src="https://open.spotify.com/embed/playlist/6hWrY7npl9UIbUzlRgpwoo?utm_source=generator" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
                 </div>
             </div>
         </>
