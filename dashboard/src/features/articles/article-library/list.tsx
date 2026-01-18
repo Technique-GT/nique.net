@@ -15,6 +15,7 @@ import { apiClient } from "@/lib/api-client";
 import { useCreateArticleDraft } from "@/hooks/use-queries";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/authStore";
+import { Badge } from "@/components/ui/badge";
 
 export default function ArticleList() {
   const navigate = useNavigate();
@@ -277,6 +278,13 @@ export default function ArticleList() {
         <PageHeader
           title="Article Management"
           description="Manage your articles with full CRUD operations"
+          badge={
+            !isAdmin ? (
+              <Badge variant="destructive" className="text-xs">
+                Limited edit access
+              </Badge>
+            ) : null
+          }
           actions={
             <>
               <Button variant="outline" onClick={() => fetchArticles()} disabled={loading}>

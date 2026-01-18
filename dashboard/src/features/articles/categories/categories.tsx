@@ -25,6 +25,8 @@ import {
   type Category,
   type SubCategory,
 } from "@/hooks/use-queries";
+import { useAuthStore } from "@/stores/authStore";
+import { canManageTaxonomy } from "@/lib/permissions";
 
 // Local type for UI with populated category
 interface SubCategoryUI extends Omit<SubCategory, 'categoryId'> {
@@ -43,6 +45,8 @@ export default function Categories() {
   const [editingSubCategory, setEditingSubCategory] = useState<SubCategoryUI | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const user = useAuthStore((state) => state.auth.user);
+  const isAdmin = canManageTaxonomy(user);
   
   const [categoryFormData, setCategoryFormData] = useState({ name: "" });
   const [subCategoryFormData, setSubCategoryFormData] = useState({ name: "", category: "" });
@@ -89,6 +93,7 @@ export default function Categories() {
 
   // Handlers
   const handleAddCategory = async () => {
+    if (!isAdmin) return;
     if (!categoryFormData.name.trim()) {
       setError('Category name is required');
       return;
@@ -109,6 +114,7 @@ export default function Categories() {
   };
 
   const handleAddSubCategory = async () => {
+    if (!isAdmin) return;
     if (!subCategoryFormData.name.trim()) {
       setError('Sub-category name is required');
       return;
@@ -139,6 +145,7 @@ export default function Categories() {
   };
 
   const handleDeleteCategory = async (category: Category) => {
+    if (!isAdmin) return;
     if (!confirm('Are you sure you want to delete this category? This will also delete all associated sub-categories.')) return;
     try {
       await deleteCategory.mutateAsync(category._id);
@@ -148,6 +155,7 @@ export default function Categories() {
   };
 
   const handleDeleteSubCategory = async (subCategory: SubCategoryUI) => {
+    if (!isAdmin) return;
     if (!confirm('Are you sure you want to delete this sub-category?')) return;
     try {
       await deleteSubCategory.mutateAsync(subCategory._id);
@@ -157,6 +165,7 @@ export default function Categories() {
   };
 
   const openEditCategoryDialog = (category: Category) => {
+    if (!isAdmin) return;
     setCategoryFormData({ name: category.name });
     setEditingCategory(category);
     setError(null);
@@ -164,6 +173,7 @@ export default function Categories() {
   };
 
   const openEditSubCategoryDialog = (subCategory: SubCategoryUI) => {
+    if (!isAdmin) return;
     setSubCategoryFormData({ name: subCategory.name, category: subCategory.category._id });
     setEditingSubCategory(subCategory);
     setError(null);
@@ -171,11 +181,13 @@ export default function Categories() {
   };
 
   const openCreateCategoryDialog = () => {
+    if (!isAdmin) return;
     resetCategoryForm();
     setIsCategoryDialogOpen(true);
   };
 
   const openCreateSubCategoryDialog = () => {
+    if (!isAdmin) return;
     resetSubCategoryForm();
     setIsSubCategoryDialogOpen(true);
   };
@@ -249,128 +261,139 @@ export default function Categories() {
       <PageHeader
         title="Categories"
           description="Organize your content with categories and subcategories"
+          badge={
+            !isAdmin ? (
+              <Badge variant="destructive" className="text-xs">
+                View only
+              </Badge>
+            ) : null
+          }
           actions={
             <>
-              <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" onClick={openCreateCategoryDialog}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Category
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingCategory ? 'Edit Category' : 'Add New Category'}
-                    </DialogTitle>
-                    <DialogDescription>
-                      {editingCategory 
-                        ? 'Update your category information.' 
-                        : 'Create a new category to organize your content.'
-                      }
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
-                      {error}
-                    </div>
-                  )}
-
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="category-name">Category Name *</Label>
-                      <Input
-                        id="category-name"
-                        value={categoryFormData.name}
-                        onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
-                        placeholder="Enter category name"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>
-                      Cancel
+              {isAdmin && (
+                <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" onClick={openCreateCategoryDialog}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Category
                     </Button>
-                    <Button 
-                      onClick={handleAddCategory} 
-                      disabled={createCategory.isPending || updateCategory.isPending}
-                    >
-                      {(createCategory.isPending || updateCategory.isPending) ? 'Saving...' : (editingCategory ? 'Update' : 'Create')}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-              <Dialog open={isSubCategoryDialogOpen} onOpenChange={setIsSubCategoryDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={openCreateSubCategoryDialog}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Subcategory
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingSubCategory ? 'Edit Subcategory' : 'Add New Subcategory'}
-                    </DialogTitle>
-                    <DialogDescription>
-                      {editingSubCategory 
-                        ? 'Update your subcategory information.' 
-                        : 'Create a new subcategory under an existing category.'
-                      }
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
-                      {error}
-                    </div>
-                  )}
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingCategory ? 'Edit Category' : 'Add New Category'}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {editingCategory 
+                          ? 'Update your category information.' 
+                          : 'Create a new category to organize your content.'
+                        }
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
+                        {error}
+                      </div>
+                    )}
 
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="subcategory-name">Subcategory Name *</Label>
-                      <Input
-                        id="subcategory-name"
-                        value={subCategoryFormData.name}
-                        onChange={(e) => setSubCategoryFormData({ ...subCategoryFormData, name: e.target.value })}
-                        placeholder="Enter subcategory name"
-                        required
-                      />
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="category-name">Category Name *</Label>
+                        <Input
+                          id="category-name"
+                          value={categoryFormData.name}
+                          onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+                          placeholder="Enter category name"
+                          required
+                        />
+                      </div>
                     </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="parent-category">Parent Category *</Label>
-                      <Select 
-                        value={subCategoryFormData.category} 
-                        onValueChange={(value) => setSubCategoryFormData({ ...subCategoryFormData, category: value })}
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleAddCategory} 
+                        disabled={createCategory.isPending || updateCategory.isPending}
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem key={category._id} value={category._id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        {(createCategory.isPending || updateCategory.isPending) ? 'Saving...' : (editingCategory ? 'Update' : 'Create')}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+              {isAdmin && (
+                <Dialog open={isSubCategoryDialogOpen} onOpenChange={setIsSubCategoryDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={openCreateSubCategoryDialog}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Subcategory
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingSubCategory ? 'Edit Subcategory' : 'Add New Subcategory'}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {editingSubCategory 
+                          ? 'Update your subcategory information.' 
+                          : 'Create a new subcategory under an existing category.'
+                        }
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
+                        {error}
+                      </div>
+                    )}
+
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="subcategory-name">Subcategory Name *</Label>
+                        <Input
+                          id="subcategory-name"
+                          value={subCategoryFormData.name}
+                          onChange={(e) => setSubCategoryFormData({ ...subCategoryFormData, name: e.target.value })}
+                          placeholder="Enter subcategory name"
+                          required
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="parent-category">Parent Category *</Label>
+                        <Select 
+                          value={subCategoryFormData.category} 
+                          onValueChange={(value) => setSubCategoryFormData({ ...subCategoryFormData, category: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map((category) => (
+                              <SelectItem key={category._id} value={category._id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                  </div>
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setIsSubCategoryDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button 
-                      onClick={handleAddSubCategory} 
-                      disabled={createSubCategory.isPending || updateSubCategory.isPending}
-                    >
-                      {(createSubCategory.isPending || updateSubCategory.isPending) ? 'Saving...' : (editingSubCategory ? 'Update' : 'Create')}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setIsSubCategoryDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleAddSubCategory} 
+                        disabled={createSubCategory.isPending || updateSubCategory.isPending}
+                      >
+                        {(createSubCategory.isPending || updateSubCategory.isPending) ? 'Saving...' : (editingSubCategory ? 'Update' : 'Create')}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
             </>
           }
         />
@@ -434,128 +457,132 @@ export default function Categories() {
                 </div>
 
                 {/* Category Dialog */}
-                <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button onClick={openCreateCategoryDialog}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Category
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingCategory ? 'Edit Category' : 'Add New Category'}
-                      </DialogTitle>
-                      <DialogDescription>
-                        {editingCategory 
-                          ? 'Update your category information.' 
-                          : 'Create a new category to organize your articles.'
-                        }
-                      </DialogDescription>
-                    </DialogHeader>
-                    
-                    {error && (
-                      <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
-                        {error}
-                      </div>
-                    )}
+                {isAdmin && (
+                  <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button onClick={openCreateCategoryDialog}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Category
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>
+                          {editingCategory ? 'Edit Category' : 'Add New Category'}
+                        </DialogTitle>
+                        <DialogDescription>
+                          {editingCategory 
+                            ? 'Update your category information.' 
+                            : 'Create a new category to organize your articles.'
+                          }
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
+                          {error}
+                        </div>
+                      )}
 
-                    <div className="grid gap-4 py-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="name">Category Name *</Label>
-                        <Input
-                          id="name"
-                          value={categoryFormData.name}
-                          onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
-                          placeholder="Enter category name"
-                          required
-                        />
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="name">Category Name *</Label>
+                          <Input
+                            id="name"
+                            value={categoryFormData.name}
+                            onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+                            placeholder="Enter category name"
+                            required
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button 
-                        onClick={handleAddCategory}
-                        disabled={createCategory.isPending || updateCategory.isPending}
-                      >
-                        {(createCategory.isPending || updateCategory.isPending) ? 'Saving...' : (editingCategory ? 'Update Category' : 'Create Category')}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                      <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={handleAddCategory}
+                          disabled={createCategory.isPending || updateCategory.isPending}
+                        >
+                          {(createCategory.isPending || updateCategory.isPending) ? 'Saving...' : (editingCategory ? 'Update Category' : 'Create Category')}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
 
                 {/* SubCategory Dialog */}
-                <Dialog open={isSubCategoryDialogOpen} onOpenChange={setIsSubCategoryDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button onClick={openCreateSubCategoryDialog} variant="outline">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Subcategory
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingSubCategory ? 'Edit Subcategory' : 'Add New Subcategory'}
-                      </DialogTitle>
-                      <DialogDescription>
-                        {editingSubCategory 
-                          ? 'Update your subcategory information.' 
-                          : 'Create a new subcategory under a parent category.'
-                        }
-                      </DialogDescription>
-                    </DialogHeader>
-                    
-                    {error && (
-                      <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
-                        {error}
-                      </div>
-                    )}
+                {isAdmin && (
+                  <Dialog open={isSubCategoryDialogOpen} onOpenChange={setIsSubCategoryDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button onClick={openCreateSubCategoryDialog} variant="outline">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Subcategory
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>
+                          {editingSubCategory ? 'Edit Subcategory' : 'Add New Subcategory'}
+                        </DialogTitle>
+                        <DialogDescription>
+                          {editingSubCategory 
+                            ? 'Update your subcategory information.' 
+                            : 'Create a new subcategory under a parent category.'
+                          }
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
+                          {error}
+                        </div>
+                      )}
 
-                    <div className="grid gap-4 py-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="subcategory-name">Subcategory Name *</Label>
-                        <Input
-                          id="subcategory-name"
-                          value={subCategoryFormData.name}
-                          onChange={(e) => setSubCategoryFormData({ ...subCategoryFormData, name: e.target.value })}
-                          placeholder="Enter subcategory name"
-                          required
-                        />
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="subcategory-name">Subcategory Name *</Label>
+                          <Input
+                            id="subcategory-name"
+                            value={subCategoryFormData.name}
+                            onChange={(e) => setSubCategoryFormData({ ...subCategoryFormData, name: e.target.value })}
+                            placeholder="Enter subcategory name"
+                            required
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="parent-category">Parent Category *</Label>
+                          <Select
+                            value={subCategoryFormData.category}
+                            onValueChange={(value) => setSubCategoryFormData({ ...subCategoryFormData, category: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a parent category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map((category) => (
+                                <SelectItem key={category._id} value={category._id}>
+                                  {category.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="parent-category">Parent Category *</Label>
-                        <Select
-                          value={subCategoryFormData.category}
-                          onValueChange={(value) => setSubCategoryFormData({ ...subCategoryFormData, category: value })}
+                      <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setIsSubCategoryDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={handleAddSubCategory}
+                          disabled={createSubCategory.isPending || updateSubCategory.isPending}
                         >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a parent category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {categories.map((category) => (
-                              <SelectItem key={category._id} value={category._id}>
-                                {category.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setIsSubCategoryDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button 
-                        onClick={handleAddSubCategory}
-                        disabled={createSubCategory.isPending || updateSubCategory.isPending}
-                      >
-                        {(createSubCategory.isPending || updateSubCategory.isPending) ? 'Saving...' : (editingSubCategory ? 'Update Subcategory' : 'Create Subcategory')}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                          {(createSubCategory.isPending || updateSubCategory.isPending) ? 'Saving...' : (editingSubCategory ? 'Update Subcategory' : 'Create Subcategory')}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
               </div>
             </div>
 
@@ -614,24 +641,26 @@ export default function Categories() {
                               {new Date(category.createdAt).toLocaleDateString()}
                             </TableCell>
                             <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => openEditCategoryDialog(category)}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() => handleDeleteCategory(category)}
-                                  title="Delete category"
-                                  disabled={deleteCategory.isPending}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
+                              {isAdmin && (
+                                <div className="flex justify-end gap-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => openEditCategoryDialog(category)}
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => handleDeleteCategory(category)}
+                                    title="Delete category"
+                                    disabled={deleteCategory.isPending}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              )}
                             </TableCell>
                           </TableRow>
                           
@@ -652,22 +681,26 @@ export default function Categories() {
                                           </div>
                                         </div>
                                         <div className="flex gap-2">
-                                          <Button 
-                                            variant="outline" 
-                                            size="sm"
-                                            onClick={() => openEditSubCategoryDialog(subCategory)}
-                                          >
-                                            <Edit className="w-3 h-3" />
-                                          </Button>
-                                          <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            onClick={() => handleDeleteSubCategory(subCategory)}
-                                            title="Delete subcategory"
-                                            disabled={deleteSubCategory.isPending}
-                                          >
-                                            <Trash2 className="w-3 h-3" />
-                                          </Button>
+                                          {isAdmin && (
+                                            <>
+                                              <Button 
+                                                variant="outline" 
+                                                size="sm"
+                                                onClick={() => openEditSubCategoryDialog(subCategory)}
+                                              >
+                                                <Edit className="w-3 h-3" />
+                                              </Button>
+                                              <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={() => handleDeleteSubCategory(subCategory)}
+                                                title="Delete subcategory"
+                                                disabled={deleteSubCategory.isPending}
+                                              >
+                                                <Trash2 className="w-3 h-3" />
+                                              </Button>
+                                            </>
+                                          )}
                                         </div>
                                       </div>
                                     ))}
@@ -692,10 +725,12 @@ export default function Categories() {
                               </p>
                             )}
                             {!searchTerm && (
-                              <Button onClick={openCreateCategoryDialog} className="mt-4">
-                                <Plus className="w-4 h-4 mr-2" />
-                                Create Your First Category
-                              </Button>
+                              isAdmin && (
+                                <Button onClick={openCreateCategoryDialog} className="mt-4">
+                                  <Plus className="w-4 h-4 mr-2" />
+                                  Create Your First Category
+                                </Button>
+                              )
                             )}
                           </div>
                         </TableCell>
@@ -740,24 +775,26 @@ export default function Categories() {
                           {new Date(subCategory.createdAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => openEditSubCategoryDialog(subCategory)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteSubCategory(subCategory)}
-                              title="Delete subcategory"
-                              disabled={deleteSubCategory.isPending}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+                          {isAdmin && (
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => openEditSubCategoryDialog(subCategory)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteSubCategory(subCategory)}
+                                title="Delete subcategory"
+                                disabled={deleteSubCategory.isPending}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -774,10 +811,12 @@ export default function Categories() {
                               </p>
                             )}
                             {!searchTerm && (
-                              <Button onClick={openCreateSubCategoryDialog} className="mt-4">
-                                <Plus className="w-4 h-4 mr-2" />
-                                Create Your First Subcategory
-                              </Button>
+                              isAdmin && (
+                                <Button onClick={openCreateSubCategoryDialog} className="mt-4">
+                                  <Plus className="w-4 h-4 mr-2" />
+                                  Create Your First Subcategory
+                                </Button>
+                              )
                             )}
                           </div>
                         </TableCell>

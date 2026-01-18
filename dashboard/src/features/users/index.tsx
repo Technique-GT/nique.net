@@ -1,14 +1,19 @@
 import { Main } from '@/components/layout/main'
 import { PageHeader } from "@/components/layout/page-header"
+import { Badge } from '@/components/ui/badge'
 import { columns } from './components/users-columns'
 import { UsersDialogs } from './components/users-dialogs'
 import { UsersPrimaryButtons } from './components/users-primary-buttons'
 import { UsersTable } from './components/users-table'
 import UsersProvider from './context/users-context'
 import { useUsers } from './context/users-context'
+import { useAuthStore } from '@/stores/authStore'
+import { canManageStaff } from '@/lib/permissions'
 
 function UsersContent() {
   const { users, loading } = useUsers()
+  const user = useAuthStore((state) => state.auth.user)
+  const hasEditAccess = canManageStaff(user)
 
   if (loading) {
     return (
@@ -26,7 +31,18 @@ function UsersContent() {
         <PageHeader
           title="Staff Members"
           description="Manage your users and access details here."
-          actions={<UsersPrimaryButtons />}
+          badge={
+            !hasEditAccess ? (
+              <Badge variant="destructive" className="text-xs">
+                View only
+              </Badge>
+            ) : null
+          }
+          actions={
+            <>
+              <UsersPrimaryButtons />
+            </>
+          }
         />
         <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>
           <UsersTable data={users} columns={columns} />

@@ -16,6 +16,8 @@ import {
   useDeleteTag,
   type Tag,
 } from "@/hooks/use-queries";
+import { useAuthStore } from "@/stores/authStore";
+import { canManageTaxonomy } from "@/lib/permissions";
 
 export default function Tags() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,6 +25,8 @@ export default function Tags() {
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const [formData, setFormData] = useState({ name: "" });
   const [error, setError] = useState<string | null>(null);
+  const user = useAuthStore((state) => state.auth.user);
+  const isAdmin = canManageTaxonomy(user);
 
   // TanStack Query hooks
   const { data: tags = [], isLoading, refetch } = useTags();
@@ -43,6 +47,7 @@ export default function Tags() {
   }, [tags, searchTerm]);
 
   const handleAddTag = async () => {
+    if (!isAdmin) return;
     if (!formData.name.trim()) {
       setError('Tag name is required');
       return;
@@ -63,6 +68,7 @@ export default function Tags() {
   };
 
   const handleDeleteTag = async (tag: Tag) => {
+    if (!isAdmin) return;
     if (!confirm('Are you sure you want to delete this tag?')) return;
 
     try {
@@ -73,6 +79,7 @@ export default function Tags() {
   };
 
   const openEditDialog = (tag: Tag) => {
+    if (!isAdmin) return;
     setFormData({ name: tag.name });
     setEditingTag(tag);
     setError(null);
@@ -80,6 +87,7 @@ export default function Tags() {
   };
 
   const openCreateDialog = () => {
+    if (!isAdmin) return;
     resetForm();
     setIsDialogOpen(true);
   };
@@ -120,64 +128,73 @@ export default function Tags() {
       <PageHeader
         title="Tags"
           description="Organize your content with tags"
+          badge={
+            !isAdmin ? (
+              <Badge variant="destructive" className="text-xs">
+                View only
+              </Badge>
+            ) : null
+          }
           actions={
             <>
               <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
                 <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={openCreateDialog}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Tag
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingTag ? 'Edit Tag' : 'Add New Tag'}
-                    </DialogTitle>
-                    <DialogDescription>
-                      {editingTag 
-                        ? 'Update your tag information.' 
-                        : 'Create a new tag to organize your content.'
-                      }
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  {/* Show error in dialog if any */}
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
-                      {error}
-                    </div>
-                  )}
+              {isAdmin && (
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={openCreateDialog}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Tag
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingTag ? 'Edit Tag' : 'Add New Tag'}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {editingTag 
+                          ? 'Update your tag information.' 
+                          : 'Create a new tag to organize your content.'
+                        }
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    {/* Show error in dialog if any */}
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
+                        {error}
+                      </div>
+                    )}
 
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="name">Tag Name *</Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Enter tag name"
-                        required
-                      />
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="name">Tag Name *</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          placeholder="Enter tag name"
+                          required
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button 
-                      onClick={handleAddTag} 
-                      disabled={createTag.isPending || updateTag.isPending}
-                    >
-                      {(createTag.isPending || updateTag.isPending) ? 'Saving...' : (editingTag ? 'Update Tag' : 'Create Tag')}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleAddTag} 
+                        disabled={createTag.isPending || updateTag.isPending}
+                      >
+                        {(createTag.isPending || updateTag.isPending) ? 'Saving...' : (editingTag ? 'Update Tag' : 'Create Tag')}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
             </>
           }
         />
@@ -221,7 +238,7 @@ export default function Tags() {
                   <h3 className="text-sm font-medium">
                     Current Tags ({filteredTags.length})
                   </h3>
-                  {filteredTags.length > 0 && (
+                  {filteredTags.length > 0 && isAdmin && (
                     <span className="text-sm text-muted-foreground">
                       Click on a tag to edit
                     </span>
@@ -232,34 +249,36 @@ export default function Tags() {
                     <div key={tag._id} className="relative group">
                       <Badge
                         variant="secondary"
-                        className="px-3 py-1 text-sm cursor-pointer transition-all"
-                        onClick={() => openEditDialog(tag)}
+                        className={`px-3 py-1 text-sm transition-all ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`}
+                        onClick={isAdmin ? () => openEditDialog(tag) : undefined}
                       >
                         {tag.name}
                       </Badge>
-                      <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openEditDialog(tag);
-                          }}
-                          className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1 shadow-md"
-                          title="Edit tag"
-                        >
-                          <Edit className="w-2 h-2" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteTag(tag);
-                          }}
-                          className="bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-md"
-                          title="Delete tag"
-                          disabled={deleteTag.isPending}
-                        >
-                          <Trash2 className="w-2 h-2" />
-                        </button>
-                      </div>
+                      {isAdmin && (
+                        <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditDialog(tag);
+                            }}
+                            className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1 shadow-md"
+                            title="Edit tag"
+                          >
+                            <Edit className="w-2 h-2" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteTag(tag);
+                            }}
+                            className="bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-md"
+                            title="Delete tag"
+                            disabled={deleteTag.isPending}
+                          >
+                            <Trash2 className="w-2 h-2" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                   {filteredTags.length === 0 && (
@@ -270,7 +289,7 @@ export default function Tags() {
                           Try adjusting your search terms
                         </p>
                       )}
-                      {!searchTerm && (
+                      {!searchTerm && isAdmin && (
                         <Button onClick={openCreateDialog} className="mt-4">
                           <Plus className="w-4 h-4 mr-2" />
                           Create Your First Tag

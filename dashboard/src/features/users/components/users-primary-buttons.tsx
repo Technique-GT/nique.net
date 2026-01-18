@@ -1,9 +1,16 @@
 import { IconMailPlus, IconUserPlus } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { useUsers } from '../context/users-context'
+import { useAuthStore } from '@/stores/authStore'
+import { canManageStaff } from '@/lib/permissions'
 
 export function UsersPrimaryButtons() {
   const { setOpen } = useUsers()
+  const user = useAuthStore((state) => state.auth.user)
+  const isAdmin = canManageStaff(user)
+
+  if (!isAdmin) return null
+
   return (
     <div className='flex gap-2'>
       <Button

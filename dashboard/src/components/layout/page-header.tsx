@@ -5,6 +5,7 @@ interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string
   description?: string
   actions?: React.ReactNode
+  badge?: React.ReactNode
 }
 
 /**
@@ -15,6 +16,7 @@ export function PageHeader({
   title,
   description,
   actions,
+  badge,
   className,
   children,
   ...props
@@ -25,7 +27,10 @@ export function PageHeader({
       {...props}
     >
       <div className='space-y-1'>
-        <h1 className='text-2xl font-bold tracking-tight'>{title}</h1>
+        <div className='flex items-center gap-2'>
+          <h1 className='text-2xl font-bold tracking-tight'>{title}</h1>
+          {badge}
+        </div>
         {description && (
           <p className='text-muted-foreground text-sm'>{description}</p>
         )}

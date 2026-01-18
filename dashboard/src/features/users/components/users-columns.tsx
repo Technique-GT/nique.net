@@ -100,7 +100,6 @@ export const columns: ColumnDef<User>[] = [
       return value.includes(String(row.getValue(id)))
     },
     enableHiding: false,
-    enableSorting: false,
   },
   {
     accessorKey: 'googleSub',
