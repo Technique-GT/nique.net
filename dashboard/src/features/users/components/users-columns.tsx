@@ -68,6 +68,16 @@ export const columns: ColumnDef<User>[] = [
     enableSorting: false,
   },
   {
+    accessorKey: 'email',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Email' />
+    ),
+    cell: ({ row }) => (
+      <LongText className='max-w-48'>{row.getValue('email') || '—'}</LongText>
+    ),
+    enableHiding: false,
+  },
+  {
     accessorFn: (row) => String(row.isAdmin),
     id: 'isAdmin',
     header: ({ column }) => (
@@ -103,7 +113,6 @@ export const columns: ColumnDef<User>[] = [
       </LongText>
     ),
     enableSorting: false,
-    enableHiding: false,
   },
   {
     accessorKey: 'socialLinks',

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
 import ArticleBlock from "../components/ArticleBlock";
-import { Post } from '../types/article';
+import { ArticleDocument } from '../types/article';
 import { Categories } from '../types/categories';
 import SideArticle from '../components/SideArticle';
 import FeaturedStory from '../components/FeaturedStory';
@@ -10,15 +10,15 @@ import SmallArticle from '../components/SmallArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
-import { mapArticleToPost } from '../utils/articleMapping';
+import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
 
 function Life() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentLifeArticles, setRecentLifeArticles] = useState<Post[]>([]);
-    const [lifeArticles, setLifeArticles] = useState<Post[]>([]);
-    const [events, setEvents] = useState<Post[]>([]);
-    const [rsos, setRsos] = useState<Post[]>([]);
-    const [featuresArticles, setFeaturesArticles] = useState<Post[]>([]);
+    const [recentLifeArticles, setRecentLifeArticles] = useState<ArticleDocument[]>([]);
+    const [lifeArticles, setLifeArticles] = useState<ArticleDocument[]>([]);
+    const [events, setEvents] = useState<ArticleDocument[]>([]);
+    const [rsos, setRsos] = useState<ArticleDocument[]>([]);
+    const [featuresArticles, setFeaturesArticles] = useState<ArticleDocument[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [lifeCategoryId, setLifeCategoryId] = useState<string | null>(null);
 
@@ -52,42 +52,28 @@ function Life() {
                     controller.signal
                 );
 
-                const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
-                const allLifeArticles = mapResponseData(lifeResponse);
-                const getTimestamp = (post: Post) => {
-                    const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
-                    const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
-                    return Math.max(published, created);
-                };
-                const sortByPublishedDesc = (a: Post, b: Post) => getTimestamp(b) - getTimestamp(a);
+                const allLifeArticles = lifeResponse || [];
+                const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+                    getArticleTimestamp(b) - getArticleTimestamp(a);
 
-                const stickyPosts = allLifeArticles.filter((post) => post.isSticky).sort(sortByPublishedDesc);
-                const nonStickyPosts = allLifeArticles.filter((post) => !post.isSticky).sort(sortByPublishedDesc);
+                const stickyPosts = allLifeArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+                const nonStickyPosts = allLifeArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
                 const orderedLife = [...stickyPosts, ...nonStickyPosts];
                 const RECENT_COUNT = Math.max(7, stickyPosts.length);
                 const recentSelection = orderedLife.slice(0, RECENT_COUNT);
                 const remainingLife = orderedLife.slice(RECENT_COUNT);
-                const recentIds = new Set(recentSelection.map((post) => post.id));
+                const recentIds = new Set(recentSelection.map(getArticleId));
 
-                const filterBySubcategory = (articles: any[], subcategory: string) =>
+                const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
                     articles
-                        .filter((article: any) => {
+                        .filter((article) => {
                             if (article.subcategoryId && typeof article.subcategoryId === 'object') {
                                 return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
                             }
 
-                            if (Array.isArray(article.subcategories)) {
-                                return article.subcategories.some(
-                                    (sub: any) =>
-                                        typeof sub?.value === 'string' &&
-                                        sub.value.toLowerCase() === subcategory.toLowerCase()
-                                );
-                            }
-
                             return false;
                         })
-                        .map(mapArticleToPost)
-                        .filter((post) => !recentIds.has(post.id))
+                        .filter((article) => !recentIds.has(getArticleId(article)))
                         .sort(sortByPublishedDesc);
 
                 if (!isMounted) {
@@ -144,8 +130,8 @@ function Life() {
             <div className='max-w-[95%] lg:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div>
                     <div className='flex flex-col gap-4 h-[80vh]'>
-                        {recentLifeArticles[0] && <JustInBlock post={recentLifeArticles[0]} />}
-                        {recentLifeArticles[1] && <FeaturedStory post={recentLifeArticles[1]} priority={true} />}
+                        {recentLifeArticles[0] && <JustInBlock article={recentLifeArticles[0]} />}
+                        {recentLifeArticles[1] && <FeaturedStory article={recentLifeArticles[1]} priority={true} />}
                     </div>
 
                     <hr className='my-3' />
@@ -153,26 +139,26 @@ function Life() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Events</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='col-span-2'>
-                            {events[0] && <ArticleBlock post={events[0]} height='460px' />}
+                            {events[0] && <ArticleBlock article={events[0]} height='460px' />}
                         </div>
                         <div className='grid col-span-2 gap-4'>
-                            {events[1] && <ArticleBlock post={events[1]} height='222px' />}
-                            {events[2] && <ArticleBlock post={events[2]} height='222px' />}
+                            {events[1] && <ArticleBlock article={events[1]} height='222px' />}
+                            {events[2] && <ArticleBlock article={events[2]} height='222px' />}
                             <div className='col-span-2'>
-                                {events[3] && <ArticleBlock post={events[3]} height='222px' />}
+                                {events[3] && <ArticleBlock article={events[3]} height='222px' />}
                             </div>
                         </div>
                         <div className='col-span-2'>
                             {(() => {
-                                const posts = events.slice(6, 8);
-                                return posts.length ? <SmallArticle posts={posts} direction='left'/> : null;
+                                const articles = events.slice(6, 8);
+                                return articles.length ? <SmallArticle articles={articles} direction='left'/> : null;
                             })()}
                         </div>
                         <hr className="block lg:hidden col-span-2" />
                         <div className='col-span-2'>
                             {(() => {
-                                const posts = events.slice(8, 10);
-                                return posts.length ? <SmallArticle posts={posts} direction='left'/> : null;
+                                const articles = events.slice(8, 10);
+                                return articles.length ? <SmallArticle articles={articles} direction='left'/> : null;
                             })()}
                         </div>
                     </div>
@@ -183,13 +169,13 @@ function Life() {
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='grid grid-cols-2 gap-4 col-span-2'>
                             {rsos.slice(0, 4).map((article) => (
-                                <ArticleBlock key={article.id} post={article} height='222px' />
+                                <ArticleBlock key={article._id || article.slug} article={article} height='222px' />
                             ))}
                         </div>
                         <div className='grid col-span-2 gap-4'>
                             {(() => {
-                                const posts = rsos.slice(4, 8);
-                                return posts.length ? <SideArticle posts={posts} width='18%'/> : null;
+                                const articles = rsos.slice(4, 8);
+                                return articles.length ? <SideArticle articles={articles} width='18%'/> : null;
                             })()}
                         </div>
                     </div>
@@ -199,7 +185,7 @@ function Life() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Features</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
                         {featuresArticles.slice(0, 6).map((article) => (
-                            <ArticleBlock key={article.id} post={article} height='230px' />
+                            <ArticleBlock key={article._id || article.slug} article={article} height='230px' />
                         ))}
                     </div>
 
@@ -209,9 +195,9 @@ function Life() {
                 <div className='flex flex-col gap-4'>
                     <hr className="lg:mt-15" />
                     {(() => {
-                        const posts = lifeArticles.slice(0, 4);
-                        return posts.length ? (
-                            <SideArticle posts={posts} width='80px' hasDesc={true}/>
+                        const articles = lifeArticles.slice(0, 4);
+                        return articles.length ? (
+                            <SideArticle articles={articles} width='80px' hasDesc={true}/>
                         ) : null;
                     })()}
                     {/* <VerticalAd ad={MockAd} /> */}

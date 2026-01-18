@@ -38,16 +38,17 @@ export default function UsersProvider({ children }: Props) {
 
   // Map backend users to frontend User schema
   const users: User[] = React.useMemo(() => {
-    const mappedUsers = rawUsers.map((u: any) => ({
-      _id: u._id,
-      id: u._id,
-      name: typeof u.name === 'string' ? u.name : 'Unknown',
-      bio: typeof u.bio === 'string' ? u.bio : undefined,
-      isAdmin: !!u.isAdmin,
-      googleSub: typeof u.googleSub === 'string' ? u.googleSub : undefined,
-      profilePictureMediaId: typeof u.profilePictureMediaId === 'string' ? u.profilePictureMediaId : undefined,
-      socialLinks: Array.isArray(u.socialLinks) ? u.socialLinks : [],
-    }))
+      const mappedUsers = rawUsers.map((u: any) => ({
+        _id: u._id,
+        id: u._id,
+        name: typeof u.name === 'string' ? u.name : 'Unknown',
+        bio: typeof u.bio === 'string' ? u.bio : undefined,
+        isAdmin: !!u.isAdmin,
+        email: typeof u.email === 'string' ? u.email : undefined,
+        googleSub: typeof u.googleSub === 'string' ? u.googleSub : undefined,
+        profilePictureMediaId: typeof u.profilePictureMediaId === 'string' ? u.profilePictureMediaId : undefined,
+        socialLinks: Array.isArray(u.socialLinks) ? u.socialLinks : [],
+      }))
 
     // Validate against schema to be safe
     try {

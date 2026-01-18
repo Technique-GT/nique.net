@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
 import ArticleBlock from "../components/ArticleBlock";
-import { Post } from '../types/article';
+import { ArticleDocument } from '../types/article';
 import SideArticle from '../components/SideArticle';
 import Carousel from '../components/Carousel';
 import SmallArticle from '../components/SmallArticle';
@@ -9,15 +9,15 @@ import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import { Categories } from '../types/categories';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
-import { mapArticleToPost } from '../utils/articleMapping';
+import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
 
 function Entertainment() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentEntertainment, setRecentEntertainment] = useState<Post[]>([]);
-    const [entertainmentArticles, setEntertainmentArticles] = useState<Post[]>([]);
-    const [filmtv, setFilmAndTV] = useState<Post[]>([]);
-    const [music, setMusic] = useState<Post[]>([]);
-    const [artsTheater, setArtsTheater] = useState<Post[]>([]);
+    const [recentEntertainment, setRecentEntertainment] = useState<ArticleDocument[]>([]);
+    const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>([]);
+    const [filmtv, setFilmAndTV] = useState<ArticleDocument[]>([]);
+    const [music, setMusic] = useState<ArticleDocument[]>([]);
+    const [artsTheater, setArtsTheater] = useState<ArticleDocument[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [entertainmentCategoryId, setEntertainmentCategoryId] = useState<string | null>(null);
 
@@ -50,42 +50,28 @@ function Entertainment() {
                 controller.signal
             );
 
-            const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
-            const allEntertainment = mapResponseData(entertainmentResponse);
-            const getTimestamp = (post: Post) => {
-                const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
-                const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
-                return Math.max(published, created);
-            };
-            const sortByPublishedDesc = (a: Post, b: Post) => getTimestamp(b) - getTimestamp(a);
+            const allEntertainment = entertainmentResponse || [];
+            const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+                getArticleTimestamp(b) - getArticleTimestamp(a);
 
-            const stickyPosts = allEntertainment.filter((post) => post.isSticky).sort(sortByPublishedDesc);
-            const nonStickyPosts = allEntertainment.filter((post) => !post.isSticky).sort(sortByPublishedDesc);
+            const stickyPosts = allEntertainment.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+            const nonStickyPosts = allEntertainment.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
             const orderedEntertainment = [...stickyPosts, ...nonStickyPosts];
             const RECENT_COUNT = Math.max(3, stickyPosts.length);
             const recentSelection = orderedEntertainment.slice(0, RECENT_COUNT);
             const remainingEntertainment = orderedEntertainment.slice(RECENT_COUNT);
-            const recentIds = new Set(recentSelection.map((post) => post.id));
+            const recentIds = new Set(recentSelection.map(getArticleId));
 
-            const filterBySubcategory = (articles: any[], subcategory: string) =>
+            const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
                 articles
-                    .filter((article: any) => {
+                    .filter((article) => {
                         if (article.subcategoryId && typeof article.subcategoryId === 'object') {
                             return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
                         }
 
-                        if (Array.isArray(article.subcategories)) {
-                            return article.subcategories.some(
-                                (sub: any) =>
-                                    typeof sub?.value === 'string' &&
-                                    sub.value.toLowerCase() === subcategory.toLowerCase()
-                            );
-                        }
-
                         return false;
                     })
-                    .map(mapArticleToPost)
-                    .filter((post) => !recentIds.has(post.id))
+                    .filter((article) => !recentIds.has(getArticleId(article)))
                     .sort(sortByPublishedDesc);
 
             if (!isMounted) {
@@ -145,7 +131,7 @@ function Entertainment() {
             <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                 <div className='lg:col-span-4 m-0'>
                 {recentEntertainment.slice(0, 4).length > 0 && (
-                    <Carousel posts={recentEntertainment.slice(0, 4)} width='70%'/>
+                    <Carousel articles={recentEntertainment.slice(0, 4)} width='70%'/>
                 )}
                 </div>
             </div>
@@ -154,12 +140,12 @@ function Entertainment() {
             <h4 className="font-bold mb-2 text-2xl text-nique-blue">Music</h4>
             <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                 <div className='lg:col-span-2 sm:col-span-2'>
-                {music[0] && <ArticleBlock post={music[0]} height='400px'/>}
+                {music[0] && <ArticleBlock article={music[0]} height='400px'/>}
                 </div>
 
                 <div className='grid gap-4 grid-cols-2 lg:col-span-2'>
                 {music.slice(1, 5).map((article) => (
-                    <ArticleBlock key={article.id} post={article} height='190px' />
+                    <ArticleBlock key={article._id || article.slug} article={article} height='190px' />
                 ))}
                 </div>
             </div>
@@ -169,7 +155,7 @@ function Entertainment() {
             <h4 className="font-bold mb-2 text-2xl text-nique-blue">Film & TV</h4>
             <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                 {filmtv.slice(0, 4).map((article) => (
-                <ArticleBlock key={article.id} post={article} height='230px' />
+                <ArticleBlock key={article._id || article.slug} article={article} height='230px' />
                 ))}
             </div>
 
@@ -178,12 +164,12 @@ function Entertainment() {
             <h4 className="font-bold mb-2 text-2xl text-nique-blue">Arts & Theater</h4>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4 items-start'>
                 {(() => {
-                const posts = artsTheater.slice(0, 2);
-                return posts.length ? <SmallArticle posts={posts} direction="left"/> : null;
+                const articles = artsTheater.slice(0, 2);
+                return articles.length ? <SmallArticle articles={articles} direction="left"/> : null;
                 })()}
                 {(() => {
-                const posts = artsTheater.slice(2, 4);
-                return posts.length ? <SmallArticle posts={posts} direction="left"/> : null;
+                const articles = artsTheater.slice(2, 4);
+                return articles.length ? <SmallArticle articles={articles} direction="left"/> : null;
                 })()}
             </div>
 
@@ -198,9 +184,9 @@ function Entertainment() {
                     loading="lazy"
                 />
                 {(() => {
-                    const posts = entertainmentArticles.slice(0, 5)
-                    .filter(Boolean) as Post[];
-                    return posts.length ? <SideArticle posts={posts} width='28%'/> : null;
+                    const articles = entertainmentArticles.slice(0, 5)
+                    .filter(Boolean) as ArticleDocument[];
+                    return articles.length ? <SideArticle articles={articles} width='28%'/> : null;
                 })()}
             </div>
         </div>

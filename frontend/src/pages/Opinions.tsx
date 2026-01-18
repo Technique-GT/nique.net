@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
 import ArticleBlock from "../components/ArticleBlock";
-import { Post } from '../types/article';
+import { ArticleDocument } from '../types/article';
 // SideArticle not currently used
 // import SideArticle from '../components/SideArticle';
 import Navbar from '../components/Navbar';
@@ -10,17 +10,17 @@ import FeaturedStory from '../components/FeaturedStory';
 import SmallArticle from '../components/SmallArticle';
 import { Categories } from '../types/categories';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
-import { mapArticleToPost } from '../utils/articleMapping';
+import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
 
 function Opinions() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentOpinionArticles, setRecentOpinionArticles] = useState<Post[]>([]);
+    const [recentOpinionArticles, setRecentOpinionArticles] = useState<ArticleDocument[]>([]);
     // const [opinionArticles, setOpinionArticles] = useState<Post[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [opinionCategoryId, setOpinionCategoryId] = useState<string | null>(null);
-    const [opEdArticles, setOpEdArticles] = useState<Post[]>([]);
-    const [consensusArticles, setConsensusArticles] = useState<Post[]>([]);
-    const [lettersArticles, setLettersArticles] = useState<Post[]>([]);
+    const [opEdArticles, setOpEdArticles] = useState<ArticleDocument[]>([]);
+    const [consensusArticles, setConsensusArticles] = useState<ArticleDocument[]>([]);
+    const [lettersArticles, setLettersArticles] = useState<ArticleDocument[]>([]);
 
     useEffect(() => {
         let isMounted = true;
@@ -51,42 +51,28 @@ function Opinions() {
             controller.signal
             );
 
-            const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
-            const allOpinions = mapResponseData(opinionResponse);
-            const getTimestamp = (post: Post) => {
-                const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
-                const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
-                return Math.max(published, created);
-            };
-            const sortByPublishedDesc = (a: Post, b: Post) => getTimestamp(b) - getTimestamp(a);
+            const allOpinions = opinionResponse || [];
+            const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+                getArticleTimestamp(b) - getArticleTimestamp(a);
 
-            const stickyPosts = allOpinions.filter((post) => post.isSticky).sort(sortByPublishedDesc);
-            const nonStickyPosts = allOpinions.filter((post) => !post.isSticky).sort(sortByPublishedDesc);
+            const stickyPosts = allOpinions.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+            const nonStickyPosts = allOpinions.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
             const orderedOpinion = [...stickyPosts, ...nonStickyPosts];
             const RECENT_COUNT = Math.max(5, stickyPosts.length);
             const recentSelection = orderedOpinion.slice(0, RECENT_COUNT);
             // const remainingOpinion = orderedOpinion.slice(RECENT_COUNT);
-            const recentIds = new Set(recentSelection.map((post) => post.id));
+            const recentIds = new Set(recentSelection.map(getArticleId));
 
-            const filterBySubcategory = (articles: any[], subcategory: string) =>
+            const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
                 articles
-                    .filter((article: any) => {
+                    .filter((article) => {
                         if (article.subcategoryId && typeof article.subcategoryId === 'object') {
                             return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
                         }
 
-                        if (Array.isArray(article.subcategories)) {
-                            return article.subcategories.some(
-                                (sub: any) =>
-                                    typeof sub?.value === 'string' &&
-                                    sub.value.toLowerCase() === subcategory.toLowerCase()
-                            );
-                        }
-
                         return false;
                     })
-                    .map(mapArticleToPost)
-                    .filter((post) => !recentIds.has(post.id))
+                    .filter((article) => !recentIds.has(getArticleId(article)))
                     .sort(sortByPublishedDesc);
 
             if (!isMounted) {
@@ -145,11 +131,11 @@ function Opinions() {
             <div className='w-full h-screen'>
                 <div className='grid gap-5 grid-cols-1 lg:grid-cols-[70%_auto] lg:grid-rows-4 w-full h-[80vh]'>
                     <div className='flex flex-col gap-4 order-first row-span-4'>
-                        {recentOpinionArticles[0] && <FeaturedStory post={recentOpinionArticles[0]} priority={true} />}
+                        {recentOpinionArticles[0] && <FeaturedStory article={recentOpinionArticles[0]} priority={true} />}
                     </div>
                     <div className='flex flex-col gap-4 row-span-4'>
                         {recentOpinionArticles.slice(1, 6).map((article) => (
-                            <ArticleBlock key={article.id} post={article} height='100%' />
+                            <ArticleBlock key={article._id || article.slug} article={article} height='100%' />
                         ))}
                     </div>
                 </div>
@@ -159,7 +145,7 @@ function Opinions() {
                 <h4 className="font-bold mb-2 text-2xl text-nique-blue">Op Ed</h4>
                 <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
                     {opEdArticles.map((article) => (
-                        <ArticleBlock key={article.id} post={article} height='230px' />
+                        <ArticleBlock key={article._id || article.slug} article={article} height='230px' />
                     ))}
                 </div>
 
@@ -168,15 +154,15 @@ function Opinions() {
                 <h4 className="font-bold mb-2 text-2xl text-nique-blue">Consensus</h4>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                     {(() => {
-                        const posts = consensusArticles.slice(0, 2);
-                        return posts.length ? (
-                        <SmallArticle posts={posts} direction="left" />
+                        const articles = consensusArticles.slice(0, 2);
+                        return articles.length ? (
+                        <SmallArticle articles={articles} direction="left" />
                         ) : null;
                     })()}
                     {(() => {
-                        const posts = consensusArticles.slice(2, 4);
-                        return posts.length ? (
-                        <SmallArticle posts={posts} direction="left" />
+                        const articles = consensusArticles.slice(2, 4);
+                        return articles.length ? (
+                        <SmallArticle articles={articles} direction="left" />
                         ) : null;
                     })()}
                 </div>
@@ -188,7 +174,7 @@ function Opinions() {
             <div className='flex flex-col gap-4'>
                 <h4 className="font-bold text-2xl text-nique-blue">Letters to the Editor</h4>
                 <hr />
-                <SmallArticle posts={lettersArticles} direction="right" />
+                <SmallArticle articles={lettersArticles} direction="right" />
                 
             </div>
         </div>

@@ -1,30 +1,34 @@
 import { useNavigate } from 'react-router-dom'
 import { ArticleListProps } from '../types/article'
+import { getArticleAuthorName, getArticleDescription, getArticleImage, getArticleLink } from '../utils/articlePresentation'
 
 interface SideArticleProps extends ArticleListProps {
     hasBreak?: boolean;
     hasDesc?: boolean;
 }
 
-function SideArticle({ posts, hasBreak = true, hasDesc = false }: SideArticleProps ) {
+function SideArticle({ articles, hasBreak = true, hasDesc = false }: SideArticleProps ) {
     const navigate = useNavigate();
     return (
         <div className='w-full'>
-            {posts.map((post) => {
-                const link = post.categorySlug && post.slug ? `/${post.categorySlug}/${post.slug}` : `/${post.id}`;
+            {articles.map((article) => {
+                const link = getArticleLink(article);
+                const image = getArticleImage(article);
+                const author = getArticleAuthorName(article);
+                const desc = getArticleDescription(article);
                 return (
-                <div key={post.id}>
+                <div key={article._id || article.slug}>
                     <div className='cursor-pointer w-full grid grid-cols-4 justify-between gap-1' onClick={() => navigate(link)}>
                         <div className='col-span-3 flex flex-col justify-start'>
-                            <h3 className="title text-[#1A1E47] font-bold text-xl/6 mb-2">{post.title}</h3>
-                            <h6 className="text-nique-blue text-sm">{post.author}</h6>
+                            <h3 className="title text-[#1A1E47] font-bold text-xl/6 mb-2">{article.title}</h3>
+                            <h6 className="text-nique-blue text-sm">{author}</h6>
                             
                         </div>
-                        {post.featuredImage && (
+                        {image && (
                             <img
-                                src={post.featuredImage?.url}
+                                src={image.url}
                                 loading="lazy"
-                                alt={post.title}
+                                alt={article.title}
                                 className='aspect-square w-full rounded-md object-cover col-span-1'
                             />
                         )}
@@ -35,7 +39,7 @@ function SideArticle({ posts, hasBreak = true, hasDesc = false }: SideArticlePro
                             WebkitLineClamp: 3,
                             WebkitBoxOrient: 'vertical',
                             }}>
-                            {post.desc}
+                            {desc}
                         </p>
                     }
                     {hasBreak ? <hr className='my-3' /> : <div className='my-3' />}

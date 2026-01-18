@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { ArticleProps } from '../types/article'
+import { getArticleLink } from '../utils/articlePresentation'
 
 function formatTimeSincePublished(publishedAt?: string | Date | null) {
     if (!publishedAt) {
@@ -34,16 +35,16 @@ function formatTimeSincePublished(publishedAt?: string | Date | null) {
     return 'just now';
 }
 
-function JustInBlock({ post }: ArticleProps) {
+function JustInBlock({ article }: ArticleProps) {
     const navigate = useNavigate();
-    const link = post.categorySlug && post.slug ? `/${post.categorySlug}/${post.slug}` : `/${post.id}`;
+    const link = getArticleLink(article);
 
     return (
         <div className='flex flex-col sm:flex-row gap-4 content-center cursor-pointer' onClick={() => navigate(link)}>
             <button className='bg-[#1A1E47] m-auto sm:m-0 rounded-md text-white h-[42px] lg:h-full w-[94px] py-2 cursor-pointer' onClick={() => navigate(link)}><h4 className='font-bold uppercase text-xl'>Just In</h4></button>
             <div>
-                <h3 className="title text-center sm:text-left text-black font-bold text-2xl/5 mb-1">{post.title}</h3>
-                <h6 className="text-center sm:text-left text-[#BAC0FF] text-sm">{formatTimeSincePublished(post.publishedAt)}</h6>
+                <h3 className="title text-center sm:text-left text-black font-bold text-2xl/5 mb-1">{article.title}</h3>
+                <h6 className="text-center sm:text-left text-[#BAC0FF] text-sm">{formatTimeSincePublished(article.publishedAt)}</h6>
             </div>
         </div>
     )

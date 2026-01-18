@@ -1,14 +1,16 @@
 import { ArticleListProps } from "../types/article";
+import { getArticleImage } from "../utils/articlePresentation";
 
-function Collage({ posts, width = '500px' }: ArticleListProps) {
+function Collage({ articles, width = '500px' }: ArticleListProps) {
   return (
     <div className="relative w-full overflow-hidden">
       <div className="scroll-container">
         <div className="scroll-content flex">
-          {posts.map((post, index) => {
-            if (!post) return null;
-            const imageUrl = post.featuredImage?.url || "https://picsum.photos/600/800";
-            const altText = post.title || "Article image";
+          {articles.map((article, index) => {
+            if (!article) return null;
+            const image = getArticleImage(article);
+            const imageUrl = image?.url || "https://picsum.photos/600/800";
+            const altText = article.title || "Article image";
             return (
               <div key={`first-${index}`} onDragStart={(e) => e.preventDefault()}>
                 <img
@@ -21,10 +23,11 @@ function Collage({ posts, width = '500px' }: ArticleListProps) {
               </div>
             );
           })}
-          {posts.map((post, index) => {
-            if (!post) return null;
-            const imageUrl = post.featuredImage?.url || "https://picsum.photos/600/800"; //placeholder
-            const altText = post.title || "Article image";
+          {articles.map((article, index) => {
+            if (!article) return null;
+            const image = getArticleImage(article);
+            const imageUrl = image?.url || "https://picsum.photos/600/800"; //placeholder
+            const altText = article.title || "Article image";
             return (
               <div key={`second-${index}`} onDragStart={(e) => e.preventDefault()}>
                 <img

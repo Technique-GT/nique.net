@@ -8,8 +8,9 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import '../index.css';
 import { ArticleListProps } from '../types/article';
+import { getArticleDescription, getArticleImage, getArticleLink } from '../utils/articlePresentation';
 
-export default function Carousel( {posts, width}: ArticleListProps ) {
+export default function Carousel( {articles, width}: ArticleListProps ) {
   const navigate=useNavigate();
   
   return (
@@ -37,20 +38,22 @@ export default function Carousel( {posts, width}: ArticleListProps ) {
           style={{ width: `${width}` }}
           className="coverflow h-96"
         >
-          {posts.map((p, index) => {
-            const link = p.categorySlug && p.slug ? `/${p.categorySlug}/${p.slug}` : `/${p.id}`;
+          {articles.map((article, index) => {
+            const link = getArticleLink(article);
+            const image = getArticleImage(article);
+            const desc = getArticleDescription(article);
             return (
               <SwiperSlide 
                 key={index} 
                 onClick={()=>navigate(link)} 
                 className={`cursor-pointer rounded-lg relative flex items-end h-full overflow-hidden group ${
-                  p.featuredImage ? "" : "bg-gradient-to-b from-nique-blue/10 to-white"
+                  image ? "" : "bg-gradient-to-b from-nique-blue/10 to-white"
                 }`}
               >
-                {p.featuredImage?.url && (
+                {image?.url && (
                     <img 
-                        src={p.featuredImage.url} 
-                        alt={p.title}
+                        src={image.url} 
+                        alt={article.title}
                         loading="lazy"
                         decoding="async"
                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 will-change-transform"
@@ -60,7 +63,7 @@ export default function Carousel( {posts, width}: ArticleListProps ) {
                 <div 
                     className="absolute inset-0 pointer-events-none"
                     style={{
-                        background: p.featuredImage ? 'linear-gradient(to bottom, rgba(0,0,0,0) 80%, rgba(255,255,255,1))' : undefined
+                        background: image ? 'linear-gradient(to bottom, rgba(0,0,0,0) 80%, rgba(255,255,255,1))' : undefined
                     }}
                 />
 
@@ -71,7 +74,7 @@ export default function Carousel( {posts, width}: ArticleListProps ) {
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
                 }}>
-                    { p.desc }
+                    {desc}
                 </h6>
               </SwiperSlide>
             );

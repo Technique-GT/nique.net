@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
-import { Post } from '../types/article';
+import { ArticleDocument } from '../types/article';
 import { FaFacebook, FaXTwitter, FaInstagram, FaTiktok, FaLinkedin } from "react-icons/fa6";
 import Navbar from "../components/Navbar";
 import Collage from "../components/Collage";
 import Spinner from '../components/Spinner';
-import { mapArticleToPost } from '../utils/articleMapping';
 
 function About() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentArticles, setRecentArticles] = useState<Post[]>([]);
+    const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>([]);
 
     useEffect(() => {
             let isMounted = true;
@@ -26,7 +25,7 @@ function About() {
                         return;
                     }
     
-                    setRecentArticles((recentArticlesData || []).map(mapArticleToPost));
+                    setRecentArticles(recentArticlesData || []);
                 } catch (err) {
                     if (!isMounted) {
                         return;
@@ -62,7 +61,7 @@ function About() {
                 <h4 className="font-bold mb-2 text-2xl text-nique-blue">About Us</h4>
             </div>
 
-            <Collage posts={[recentArticles[0], recentArticles[1], recentArticles[2], recentArticles[3], recentArticles[4], recentArticles[5]]} /> {/* collection of best pictures you may want to feature */}
+            <Collage articles={[recentArticles[0], recentArticles[1], recentArticles[2], recentArticles[3], recentArticles[4], recentArticles[5]].filter(Boolean) as ArticleDocument[]} /> {/* collection of best pictures you may want to feature */}
 
             {/* Mission */}
             <div className='grid grid-cols-1 sm:grid-cols-3 max-w-[95%] md:max-w-[80%] m-auto p-5 gap-x-16'>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import articleService from '../services/articleService';
 import ArticleBlock from "../components/ArticleBlock";
-import { Post, ArticleDocument } from '../types/article';
+import { ArticleDocument } from '../types/article';
 import FeaturedStory from '../components/FeaturedStory';
 import JustInBlock from '../components/JustIn';
 import SideWidget from '../components/SideWidget';
@@ -10,16 +10,16 @@ import { Categories } from '../types/categories';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
-import { mapArticleToPost } from '../utils/articleMapping';
+import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
 
 function Home() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentArticles, setRecentArticles] = useState<Post[]>([]);
-    const [lifeArticles, setLifeArticles] = useState<Post[]>([]);
-    const [newsArticles, setNewsArticles] = useState<Post[]>([]);
-    const [entertainmentArticles, setEntertainmentArticles] = useState<Post[]>([]);
-    const [opinionArticles, setOpinionArticles] = useState<Post[]>([]);
-    const [sportsArticles, setSportsArticles] = useState<Post[]>([]);
+    const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>([]);
+    const [lifeArticles, setLifeArticles] = useState<ArticleDocument[]>([]);
+    const [newsArticles, setNewsArticles] = useState<ArticleDocument[]>([]);
+    const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>([]);
+    const [opinionArticles, setOpinionArticles] = useState<ArticleDocument[]>([]);
+    const [sportsArticles, setSportsArticles] = useState<ArticleDocument[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -77,34 +77,25 @@ function Home() {
                     return;
                 }
 
-                const mapResponseData = (data: ArticleDocument[]) => (data || []).map(mapArticleToPost);
-                const stickyPosts = mapResponseData(stickyArticles);
-                const recentPosts = mapResponseData(recentArticlesData);
-                const lifePosts = mapResponseData(lifeArticlesData);
-                const newsPosts = mapResponseData(newsArticlesData);
-                const entertainmentPosts = mapResponseData(entertainmentArticlesData);
-                const opinionPosts = mapResponseData(opinionArticlesData);
-                const sportsPosts = mapResponseData(sportsArticlesData);
+                const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+                    getArticleTimestamp(b) - getArticleTimestamp(a);
 
-                const sortByPublishedDesc = (a: Post, b: Post) => {
-                    const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-                    const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
-                    return dateB - dateA;
-                };
-
-                const stickySorted = stickyPosts.filter((post) => post.isSticky).sort(sortByPublishedDesc);
-                const stickyIds = new Set(stickySorted.map((post) => post.id));
-                const nonStickyRecent = recentPosts.filter((post) => !stickyIds.has(post.id)).sort(sortByPublishedDesc);
+                const stickySorted = (stickyArticles || []).filter((article) => article.isSticky).sort(sortByPublishedDesc);
+                const stickyIds = new Set(stickySorted.map(getArticleId));
+                const nonStickyRecent = (recentArticlesData || [])
+                    .filter((article) => !stickyIds.has(getArticleId(article)))
+                    .sort(sortByPublishedDesc);
                 const sortedRecent = [...stickySorted, ...nonStickyRecent];
-                const recentIds = new Set(sortedRecent.map((post) => post.id));
-                const filterAndSort = (posts: Post[]) => posts.filter((post) => !recentIds.has(post.id)).sort(sortByPublishedDesc);
+                const recentIds = new Set(sortedRecent.map(getArticleId));
+                const filterAndSort = (articles: ArticleDocument[]) =>
+                    articles.filter((article) => !recentIds.has(getArticleId(article))).sort(sortByPublishedDesc);
 
                 setRecentArticles(sortedRecent);
-                setLifeArticles(filterAndSort(lifePosts));
-                setNewsArticles(filterAndSort(newsPosts));
-                setEntertainmentArticles(filterAndSort(entertainmentPosts));
-                setOpinionArticles(filterAndSort(opinionPosts));
-                setSportsArticles(filterAndSort(sportsPosts)); 
+                setLifeArticles(filterAndSort(lifeArticlesData));
+                setNewsArticles(filterAndSort(newsArticlesData));
+                setEntertainmentArticles(filterAndSort(entertainmentArticlesData));
+                setOpinionArticles(filterAndSort(opinionArticlesData));
+                setSportsArticles(filterAndSort(sportsArticlesData)); 
             } catch (err) {
                 if (!isMounted) {
                     return;
@@ -156,12 +147,12 @@ function Home() {
                     <div className='grid gap-5 grid-cols-1 lg:grid-cols-[30%_auto] lg:grid-rows-4 w-full h-[80vh]'>
                         <div className='flex flex-col gap-4 order-last lg:order-first lg:row-span-4'>
                             {recentArticles.slice(2, 6).map((article) => (
-                                <ArticleBlock key={article.id} post={article} height='100%'/>
+                                <ArticleBlock key={article._id || article.slug} article={article} height='100%'/>
                             ))}
                         </div>
                         <div className='flex flex-col gap-4 row-span-4 h-full'>
-                            {recentArticles[0] && <JustInBlock post={recentArticles[0]} />}
-                            {recentArticles[1] && <FeaturedStory post={recentArticles[1]} />}
+                            {recentArticles[0] && <JustInBlock article={recentArticles[0]} />}
+                            {recentArticles[1] && <FeaturedStory article={recentArticles[1]} />}
                         </div>
                     </div>
 
@@ -170,11 +161,11 @@ function Home() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.LIFE}</h4>
                     <div className='grid grid-cols-2 md:grid-cols-[48%_auto] gap-4'>
                         <div className='w-full'>
-                            {lifeArticles[0] && <ArticleBlock post={lifeArticles[0]} height='396px' />}
+                            {lifeArticles[0] && <ArticleBlock article={lifeArticles[0]} height='396px' />}
                         </div>
                         <div className='flex flex-col gap-4 w-full'>
                             {lifeArticles.slice(1,3).map((article) => (
-                                <ArticleBlock key={article.id} post={article} height='190px' />
+                                <ArticleBlock key={article._id || article.slug} article={article} height='190px' />
                             ))}
                         </div>
                     </div>
@@ -184,7 +175,7 @@ function Home() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.NEWS}</h4>
                     <div className='grid grid-cols-3 sm:flex-row gap-4'>
                         {newsArticles.slice(0,3).map((article) => (
-                            <ArticleBlock key={article.id} post={article} height='200px' />
+                            <ArticleBlock key={article._id || article.slug} article={article} height='200px' />
                         ))}
                     </div>
 
@@ -193,7 +184,7 @@ function Home() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.ENTERTAINMENT}</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         {entertainmentArticles.slice(0, 8).map((article) => (
-                            <ArticleBlock key={article.id} post={article} height='230px' />
+                            <ArticleBlock key={article._id || article.slug} article={article} height='230px' />
                         ))}
                     </div>
 
@@ -202,11 +193,11 @@ function Home() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.SPORTS}</h4>
                     <div className="grid gap-4 grid-cols-1 sm:grid-cols-4">
                         <div className="sm:col-span-2">
-                            {sportsArticles[0] && <ArticleBlock post={sportsArticles[0]} height="396px" />}
+                            {sportsArticles[0] && <ArticleBlock article={sportsArticles[0]} height="396px" />}
                         </div>
                         <div className="sm:col-span-2 grid gap-4 grid-cols-1 md:grid-cols-2">
                             {sportsArticles.slice(1, 5).map((article) => (
-                            <ArticleBlock key={article.id} post={article} height="190px" />
+                            <ArticleBlock key={article._id || article.slug} article={article} height="190px" />
                             ))}
                         </div>
                     </div>
@@ -216,7 +207,7 @@ function Home() {
 
                 <div className='flex flex-col gap-4'>
                     <SideWidget />
-                    <SideArticle posts={sideArticles}/>
+                    <SideArticle articles={sideArticles}/>
                     <iframe className="rounded-md w-full h-[550px]" src="https://open.spotify.com/embed/playlist/6hWrY7npl9UIbUzlRgpwoo?utm_source=generator" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
                 </div>
             </div>

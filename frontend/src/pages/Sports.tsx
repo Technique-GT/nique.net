@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import articleService from '../services/articleService';
 import { Categories } from '../types/categories';
 import ArticleBlock from "../components/ArticleBlock"
-import { Post } from '../types/article'
+import { ArticleDocument } from '../types/article'
 // import VerticalAd from "../components/VerticalAd";
 // import MockAd from '../assets/mock_advertisement.jpg';
 import SideArticle from '../components/SideArticle';
@@ -11,15 +11,15 @@ import SmallArticle from '../components/SmallArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
-import { mapArticleToPost } from '../utils/articleMapping';
+import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
 
 function Sports() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentSportsArticles, setRecentSportsArticles] = useState<Post[]>([]);
+    const [recentSportsArticles, setRecentSportsArticles] = useState<ArticleDocument[]>([]);
     // const [sportsArticles, setSportsArticles] = useState<Post[]>([]);
-    const [techSports, setTechSports] = useState<Post[]>([]);
-    const [atlSports, setAtlSports] = useState<Post[]>([]);
-    const [seasonScoreboard, setSeasonScoreboard] = useState<Post[]>([]);
+    const [techSports, setTechSports] = useState<ArticleDocument[]>([]);
+    const [atlSports, setAtlSports] = useState<ArticleDocument[]>([]);
+    const [seasonScoreboard, setSeasonScoreboard] = useState<ArticleDocument[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [sportsCategoryId, setSportsCategoryId] = useState<string | null>(null);
 
@@ -51,42 +51,28 @@ function Sports() {
                     controller.signal
                 );
 
-                const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
-                const allSportsArticles = mapResponseData(sportsResponse);
-                const getTimestamp = (post: Post) => {
-                    const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
-                    const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
-                    return Math.max(published, created);
-                };
-                const sortByPublishedDesc = (a: Post, b: Post) => getTimestamp(b) - getTimestamp(a);
+                const allSportsArticles = sportsResponse || [];
+                const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+                    getArticleTimestamp(b) - getArticleTimestamp(a);
 
-                const stickyPosts = allSportsArticles.filter((post) => post.isSticky).sort(sortByPublishedDesc);
-                const nonStickyPosts = allSportsArticles.filter((post) => !post.isSticky).sort(sortByPublishedDesc);
+                const stickyPosts = allSportsArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+                const nonStickyPosts = allSportsArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
                 const orderedSports = [...stickyPosts, ...nonStickyPosts];
                 const RECENT_COUNT = Math.max(5, stickyPosts.length);
                 const recentSelection = orderedSports.slice(0, RECENT_COUNT);
                 // const remainingSports = orderedSports.slice(RECENT_COUNT);
-                const recentIds = new Set(recentSelection.map((post) => post.id));
+                const recentIds = new Set(recentSelection.map(getArticleId));
 
-                const filterBySubcategory = (articles: any[], subcategory: string) =>
+                const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
                     articles
-                        .filter((article: any) => {
+                        .filter((article) => {
                             if (article.subcategoryId && typeof article.subcategoryId === 'object') {
                                 return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
                             }
 
-                            if (Array.isArray(article.subcategories)) {
-                                return article.subcategories.some(
-                                    (sub: any) =>
-                                        typeof sub?.value === 'string' &&
-                                        sub.value.toLowerCase() === subcategory.toLowerCase()
-                                );
-                            }
-
                             return false;
                         })
-                        .map(mapArticleToPost)
-                        .filter((post) => !recentIds.has(post.id))
+                        .filter((article) => !recentIds.has(getArticleId(article)))
                         .sort(sortByPublishedDesc);
 
                 if (!isMounted) {
@@ -145,13 +131,13 @@ function Sports() {
                 <div className='w-full h-screen'>
                     <div className='grid gap-5 grid-cols-1 lg:grid-cols-[auto_35%] lg:grid-rows-4 w-full h-[80vh]'>
                         <div className='flex flex-col gap-4 lg:row-span-4'>
-                            {recentSportsArticles[0] && <ArticleBlock post={recentSportsArticles[0]} height="100%" />}
+                            {recentSportsArticles[0] && <ArticleBlock article={recentSportsArticles[0]} height="100%" />}
                         </div>
                         <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:grid-rows-4 lg:row-span-4 h-full'>
-                            {recentSportsArticles[1] && <ArticleBlock post={recentSportsArticles[1]} height="100%" />}
-                            {recentSportsArticles[2] && <ArticleBlock post={recentSportsArticles[2]} height="100%" />}
-                            {recentSportsArticles[3] && <ArticleBlock post={recentSportsArticles[3]} height="100%" />}
-                            {recentSportsArticles[4] && <ArticleBlock post={recentSportsArticles[4]} height="100%" />}
+                            {recentSportsArticles[1] && <ArticleBlock article={recentSportsArticles[1]} height="100%" />}
+                            {recentSportsArticles[2] && <ArticleBlock article={recentSportsArticles[2]} height="100%" />}
+                            {recentSportsArticles[3] && <ArticleBlock article={recentSportsArticles[3]} height="100%" />}
+                            {recentSportsArticles[4] && <ArticleBlock article={recentSportsArticles[4]} height="100%" />}
                         </div>
                     </div>
 
@@ -161,13 +147,13 @@ function Sports() {
                     <div className='grid grid-cols-1 lg:grid-cols-[48%_auto] gap-4'>
                         <div className='w-full'>
                             {(() => {
-                                const posts = techSports.slice(0, 4);
-                                return posts.length ? <SmallArticle posts={posts} direction="left"/> : null;
+                                const articles = techSports.slice(0, 4);
+                                return articles.length ? <SmallArticle articles={articles} direction="left"/> : null;
                             })()}
                         </div>
                         <div className='grid gap-4 grid-cols-1 sm:grid-cols-2'>
                             {techSports.slice(4, 8).map((article) => (
-                                <ArticleBlock key={article.id} post={article} height='190px' />
+                                <ArticleBlock key={article._id || article.slug} article={article} height='190px' />
                             ))}
                         </div>
                     </div>
@@ -177,7 +163,7 @@ function Sports() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Atlanta</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
                         {atlSports.slice(0, 4).map((article) => (
-                            <ArticleBlock key={article.id} post={article} height='180px' />
+                            <ArticleBlock key={article._id || article.slug} article={article} height='180px' />
                         ))}
                     </div>
 
@@ -191,8 +177,8 @@ function Sports() {
                     <hr className='my-3' /> */}
                     <h4 className="text-nique-blue font-bold mb-4 text-2xl">Season Scoreboard</h4>
                     {(() => {
-                        const posts = seasonScoreboard.slice(0, 5);
-                        return posts.length ? <SideArticle posts={posts} /> : null;
+                        const articles = seasonScoreboard.slice(0, 5);
+                        return articles.length ? <SideArticle articles={articles} /> : null;
                     })()}
                 </div>
             </div>

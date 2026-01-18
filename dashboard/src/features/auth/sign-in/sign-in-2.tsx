@@ -1,11 +1,11 @@
-import ViteLogo from '@/assets/vite.svg'
+import ViteLogo from '@/assets/logo.svg'
 import { UserAuthForm } from './components/user-auth-form'
 
 export default function SignIn2() {
   return (
     <div className='relative container grid h-svh flex-col items-center justify-center lg:max-w-none lg:grid-cols-2 lg:px-0'>
       <div className='bg-muted relative hidden h-full flex-col p-10 text-white lg:flex dark:border-r'>
-        <div className='absolute inset-0 bg-nique-blue' />
+        <div className='absolute inset-0 bg-linear-to-br/shorter from-nique-light-blue to-nique-blue' />
         <div className='relative z-20 flex items-center text-lg font-medium'>
           Technique Dashboard
         </div>

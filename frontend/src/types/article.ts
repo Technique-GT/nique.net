@@ -90,41 +90,17 @@ export interface Comment {
   replies?: Comment[];
 }
 
-// =============================================================================
-// Derived / UI-specific Types
-// =============================================================================
-
-/**
- * Simplified article shape for list/card views.
- * Derived from ArticleDocument in mapping utilities.
- */
-export interface Post {
-  id: string;
-  title: string;
-  slug?: string;
-  excerpt?: string;
-  desc: string;
-  author: string;
-  category: string;
-  categorySlug?: string; // Added for routing
-  featuredImage?: Media | null;
-  imageCaption?: string;
-  publishedAt?: Date | string | null;
-  createdAt?: Date | string;
-  isSticky?: boolean;
-}
-
 export interface ArticleBlockProps {
-  post: Post;
+  article: ArticleDocument;
   height?: string;
 }
 
 export interface ArticleProps {
-  post: Post;
+  article: ArticleDocument;
 }
 
 export interface ArticleListProps {
-  posts: Post[];
+  articles: ArticleDocument[];
   width?: string;
 }
 

@@ -26,7 +26,7 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
 
     if (typeof search === 'string' && search.trim().length > 0) {
       const rx = new RegExp(search.trim(), 'i');
-      filter.$or = [{ name: rx }, { bio: rx }];
+      filter.$or = [{ name: rx }, { bio: rx }, { email: rx }];
     }
 
     const pageNum = Math.max(parseInt(page as string, 10) || 1, 1);
@@ -79,6 +79,15 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
 
     const bio = typeof req.body?.bio === 'string' ? req.body.bio : undefined;
     const isAdmin = typeof req.body?.isAdmin === 'boolean' ? req.body.isAdmin : false;
+    const emailRaw = typeof req.body?.email === 'string' ? req.body.email : undefined;
+    const email = emailRaw?.trim().toLowerCase() || undefined;
+    if (email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        res.status(400).json({ success: false, message: 'email already in use' });
+        return;
+      }
+    }
     const googleSubRaw = typeof req.body?.googleSub === 'string' ? req.body.googleSub : undefined;
     const googleSub = googleSubRaw?.trim() || undefined;
     if (googleSub) {
@@ -98,6 +107,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       name,
       ...(bio ? { bio } : {}),
       isAdmin,
+      ...(email ? { email } : {}),
       ...(googleSub ? { googleSub } : {}),
       ...(profilePictureMediaId ? { profilePictureMediaId } : {}),
       socialLinks,
@@ -128,6 +138,23 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
 
     if (typeof req.body?.isAdmin === 'boolean') {
       update.isAdmin = req.body.isAdmin;
+    }
+
+    if (typeof req.body?.email === 'string' || req.body?.email === null) {
+      const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+      if (req.body.email === null) {
+        update.email = undefined;
+      } else if (!email) {
+        res.status(400).json({ success: false, message: 'email cannot be empty' });
+        return;
+      } else {
+        const existingUser = await User.findOne({ email, _id: { $ne: id } });
+        if (existingUser) {
+          res.status(400).json({ success: false, message: 'email already in use' });
+          return;
+        }
+        update.email = email;
+      }
     }
 
     if (typeof req.body?.googleSub === 'string' || req.body?.googleSub === null) {

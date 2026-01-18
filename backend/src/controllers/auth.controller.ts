@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth.middleware';
 
-type GoogleProfile = { name?: string; sub?: string };
+type GoogleProfile = { name?: string; sub?: string; email?: string; email_verified?: boolean };
 
 const AuthUser = User as unknown as mongoose.Model<any>;
 
@@ -24,6 +24,22 @@ const generateToken = (user: any) => {
   return jwt.sign({ id: user._id, name: user.name, isAdmin: user.isAdmin }, process.env.JWT_TOKEN as string, {
     expiresIn: '7d',
   });
+};
+
+const getAdminEmailAllowlist = () => {
+  const raw = process.env.ADMIN_EMAIL_ALLOWLIST || '';
+  return raw
+    .split(',')
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+};
+
+const isAdminEmailAllowlisted = async (email: string, emailVerified: boolean) => {
+  if (!emailVerified || !email) return false;
+  const allowlist = getAdminEmailAllowlist();
+  if (allowlist.includes(email)) return true;
+  const adminUser = await AuthUser.exists({ email, isAdmin: true });
+  return !!adminUser;
 };
 
 export const register = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -172,6 +188,9 @@ export const googleAuthCallback = async (req: Request, res: Response): Promise<v
     const profile = (await fetchGoogleProfile((tokenResponse as any).access_token)) as GoogleProfile;
     const fullName = typeof profile?.name === 'string' ? profile.name.trim() : '';
     const googleSub = typeof profile?.sub === 'string' ? profile.sub.trim() : '';
+    const email = typeof profile?.email === 'string' ? profile.email.trim().toLowerCase() : '';
+    const emailVerified = profile?.email_verified === true;
+    const isAllowlistedAdmin = await isAdminEmailAllowlisted(email, emailVerified);
 
     if (!googleSub) {
       res.status(403).json({ message: 'Google profile missing sub' });
@@ -184,13 +203,36 @@ export const googleAuthCallback = async (req: Request, res: Response): Promise<v
     }
 
     let user = await AuthUser.findOne({ googleSub });
+    if (!user && isAllowlistedAdmin && email) {
+      user = await AuthUser.findOne({ email });
+    }
+
     if (!user) {
       user = await AuthUser.create({
         name: fullName,
         socialLinks: [],
-        isAdmin: false,
+        isAdmin: isAllowlistedAdmin,
         googleSub,
+        ...(isAllowlistedAdmin ? { email } : {}),
       });
+    } else if (isAllowlistedAdmin) {
+      const updates: Record<string, any> = {};
+      if (!user.isAdmin) {
+        updates.isAdmin = true;
+      }
+      if (user.email !== email) {
+        updates.email = email;
+      }
+      if (user.googleSub !== googleSub) {
+        updates.googleSub = googleSub;
+      }
+      if (user.name !== fullName) {
+        updates.name = fullName;
+      }
+      if (Object.keys(updates).length > 0) {
+        user.set(updates);
+        await user.save();
+      }
     }
 
     const token = generateToken(user);

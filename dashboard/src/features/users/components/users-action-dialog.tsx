@@ -32,6 +32,7 @@ const formSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
   bio: z.string().optional(),
   isAdmin: z.boolean(),
+  email: z.string().email().optional(),
   googleSub: z.string().optional(),
   profilePictureMediaId: z.string().optional(),
 })
@@ -55,6 +56,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           name: currentRow.name,
           bio: currentRow.bio || '',
           isAdmin: currentRow.isAdmin,
+          email: currentRow.email || '',
           googleSub: currentRow.googleSub || '',
           profilePictureMediaId: currentRow.profilePictureMediaId || '',
         }
@@ -62,6 +64,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           name: '',
           bio: '',
           isAdmin: false,
+          email: '',
           googleSub: '',
           profilePictureMediaId: '',
         },
@@ -75,6 +78,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           name: values.name.trim(),
           ...(values.bio?.trim() ? { bio: values.bio.trim() } : {}),
           isAdmin: values.isAdmin,
+          ...(values.email?.trim() ? { email: values.email.trim() } : {}),
           ...(values.googleSub?.trim() ? { googleSub: values.googleSub.trim() } : {}),
           ...(values.profilePictureMediaId?.trim()
             ? { profilePictureMediaId: values.profilePictureMediaId.trim() }
@@ -98,6 +102,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           name: values.name.trim(),
           ...(values.bio?.trim() ? { bio: values.bio.trim() } : {}),
           isAdmin: values.isAdmin,
+          ...(values.email?.trim() ? { email: values.email.trim() } : {}),
           ...(values.googleSub?.trim() ? { googleSub: values.googleSub.trim() } : {}),
           ...(values.profilePictureMediaId?.trim()
             ? { profilePictureMediaId: values.profilePictureMediaId.trim() }
@@ -184,6 +189,25 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                         placeholder='Short bio (optional)'
                         className='col-span-4'
                         autoComplete='off'
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className='col-span-4 col-start-3' />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='email'
+                render={({ field }) => (
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='col-span-2 text-right'>
+                      Email
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder='name@example.com'
+                        className='col-span-4'
                         {...field}
                       />
                     </FormControl>

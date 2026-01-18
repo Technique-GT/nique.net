@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import articleService from '../services/articleService';
-import type { Post } from '../types/article';
-import { mapArticleToPost } from '../utils/articleMapping';
+import type { ArticleDocument } from '../types/article';
+import { getArticleCategoryName, getArticleLink } from '../utils/articlePresentation';
 
 const PAGE_SIZE = 8;
 
@@ -18,7 +18,7 @@ function InfiniteScrollModule({ categoryId, startPage = 1 }: InfiniteScrollModul
   const navigate = useNavigate();
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const [articles, setArticles] = useState<Post[]>([]);
+  const [articles, setArticles] = useState<ArticleDocument[]>([]);
   const [page, setPage] = useState(startPage);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,10 +55,9 @@ function InfiniteScrollModule({ categoryId, startPage = 1 }: InfiniteScrollModul
 
         if (!isCurrent) return;
 
-        const mappedArticles = (response.data || []).map(mapArticleToPost);
-        
         // On first page, replace; on subsequent pages, append
-        setArticles((prev) => (page === startPage ? mappedArticles : [...prev, ...mappedArticles]));
+        const nextArticles = response.data || [];
+        setArticles((prev) => (page === startPage ? nextArticles : [...prev, ...nextArticles]));
         setTotalPages(response.pagination?.pages || 1);
       } catch (fetchError) {
         if (!isCurrent || controller.signal.aborted) return;
@@ -110,11 +109,12 @@ function InfiniteScrollModule({ categoryId, startPage = 1 }: InfiniteScrollModul
     };
   }, [requestNextPage, supportsIntersectionObserver]);
 
-  const renderArticle = (article: Post) => {
-    const link = article.categorySlug && article.slug ? `/${article.categorySlug}/${article.slug}` : `/${article.id}`;
+  const renderArticle = (article: ArticleDocument) => {
+    const link = getArticleLink(article);
+    const category = getArticleCategoryName(article);
     return (
       <article
-        key={article.id}
+        key={article._id || article.slug}
         className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md cursor-pointer"
         onClick={() => navigate(link)}
       >
@@ -123,7 +123,7 @@ function InfiniteScrollModule({ categoryId, startPage = 1 }: InfiniteScrollModul
             const rawDate = article.publishedAt ?? article.createdAt ?? Date.now();
             return new Date(rawDate).toLocaleDateString();
           })()}{' '}
-          &#8226; {article.category}
+          &#8226; {category}
         </p>
         <h3 className="mt-1 text-xl font-semibold text-nique-blue">{article.title}</h3>
         {article.excerpt && <h6 className="text-sm text-slate-600">{article.excerpt}</h6>}

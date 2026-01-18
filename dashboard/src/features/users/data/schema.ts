@@ -11,6 +11,7 @@ const userSchema = z.object({
   name: z.string(),
   bio: z.string().optional(),
   isAdmin: z.boolean(),
+  email: z.string().email().optional(),
   googleSub: z.string().optional(),
   profilePictureMediaId: z.string().optional(),
   socialLinks: z.array(socialLinkSchema),

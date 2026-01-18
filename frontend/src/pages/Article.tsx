@@ -7,8 +7,7 @@ import Comment from "../components/Comment";
 import Spinner from "../components/Spinner";
 import articleService from "../services/articleService";
 import commentService from "../services/commentService";
-import { ArticleDocument, Post, User, Comment as CommentType } from "../types/article";
-import { mapArticleToPost } from "../utils/articleMapping";
+import { ArticleDocument, User, Comment as CommentType } from "../types/article";
 
 /**
  * Map API comment (backend shape) to display format.
@@ -69,7 +68,7 @@ export default function Article() {
   }, [id, slug]);
   const [isLoading, setIsLoading] = useState(true);
   const [article, setArticle] = useState<ArticleDocument | null>(null);
-  const [relatedArticles, setRelatedArticles] = useState<Post[]>([]);
+  const [relatedArticles, setRelatedArticles] = useState<ArticleDocument[]>([]);
   const [comments, setComments] = useState<DisplayComment[]>([]);
   const [numCommentsToView, setNumCommentsToView] = useState(5);
   const [commentsSortBy, setCommentsSort] = useState<"Best" | "Newest" | "Oldest">("Best");
@@ -111,11 +110,8 @@ export default function Article() {
 
             const fetchedArticleId = fetchedArticle._id || "";
 
-            const mappedRelated = relatedArticles
-              .filter((item) => item._id !== fetchedArticleId)
-              .map(mapArticleToPost);
-
-            setRelatedArticles(mappedRelated);
+            const filteredRelated = relatedArticles.filter((item) => item._id !== fetchedArticleId);
+            setRelatedArticles(filteredRelated);
           } catch (relatedErr) {
             console.warn("Unable to load related articles", relatedErr);
             setRelatedArticles([]);
@@ -262,6 +258,10 @@ export default function Article() {
 
   // backend uses tagIds, not tags
   const tagsDisplay = article.tagIds?.map((tag) => tag.name).filter(Boolean).join(" • ");
+  const featuredMedia =
+    article.featuredMediaId && typeof article.featuredMediaId === "object"
+      ? article.featuredMediaId
+      : null;
 
   return (
     <>
@@ -285,13 +285,13 @@ export default function Article() {
         </header>
 
         {/* Featured Image - backend uses featuredMediaId, not featuredImage */}
-        {article.featuredMediaId && (
+        {featuredMedia && (
           <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
             <img
               className="w-full aspect-3/2 object-cover rounded-md"
-              src={article.featuredMediaId.url}
+              src={featuredMedia.url}
               loading="lazy"
-              alt={article.featuredMediaId.altText || article.title}
+              alt={featuredMedia.altText || article.title}
             />
             {article.imageCaption && (
               <figcaption className="w-full text-xs text-nique-blue mt-2">
@@ -315,8 +315,8 @@ export default function Article() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-nique-blue">Related Articles</h2>
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-              {relatedArticles.map((related, index) => (
-                <ArticleBlock key={index} post={related} height="230px" />
+              {relatedArticles.map((related) => (
+                <ArticleBlock key={related._id || related.slug} article={related} height="230px" />
               ))}
             </div>
           </section>
