@@ -12,7 +12,7 @@ interface ArticleTableProps {
   filteredArticles: Article[];
   loading: boolean;
   getAuthorName: (author: PopulatedAuthor) => string;
-  getStatusVariant: (status: string) => "default" | "secondary" | "outline";
+  getStatusVariant: (status: string) => "default" | "secondary" | "outline" | "destructive";
   formatDate: (dateString: string) => string;
   publishingArticle: string | null;
   featuringArticle: string | null;
@@ -145,9 +145,16 @@ export function ArticleTable({
                 {article.category?.name || 'Unknown'}
               </TableCell>
               <TableCell>
-                <Badge variant={getStatusVariant(article.status)}>
-                  {article.status}
-                </Badge>
+                <div className="flex flex-col gap-1">
+                  <Badge variant={getStatusVariant(article.reviewStatus || article.status)}>
+                    {article.reviewStatus || article.status}
+                  </Badge>
+                  {article.hasPendingChanges && article.reviewStatus === 'published' && (
+                    <Badge variant="outline" className="text-[10px] border-orange-200 bg-orange-50 text-orange-700 w-fit">
+                      Pending Changes
+                    </Badge>
+                  )}
+                </div>
               </TableCell>
               <TableCell>{formatDate(article.createdAt)}</TableCell>
               <TableCell>{article.views}</TableCell>

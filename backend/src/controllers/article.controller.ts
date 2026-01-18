@@ -43,12 +43,8 @@ const populateArticleForFeed = (query: any) =>
     .populate('authors.authorId', 'name profilePictureMediaId')
     .populate('featuredMediaId', 'url altText');
 
-const parsePublished = (body: any): boolean => {
-  if (typeof body?.published === 'boolean') return body.published;
-  if (typeof body?.isPublished === 'boolean') return body.isPublished;
-  if (typeof body?.status === 'string') return body.status === 'published';
-  return false;
-};
+// parsePublished is removed or commented out as it's no longer used in the new buildArticleUpdate logic (we check typeof directly)
+// const parsePublished = (body: any): boolean => { ... };
 
 const parsePublishedAt = (body: any, published: boolean, existingPublishedAt?: Date | null): Date | null => {
   if (body?.publishedAt instanceof Date) return body.publishedAt;
@@ -74,33 +70,39 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
   const categoryId = toObjectId(body?.categoryId ?? body?.category) ?? undefined;
   const subcategoryId = toObjectId(body?.subcategoryId ?? body?.subcategory) ?? undefined;
 
-  const tagIds = toObjectIdArray(body?.tagIds ?? body?.tags);
+  // Only update tagIds if present in body
+  let tagIds: mongoose.Types.ObjectId[] | undefined;
+  if (body?.tagIds !== undefined || body?.tags !== undefined) {
+    tagIds = toObjectIdArray(body?.tagIds ?? body?.tags);
+  }
 
   // Authors can come as string[] or [{authorId, order}]
   let authors: any[] | undefined;
-  if (Array.isArray(body?.authors)) {
-    if (body.authors.length > 0 && typeof body.authors[0] === 'object' && body.authors[0] !== null && (body.authors[0] as any).authorId) {
-      authors = body.authors
-        .map((a: any, idx: number) => {
-          const authorId = toObjectId(a?.authorId);
-          if (!authorId) return null;
-          const order = typeof a?.order === 'number' ? a.order : idx;
-          return { authorId, order };
-        })
-        .filter(Boolean);
-    } else {
-      const ids = toObjectIdArray(body.authors);
+  if (body?.authors !== undefined || body?.authorIds !== undefined) {
+    if (Array.isArray(body?.authors)) {
+      if (body.authors.length > 0 && typeof body.authors[0] === 'object' && body.authors[0] !== null && (body.authors[0] as any).authorId) {
+        authors = body.authors
+          .map((a: any, idx: number) => {
+            const authorId = toObjectId(a?.authorId);
+            if (!authorId) return null;
+            const order = typeof a?.order === 'number' ? a.order : idx;
+            return { authorId, order };
+          })
+          .filter(Boolean);
+      } else {
+        const ids = toObjectIdArray(body.authors);
+        authors = ids.map((authorId, idx) => ({ authorId, order: idx }));
+      }
+    } else if (Array.isArray(body?.authorIds)) {
+      const ids = toObjectIdArray(body.authorIds);
       authors = ids.map((authorId, idx) => ({ authorId, order: idx }));
     }
-  } else if (Array.isArray(body?.authorIds)) {
-    const ids = toObjectIdArray(body.authorIds);
-    authors = ids.map((authorId, idx) => ({ authorId, order: idx }));
   }
 
   const featuredMediaId = toObjectId(body?.featuredMediaId) ?? undefined;
   const imageCaption = typeof body?.imageCaption === 'string' ? body.imageCaption : undefined;
 
-  const published = parsePublished(body);
+  const published = typeof body?.published === 'boolean' ? body.published : undefined;
   const allowComments = typeof body?.allowComments === 'boolean' ? body.allowComments : undefined;
   const isFeatured = typeof body?.isFeatured === 'boolean' ? body.isFeatured : undefined;
   const isSticky = typeof body?.isSticky === 'boolean' ? body.isSticky : undefined;
@@ -108,7 +110,11 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
   const editorState = body?.editorState;
   const reviewStatus = body?.reviewStatus;
 
-  const publishedAt = parsePublishedAt(body, published, existing?.publishedAt ?? null);
+  // Only update publishedAt if published state is explicitly changing to true
+  let publishedAt = undefined;
+  if (published === true) {
+    publishedAt = parsePublishedAt(body, true, existing?.publishedAt ?? null);
+  }
 
   const update: Partial<IArticle> = {};
 
@@ -128,23 +134,97 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
   if (editorState !== undefined) update.editorState = editorState;
   if (reviewStatus !== undefined) update.reviewStatus = reviewStatus;
 
-  update.published = published;
-  update.publishedAt = publishedAt;
+  if (published !== undefined) {
+    update.published = published;
+    if (publishedAt !== undefined) {
+      update.publishedAt = publishedAt;
+    } else if (published === false) {
+      // Keep publishedAt if unpublishing? Usually null it out or keep as "last published"
+      // Current logic was: update.publishedAt = null
+      update.publishedAt = null;
+    }
+  }
 
   if (allowComments !== undefined) update.allowComments = allowComments;
 
   // Featured/sticky rules: only published articles can be featured/sticky
-  const basePublished = published;
-  if (isFeatured !== undefined) update.isFeatured = basePublished ? isFeatured : false;
-  if (isSticky !== undefined) update.isSticky = basePublished ? isSticky : false;
+  // If published is changing to false, force featured/sticky off
+  // If published is not present but existing is false, force featured/sticky off if they are being set to true (validation)
+  // But simpler: just enforce consistency based on resulting state.
+  
+  const resultingPublished = published !== undefined ? published : existing?.published ?? false;
 
-  if (!basePublished) {
+  if (isFeatured !== undefined) {
+    update.isFeatured = resultingPublished ? isFeatured : false;
+  } else if (!resultingPublished && existing?.isFeatured) {
     update.isFeatured = false;
+  }
+
+  if (isSticky !== undefined) {
+    update.isSticky = resultingPublished ? isSticky : false;
+  } else if (!resultingPublished && existing?.isSticky) {
     update.isSticky = false;
-    update.publishedAt = null;
+  }
+  
+  if (!resultingPublished && (update.published === false || existing?.published)) {
+     if (update.publishedAt === undefined) {
+         update.publishedAt = null;
+     }
   }
 
   return update;
+};
+
+const idsAreEqual = (id1: any, id2: any): boolean => {
+  if (!id1 && !id2) return true;
+  if (!id1 || !id2) return false;
+  return id1.toString() === id2.toString();
+};
+
+const arraysAreEqual = (arr1: any[], arr2: any[], comparator: (a: any, b: any) => boolean): boolean => {
+  if (!arr1 && !arr2) return true;
+  if (!arr1 || !arr2) return false;
+  if (arr1.length !== arr2.length) return false;
+  return arr1.every((item, index) => comparator(item, arr2[index]));
+};
+
+const hasArticleChanged = (existing: IArticle, update: Partial<IArticle>): boolean => {
+  if (update.title !== undefined && update.title !== existing.title) return true;
+  // Content can be large, but string comparison is efficient enough
+  if (update.content !== undefined && update.content !== existing.content) return true;
+  if (update.excerpt !== undefined && update.excerpt !== existing.excerpt) return true;
+
+  if ('categoryId' in update && !idsAreEqual(update.categoryId, existing.categoryId)) return true;
+  if ('subcategoryId' in update && !idsAreEqual(update.subcategoryId, existing.subcategoryId)) return true;
+  if ('featuredMediaId' in update && !idsAreEqual(update.featuredMediaId, existing.featuredMediaId)) return true;
+
+  if (update.tagIds && !arraysAreEqual(update.tagIds, existing.tagIds, idsAreEqual)) return true;
+
+  if (update.authors) {
+      // Check if authors array changed. Note: existing.authors contains { authorId, order, _id }.
+      // update.authors contains { authorId, order }.
+      const authorsChanged = !arraysAreEqual(update.authors, existing.authors, (a, b) => {
+          return idsAreEqual(a.authorId, b.authorId) && a.order === b.order;
+      });
+      if (authorsChanged) return true;
+  }
+
+  if (update.editorState) {
+      // Deep compare editorState (JSON)
+      // Note: This relies on key order being deterministic in JSON.stringify which isn't guaranteed,
+      // but for Lexical state produced by same client, it's often consistent enough.
+      // A better approach would be deep object equality, but JSON stringify is a quick proxy.
+      try {
+        if (JSON.stringify(update.editorState) !== JSON.stringify(existing.editorState)) return true;
+      } catch (e) {
+        // If stringify fails or circular, assume changed
+        return true;
+      }
+  }
+  
+  if (update.imageCaption !== undefined && update.imageCaption !== existing.imageCaption) return true;
+
+  return false;
 };
 
 export const createArticle = async (req: Request, res: Response): Promise<void> => {
@@ -204,9 +284,10 @@ export const createArticle = async (req: Request, res: Response): Promise<void> 
   }
 };
 
-export const getArticles = async (req: Request, res: Response): Promise<void> => {
+export const getArticles = async (req: any, res: Response): Promise<void> => {
   try {
-    const { page = '1', limit = '20', search } = req.query;
+    // In case validateQuery mutation fails or behaves unexpectedly, allow safe parsing
+    const { page, limit, search } = req.query;
 
     const filter: any = {};
     if (typeof search === 'string' && search.trim().length > 0) {
@@ -214,8 +295,23 @@ export const getArticles = async (req: Request, res: Response): Promise<void> =>
       filter.$or = [{ title: rx }, { excerpt: rx }];
     }
 
-    const pageNum = Math.max(parseInt(page as string, 10) || 1, 1);
-    const limitNum = Math.max(parseInt(limit as string, 10) || 20, 1);
+    // Filter for non-admins: only show owned or authored articles
+    if (!req.user.isAdmin) {
+      const userId = new mongoose.Types.ObjectId(req.user.id);
+      if (filter.$or) {
+        // combine search with ownership check
+        filter.$and = [
+          { $or: filter.$or },
+          { $or: [{ ownerId: userId }, { 'authors.authorId': userId }] }
+        ];
+        delete filter.$or;
+      } else {
+        filter.$or = [{ ownerId: userId }, { 'authors.authorId': userId }];
+      }
+    }
+
+    const pageNum = Math.max(Number(page) || 1, 1);
+    const limitNum = Math.max(Number(limit) || 20, 1);
     const skip = (pageNum - 1) * limitNum;
 
     const [articles, total] = await Promise.all([
@@ -424,6 +520,21 @@ export const updateArticle = async (req: any, res: Response): Promise<void> => {
       delete update.published;
       delete update.isFeatured;
       delete update.isSticky;
+      delete update.reviewStatus; // Ensure non-admins use transitions
+    }
+
+    // Logic for pending changes on published articles
+    if (existing.published) {
+       // Check for actual changes before flagging as pending
+       const hasChanges = hasArticleChanged(existing, update);
+
+       if (hasChanges) {
+           update.hasPendingChanges = true;
+           // If not admin, force status change to ensure re-review
+           if (!req.user.isAdmin) {
+             update.reviewStatus = 'changes_requested';
+           }
+       }
     }
 
     const article = await Article.findByIdAndUpdate(id, update, { new: true, runValidators: true });
@@ -461,8 +572,13 @@ export const deleteArticle = async (req: any, res: Response): Promise<void> => {
   }
 };
 
-export const toggleFeatured = async (req: Request, res: Response): Promise<void> => {
+export const toggleFeatured = async (req: any, res: Response): Promise<void> => {
   try {
+    if (!canPublishArticle(req.user)) {
+      res.status(403).json({ success: false, message: 'Only admins can toggle featured' });
+      return;
+    }
+
     const article = await Article.findById(req.params.id);
     if (!article) {
       res.status(404).json({ success: false, message: 'Article not found' });
@@ -489,8 +605,13 @@ export const toggleFeatured = async (req: Request, res: Response): Promise<void>
   }
 };
 
-export const toggleSticky = async (req: Request, res: Response): Promise<void> => {
+export const toggleSticky = async (req: any, res: Response): Promise<void> => {
   try {
+    if (!canPublishArticle(req.user)) {
+      res.status(403).json({ success: false, message: 'Only admins can toggle sticky' });
+      return;
+    }
+
     const article = await Article.findById(req.params.id);
     if (!article) {
       res.status(404).json({ success: false, message: 'Article not found' });
@@ -517,8 +638,13 @@ export const toggleSticky = async (req: Request, res: Response): Promise<void> =
   }
 };
 
-export const updateArticleStatus = async (req: Request, res: Response): Promise<void> => {
+export const updateArticleStatus = async (req: any, res: Response): Promise<void> => {
   try {
+    if (!canPublishArticle(req.user)) {
+      res.status(403).json({ success: false, message: 'Only admins can update article status' });
+      return;
+    }
+
     const { id } = req.params;
     const { status, isFeatured, isSticky } = req.body;
 
@@ -535,6 +661,15 @@ export const updateArticleStatus = async (req: Request, res: Response): Promise<
       published = status === 'published';
       updateData.published = published;
       updateData.publishedAt = published ? article.publishedAt ?? new Date() : null;
+
+      if (published) {
+        updateData.reviewStatus = 'published';
+        updateData.hasPendingChanges = false;
+        updateData.reviewedAt = new Date();
+        updateData.reviewedBy = req.user.id;
+      } else {
+        updateData.reviewStatus = 'draft';
+      }
 
       if (!published) {
         updateData.isFeatured = false;
@@ -556,6 +691,13 @@ export const updateArticleStatus = async (req: Request, res: Response): Promise<
         return;
       }
       updateData.isSticky = isSticky;
+    }
+
+    // Final consistency check: if not published (either by this request or existing state), force flags off
+    // "published" variable holds the *intended* state for this request (or existing if not changing)
+    if (!published) {
+      updateData.isFeatured = false;
+      updateData.isSticky = false;
     }
 
     const updatedArticle = await Article.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
@@ -624,6 +766,14 @@ export const requestReview = async (req: any, res: Response): Promise<void> => {
       return;
     }
 
+    if (article.reviewStatus !== 'draft' && article.reviewStatus !== 'changes_requested') {
+      // Allow re-requesting if published but has pending changes
+      if (!(article.reviewStatus === 'published' && article.hasPendingChanges)) {
+         res.status(400).json({ success: false, message: 'Article is already in review or published' });
+         return;
+      }
+    }
+
     if (article.ownerId.toString() !== req.user.id && !req.user.isAdmin) {
       res.status(403).json({ success: false, message: 'Only the owner can request review' });
       return;
@@ -646,12 +796,34 @@ export const unrequestReview = async (req: any, res: Response): Promise<void> =>
       return;
     }
 
+    if (article.reviewStatus !== 'in_review') {
+      res.status(400).json({ success: false, message: 'Article is not in review' });
+      return;
+    }
+
     if (article.ownerId.toString() !== req.user.id && !req.user.isAdmin) {
       res.status(403).json({ success: false, message: 'Only the owner can unrequest review' });
       return;
     }
 
-    article.reviewStatus = 'draft';
+    if (article.published) {
+      // If it was published but in review (e.g. pending changes), revert to published
+      // Wait, if it has pending changes, "unrequest review" means "keep pending changes but stop reviewing"
+      // or "discard pending changes"?
+      // Usually "Withdraw review request" -> returns to "In Progress" (Changes Requested / Draft).
+      // If published, it should go back to 'changes_requested' (if changes exist) or 'published' (if no changes?)
+      // But we only allow request review if pending changes exist on published.
+      // So let's revert to 'changes_requested' to imply "still working on it".
+    if (article.reviewStatus !== 'in_review') {
+      res.status(400).json({ success: false, message: 'Article is not in review' });
+      return;
+    }
+
+    article.reviewStatus = 'changes_requested';
+    } else {
+      article.reviewStatus = 'draft';
+    }
+    
     await article.save();
 
     res.json({ success: true, message: 'Review cancelled', data: article });
@@ -675,7 +847,10 @@ export const adminPublish = async (req: any, res: Response): Promise<void> => {
 
     article.published = true;
     article.reviewStatus = 'published';
+    article.hasPendingChanges = false;
     article.publishedAt = article.publishedAt || new Date();
+    article.reviewedAt = new Date();
+    article.reviewedBy = req.user.id;
     await article.save();
 
     res.json({ success: true, message: 'Article published', data: article });
@@ -706,6 +881,36 @@ export const adminUnpublish = async (req: any, res: Response): Promise<void> => 
     res.json({ success: true, message: 'Article unpublished', data: article });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'Error unpublishing article', error: error.message });
+  }
+};
+
+export const requestChanges = async (req: any, res: Response): Promise<void> => {
+  try {
+    if (!canPublishArticle(req.user)) { // Assume admins/editors can request changes
+      res.status(403).json({ success: false, message: 'Only admins can request changes' });
+      return;
+    }
+
+    const article = await Article.findById(req.params.id);
+    if (!article) {
+      res.status(404).json({ success: false, message: 'Article not found' });
+      return;
+    }
+
+    if (article.reviewStatus !== 'in_review') {
+      res.status(400).json({ success: false, message: 'Article is not in review' });
+      return;
+    }
+
+    article.reviewStatus = 'changes_requested';
+    if (req.body.reviewNotes) {
+      article.reviewNotes = req.body.reviewNotes;
+    }
+    await article.save();
+
+    res.json({ success: true, message: 'Changes requested', data: article });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Error requesting changes', error: error.message });
   }
 };
 

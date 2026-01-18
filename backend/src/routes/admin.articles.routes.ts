@@ -8,6 +8,7 @@ import {
   getAdminArticleById,
   getArticles,
   requestReview,
+  requestChanges,
   toggleFeatured,
   toggleSticky,
   transferOwnership,
@@ -32,6 +33,7 @@ router.get('/articles/:id', validateParams(idParamSchema), getAdminArticleById);
 router.put('/articles/:id', validateParams(idParamSchema), validateBody(updateArticleBodySchema), updateArticle);
 
 router.post('/articles/:id/request-review', validateParams(idParamSchema), requestReview);
+router.post('/articles/:id/request-changes', validateParams(idParamSchema), requestChanges);
 router.post('/articles/:id/unrequest-review', validateParams(idParamSchema), unrequestReview);
 router.post('/articles/:id/publish', validateParams(idParamSchema), adminPublish);
 router.post('/articles/:id/unpublish', validateParams(idParamSchema), adminUnpublish);

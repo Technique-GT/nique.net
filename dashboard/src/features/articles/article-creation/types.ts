@@ -62,7 +62,11 @@ export interface Article {
   collaborators: Collaborator[];
   ownerId?: string;
   editorState?: any;
-  reviewStatus?: 'draft' | 'in_review' | 'published';
+  reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published';
+  hasPendingChanges?: boolean;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
   featuredMedia: {
     id: string;
     url: string;

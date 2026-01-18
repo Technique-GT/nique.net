@@ -22,7 +22,7 @@ interface ArticleDialogsProps {
   
   // Functions
   getAuthorName: (author: PopulatedAuthor) => string;
-  getStatusVariant: (status: string) => "default" | "secondary" | "outline";
+  getStatusVariant: (status: string) => "default" | "secondary" | "outline" | "destructive";
   formatDate: (dateString: string) => string;
   confirmDelete: () => void;
 }
@@ -96,9 +96,16 @@ export function ArticleDialogs({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-muted-foreground">Status</Label>
-                  <Badge variant={getStatusVariant(currentArticle.status)}>
-                    {currentArticle.status}
-                  </Badge>
+                  <div className="flex flex-col gap-1 items-start">
+                    <Badge variant={getStatusVariant(currentArticle.reviewStatus || currentArticle.status)}>
+                      {currentArticle.reviewStatus || currentArticle.status}
+                    </Badge>
+                     {currentArticle.hasPendingChanges && currentArticle.reviewStatus === 'published' && (
+                        <Badge variant="outline" className="text-[10px] border-orange-200 bg-orange-50 text-orange-700">
+                          Pending Changes
+                        </Badge>
+                      )}
+                  </div>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Created</Label>

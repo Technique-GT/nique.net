@@ -46,6 +46,9 @@ interface ArticleFormProps {
   isLoadingData?: boolean;
 }
 
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/hooks/use-queries";
+
 export default function ArticleForm({
   categories,
   subcategories,
@@ -57,6 +60,7 @@ export default function ArticleForm({
   isLoadingData,
 }: ArticleFormProps) {
   const { user: me } = useAuthStore((state) => state.auth);
+  const queryClient = useQueryClient();
 
   const [title, setTitle] = useState(initialArticle?.title || "");
   const [content, setContent] = useState<SerializedEditorState | undefined>(
@@ -84,8 +88,9 @@ export default function ArticleForm({
   const [isFeatured, setIsFeatured] = useState(initialArticle?.isFeatured || false);
   const [isSticky, setIsSticky] = useState(initialArticle?.isSticky || false);
   const [reviewStatus, setReviewStatus] = useState<
-    "draft" | "in_review" | "published"
+    "draft" | "in_review" | "changes_requested" | "published"
   >(initialArticle?.reviewStatus || "draft");
+  const [hasPendingChanges, setHasPendingChanges] = useState(initialArticle?.hasPendingChanges || false);
 
   const isOwner = me?.id === initialArticle?.ownerId;
   const isAdmin = !!me?.isAdmin;
@@ -107,6 +112,7 @@ export default function ArticleForm({
       setIsFeatured(initialArticle.isFeatured || false);
       setIsSticky(initialArticle.isSticky || false);
       setReviewStatus(initialArticle.reviewStatus || "draft");
+      setHasPendingChanges(initialArticle.hasPendingChanges || false);
       setEditorResetKey((prev) => prev + 1);
     }
   }, [initialArticle]);
@@ -279,6 +285,12 @@ export default function ArticleForm({
          };
 
          await apiClient.put(`/admin/articles/${initialArticle._id}`, articleData);
+         
+         // Invalidate query to keep state fresh, but do it silently without triggering loading states if possible.
+         // However, useAdminArticle has staleTime: 0, so invalidating will trigger refetch.
+         // This might cause UI flicker if not handled gracefully, but ensures consistency.
+         await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
+
        } catch (error) {
          console.error('Autosave failed:', error);
        }
@@ -338,6 +350,7 @@ export default function ArticleForm({
       setIsSubmitting(true);
       await apiClient.post(`/admin/articles/${initialArticle._id}/request-review`);
       setReviewStatus('in_review');
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Review requested");
     } catch (error) {
       console.error('Failed to request review:', error);
@@ -353,10 +366,29 @@ export default function ArticleForm({
       setIsSubmitting(true);
       await apiClient.post(`/admin/articles/${initialArticle._id}/unrequest-review`);
       setReviewStatus('draft');
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Review cancelled");
     } catch (error) {
       console.error('Failed to cancel review:', error);
       toast.error("Failed to cancel review");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRequestChanges = async () => {
+    if (!initialArticle?._id) return;
+    // Prompt for notes? For now just simple request
+    const notes = prompt("Enter notes for requested changes (optional):");
+    try {
+      setIsSubmitting(true);
+      await apiClient.post(`/admin/articles/${initialArticle._id}/request-changes`, { reviewNotes: notes });
+      setReviewStatus('changes_requested');
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
+      toast.success("Changes requested");
+    } catch (error) {
+      console.error('Failed to request changes:', error);
+      toast.error("Failed to request changes");
     } finally {
       setIsSubmitting(false);
     }
@@ -369,6 +401,8 @@ export default function ArticleForm({
       await apiClient.post(`/admin/articles/${initialArticle._id}/publish`);
       setReviewStatus('published');
       setIsPublished(true);
+      setHasPendingChanges(false);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Article published");
     } catch (error) {
       console.error('Failed to publish:', error);
@@ -385,6 +419,7 @@ export default function ArticleForm({
       await apiClient.post(`/admin/articles/${initialArticle._id}/unpublish`);
       setReviewStatus('draft');
       setIsPublished(false);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Article unpublished");
     } catch (error) {
       console.error('Failed to unpublish:', error);
@@ -611,6 +646,8 @@ export default function ArticleForm({
 
       await apiClient.put(`/admin/articles/${initialArticle._id}`, articleData);
 
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
+
       setSubmitMessage({ type: 'success', message: 'Changes saved.' });
     } catch (error: any) {
       console.error('Save failed:', error);
@@ -692,6 +729,18 @@ export default function ArticleForm({
               <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-2 rounded-md flex items-center gap-2">
                 <Info className="w-4 h-4" />
                 <span className="text-sm">This article is currently locked for review.</span>
+              </div>
+            )}
+            {reviewStatus === 'changes_requested' && (
+              <div className="bg-orange-50 border border-orange-200 text-orange-800 px-4 py-2 rounded-md flex items-center gap-2">
+                <Info className="w-4 h-4" />
+                <span className="text-sm">Changes requested by admin. {initialArticle?.reviewNotes ? `Note: ${initialArticle.reviewNotes}` : ''}</span>
+              </div>
+            )}
+            {hasPendingChanges && reviewStatus === 'published' && (
+              <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-md flex items-center gap-2">
+                <Info className="w-4 h-4" />
+                <span className="text-sm">This article has pending changes that are not yet live. Request review to publish updates.</span>
               </div>
             )}
             <div className="space-y-2">
@@ -1048,44 +1097,35 @@ export default function ArticleForm({
                 </div>
 
                 {/* New Featured and Sticky Controls */}
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="publish"
-                      checked={isPublished}
-                      disabled={!isAdmin}
-                      onCheckedChange={setIsPublished}
-                    />
-                    <Label htmlFor="publish">Published</Label>
-                    {!isAdmin && <span className="text-xs text-muted-foreground ml-1">(Admin only)</span>}
-                  </div>
+                {isAdmin && (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="featured"
+                        checked={isFeatured}
+                        onCheckedChange={setIsFeatured}
+                        disabled={!isPublished || !isAdmin}
+                      />
+                      <Label htmlFor="featured" className={(!isPublished || !isAdmin) ? "text-muted-foreground" : ""}>
+                        Featured article
+                        {(!isPublished) && <span className="text-xs text-muted-foreground ml-1">(requires publishing)</span>}
+                      </Label>
+                    </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="featured"
-                      checked={isFeatured}
-                      onCheckedChange={setIsFeatured}
-                      disabled={!isPublished || !isAdmin}
-                    />
-                    <Label htmlFor="featured" className={(!isPublished || !isAdmin) ? "text-muted-foreground" : ""}>
-                      Featured article
-                      {(!isPublished || !isAdmin) && <span className="text-xs text-muted-foreground ml-1">(requires publishing & admin)</span>}
-                    </Label>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="sticky"
+                        checked={isSticky}
+                        onCheckedChange={setIsSticky}
+                        disabled={!isPublished || !isAdmin}
+                      />
+                      <Label htmlFor="sticky" className={(!isPublished || !isAdmin) ? "text-muted-foreground" : ""}>
+                        Sticky article (pinned to top)
+                        {(!isPublished) && <span className="text-xs text-muted-foreground ml-1">(requires publishing)</span>}
+                      </Label>
+                    </div>
                   </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="sticky"
-                      checked={isSticky}
-                      onCheckedChange={setIsSticky}
-                      disabled={!isPublished || !isAdmin}
-                    />
-                    <Label htmlFor="sticky" className={(!isPublished || !isAdmin) ? "text-muted-foreground" : ""}>
-                      Sticky article (pinned to top)
-                      {(!isPublished || !isAdmin) && <span className="text-xs text-muted-foreground ml-1">(requires publishing & admin)</span>}
-                    </Label>
-                  </div>
-                </div>
+                )}
 
                 <div className="flex flex-wrap gap-4">
                   {/* Common Save/Create button (only for drafts/published, not in_review unless admin) */}
@@ -1102,7 +1142,8 @@ export default function ArticleForm({
                   {/* Workflow buttons */}
                   {initialArticle?._id && (
                     <>
-                      {reviewStatus === 'draft' && (isOwner || isAdmin) && (
+                      {/* Request Review: Available if draft, changes_requested, or if published with pending changes (and not already in review) */}
+                      {reviewStatus !== 'in_review' && (reviewStatus === 'draft' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges)) && (isOwner || isAdmin) && (
                         <Button type="button" variant="outline" onClick={handleRequestReview} disabled={isSubmitting}>
                           Request Review
                         </Button>
@@ -1114,9 +1155,15 @@ export default function ArticleForm({
                         </Button>
                       )}
 
-                      {isAdmin && reviewStatus !== 'published' && (
+                      {isAdmin && reviewStatus === 'in_review' && (
+                         <Button type="button" variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50" onClick={handleRequestChanges} disabled={isSubmitting}>
+                           Request Changes
+                         </Button>
+                      )}
+
+                      {isAdmin && (reviewStatus === 'in_review' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges)) && (
                         <Button type="button" variant="default" className="bg-green-600 hover:bg-green-700 text-white" onClick={handleAdminPublish} disabled={isSubmitting}>
-                          Approve & Publish
+                          {reviewStatus === 'published' ? 'Publish Updates' : 'Approve & Publish'}
                         </Button>
                       )}
 

@@ -74,6 +74,13 @@ export const useArticles = () => {
       isSticky: article.isSticky || false,
       status: article.published ? 'published' : 'draft',
       allowComments: article.allowComments ?? true,
+      // Map new review fields
+      reviewStatus: article.reviewStatus,
+      hasPendingChanges: article.hasPendingChanges,
+      reviewedAt: article.reviewedAt,
+      reviewedBy: article.reviewedBy,
+      reviewNotes: article.reviewNotes,
+
       slug: article.slug || '',
       views: article.viewCount || 0,
       viewCount: article.viewCount || 0,

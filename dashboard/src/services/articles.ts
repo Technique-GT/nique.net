@@ -17,6 +17,11 @@ export type BackendArticle = {
   updatedAt: string
   viewCount?: number
   categoryId?: { _id: string; name: string; slug: string } | string | null
+  reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published'
+  hasPendingChanges?: boolean
+  reviewedAt?: string
+  reviewedBy?: string
+  reviewNotes?: string
 }
 
 export type Pagination = {

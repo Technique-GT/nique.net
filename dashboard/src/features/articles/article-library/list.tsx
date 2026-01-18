@@ -249,6 +249,8 @@ export default function ArticleList() {
     switch (status) {
       case "published": return "default";
       case "draft": return "secondary";
+      case "in_review": return "outline"; // Should probably be visually distinct in badge impl
+      case "changes_requested": return "destructive";
       default: return "outline";
     }
   };
