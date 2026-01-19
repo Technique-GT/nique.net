@@ -277,31 +277,13 @@ export default function Categories() {
               </Badge>
             ) : null
           }
-      />
-
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <CardTitle>Manage Taxonomy</CardTitle>
-            
-            <div className="flex flex-col sm:flex-row gap-4 flex-1 justify-end w-full sm:w-auto">
-              <div className="relative w-full sm:w-64">
-                <Label htmlFor="search-categories" className="sr-only">Search</Label>
-                <Input
-                  id="search-categories"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search categories..."
-                  className="pl-10"
-                />
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              </div>
-
-              {/* Category Dialog */}
-              {isAdmin && (
+          actions={
+            isAdmin ? (
+              <div className="flex gap-2">
+                {/* Category Dialog */}
                 <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={openCreateCategoryDialog}>
+                    <Button onClick={openCreateCategoryDialog} variant="outline">
                       <Plus className="w-4 h-4 mr-2" />
                       Add Category
                     </Button>
@@ -350,13 +332,11 @@ export default function Categories() {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-              )}
 
-              {/* SubCategory Dialog */}
-              {isAdmin && (
+                {/* SubCategory Dialog */}
                 <Dialog open={isSubCategoryDialogOpen} onOpenChange={setIsSubCategoryDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={openCreateSubCategoryDialog} variant="outline">
+                    <Button onClick={openCreateSubCategoryDialog}>
                       <Plus className="w-4 h-4 mr-2" />
                       Add Subcategory
                     </Button>
@@ -423,7 +403,26 @@ export default function Categories() {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-              )}
+              </div>
+            ) : null
+          }
+      />
+
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <CardTitle>Manage Taxonomy</CardTitle>
+            
+            <div className="relative w-full sm:w-64">
+              <Label htmlFor="search-categories" className="sr-only">Search</Label>
+              <Input
+                id="search-categories"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search categories..."
+                className="pl-10"
+              />
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             </div>
           </div>
         </CardHeader>
