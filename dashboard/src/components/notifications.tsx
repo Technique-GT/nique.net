@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge"
 import { useEffect, useState } from "react"
 import { getNotifications, markAllNotificationsAsRead, markNotificationAsRead, Notification } from "@/services/notifications"
 import { formatDistanceToNow } from "date-fns"
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "@tanstack/react-router"
 import { cn } from "@/lib/utils"
 
 export function Notifications() {
@@ -39,8 +39,12 @@ export function Notifications() {
 
   useEffect(() => {
     fetchNotifications()
-    // Poll every minute
-    const interval = setInterval(fetchNotifications, 60000)
+    // Poll every minute if visible
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        fetchNotifications()
+      }
+    }, 60000)
     return () => clearInterval(interval)
   }, [])
 
@@ -56,7 +60,7 @@ export function Notifications() {
     }
 
     if (notification.link) {
-      navigate(notification.link)
+      navigate({ to: notification.link as any })
       setIsOpen(false)
     }
   }

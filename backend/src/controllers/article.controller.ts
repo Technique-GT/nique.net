@@ -695,7 +695,7 @@ export const updateArticleStatus = async (req: any, res: Response): Promise<void
     }
 
     // Final consistency check: if not published (either by this request or existing state), force flags off
-    // "published" variable holds the *intended* state for this request (or existing if not changing)
+      // "published" variable holds the *intended* state for this request (or existing if not changing)
     if (!published) {
       updateData.isFeatured = false;
       updateData.isSticky = false;
@@ -705,6 +705,22 @@ export const updateArticleStatus = async (req: any, res: Response): Promise<void
     if (!updatedArticle) {
       res.status(404).json({ success: false, message: 'Article not found' });
       return;
+    }
+
+    // Check if we just published it, and notify
+    // published is the intended state; check if it wasn't published before
+    if (published && !article.published) {
+        // Notify owner
+        if (updatedArticle.ownerId.toString() !== req.user.id) {
+          await NotificationService.create(
+            updatedArticle.ownerId,
+            'published',
+            'Article Published',
+            `Your article "${updatedArticle.title}" has been published!`,
+            `/articles/${updatedArticle._id}/edit`,
+            { articleId: updatedArticle._id }
+          );
+        }
     }
 
     const populatedArticle = await populateArticle(Article.findById(updatedArticle._id));

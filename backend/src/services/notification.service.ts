@@ -65,16 +65,16 @@ export class NotificationService {
    */
   static async list(userId: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
-    const [notifications, total] = await Promise.all([
+    const [notifications, total, unreadCount] = await Promise.all([
       Notification.find({ recipientId: userId })
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit),
-      Notification.countDocuments({ recipientId: userId })
+        .limit(limit)
+        .lean(),
+      Notification.countDocuments({ recipientId: userId }),
+      Notification.countDocuments({ recipientId: userId, read: false })
     ]);
     
-    const unreadCount = await Notification.countDocuments({ recipientId: userId, read: false });
-
     return { notifications, total, unreadCount };
   }
 
