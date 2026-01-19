@@ -608,13 +608,19 @@ export default function Categories() {
                       
                       return (
                         <Fragment key={category._id}>
-                          <TableRow>
+                          <TableRow 
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => toggleCategoryExpansion(category._id)}
+                          >
                             <TableCell>
                               {categorySubCategories.length > 0 && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => toggleCategoryExpansion(category._id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleCategoryExpansion(category._id);
+                                  }}
                                 >
                                   {isExpanded ? (
                                     <ChevronDown className="w-4 h-4" />
@@ -643,7 +649,10 @@ export default function Categories() {
                             </TableCell>
                             <TableCell className="text-right">
                               {isAdmin && (
-                                <div className="flex justify-end gap-2">
+                                <div 
+                                  className="flex justify-end gap-2"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
                                   <Button 
                                     variant="outline" 
                                     size="sm"
