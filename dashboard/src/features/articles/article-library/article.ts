@@ -43,7 +43,6 @@ export interface Article {
   subcategory?: PopulatedSubCategory;
   tags: PopulatedTag[];
   authors: PopulatedAuthor[];
-  collaborators: PopulatedAuthor[]; // Assuming collaborators are also authors
   ownerId?: string;
   reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published';
   hasPendingChanges?: boolean;

@@ -6,11 +6,10 @@ import { formatDistanceToNow } from "date-fns";
 import {
   useTaxonomy,
   useUsers,
-  useCollaborators,
   useMedia,
   useAdminArticle,
 } from "@/hooks/use-queries";
-import type { Category, SubCategory, Tag, Author, Collaborator, MediaItem } from "./types";
+import type { Category, SubCategory, Tag, Author, MediaItem } from "./types";
 import { useParams } from "@tanstack/react-router";
 
 export default function ArticleCreation() {
@@ -78,15 +77,13 @@ export default function ArticleCreation() {
 
   // TanStack Query hooks - all taxonomy data is persisted
   const { categories: rawCategories, subCategories: rawSubCategories, tags: rawTags, isLoading: taxonomyLoading, isError: taxonomyError } = useTaxonomy();
-  const { data: usersData, isLoading: usersLoading } = useUsers();
-  const rawUsers = usersData?.data || [];
-  const { data: collaboratorsData = [], isLoading: collabLoading } = useCollaborators();
+  const { data: usersData, isLoading: usersLoading } = useUsers({ limit: 1000 });
+  const rawUsers = usersData ?? [];
   const { data: mediaData, isLoading: mediaLoading } = useMedia({ limit: 100 });
 
   const isLoading =
     taxonomyLoading ||
     usersLoading ||
-    collabLoading ||
     mediaLoading ||
     articleLoading;
 
@@ -127,6 +124,7 @@ export default function ArticleCreation() {
         slug: sc.slug,
         description: sc.description,
         isActive: true,
+        categoryId,
         category: {
           _id: category?._id || categoryId,
           name: category?.name || 'Unknown',
@@ -177,19 +175,6 @@ export default function ArticleCreation() {
     }));
   }, [mediaData]);
 
-  // Map collaborators to expected format
-  const collaborators: Collaborator[] = useMemo(() => {
-    return collaboratorsData.map((c) => ({
-      _id: c._id,
-      name: c.name,
-      title: c.title,
-      email: c.email,
-      status: c.status,
-      joinDate: c.joinDate,
-      createdAt: c.createdAt,
-      updatedAt: c.updatedAt,
-    }));
-  }, [collaboratorsData]);
 
   if (isLoading) {
     return (
@@ -242,7 +227,6 @@ export default function ArticleCreation() {
         subcategories={subcategories}
         tags={tags}
         authors={authors}
-        collaborators={collaborators}
         mediaLibrary={mediaItems}
         initialArticle={transformedArticle as any}
         isLoadingData={isLoading}

@@ -64,7 +64,6 @@ export const useArticles = () => {
         isActive: true
       })) : [],
       authors: Array.isArray(article.authors) ? article.authors.map((a: any) => transformAuthor(a.authorId)) : [],
-      collaborators: [],
       ownerId: typeof article.ownerId === 'string' ? article.ownerId : (article.ownerId?._id || article.ownerId?.$oid),
       featuredMedia: {
         id: article.featuredMediaId?._id || article.featuredMediaId || '',
@@ -120,7 +119,7 @@ export const useArticles = () => {
   
   // Use centralized users hook (NOT persisted - PII)
   const { data: usersData } = useUsers();
-  const rawUsers = usersData?.data || [];
+  const rawUsers = usersData ?? [];
   
   // Use centralized media hook (NOT persisted - large)
   const { data: mediaData } = useMedia({ limit: 100 });

@@ -6,7 +6,6 @@ import pinoHttp from 'pino-http';
 import articleRoutes from './routes/article.routes';
 import categoryRoutes from './routes/category.routes';
 import commentRoutes from './routes/comment.routes';
-import collaboratorRoutes from './routes/collab.routes';
 import mediaRoutes from './routes/media.routes';
 import playlistRoutes from './routes/playlist.routes';
 import sliverRoutes from './routes/sliver.routes';
@@ -70,7 +69,6 @@ export function createApp() {
   app.use('/api/tags', tagRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/media', mediaRoutes);
-  app.use('/api/collaborators', collaboratorRoutes);
   app.use('/api/playlists', playlistRoutes);
   app.use('/api/slivers', sliverRoutes);
   app.use('/api/comments', commentRoutes);

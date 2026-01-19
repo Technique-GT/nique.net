@@ -14,7 +14,9 @@ export function InitialHtmlPlugin({ html }: { html: string }) {
       const parser = new DOMParser();
       const dom = parser.parseFromString(html, "text/html");
       const nodes = $generateNodesFromDOM(editor, dom);
-      $getRoot().select();
+      const root = $getRoot();
+      root.clear();
+      root.select();
       $insertNodes(nodes);
     });
 

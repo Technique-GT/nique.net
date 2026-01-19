@@ -34,7 +34,6 @@ import {
   type Article,
   type Author,
   type Category,
-  type Collaborator,
   type FieldErrorKey,
   type MediaItem,
   type SerializedEditorState,
@@ -48,7 +47,6 @@ interface ArticleFormProps {
   subcategories: SubCategory[];
   tags: Tag[];
   authors: Author[];
-  collaborators: Collaborator[];
   mediaLibrary: MediaItem[];
   initialArticle?: Article | null;
   isLoadingData?: boolean;
@@ -63,7 +61,6 @@ export default function ArticleForm({
   subcategories,
   tags,
   authors,
-  collaborators,
   mediaLibrary,
   initialArticle,
   isLoadingData,
@@ -87,9 +84,6 @@ export default function ArticleForm({
   );
   const [selectedAuthors, setSelectedAuthors] = useState<Author[]>(
     initialArticle?.authors || [],
-  );
-  const [selectedCollaborators, setSelectedCollaborators] = useState<Collaborator[]>(
-    initialArticle?.collaborators || [],
   );
   const [featuredMediaId, setFeaturedMediaId] = useState<string>(
     initialArticle?.featuredMedia?.id || "",
@@ -334,8 +328,6 @@ export default function ArticleForm({
   // Search functionality
   const [authorSearch, setAuthorSearch] = useState("");
   const [showAuthorResults, setShowAuthorResults] = useState(false);
-  const [collaboratorSearch, setCollaboratorSearch] = useState("");
-  const [showCollaboratorResults, setShowCollaboratorResults] = useState(false);
 
   // Filter authors based on search
   const filteredAuthors = useMemo(() => {
@@ -358,18 +350,6 @@ export default function ArticleForm({
       );
     });
   }, [authorSearch, authors]);
-
-  // Filter collaborators based on search
-  const filteredCollaborators = useMemo(() => {
-    if (!collaboratorSearch.trim()) return [];
-    
-    const searchTerm = collaboratorSearch.toLowerCase();
-    return collaborators.filter(collaborator => 
-      collaborator.name.toLowerCase().includes(searchTerm) ||
-      collaborator.title.toLowerCase().includes(searchTerm) ||
-      (collaborator.email && collaborator.email.toLowerCase().includes(searchTerm))
-    );
-  }, [collaboratorSearch, collaborators]);
 
   const handleRequestReview = async () => {
     if (!initialArticle?._id) return;
@@ -502,7 +482,9 @@ export default function ArticleForm({
     
     return subcategories
       .filter(sub => {
-        const catId = typeof sub.category === 'object' ? sub.category?._id : sub.category;
+        const catId =
+          sub.categoryId ??
+          (typeof sub.category === 'object' ? sub.category?._id : sub.category);
         return catId === category;
       })
       .map(sub => ({
@@ -561,24 +543,6 @@ export default function ArticleForm({
     setSelectedAuthors(prev => prev.filter(a => a._id !== authorId));
   };
 
-  // Collaborator selection functions
-  const handleCollaboratorSearch = (searchTerm: string) => {
-    setCollaboratorSearch(searchTerm);
-    setShowCollaboratorResults(searchTerm.length > 0);
-  };
-
-  const handleCollaboratorSelect = (collaborator: Collaborator) => {
-    if (!selectedCollaborators.find(c => c._id === collaborator._id)) {
-      setSelectedCollaborators(prev => [...prev, collaborator]);
-    }
-    setCollaboratorSearch("");
-    setShowCollaboratorResults(false);
-  };
-
-  const handleCollaboratorRemove = (collaboratorId: string) => {
-    setSelectedCollaborators(prev => prev.filter(c => c._id !== collaboratorId));
-  };
-
   // Tag selection functions
   const handleTagSelect = (tagId: string) => {
     setSelectedTags((prev) =>
@@ -596,10 +560,6 @@ export default function ArticleForm({
   // Display functions for selected items
   const getAuthorDisplayName = (author: Author) => {
     return `${author.firstName} ${author.lastName} (${author.role})`;
-  };
-
-  const getCollaboratorDisplayName = (collaborator: Collaborator) => {
-    return `${collaborator.name} - ${collaborator.title}`;
   };
 
   const validateRequiredFields = () => {
@@ -763,7 +723,7 @@ export default function ArticleForm({
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="title" className='gap-0'><span className='text-destructive'>*</span>Title</Label>
+              <Label htmlFor="title" className='gap-0'>Title<span className='text-destructive'>*</span></Label>
               <Input
                 id="title"
                 value={title}
@@ -788,7 +748,7 @@ export default function ArticleForm({
             </div>
 
             <div className="space-y-2">
-              <Label id="content-label" className='gap-0'><span className='text-destructive'>*</span>Content</Label>
+              <Label id="content-label" className='gap-0'>Content<span className='text-destructive'>*</span></Label>
               <div role="group" aria-labelledby="content-label">
                 <Editor
                   key={editorResetKey}
@@ -867,7 +827,7 @@ export default function ArticleForm({
               <div className="space-y-6">
                 {/* Authors - Searchable Input */}
                 <div className="space-y-2">
-                  <Label htmlFor="authors" className='gap-0'><span className='text-destructive'>*</span>Author(s)</Label>
+                  <Label htmlFor="authors" className='gap-0'>Author(s)<span className='text-destructive'>*</span></Label>
                   
                   {/* Selected Authors */}
                   <div className={cn(
@@ -941,93 +901,11 @@ export default function ArticleForm({
                     </div>
                   )}
                 </div>
-                
-                 {/* Collaborators Section */}
-                <div className="space-y-2">
-                  <Label htmlFor="collaborators" className="flex items-center gap-2">
-                    Collaborators
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="w-3 h-3 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        WIP: Collaborators are not yet linked to articles in the backend.
-                      </TooltipContent>
-                    </Tooltip>
-                  </Label>
-
-                  
-                  {/* Selected Collaborators */}
-                  <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-10">
-                    {selectedCollaborators.map((collaborator) => (
-                      <Badge
-                        key={collaborator._id}
-                        variant="outline"
-                        className="px-3 py-1 text-sm flex items-center gap-1"
-                      >
-                        {getCollaboratorDisplayName(collaborator)}
-                        {!isLocked && (
-                          <button
-                            type="button"
-                            onClick={() => handleCollaboratorRemove(collaborator._id)}
-                            className="ml-1 hover:text-destructive"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
-                      </Badge>
-                    ))}
-                    {selectedCollaborators.length === 0 && (
-                      <span className="text-muted-foreground text-sm">No collaborators selected</span>
-                    )}
-                  </div>
-
-                  {/* Collaborator Search */}
-                  {!isLocked && (
-                    <div className="relative">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          value={collaboratorSearch}
-                          onChange={(e) => handleCollaboratorSearch(e.target.value)}
-                          placeholder="Search for collaborators by name, title, or email..."
-                          className="pl-10"
-                        />
-                      </div>
-                      
-                      {/* Search Results */}
-                      {showCollaboratorResults && (
-                        <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
-                          {filteredCollaborators.length > 0 ? (
-                            filteredCollaborators.map((collaborator) => (
-                              <div
-                                key={collaborator._id}
-                                className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
-                                onClick={() => handleCollaboratorSelect(collaborator)}
-                              >
-                                <div className="font-medium">
-                                  {getCollaboratorDisplayName(collaborator)}
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                  {collaborator.email || "No email"} • {collaborator.status}
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="p-3 text-muted-foreground text-center">
-                              No collaborators found
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
 
                 {/* Category & sub-category */}
                 <div className="space-y-4 sm:space-y-0 sm:flex sm:flex-row sm:gap-4">
                   <div className="space-y-2 flex-1">
-                    <Label htmlFor="category" className='gap-0'><span className='text-destructive'>*</span>Category</Label>
+                    <Label htmlFor="category" className='gap-0'>Category<span className='text-destructive'>*</span></Label>
                     <Select
                       value={category}
                       disabled={isLocked}

@@ -13,6 +13,7 @@ export interface SubCategory {
   slug: string;
   description?: string;
   isActive: boolean;
+  categoryId?: string;
   category: {
     _id: string;
     name: string;
@@ -39,17 +40,6 @@ export interface Author {
   status: string;
 }
 
-export interface Collaborator {
-  _id: string;
-  name: string;
-  title: string;
-  email?: string;
-  status: "active" | "inactive";
-  joinDate: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface Article {
   _id: string;
   title: string;
@@ -59,7 +49,6 @@ export interface Article {
   subcategory?: SubCategory;
   tags: Tag[];
   authors: Author[];
-  collaborators: Collaborator[];
   ownerId?: string;
   editorState?: any;
   reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published';

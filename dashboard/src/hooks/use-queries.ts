@@ -3,7 +3,7 @@
  *
  * Persistence policy:
  * - Queries with `meta: { persist: true }` are cached in localStorage and rehydrated on reload.
- * - Use persist for: taxonomy (categories/subcategories/tags), collaborators, small stats.
+ * - Use persist for: taxonomy (categories/subcategories/tags), small stats.
  * - Do NOT persist: auth, large/fast-changing lists (articles, comments, users).
  */
 
@@ -16,14 +16,6 @@ import {
   type SubCategory,
   type Tag,
 } from '@/services/taxonomy'
-import {
-  getCollaborators,
-  createCollaborator,
-  updateCollaborator,
-  deleteCollaborator,
-  type Collaborator,
-  type CollaboratorQuery,
-} from '@/services/collaborators'
 import {
   getUsers,
   type User,
@@ -68,9 +60,6 @@ export const queryKeys = {
   categories: ['categories'] as const,
   subCategories: ['sub-categories'] as const,
   tags: ['tags'] as const,
-
-  // Collaborators - persisted
-  collaborators: (query?: CollaboratorQuery) => ['collaborators', query] as const,
 
   // Users - NOT persisted (PII)
   users: (params?: {
@@ -153,50 +142,6 @@ export function useTaxonomy() {
       tags.refetch()
     },
   }
-}
-
-// ============================================================================
-// Collaborators Hooks (PERSISTED)
-// ============================================================================
-
-export function useCollaborators(query?: CollaboratorQuery) {
-  return useQuery({
-    queryKey: queryKeys.collaborators(query),
-    queryFn: () => getCollaborators(query),
-    staleTime: 5 * 60 * 1000,
-    meta: { persist: true },
-  })
-}
-
-export function useCreateCollaborator() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: createCollaborator,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['collaborators'] })
-    },
-  })
-}
-
-export function useUpdateCollaborator() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Collaborator> }) =>
-      updateCollaborator(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['collaborators'] })
-    },
-  })
-}
-
-export function useDeleteCollaborator() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: deleteCollaborator,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['collaborators'] })
-    },
-  })
 }
 
 // ============================================================================
@@ -608,4 +553,4 @@ export function useCreateArticleDraft() {
 }
 
 // Re-export types for convenience
-export type { Category, SubCategory, Tag, Collaborator, User, MediaItem, Comment, CommentStats, Sliver }
+export type { Category, SubCategory, Tag, User, MediaItem, Comment, CommentStats, Sliver }

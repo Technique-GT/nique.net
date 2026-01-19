@@ -66,7 +66,6 @@ export const columns: ColumnDef<User>[] = [
     meta: {
       className: 'hidden sm:table-cell',
     },
-    enableSorting: false,
     enableHiding: false,
   },
   {
@@ -91,7 +90,6 @@ export const columns: ColumnDef<User>[] = [
     filterFn: (row, id, value) => {
       return value.includes(String(row.getValue(id)))
     },
-    enableSorting: false,
     enableHiding: false,
   },
   {

@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus } from "lucide-react";
 import { Main } from "@/components/layout/main";
@@ -68,25 +68,6 @@ export default function ArticleList() {
   const [publishingArticle, setPublishingArticle] = useState<string | null>(null);
   const [featuringArticle, setFeaturingArticle] = useState<string | null>(null);
   const [stickingArticle, setStickingArticle] = useState<string | null>(null);
-
-  // Add collaborators data
-  const [collaborators, setCollaborators] = useState<any[]>([]);
-
-  // Fetch collaborators
-  useEffect(() => {
-    const fetchCollaborators = async () => {
-      try {
-        const result = await apiClient.get('/collaborators');
-        // apiClient unwraps data if success=true, returning array
-        if (Array.isArray(result)) {
-          setCollaborators(result);
-        }
-      } catch (error) {
-        console.error('Error fetching collaborators:', error);
-      }
-    };
-    fetchCollaborators();
-  }, []);
 
   // Quick action handlers
   const handleQuickPublish = async (article: Article) => {
@@ -405,7 +386,6 @@ export default function ArticleList() {
         subcategories={subcategories}
         tags={tags}
         authors={authors}
-        collaborators={collaborators}
         mediaLibrary={mediaLibrary}
         
         // Functions

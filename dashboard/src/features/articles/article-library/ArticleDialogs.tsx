@@ -12,7 +12,6 @@ interface ArticleDialogsProps {
   subcategories: PopulatedSubCategory[];
   tags: PopulatedTag[];
   authors: PopulatedAuthor[];
-  collaborators: any[];
   mediaLibrary: any[];
   
   // Functions

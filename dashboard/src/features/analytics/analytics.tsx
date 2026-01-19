@@ -172,13 +172,13 @@ export default function Analytics() {
         </TabsContent>
 
         <TabsContent value="articles">
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden h-[80vh]">
             <CardHeader>
               <CardTitle>Top Articles by Views</CardTitle>
               <CardDescription>Most engaged content across the platform</CardDescription>
             </CardHeader>
-            <CardContent className="overflow-x-auto">
-              <div className="h-[400px] min-w-[400px]">
+            <CardContent className="overflow-x-auto h-full">
+              <div className="h-full min-w-100">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.topArticles} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" />
