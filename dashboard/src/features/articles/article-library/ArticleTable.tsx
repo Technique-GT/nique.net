@@ -158,9 +158,7 @@ export function ArticleTable({
                       )}
                     </>
                   ) : (
-                    <Badge variant="secondary" className="text-xs">
-                      Unknown
-                    </Badge>
+                    <span className="text-muted-foreground text-sm">Not assigned</span>
                   )}
                 </div>
               </TableCell>
