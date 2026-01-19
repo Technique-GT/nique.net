@@ -12,7 +12,7 @@ interface ArticleTableProps {
   filteredArticles: Article[];
   loading: boolean;
   getAuthorName: (author: PopulatedAuthor) => string;
-  getStatusVariant: (status: string) => "default" | "secondary" | "outline" | "destructive";
+  getStatusVariant: (status: string) => "default" | "secondary" | "outline" | "destructive" | "success" | "info" | "warning";
   formatDate: (dateString: string) => string;
   publishingArticle: string | null;
   featuringArticle: string | null;
@@ -25,6 +25,17 @@ interface ArticleTableProps {
   onNewArticle: () => void;
   isAdmin: boolean;
   currentUserId: string | null;
+}
+
+const statusMap: Record<string, string> = {
+  draft: 'Draft',
+  in_review: 'In Review',
+  published: 'Published',
+  changes_requested: 'Changes Requested',
+}
+
+function prettifyStatus(status: string) {
+  return statusMap[status] || status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
 }
 
 export function ArticleTable({
@@ -168,7 +179,7 @@ export function ArticleTable({
               <TableCell>
                 <div className="flex flex-col gap-1">
                   <Badge variant={getStatusVariant(article.reviewStatus || article.status)}>
-                    {article.reviewStatus || article.status}
+                    {prettifyStatus(article.reviewStatus || article.status)}
                   </Badge>
                   {article.hasPendingChanges && article.reviewStatus === 'published' && (
                     <Badge variant="outline" className="text-[10px] border-orange-200 bg-orange-50 text-orange-700 w-fit">

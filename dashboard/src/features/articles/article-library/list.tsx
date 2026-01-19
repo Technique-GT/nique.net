@@ -257,10 +257,10 @@ export default function ArticleList() {
   // Helper functions
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case "published": return "default";
+      case "published": return "success";
       case "draft": return "secondary";
-      case "in_review": return "outline"; // Should probably be visually distinct in badge impl
-      case "changes_requested": return "destructive";
+      case "in_review": return "info";
+      case "changes_requested": return "warning";
       default: return "outline";
     }
   };
@@ -309,9 +309,6 @@ export default function ArticleList() {
         <Card>
           <CardHeader>
             <CardTitle>Articles</CardTitle>
-            <CardDescription>
-              Browse and filter your content library
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-4 mb-6">
@@ -333,6 +330,8 @@ export default function ArticleList() {
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="published">Published</SelectItem>
                     <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="in_review">In Review</SelectItem>
+                    <SelectItem value="changes_requested">Changes Requested</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>

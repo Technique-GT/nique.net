@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -211,11 +210,7 @@ export default function SpotifyPlaylistManager() {
 
         <TabsContent value="playlists" className="space-y-4">
           {playlists.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-12"
-            >
+            <div className="text-center py-12">
               <Music className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
               <h3 className="text-lg font-semibold mb-2">No playlists yet</h3>
               <p className="text-muted-foreground mb-4">
@@ -225,95 +220,84 @@ export default function SpotifyPlaylistManager() {
                 <Plus className="w-4 h-4 mr-2" />
                 Add Your First Playlist
               </Button>
-            </motion.div>
+            </div>
           ) : (
-            <motion.div 
-              layout
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              <AnimatePresence>
-                {playlists.map((playlist, index) => (
-                  <motion.div
-                    key={playlist._id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <Card className={`h-full transition-all hover:shadow-lg ${
-                      playlist.isActive ? 'ring-2 ring-green-500' : ''
-                    }`}>
-                      <CardContent className="p-0">
-                        <div className="aspect-square w-full bg-muted relative group">
-                          {playlist.image ? (
-                            <img
-                              src={playlist.image}
-                              alt={playlist.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Music className="w-16 h-16 text-muted-foreground" />
-                            </div>
-                          )}
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => openEditDialog(playlist)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => handleDelete(playlist._id)}
-                              disabled={deletePlaylistMutation.isPending}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {playlists.map((playlist) => (
+                <div key={playlist._id}>
+                  <Card className={`h-full transition-all hover:shadow-lg ${
+                    playlist.isActive ? 'ring-2 ring-green-500' : ''
+                  }`}>
+                    <CardContent className="p-0">
+                      <div className="aspect-square w-full bg-muted relative group">
+                        {playlist.image ? (
+                          <img
+                            src={playlist.image}
+                            alt={playlist.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Music className="w-16 h-16 text-muted-foreground" />
                           </div>
-                          {playlist.isActive && (
-                            <Badge className="absolute top-2 right-2 bg-green-500">
-                              Active
-                            </Badge>
-                          )}
+                        )}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => openEditDialog(playlist)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleDelete(playlist._id)}
+                            disabled={deletePlaylistMutation.isPending}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
-                        <div className="p-4">
-                          <h3 className="font-semibold text-lg mb-1">{playlist.name}</h3>
-                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                            {playlist.description}
-                          </p>
-                          <div className="flex justify-between items-center">
-                            <Button
-                              variant={playlist.isActive ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => handleSetActive(playlist._id)}
-                              disabled={playlist.isActive || setActivePlaylistMutation.isPending}
+                        {playlist.isActive && (
+                          <Badge className="absolute top-2 right-2 bg-green-500">
+                            Active
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-semibold text-lg mb-1">{playlist.name}</h3>
+                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                          {playlist.description}
+                        </p>
+                        <div className="flex justify-between items-center">
+                          <Button
+                            variant={playlist.isActive ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handleSetActive(playlist._id)}
+                            disabled={playlist.isActive || setActivePlaylistMutation.isPending}
+                          >
+                            {playlist.isActive ? 'Active' : 'Set Active'}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                          >
+                            <a
+                              href={playlist.spotifyUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
                             >
-                              {playlist.isActive ? 'Active' : 'Set Active'}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              asChild
-                            >
-                              <a
-                                href={playlist.spotifyUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <ExternalLink className="w-4 h-4" />
-                              </a>
-                            </Button>
-                          </div>
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          </Button>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </motion.div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+            </div>
           )}
         </TabsContent>
 

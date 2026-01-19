@@ -17,7 +17,7 @@ interface ArticleDialogsProps {
   
   // Functions
   getAuthorName: (author: PopulatedAuthor) => string;
-  getStatusVariant: (status: string) => "default" | "secondary" | "outline" | "destructive";
+  getStatusVariant: (status: string) => "default" | "secondary" | "outline" | "destructive" | "success" | "info" | "warning";
   formatDate: (dateString: string) => string;
   confirmDelete: () => void;
 }
