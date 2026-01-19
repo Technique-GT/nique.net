@@ -9,11 +9,12 @@ import {
 } from "@/hooks/use-queries";
 
 // Query key for articles
-const articlesQueryKey = (params: { page: number; search?: string }) => 
+const articlesQueryKey = (params: { page: number; limit: number; search?: string }) => 
   ['admin-articles', params] as const;
 
 export const useArticles = () => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -93,11 +94,11 @@ export const useArticles = () => {
 
   // TanStack Query for articles (NOT persisted - large/fast-changing list)
   const articlesQuery = useQuery({
-    queryKey: articlesQueryKey({ page: currentPage, search: searchTerm || undefined }),
+    queryKey: articlesQueryKey({ page: currentPage, limit: pageSize, search: searchTerm || undefined }),
     queryFn: async () => {
       const response = await getAdminArticlesPage({ 
         page: currentPage, 
-        limit: 10,
+        limit: pageSize,
         search: searchTerm || undefined 
       });
       return {
@@ -118,7 +119,8 @@ export const useArticles = () => {
   const { categories: rawCategories, subCategories: rawSubCategories, tags: rawTags } = useTaxonomy();
   
   // Use centralized users hook (NOT persisted - PII)
-  const { data: rawUsers = [] } = useUsers();
+  const { data: usersData } = useUsers();
+  const rawUsers = usersData?.data || [];
   
   // Use centralized media hook (NOT persisted - large)
   const { data: mediaData } = useMedia({ limit: 100 });
@@ -184,6 +186,12 @@ export const useArticles = () => {
   // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1); // Reset to first page when changing page size
   };
 
   // Use full taxonomy list for category filter so options aren't page-limited
@@ -258,6 +266,8 @@ export const useArticles = () => {
     pagination,
     currentPage,
     handlePageChange,
+    pageSize,
+    handlePageSizeChange,
     mediaLibrary
   };
 };

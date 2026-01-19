@@ -20,6 +20,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 export default function ArticleList() {
   const navigate = useNavigate();
@@ -54,6 +55,8 @@ export default function ArticleList() {
     pagination,
     currentPage,
     handlePageChange,
+    pageSize,
+    handlePageSizeChange,
     mediaLibrary
   } = useArticles();
 
@@ -254,10 +257,10 @@ export default function ArticleList() {
   // Helper functions
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case "published": return "default";
+      case "published": return "success";
       case "draft": return "secondary";
-      case "in_review": return "outline"; // Should probably be visually distinct in badge impl
-      case "changes_requested": return "destructive";
+      case "in_review": return "info";
+      case "changes_requested": return "warning";
       default: return "outline";
     }
   };
@@ -306,9 +309,6 @@ export default function ArticleList() {
         <Card>
           <CardHeader>
             <CardTitle>Articles</CardTitle>
-            <CardDescription>
-              Browse and filter your content library
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-4 mb-6">
@@ -379,27 +379,16 @@ export default function ArticleList() {
               />
 
 
-            {pagination && pagination.pages > 1 && (
-              <div className="flex justify-center gap-2 mt-6">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                <div className="flex items-center px-4 text-sm font-medium">
-                  Page {currentPage} of {pagination.pages}
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === pagination.pages}
-                >
-                  Next
-                </Button>
+            {pagination && pagination.pages > 0 && (
+              <div className="mt-4">
+                <PaginationControls
+                  currentPage={currentPage}
+                  totalPages={pagination.pages}
+                  pageSize={pageSize}
+                  totalRows={pagination.total}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                />
               </div>
             )}
           </CardContent>

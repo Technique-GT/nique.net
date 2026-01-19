@@ -81,6 +81,7 @@ export const queryKeys = {
     sortDir?: 'asc' | 'desc'
   }) =>
     ['users', params] as const,
+  usersList: (page: number, limit: number) => ['users-list', page, limit] as const,
 
   // Media - NOT persisted (can be large)
   media: (query?: MediaQuery) => ['media', query] as const,

@@ -50,7 +50,6 @@ export default function UsersProvider({ children }: Props) {
     queryKey: queryKeys.users({ page, limit, sortBy, sortDir }),
     queryFn: () => getUsersPage({ page, limit, sortBy, sortDir }),
     staleTime: 30 * 1000, // 30 seconds
-    // No meta.persist - users contain PII
   })
   const rawUsers = usersResponse?.data ?? []
   const paginationMeta: PaginationMeta | undefined = usersResponse?.pagination
@@ -88,7 +87,7 @@ export default function UsersProvider({ children }: Props) {
       open, 
       setOpen, 
       currentRow, 
-      setCurrentRow,
+      setCurrentRow, 
       users,
       loading: isLoading,
       pagination,

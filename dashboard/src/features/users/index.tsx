@@ -13,7 +13,6 @@ import { canManageStaff } from '@/lib/permissions'
 function UsersContent() {
   const {
     users,
-    loading,
     pagination,
     setPagination,
     sorting,
@@ -22,16 +21,6 @@ function UsersContent() {
   } = useUsers()
   const user = useAuthStore((state) => state.auth.user)
   const hasEditAccess = canManageStaff(user)
-
-  if (loading) {
-    return (
-      <Main>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading users...</div>
-        </div>
-      </Main>
-    )
-  }
 
   return (
     <>

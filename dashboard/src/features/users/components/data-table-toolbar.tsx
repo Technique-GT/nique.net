@@ -2,9 +2,13 @@ import { Cross2Icon } from '@radix-ui/react-icons'
 import { Table } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { adminOptions } from '../data/data'
-import { DataTableFacetedFilter } from './data-table-faceted-filter'
-import { DataTableViewOptions } from './data-table-view-options'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
@@ -14,6 +18,7 @@ export function DataTableToolbar<TData>({
   table,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
+  const adminColumn = table.getColumn('isAdmin')
 
   return (
     <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
@@ -29,12 +34,22 @@ export function DataTableToolbar<TData>({
           className='h-8 w-full sm:w-[150px] lg:w-[250px]'
         />
         <div className='flex gap-x-2'>
-          {table.getColumn('isAdmin') && (
-            <DataTableFacetedFilter
-              column={table.getColumn('isAdmin')}
-              title='Admin'
-              options={adminOptions.map((t) => ({ ...t }))}
-            />
+          {adminColumn && (
+            <Select
+              value={(adminColumn.getFilterValue() as string[])?.[0] || 'all'}
+              onValueChange={(value) => {
+                adminColumn.setFilterValue(value === 'all' ? undefined : [value])
+              }}
+            >
+              <SelectTrigger className='h-8 w-[130px]'>
+                <SelectValue placeholder='Role' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>All Roles</SelectItem>
+                <SelectItem value='true'>Admin</SelectItem>
+                <SelectItem value='false'>User</SelectItem>
+              </SelectContent>
+            </Select>
           )}
         </div>
         {isFiltered && (
@@ -48,7 +63,6 @@ export function DataTableToolbar<TData>({
           </Button>
         )}
       </div>
-      <DataTableViewOptions table={table} />
     </div>
   )
 }
