@@ -56,21 +56,6 @@ export const columns: ColumnDef<User>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: 'bio',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Bio' />
-    ),
-    cell: ({ row }) => (
-      <LongText className='max-w-56 text-muted-foreground'>
-        {row.getValue('bio') || '—'}
-      </LongText>
-    ),
-    meta: {
-      className: 'hidden lg:table-cell',
-    },
-    enableSorting: false,
-  },
-  {
     accessorKey: 'email',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title='Email' />
@@ -81,6 +66,7 @@ export const columns: ColumnDef<User>[] = [
     meta: {
       className: 'hidden sm:table-cell',
     },
+    enableSorting: false,
     enableHiding: false,
   },
   {
@@ -105,22 +91,8 @@ export const columns: ColumnDef<User>[] = [
     filterFn: (row, id, value) => {
       return value.includes(String(row.getValue(id)))
     },
-    enableHiding: false,
-  },
-  {
-    accessorKey: 'googleSub',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Google Sub' />
-    ),
-    cell: ({ row }) => (
-      <LongText className='max-w-48 font-mono text-xs'>
-        {row.getValue('googleSub') || '—'}
-      </LongText>
-    ),
-    meta: {
-      className: 'hidden xl:table-cell',
-    },
     enableSorting: false,
+    enableHiding: false,
   },
   {
     accessorKey: 'socialLinks',

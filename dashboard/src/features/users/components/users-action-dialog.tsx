@@ -23,17 +23,14 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { User } from '../data/schema'
 import { useUsers } from '../context/users-context'
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
-  bio: z.string().optional(),
   isAdmin: z.boolean(),
   email: z.string().trim().email('Please enter a valid email.').optional().or(z.literal('')),
-  googleSub: z.string().optional(),
   profilePictureMediaId: z.string().optional(),
 })
 type UserForm = z.infer<typeof formSchema>
@@ -54,18 +51,14 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
     defaultValues: isEdit
       ? {
           name: currentRow.name,
-          bio: currentRow.bio || '',
           isAdmin: currentRow.isAdmin,
           email: currentRow.email || '',
-          googleSub: currentRow.googleSub || '',
           profilePictureMediaId: currentRow.profilePictureMediaId || '',
         }
       : {
           name: '',
-          bio: '',
           isAdmin: false,
           email: '',
-          googleSub: '',
           profilePictureMediaId: '',
         },
   })
@@ -76,10 +69,8 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
       if (isEdit && currentRow) {
         const userData = {
           name: values.name.trim(),
-          ...(values.bio?.trim() ? { bio: values.bio.trim() } : {}),
           isAdmin: values.isAdmin,
           ...(values.email?.trim() ? { email: values.email.trim() } : {}),
-          ...(values.googleSub?.trim() ? { googleSub: values.googleSub.trim() } : {}),
           ...(values.profilePictureMediaId?.trim()
             ? { profilePictureMediaId: values.profilePictureMediaId.trim() }
             : {}),
@@ -100,10 +91,8 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
         // Create user
         const userData = {
           name: values.name.trim(),
-          ...(values.bio?.trim() ? { bio: values.bio.trim() } : {}),
           isAdmin: values.isAdmin,
           ...(values.email?.trim() ? { email: values.email.trim() } : {}),
-          ...(values.googleSub?.trim() ? { googleSub: values.googleSub.trim() } : {}),
           ...(values.profilePictureMediaId?.trim()
             ? { profilePictureMediaId: values.profilePictureMediaId.trim() }
             : {}),
@@ -178,26 +167,6 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               />
               <FormField
                 control={form.control}
-                name='bio'
-                render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-right'>
-                      Bio
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder='Short bio (optional)'
-                        className='col-span-4'
-                        autoComplete='off'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
                 name='email'
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
@@ -207,25 +176,6 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                     <FormControl>
                       <Input
                         placeholder='name@example.com'
-                        className='col-span-4'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='googleSub'
-                render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-right'>
-                      Google Sub
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder='Google subject (optional)'
                         className='col-span-4'
                         {...field}
                       />
