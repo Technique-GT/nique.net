@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Fragment } from "react";
 import { Plus, Edit, Trash2, Search, FolderOpen, FolderTree, ChevronDown, ChevronRight } from "lucide-react";
 import { Main } from "@/components/layout/main";
@@ -15,8 +14,6 @@ import { PageHeader } from "@/components/layout/page-header";
 import {
   useCategories,
   useSubCategories,
-  useCategoryStats,
-  useSubCategoryStats,
   useCreateCategory,
   useUpdateCategory,
   useDeleteCategory,
@@ -55,8 +52,6 @@ export default function Categories() {
   // TanStack Query hooks
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   const { data: rawSubCategories = [], isLoading: subCategoriesLoading } = useSubCategories();
-  const { data: categoryStats } = useCategoryStats();
-  const { data: subCategoryStats } = useSubCategoryStats();
 
   const createCategory = useCreateCategory();
   const updateCategory = useUpdateCategory();
@@ -85,12 +80,6 @@ export default function Categories() {
       };
     });
   }, [categories, rawSubCategories]);
-
-  // Stats
-  const stats = {
-    totalCategories: categoryStats?.totalCategories ?? categories.length,
-    totalSubCategories: subCategoryStats?.totalSubCategories ?? allSubCategories.length,
-  };
 
   // Handlers
   const handleAddCategory = async () => {
@@ -219,18 +208,37 @@ export default function Categories() {
     return allSubCategories.filter(subCat => subCat.category._id === categoryId);
   };
 
-  // Client-side filtering
+  // Client-side filtering with smart expansion
   const filteredCategories = useMemo(() => {
     if (!searchTerm) return categories;
+    
     const term = searchTerm.toLowerCase();
-    return categories.filter(category => category.name.toLowerCase().includes(term));
-  }, [categories, searchTerm]);
+    
+    // 2. Find matching subcategories and identify their parents
+    const matchingSubCategories = allSubCategories.filter(sub => 
+      sub.name.toLowerCase().includes(term) || sub.slug.includes(term)
+    );
+    
+    const parentIdsOfMatchingSubs = new Set(matchingSubCategories.map(sub => sub.category._id));
+    
+    // 3. Auto-expand parents of matching subcategories
+    if (matchingSubCategories.length > 0) {
+      setExpandedCategories(prev => {
+        const next = new Set(prev);
+        parentIdsOfMatchingSubs.forEach(id => next.add(id));
+        return next;
+      });
+    }
 
-  const filteredSubCategories = useMemo(() => {
-    if (!searchTerm) return allSubCategories;
-    const term = searchTerm.toLowerCase();
-    return allSubCategories.filter(subCategory => subCategory.name.toLowerCase().includes(term));
-  }, [allSubCategories, searchTerm]);
+    // 4. Return union of:
+    //    - Categories matching the search term
+    //    - Categories that contain matching subcategories
+    return categories.filter(cat => 
+      cat.name.toLowerCase().includes(term) || 
+      cat.slug.includes(term) || 
+      parentIdsOfMatchingSubs.has(cat._id)
+    );
+  }, [categories, allSubCategories, searchTerm]);
 
   if (isLoading) {
     return (
@@ -269,12 +277,31 @@ export default function Categories() {
               </Badge>
             ) : null
           }
-          actions={
-            <>
+      />
+
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <CardTitle>Manage Taxonomy</CardTitle>
+            
+            <div className="flex flex-col sm:flex-row gap-4 flex-1 justify-end w-full sm:w-auto">
+              <div className="relative w-full sm:w-64">
+                <Label htmlFor="search-categories" className="sr-only">Search</Label>
+                <Input
+                  id="search-categories"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search categories..."
+                  className="pl-10"
+                />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              </div>
+
+              {/* Category Dialog */}
               {isAdmin && (
                 <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" onClick={openCreateCategoryDialog}>
+                    <Button onClick={openCreateCategoryDialog}>
                       <Plus className="w-4 h-4 mr-2" />
                       Add Category
                     </Button>
@@ -287,7 +314,7 @@ export default function Categories() {
                       <DialogDescription>
                         {editingCategory 
                           ? 'Update your category information.' 
-                          : 'Create a new category to organize your content.'
+                          : 'Create a new category to organize your articles.'
                         }
                       </DialogDescription>
                     </DialogHeader>
@@ -300,14 +327,257 @@ export default function Categories() {
 
                     <div className="grid gap-4 py-4">
                       <div className="grid gap-2">
-                        <Label htmlFor="category-name">Category Name *</Label>
+                        <Label htmlFor="name">Category Name *</Label>
                         <Input
-                          id="category-name"
+                          id="name"
                           value={categoryFormData.name}
                           onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
                           placeholder="Enter category name"
                           required
                         />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleAddCategory}
+                        disabled={createCategory.isPending || updateCategory.isPending}
+                      >
+                        {(createCategory.isPending || updateCategory.isPending) ? 'Saving...' : (editingCategory ? 'Update Category' : 'Create Category')}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+
+              {/* SubCategory Dialog */}
+              {isAdmin && (
+                <Dialog open={isSubCategoryDialogOpen} onOpenChange={setIsSubCategoryDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={openCreateSubCategoryDialog} variant="outline">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Subcategory
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingSubCategory ? 'Edit Subcategory' : 'Add New Subcategory'}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {editingSubCategory 
+                          ? 'Update your subcategory information.' 
+                          : 'Create a new subcategory under a parent category.'
+                        }
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
+                        {error}
+                      </div>
+                    )}
+
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="subcategory-name">Subcategory Name *</Label>
+                        <Input
+                          id="subcategory-name"
+                          value={subCategoryFormData.name}
+                          onChange={(e) => setSubCategoryFormData({ ...subCategoryFormData, name: e.target.value })}
+                          placeholder="Enter subcategory name"
+                          required
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="parent-category">Parent Category *</Label>
+                        <Select
+                          value={subCategoryFormData.category}
+                          onValueChange={(value) => setSubCategoryFormData({ ...subCategoryFormData, category: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a parent category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map((category) => (
+                              <SelectItem key={category._id} value={category._id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setIsSubCategoryDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleAddSubCategory}
+                        disabled={createSubCategory.isPending || updateSubCategory.isPending}
+                      >
+                        {(createSubCategory.isPending || updateSubCategory.isPending) ? 'Saving...' : (editingSubCategory ? 'Update Subcategory' : 'Create Subcategory')}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border overflow-x-auto">
+            <Table className="min-w-[600px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12"></TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCategories.map((category) => {
+                  const categorySubCategories = getSubCategoriesForCategory(category._id);
+                  const isExpanded = expandedCategories.has(category._id);
+                  
+                  return (
+                    <Fragment key={category._id}>
+                      <TableRow 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => toggleCategoryExpansion(category._id)}
+                      >
+                        <TableCell>
+                          {categorySubCategories.length > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleCategoryExpansion(category._id);
+                              }}
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="w-4 h-4" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4" />
+                              )}
+                            </Button>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <FolderOpen className="w-4 h-4" />
+                            {category.name}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {isAdmin && (
+                            <div 
+                              className="flex justify-end gap-2"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => openEditCategoryDialog(category)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteCategory(category)}
+                                title="Delete category"
+                                disabled={deleteCategory.isPending}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                      
+                      {/* Subcategories for this category */}
+                      {isExpanded && categorySubCategories.length > 0 && (
+                        <TableRow className="bg-muted/20 hover:bg-muted/30">
+                          <TableCell colSpan={3} className="p-0">
+                            <div className="p-4 pl-12">
+                              <h4 className="text-sm font-medium mb-3 text-muted-foreground">Subcategories</h4>
+                              <div className="space-y-2">
+                                {categorySubCategories.map((subCategory) => (
+                                  <div key={subCategory._id} className="flex items-center justify-between p-3 bg-background rounded-lg border">
+                                    <div className="flex items-center gap-3">
+                                      <FolderTree className="w-4 h-4 text-muted-foreground" />
+                                      <div>
+                                        <div className="font-medium text-sm">{subCategory.name}</div>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      {isAdmin && (
+                                        <>
+                                          <Button 
+                                            variant="outline" 
+                                            size="sm"
+                                            onClick={() => openEditSubCategoryDialog(subCategory)}
+                                          >
+                                            <Edit className="w-3 h-3" />
+                                          </Button>
+                                          <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => handleDeleteSubCategory(subCategory)}
+                                            title="Delete subcategory"
+                                            disabled={deleteSubCategory.isPending}
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </Button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </Fragment>
+                  );
+                })}
+                
+                {filteredCategories.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center py-8">
+                      <div className="text-center">
+                        <FolderOpen className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                        <p className="text-muted-foreground">No categories found</p>
+                        {searchTerm && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Try adjusting your search terms
+                          </p>
+                        )}
+                        {!searchTerm && (
+                          isAdmin && (
+                            <Button onClick={openCreateCategoryDialog} className="mt-4">
+                              <Plus className="w-4 h-4 mr-2" />
+                              Create Your First Category
+                            </Button>
+                          )
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </Main>
+  );
+}
                       </div>
                     </div>
                     <DialogFooter>
@@ -399,407 +669,220 @@ export default function Categories() {
           }
         />
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Categories</CardTitle>
-            <FolderOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCategories}</div>
-            <p className="text-xs text-muted-foreground">All categories</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Subcategories</CardTitle>
-            <FolderTree className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalSubCategories}</div>
-            <p className="text-xs text-muted-foreground">All subcategories</p>
-          </CardContent>
-        </Card>
-      </div>
+        {/* Stats Cards - REMOVED */}
 
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <CardTitle>Manage Categories & Subcategories</CardTitle>
+            <CardTitle>Manage Taxonomy</CardTitle>
+            
+            <div className="flex flex-col sm:flex-row gap-4 flex-1 justify-end w-full sm:w-auto">
+              <div className="relative w-full sm:w-64">
+                <Label htmlFor="search-categories" className="sr-only">Search</Label>
+                <Input
+                  id="search-categories"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search categories..."
+                  className="pl-10"
+                />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              </div>
+
+              {/* Category Dialog */}
+              {isAdmin && (
+                <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={openCreateCategoryDialog}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Category
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingCategory ? 'Edit Category' : 'Add New Category'}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {editingCategory 
+                          ? 'Update your category information.' 
+                          : 'Create a new category to organize your articles.'
+                        }
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
+                        {error}
+                      </div>
+                    )}
+
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="name">Category Name *</Label>
+                        <Input
+                          id="name"
+                          value={categoryFormData.name}
+                          onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+                          placeholder="Enter category name"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleAddCategory}
+                        disabled={createCategory.isPending || updateCategory.isPending}
+                      >
+                        {(createCategory.isPending || updateCategory.isPending) ? 'Saving...' : (editingCategory ? 'Update Category' : 'Create Category')}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+
+              {/* SubCategory Dialog */}
+              {isAdmin && (
+                <Dialog open={isSubCategoryDialogOpen} onOpenChange={setIsSubCategoryDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={openCreateSubCategoryDialog} variant="outline">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Subcategory
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingSubCategory ? 'Edit Subcategory' : 'Add New Subcategory'}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {editingSubCategory 
+                          ? 'Update your subcategory information.' 
+                          : 'Create a new subcategory under a parent category.'
+                        }
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
+                        {error}
+                      </div>
+                    )}
+
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="subcategory-name">Subcategory Name *</Label>
+                        <Input
+                          id="subcategory-name"
+                          value={subCategoryFormData.name}
+                          onChange={(e) => setSubCategoryFormData({ ...subCategoryFormData, name: e.target.value })}
+                          placeholder="Enter subcategory name"
+                          required
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="parent-category">Parent Category *</Label>
+                        <Select
+                          value={subCategoryFormData.category}
+                          onValueChange={(value) => setSubCategoryFormData({ ...subCategoryFormData, category: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a parent category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map((category) => (
+                              <SelectItem key={category._id} value={category._id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setIsSubCategoryDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleAddSubCategory}
+                        disabled={createSubCategory.isPending || updateSubCategory.isPending}
+                      >
+                        {(createSubCategory.isPending || updateSubCategory.isPending) ? 'Saving...' : (editingSubCategory ? 'Update Subcategory' : 'Create Subcategory')}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="categories" className="space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <TabsList>
-                <TabsTrigger value="categories" className="flex items-center gap-2">
-                  <FolderOpen className="w-4 h-4" />
-                  Categories
-                </TabsTrigger>
-                <TabsTrigger value="subcategories" className="flex items-center gap-2">
-                  <FolderTree className="w-4 h-4" />
-                  Subcategories
-                </TabsTrigger>
-              </TabsList>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Label htmlFor="search-categories" className="sr-only">Search</Label>
-                  <Input
-                    id="search-categories"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search..."
-                    className="pl-10 w-full sm:w-64"
-                  />
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                </div>
-
-                {/* Category Dialog */}
-                {isAdmin && (
-                  <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button onClick={openCreateCategoryDialog}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Category
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>
-                          {editingCategory ? 'Edit Category' : 'Add New Category'}
-                        </DialogTitle>
-                        <DialogDescription>
-                          {editingCategory 
-                            ? 'Update your category information.' 
-                            : 'Create a new category to organize your articles.'
-                          }
-                        </DialogDescription>
-                      </DialogHeader>
-                      
-                      {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
-                          {error}
-                        </div>
-                      )}
-
-                      <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                          <Label htmlFor="name">Category Name *</Label>
-                          <Input
-                            id="name"
-                            value={categoryFormData.name}
-                            onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
-                            placeholder="Enter category name"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button 
-                          onClick={handleAddCategory}
-                          disabled={createCategory.isPending || updateCategory.isPending}
-                        >
-                          {(createCategory.isPending || updateCategory.isPending) ? 'Saving...' : (editingCategory ? 'Update Category' : 'Create Category')}
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                )}
-
-                {/* SubCategory Dialog */}
-                {isAdmin && (
-                  <Dialog open={isSubCategoryDialogOpen} onOpenChange={setIsSubCategoryDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button onClick={openCreateSubCategoryDialog} variant="outline">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Subcategory
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>
-                          {editingSubCategory ? 'Edit Subcategory' : 'Add New Subcategory'}
-                        </DialogTitle>
-                        <DialogDescription>
-                          {editingSubCategory 
-                            ? 'Update your subcategory information.' 
-                            : 'Create a new subcategory under a parent category.'
-                          }
-                        </DialogDescription>
-                      </DialogHeader>
-                      
-                      {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
-                          {error}
-                        </div>
-                      )}
-
-                      <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                          <Label htmlFor="subcategory-name">Subcategory Name *</Label>
-                          <Input
-                            id="subcategory-name"
-                            value={subCategoryFormData.name}
-                            onChange={(e) => setSubCategoryFormData({ ...subCategoryFormData, name: e.target.value })}
-                            placeholder="Enter subcategory name"
-                            required
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="parent-category">Parent Category *</Label>
-                          <Select
-                            value={subCategoryFormData.category}
-                            onValueChange={(value) => setSubCategoryFormData({ ...subCategoryFormData, category: value })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a parent category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {categories.map((category) => (
-                                <SelectItem key={category._id} value={category._id}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setIsSubCategoryDialogOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button 
-                          onClick={handleAddSubCategory}
-                          disabled={createSubCategory.isPending || updateSubCategory.isPending}
-                        >
-                          {(createSubCategory.isPending || updateSubCategory.isPending) ? 'Saving...' : (editingSubCategory ? 'Update Subcategory' : 'Create Subcategory')}
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                )}
-              </div>
-            </div>
-
-            {/* Categories Tab */}
-            <TabsContent value="categories">
-              <div className="rounded-md border overflow-x-auto">
-                <Table className="min-w-[600px]">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12"></TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead className="hidden sm:table-cell">Slug</TableHead>
-                      <TableHead>Subcategories</TableHead>
-                      <TableHead className="hidden md:table-cell">Created</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCategories.map((category) => {
-                      const categorySubCategories = getSubCategoriesForCategory(category._id);
-                      const isExpanded = expandedCategories.has(category._id);
-                      
-                      return (
-                        <Fragment key={category._id}>
-                          <TableRow 
-                            className="cursor-pointer hover:bg-muted/50"
-                            onClick={() => toggleCategoryExpansion(category._id)}
-                          >
-                            <TableCell>
-                              {categorySubCategories.length > 0 && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleCategoryExpansion(category._id);
-                                  }}
-                                >
-                                  {isExpanded ? (
-                                    <ChevronDown className="w-4 h-4" />
-                                  ) : (
-                                    <ChevronRight className="w-4 h-4" />
-                                  )}
-                                </Button>
+          <div className="rounded-md border overflow-x-auto">
+            <Table className="min-w-[600px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12"></TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCategories.map((category) => {
+                  const categorySubCategories = getSubCategoriesForCategory(category._id);
+                  const isExpanded = expandedCategories.has(category._id);
+                  
+                  return (
+                    <Fragment key={category._id}>
+                      <TableRow 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => toggleCategoryExpansion(category._id)}
+                      >
+                        <TableCell>
+                          {categorySubCategories.length > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleCategoryExpansion(category._id);
+                              }}
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="w-4 h-4" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4" />
                               )}
-                            </TableCell>
-                            <TableCell className="font-medium">
-                              <div className="flex items-center gap-2">
-                                <FolderOpen className="w-4 h-4" />
-                                {category.name}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground font-mono text-sm hidden sm:table-cell">
-                              {category.slug}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">
-                                {categorySubCategories.length}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground text-sm hidden md:table-cell">
-                              {new Date(category.createdAt).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {isAdmin && (
-                                <div 
-                                  className="flex justify-end gap-2"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => openEditCategoryDialog(category)}
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => handleDeleteCategory(category)}
-                                    title="Delete category"
-                                    disabled={deleteCategory.isPending}
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                          
-                          {/* Subcategories for this category */}
-                          {isExpanded && categorySubCategories.length > 0 && (
-                            <TableRow className="bg-muted/20">
-                              <TableCell colSpan={8} className="p-0">
-                                <div className="p-4 pl-12">
-                                  <h4 className="text-sm font-medium mb-3">Subcategories</h4>
-                                  <div className="space-y-2">
-                                    {categorySubCategories.map((subCategory) => (
-                                      <div key={subCategory._id} className="flex items-center justify-between p-3 bg-background rounded-lg border">
-                                        <div className="flex items-center gap-3">
-                                          <FolderTree className="w-4 h-4 text-muted-foreground" />
-                                          <div>
-                                            <div className="font-medium text-sm">{subCategory.name}</div>
-                                            <div className="text-xs text-muted-foreground">{subCategory.slug}</div>
-                                          </div>
-                                        </div>
-                                        <div className="flex gap-2">
-                                          {isAdmin && (
-                                            <>
-                                              <Button 
-                                                variant="outline" 
-                                                size="sm"
-                                                onClick={() => openEditSubCategoryDialog(subCategory)}
-                                              >
-                                                <Edit className="w-3 h-3" />
-                                              </Button>
-                                              <Button
-                                                variant="destructive"
-                                                size="sm"
-                                                onClick={() => handleDeleteSubCategory(subCategory)}
-                                                title="Delete subcategory"
-                                                disabled={deleteSubCategory.isPending}
-                                              >
-                                                <Trash2 className="w-3 h-3" />
-                                              </Button>
-                                            </>
-                                          )}
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              </TableCell>
-                            </TableRow>
+                            </Button>
                           )}
-                        </Fragment>
-                      );
-                    })}
-                    
-                    {filteredCategories.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8">
-                          <div className="text-center">
-                            <FolderOpen className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                            <p className="text-muted-foreground">No categories found</p>
-                            {searchTerm && (
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Try adjusting your search terms
-                              </p>
-                            )}
-                            {!searchTerm && (
-                              isAdmin && (
-                                <Button onClick={openCreateCategoryDialog} className="mt-4">
-                                  <Plus className="w-4 h-4 mr-2" />
-                                  Create Your First Category
-                                </Button>
-                              )
-                            )}
-                          </div>
                         </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
-
-            {/* Subcategories Tab */}
-            <TabsContent value="subcategories">
-              <div className="rounded-md border overflow-x-auto">
-                <Table className="min-w-[500px]">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead className="hidden sm:table-cell">Slug</TableHead>
-                      <TableHead>Parent Category</TableHead>
-                      <TableHead className="hidden md:table-cell">Created</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredSubCategories.map((subCategory) => (
-                      <TableRow key={subCategory._id}>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
-                            <FolderTree className="w-4 h-4" />
-                            {subCategory.name}
+                            <FolderOpen className="w-4 h-4" />
+                            {category.name}
                           </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground font-mono text-sm hidden sm:table-cell">
-                          {subCategory.slug}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {subCategory.category.name}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm hidden md:table-cell">
-                          {new Date(subCategory.createdAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="text-right">
                           {isAdmin && (
-                            <div className="flex justify-end gap-2">
+                            <div 
+                              className="flex justify-end gap-2"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <Button 
                                 variant="outline" 
                                 size="sm"
-                                onClick={() => openEditSubCategoryDialog(subCategory)}
+                                onClick={() => openEditCategoryDialog(category)}
                               >
                                 <Edit className="w-4 h-4" />
                               </Button>
                               <Button
                                 variant="destructive"
                                 size="sm"
-                                onClick={() => handleDeleteSubCategory(subCategory)}
-                                title="Delete subcategory"
-                                disabled={deleteSubCategory.isPending}
+                                onClick={() => handleDeleteCategory(category)}
+                                title="Delete category"
+                                disabled={deleteCategory.isPending}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -807,36 +890,81 @@ export default function Categories() {
                           )}
                         </TableCell>
                       </TableRow>
-                    ))}
-                    
-                    {filteredSubCategories.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8">
-                          <div className="text-center">
-                            <FolderTree className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                            <p className="text-muted-foreground">No subcategories found</p>
-                            {searchTerm && (
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Try adjusting your search terms
-                              </p>
-                            )}
-                            {!searchTerm && (
-                              isAdmin && (
-                                <Button onClick={openCreateSubCategoryDialog} className="mt-4">
-                                  <Plus className="w-4 h-4 mr-2" />
-                                  Create Your First Subcategory
-                                </Button>
-                              )
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
-          </Tabs>
+                      
+                      {/* Subcategories for this category */}
+                      {isExpanded && categorySubCategories.length > 0 && (
+                        <TableRow className="bg-muted/20 hover:bg-muted/30">
+                          <TableCell colSpan={3} className="p-0">
+                            <div className="p-4 pl-12">
+                              <h4 className="text-sm font-medium mb-3 text-muted-foreground">Subcategories</h4>
+                              <div className="space-y-2">
+                                {categorySubCategories.map((subCategory) => (
+                                  <div key={subCategory._id} className="flex items-center justify-between p-3 bg-background rounded-lg border">
+                                    <div className="flex items-center gap-3">
+                                      <FolderTree className="w-4 h-4 text-muted-foreground" />
+                                      <div>
+                                        <div className="font-medium text-sm">{subCategory.name}</div>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      {isAdmin && (
+                                        <>
+                                          <Button 
+                                            variant="outline" 
+                                            size="sm"
+                                            onClick={() => openEditSubCategoryDialog(subCategory)}
+                                          >
+                                            <Edit className="w-3 h-3" />
+                                          </Button>
+                                          <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => handleDeleteSubCategory(subCategory)}
+                                            title="Delete subcategory"
+                                            disabled={deleteSubCategory.isPending}
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </Button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </Fragment>
+                  );
+                })}
+                
+                {filteredCategories.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center py-8">
+                      <div className="text-center">
+                        <FolderOpen className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                        <p className="text-muted-foreground">No categories found</p>
+                        {searchTerm && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Try adjusting your search terms
+                          </p>
+                        )}
+                        {!searchTerm && (
+                          isAdmin && (
+                            <Button onClick={openCreateCategoryDialog} className="mt-4">
+                              <Plus className="w-4 h-4 mr-2" />
+                              Create Your First Category
+                            </Button>
+                          )
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </Main>
