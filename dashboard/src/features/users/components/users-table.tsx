@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { Dispatch, SetStateAction } from 'react'
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -37,21 +38,31 @@ declare module '@tanstack/react-table' {
 interface DataTableProps {
   columns: ColumnDef<User>[]
   data: User[]
+  pagination: PaginationState
+  setPagination: Dispatch<SetStateAction<PaginationState>>
+  sorting: SortingState
+  setSorting: Dispatch<SetStateAction<SortingState>>
+  pageCount: number
 }
 
-export function UsersTable({ columns, data }: DataTableProps) {
+export function UsersTable({
+  columns,
+  data,
+  pagination,
+  setPagination,
+  sorting,
+  setSorting,
+  pageCount,
+}: DataTableProps) {
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 20,
-  })
-
   const table = useReactTable({
     data,
     columns,
+    pageCount,
+    manualPagination: true,
+    manualSorting: true,
     state: {
       sorting,
       columnVisibility,
@@ -61,7 +72,10 @@ export function UsersTable({ columns, data }: DataTableProps) {
     },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
+    onSortingChange: (updater) => {
+      setSorting(updater)
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+    },
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,

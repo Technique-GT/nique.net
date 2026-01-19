@@ -11,7 +11,15 @@ import { useAuthStore } from '@/stores/authStore'
 import { canManageStaff } from '@/lib/permissions'
 
 function UsersContent() {
-  const { users, loading } = useUsers()
+  const {
+    users,
+    loading,
+    pagination,
+    setPagination,
+    sorting,
+    setSorting,
+    pageCount,
+  } = useUsers()
   const user = useAuthStore((state) => state.auth.user)
   const hasEditAccess = canManageStaff(user)
 
@@ -45,7 +53,15 @@ function UsersContent() {
           }
         />
         <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>
-          <UsersTable data={users} columns={columns} />
+          <UsersTable
+            data={users}
+            columns={columns}
+            pagination={pagination}
+            setPagination={setPagination}
+            sorting={sorting}
+            setSorting={setSorting}
+            pageCount={pageCount}
+          />
         </div>
       </Main>
 

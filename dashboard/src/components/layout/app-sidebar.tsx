@@ -15,7 +15,7 @@ import { isAdminUser } from '@/lib/permissions'
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuthStore((state) => state.auth)
   const isAdmin = isAdminUser(user)
-  const restrictedUrls = new Set(['/stats', '/comments', '/spotify'])
+  const restrictedUrls = new Set(['/stats', '/comments', '/slivers', '/spotify'])
 
   const visibleNavGroups = isAdmin
     ? sidebarData.navGroups

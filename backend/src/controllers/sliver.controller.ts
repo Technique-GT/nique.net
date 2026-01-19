@@ -31,16 +31,50 @@ export const createSliver = async (req: Request, res: Response): Promise<void> =
 
 export const getAllSlivers = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { active } = req.query as unknown as { active?: boolean };
+    const { active, page = 1, limit = 20, search, sortBy, sortDir } = req.query as unknown as {
+      active?: boolean;
+      page?: number;
+      limit?: number;
+      search?: string;
+      sortBy?: 'createdAt' | 'expiresAt' | 'text';
+      sortDir?: 'asc' | 'desc';
+    };
 
     const query: any = {};
     if (active === true) {
       query.expiresAt = { $gt: new Date() };
+    } else if (active === false) {
+      query.expiresAt = { $lte: new Date() };
     }
 
-    const slivers = await Sliver.find(query).sort({ createdAt: -1 }).lean();
+    if (typeof search === 'string' && search.trim().length > 0) {
+      const rx = new RegExp(search.trim(), 'i');
+      query.text = rx;
+    }
 
-    res.status(200).json({ success: true, data: slivers, count: slivers.length });
+    const pageNum = Math.max(Number(page) || 1, 1);
+    const limitNum = Math.max(Number(limit) || 20, 1);
+    const skip = (pageNum - 1) * limitNum;
+
+    const sortKey = sortBy ?? 'createdAt';
+    const sortDirection = sortDir === 'asc' ? 1 : -1;
+
+    const [slivers, total] = await Promise.all([
+      Sliver.find(query).sort({ [sortKey]: sortDirection }).skip(skip).limit(limitNum).lean(),
+      Sliver.countDocuments(query),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: slivers,
+      count: slivers.length,
+      pagination: {
+        total,
+        page: pageNum,
+        pages: Math.ceil(total / limitNum),
+        limit: limitNum,
+      },
+    });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'Error fetching slivers', error: error?.message });
   }

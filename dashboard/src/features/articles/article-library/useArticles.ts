@@ -186,12 +186,10 @@ export const useArticles = () => {
     setCurrentPage(page);
   };
 
-  // Get unique categories for filter
-  const availableCategories = useMemo(() =>
-    Array.from(new Set(articles.map((article) => article.category?._id)))
-      .map((id) => articles.find((article) => article.category?._id === id)?.category)
-      .filter((cat): cat is PopulatedCategory => !!cat && typeof cat._id === 'string' && cat._id.length > 0),
-    [articles],
+  // Use full taxonomy list for category filter so options aren't page-limited
+  const availableCategories = useMemo(
+    () => categories.filter((cat) => typeof cat._id === 'string' && cat._id.length > 0),
+    [categories],
   );
 
   // Helper function to get author display name
@@ -209,9 +207,13 @@ export const useArticles = () => {
           author.username.toLowerCase().includes(searchTerm.toLowerCase())
         );
       
-      const matchesStatus = statusFilter === "all" || 
-                           (statusFilter === "published" && article.status === "published") ||
-                           (statusFilter === "draft" && article.status === "draft");
+      const effectiveStatus = article.reviewStatus || article.status;
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "published" && effectiveStatus === "published") ||
+        (statusFilter === "draft" && effectiveStatus === "draft") ||
+        (statusFilter === "in_review" && effectiveStatus === "in_review") ||
+        (statusFilter === "changes_requested" && effectiveStatus === "changes_requested");
       
       const matchesCategory = categoryFilter === "all" || article.category?._id === categoryFilter;
 

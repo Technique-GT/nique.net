@@ -1,8 +1,9 @@
 import { z } from 'zod';
+import { booleanQuerySchema, paginationQuerySchema } from './common.schema';
 
-export const listSliversQuerySchema = z.object({
-  active: z
-    .union([z.literal('true'), z.literal('false')])
-    .optional()
-    .transform((v) => (v === undefined ? undefined : v === 'true')),
+export const listSliversQuerySchema = paginationQuerySchema.extend({
+  active: booleanQuerySchema.optional(),
+  search: z.string().trim().min(1).optional(),
+  sortBy: z.enum(['createdAt', 'expiresAt', 'text']).optional(),
+  sortDir: z.enum(['asc', 'desc']).optional(),
 });

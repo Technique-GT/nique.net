@@ -16,7 +16,7 @@ const readSocialLinks = (value: any): Array<{ platform: string; url: string }> =
 
 export const getUsers = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { page = '1', limit = '20', search, isAdmin } = req.query;
+    const { page = '1', limit = '20', search, isAdmin, sortBy, sortDir } = req.query;
 
     const filter: any = {};
 
@@ -33,8 +33,22 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
     const limitNum = Math.max(parseInt(limit as string, 10) || 20, 1);
     const skip = (pageNum - 1) * limitNum;
 
+    const allowedSortFields: Record<string, string> = {
+      name: 'name',
+      email: 'email',
+      isAdmin: 'isAdmin',
+      createdAt: 'createdAt',
+      updatedAt: 'updatedAt',
+    };
+    const sortKey =
+      typeof sortBy === 'string' && allowedSortFields[sortBy]
+        ? allowedSortFields[sortBy]
+        : 'name';
+    const sortDirection =
+      typeof sortDir === 'string' && sortDir.toLowerCase() === 'desc' ? -1 : 1;
+
     const [users, total] = await Promise.all([
-      User.find(filter).sort({ name: 1 }).skip(skip).limit(limitNum).lean(),
+      User.find(filter).sort({ [sortKey]: sortDirection }).skip(skip).limit(limitNum).lean(),
       User.countDocuments(filter),
     ]);
 

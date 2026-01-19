@@ -27,6 +27,7 @@ import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authen
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedStatsIndexRouteImport } from './routes/_authenticated/stats/index'
 import { Route as AuthenticatedSpotifyIndexRouteImport } from './routes/_authenticated/spotify/index'
+import { Route as AuthenticatedSliversIndexRouteImport } from './routes/_authenticated/slivers/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
 import { Route as AuthenticatedDashIndexRouteImport } from './routes/_authenticated/dash/index'
@@ -129,6 +130,12 @@ const AuthenticatedSpotifyIndexRoute =
   AuthenticatedSpotifyIndexRouteImport.update({
     id: '/spotify/',
     path: '/spotify/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSliversIndexRoute =
+  AuthenticatedSliversIndexRouteImport.update({
+    id: '/slivers/',
+    path: '/slivers/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedSettingsIndexRoute =
@@ -235,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/dash': typeof AuthenticatedDashIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/slivers': typeof AuthenticatedSliversIndexRoute
   '/spotify': typeof AuthenticatedSpotifyIndexRoute
   '/stats': typeof AuthenticatedStatsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
@@ -265,6 +273,7 @@ export interface FileRoutesByTo {
   '/dash': typeof AuthenticatedDashIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/slivers': typeof AuthenticatedSliversIndexRoute
   '/spotify': typeof AuthenticatedSpotifyIndexRoute
   '/stats': typeof AuthenticatedStatsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
@@ -299,6 +308,7 @@ export interface FileRoutesById {
   '/_authenticated/dash/': typeof AuthenticatedDashIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/slivers/': typeof AuthenticatedSliversIndexRoute
   '/_authenticated/spotify/': typeof AuthenticatedSpotifyIndexRoute
   '/_authenticated/stats/': typeof AuthenticatedStatsIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
@@ -332,6 +342,7 @@ export interface FileRouteTypes {
     | '/dash'
     | '/help-center'
     | '/settings/'
+    | '/slivers'
     | '/spotify'
     | '/stats'
     | '/users'
@@ -362,6 +373,7 @@ export interface FileRouteTypes {
     | '/dash'
     | '/help-center'
     | '/settings'
+    | '/slivers'
     | '/spotify'
     | '/stats'
     | '/users'
@@ -395,6 +407,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dash/'
     | '/_authenticated/help-center/'
     | '/_authenticated/settings/'
+    | '/_authenticated/slivers/'
     | '/_authenticated/spotify/'
     | '/_authenticated/stats/'
     | '/_authenticated/users/'
@@ -545,6 +558,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSpotifyIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/slivers/': {
+      id: '/_authenticated/slivers/'
+      path: '/slivers'
+      fullPath: '/slivers'
+      preLoaderRoute: typeof AuthenticatedSliversIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/': {
       id: '/_authenticated/settings/'
       path: '/'
@@ -668,6 +688,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCommentsIndexRoute: typeof AuthenticatedCommentsIndexRoute
   AuthenticatedDashIndexRoute: typeof AuthenticatedDashIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
+  AuthenticatedSliversIndexRoute: typeof AuthenticatedSliversIndexRoute
   AuthenticatedSpotifyIndexRoute: typeof AuthenticatedSpotifyIndexRoute
   AuthenticatedStatsIndexRoute: typeof AuthenticatedStatsIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
@@ -685,6 +706,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCommentsIndexRoute: AuthenticatedCommentsIndexRoute,
   AuthenticatedDashIndexRoute: AuthenticatedDashIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
+  AuthenticatedSliversIndexRoute: AuthenticatedSliversIndexRoute,
   AuthenticatedSpotifyIndexRoute: AuthenticatedSpotifyIndexRoute,
   AuthenticatedStatsIndexRoute: AuthenticatedStatsIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,

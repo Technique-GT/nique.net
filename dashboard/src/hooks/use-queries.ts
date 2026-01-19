@@ -45,6 +45,12 @@ import {
   type CommentStats,
 } from '@/services/comments'
 import {
+  getSlivers,
+  deleteSliver,
+  type Sliver,
+  type SliversQuery,
+} from '@/services/slivers'
+import {
   getAdminArticleById,
   createAdminArticleDraft,
 } from '@/services/articles'
@@ -67,7 +73,13 @@ export const queryKeys = {
   collaborators: (query?: CollaboratorQuery) => ['collaborators', query] as const,
 
   // Users - NOT persisted (PII)
-  users: (params?: { page?: number; limit?: number; search?: string }) =>
+  users: (params?: {
+    page?: number
+    limit?: number
+    search?: string
+    sortBy?: string
+    sortDir?: 'asc' | 'desc'
+  }) =>
     ['users', params] as const,
 
   // Media - NOT persisted (can be large)
@@ -76,6 +88,9 @@ export const queryKeys = {
   // Comments - NOT persisted (fast-changing)
   comments: (query?: CommentsQuery) => ['comments', query] as const,
   commentStats: ['comment-stats'] as const,
+
+  // Slivers - NOT persisted (fast-changing)
+  slivers: (query?: SliversQuery) => ['slivers', query] as const,
 
   // Playlists - persisted (small reference data)
   playlists: ['playlists'] as const,
@@ -187,7 +202,13 @@ export function useDeleteCollaborator() {
 // Users Hooks (NOT persisted - PII)
 // ============================================================================
 
-export function useUsers(params?: { page?: number; limit?: number; search?: string }) {
+export function useUsers(params?: {
+  page?: number
+  limit?: number
+  search?: string
+  sortBy?: string
+  sortDir?: 'asc' | 'desc'
+}) {
   return useQuery({
     queryKey: queryKeys.users(params),
     queryFn: () => getUsers(params),
@@ -286,6 +307,28 @@ export function useDeleteComment() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments'] })
       queryClient.invalidateQueries({ queryKey: queryKeys.commentStats })
+    },
+  })
+}
+
+// ============================================================================
+// Slivers Hooks (NOT persisted - fast-changing)
+// ============================================================================
+
+export function useSlivers(query?: SliversQuery) {
+  return useQuery({
+    queryKey: queryKeys.slivers(query),
+    queryFn: () => getSlivers(query),
+    staleTime: 30 * 1000,
+  })
+}
+
+export function useDeleteSliver() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: deleteSliver,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['slivers'] })
     },
   })
 }
@@ -564,4 +607,4 @@ export function useCreateArticleDraft() {
 }
 
 // Re-export types for convenience
-export type { Category, SubCategory, Tag, Collaborator, User, MediaItem, Comment, CommentStats }
+export type { Category, SubCategory, Tag, Collaborator, User, MediaItem, Comment, CommentStats, Sliver }

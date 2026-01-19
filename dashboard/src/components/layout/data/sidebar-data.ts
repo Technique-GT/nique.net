@@ -8,6 +8,7 @@ import {
   IconMessage,
   IconMusic,
   IconPhoto,
+  IconSparkles,
   IconTag,
   IconUsers,
 } from '@tabler/icons-react'
@@ -77,6 +78,11 @@ export const sidebarData: SidebarData = {
               title: 'Comments List',
               url: '/comments',
               icon: IconMessage,
+            },
+            {
+              title: 'Slivers List',
+              url: '/slivers',
+              icon: IconSparkles,
             },
             {
               title: 'Spotify',
