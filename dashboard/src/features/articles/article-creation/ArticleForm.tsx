@@ -1150,8 +1150,8 @@ export default function ArticleForm({
                         
                         {/* Request Review */}
                         {reviewStatus !== 'in_review' && (reviewStatus === 'draft' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges)) && (isOwner || isAdmin) && (
-                          <DropdownMenuItem onClick={handleRequestReview} disabled={isSubmitting}>
-                            <Eye className="mr-2 h-4 w-4 text-blue-500" />
+                          <DropdownMenuItem onClick={handleRequestReview} disabled={isSubmitting} className="text-blue-600 focus:text-blue-700 focus:bg-blue-50 dark:focus:bg-blue-950/50">
+                            <Eye className="mr-2 h-4 w-4" />
                             Request Review
                           </DropdownMenuItem>
                         )}
@@ -1166,7 +1166,7 @@ export default function ArticleForm({
 
                         {/* Admin: Request Changes */}
                         {isAdmin && reviewStatus === 'in_review' && (
-                          <DropdownMenuItem onClick={handleRequestChanges} disabled={isSubmitting} className="text-orange-600 focus:text-orange-700 focus:bg-orange-50">
+                          <DropdownMenuItem onClick={handleRequestChanges} disabled={isSubmitting} className="text-orange-600 focus:text-orange-700 focus:bg-orange-50 dark:focus:bg-orange-950/50">
                             <AlertCircle className="mr-2 h-4 w-4" />
                             Request Changes
                           </DropdownMenuItem>
@@ -1174,7 +1174,7 @@ export default function ArticleForm({
 
                         {/* Admin: Publish */}
                         {isAdmin && (reviewStatus === 'in_review' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges)) && (
-                          <DropdownMenuItem onClick={handleAdminPublish} disabled={isSubmitting} className="text-green-600 focus:text-green-700 focus:bg-green-50">
+                          <DropdownMenuItem onClick={handleAdminPublish} disabled={isSubmitting} className="text-green-600 focus:text-green-700 focus:bg-green-50 dark:focus:bg-green-950/50">
                             <Check className="mr-2 h-4 w-4" />
                             {reviewStatus === 'published' ? 'Publish Updates' : 'Approve & Publish'}
                           </DropdownMenuItem>
@@ -1184,7 +1184,7 @@ export default function ArticleForm({
                         {isAdmin && reviewStatus === 'published' && (
                           <>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={handleAdminUnpublish} disabled={isSubmitting} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                            <DropdownMenuItem onClick={handleAdminUnpublish} disabled={isSubmitting} variant="destructive">
                               <ShieldAlert className="mr-2 h-4 w-4" />
                               Unpublish Article
                             </DropdownMenuItem>
