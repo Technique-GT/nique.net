@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { MoreHorizontal, Star, Pin, Send, RefreshCw, Eye, Edit, Trash2 } from "lucide-react";
+import { ExternalLink, MoreHorizontal, Star, Pin, Send, RefreshCw, Edit, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ArticleTableProps {
@@ -20,7 +20,6 @@ interface ArticleTableProps {
   onQuickPublish: (article: Article) => void;
   onQuickFeature: (article: Article) => void;
   onQuickSticky: (article: Article) => void;
-  onView: (article: Article) => void;
   onEdit: (article: Article) => void;
   onDelete: (article: Article) => void;
   onNewArticle: () => void;
@@ -41,13 +40,18 @@ export function ArticleTable({
   onQuickPublish,
   onQuickFeature,
   onQuickSticky,
-  onView,
   onEdit,
   onDelete,
   onNewArticle,
   isAdmin,
   currentUserId,
 }: ArticleTableProps) {
+  const handleViewOnTechnique = (article: Article) => {
+    if (article.status !== 'published' || !article.slug) return;
+    const frontendUrl = import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173';
+    window.open(`${frontendUrl}/articles/${article.slug}`, '_blank');
+  };
+
   if (loading) {
     return (
       <div className="text-center py-12">
@@ -279,9 +283,12 @@ export function ArticleTable({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => onView(article)}>
-                      <Eye className="w-4 h-4 mr-2" />
-                      View
+                    <DropdownMenuItem 
+                      onClick={() => handleViewOnTechnique(article)}
+                      disabled={article.status !== 'published'}
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      View on Technique
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => onEdit(article)}

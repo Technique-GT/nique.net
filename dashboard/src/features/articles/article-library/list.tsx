@@ -59,7 +59,6 @@ export default function ArticleList() {
 
   // Dialog states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [currentArticle, setCurrentArticle] = useState<Article | null>(null);
 
   // Quick action states
@@ -237,12 +236,6 @@ export default function ArticleList() {
     }
   };
 
-  // View handler
-  const handleView = (article: Article) => {
-    setCurrentArticle(article);
-    setViewDialogOpen(true);
-  };
-
   // Navigation
   const handleNewArticle = async () => {
     try {
@@ -380,7 +373,6 @@ export default function ArticleList() {
                 onQuickPublish={handleQuickPublish}
                 onQuickFeature={handleQuickFeature}
                 onQuickSticky={handleQuickSticky}
-                onView={handleView}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onNewArticle={handleNewArticle}
@@ -419,8 +411,6 @@ export default function ArticleList() {
         // Other dialogs
         deleteDialogOpen={deleteDialogOpen}
         setDeleteDialogOpen={setDeleteDialogOpen}
-        viewDialogOpen={viewDialogOpen}
-        setViewDialogOpen={setViewDialogOpen}
         currentArticle={currentArticle}
         
         // Data
