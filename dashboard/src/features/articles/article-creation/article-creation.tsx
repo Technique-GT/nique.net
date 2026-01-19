@@ -78,7 +78,8 @@ export default function ArticleCreation() {
 
   // TanStack Query hooks - all taxonomy data is persisted
   const { categories: rawCategories, subCategories: rawSubCategories, tags: rawTags, isLoading: taxonomyLoading, isError: taxonomyError } = useTaxonomy();
-  const { data: rawUsers = [], isLoading: usersLoading } = useUsers();
+  const { data: usersData, isLoading: usersLoading } = useUsers();
+  const rawUsers = usersData?.data || [];
   const { data: collaboratorsData = [], isLoading: collabLoading } = useCollaborators();
   const { data: mediaData, isLoading: mediaLoading } = useMedia({ limit: 100 });
 
