@@ -120,6 +120,7 @@ export default function ArticleForm({
   // Actually, even easier:
   const showRequestReviewDirectly = canRequestReview && !canPublish && !canUnpublish && !canCancelReview && !canRequestChanges;
   const showCancelReviewDirectly = canCancelReview && !canPublish && !canUnpublish && !canRequestReview && !canRequestChanges;
+  const showUnpublishDirectly = canUnpublish && !canPublish && !canRequestReview && !canCancelReview && !canRequestChanges;
 
   // Sync state with initialArticle when it's loaded
   useEffect(() => {
@@ -1172,8 +1173,15 @@ export default function ArticleForm({
                         </Button>
                       )}
 
+                      {/* Direct Button: Unpublish (if only option) */}
+                      {showUnpublishDirectly && (
+                        <Button type="button" variant="destructive" onClick={handleAdminUnpublish} disabled={isSubmitting}>
+                          Unpublish
+                        </Button>
+                      )}
+
                       {/* Dropdown: If multiple options or specific admin actions */}
-                      {!showRequestReviewDirectly && !showCancelReviewDirectly && (canRequestReview || canCancelReview || canRequestChanges || canPublish || canUnpublish) && (
+                      {!showRequestReviewDirectly && !showCancelReviewDirectly && !showUnpublishDirectly && (canRequestReview || canCancelReview || canRequestChanges || canPublish || canUnpublish) && (
                         <DropdownMenu modal={false}>
                           <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="gap-2">
