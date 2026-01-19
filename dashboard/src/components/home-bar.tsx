@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, ChevronDown, Book, Newspaper, PenSquare, Info } from 'lucide-react'
-import { ThemeSwitch } from './theme-switch'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import {
@@ -110,7 +109,6 @@ export function Navbar() {
               <Link to="/sign-up">Sign Up</Link>
             </Button>
           </div>
-          <ThemeSwitch />
           <Button
             variant="ghost"
             size="icon"

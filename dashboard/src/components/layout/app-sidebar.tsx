@@ -3,7 +3,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarRail,
 } from '@/components/ui/sidebar'
 import { CardTitle } from '@/components/ui/card'
 import { NavGroup } from '@/components/layout/nav-group'
@@ -55,7 +54,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   } : sidebarData.user
 
   return (
-    <Sidebar collapsible='icon' variant='floating' {...props}>
+    <Sidebar collapsible='none' variant='floating' {...props}>
       <SidebarHeader>
         <CardTitle className="text-lg p-2 overflow-hidden whitespace-nowrap text-ellipsis">Technique</CardTitle>
       </SidebarHeader>
@@ -67,7 +66,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <NavUser user={displayUser} />
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   )
 }

@@ -152,12 +152,32 @@ function Sidebar({
       <div
         data-slot='sidebar'
         className={cn(
-          'bg-sidebar text-sidebar-foreground flex h-full w-(--sidebar-width) flex-col',
+          'bg-sidebar text-sidebar-foreground flex h-full w-(--sidebar-width) flex-col peer hidden md:block',
           className
         )}
+        data-state='expanded'
         {...props}
       >
-        {children}
+        <div
+          className={cn(
+            'fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) md:flex',
+            side === 'left' ? 'left-0' : 'right-0',
+            variant === 'floating' || variant === 'inset'
+              ? 'p-2'
+              : side === 'left' ? 'border-r' : 'border-l'
+          )}
+        >
+          <div
+            className={cn(
+              'bg-sidebar flex h-full w-full flex-col',
+              variant === 'floating' || variant === 'inset'
+                ? 'rounded-lg border shadow-sm'
+                : ''
+            )}
+          >
+            {children}
+          </div>
+        </div>
       </div>
     )
   }
