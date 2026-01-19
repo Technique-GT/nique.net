@@ -17,11 +17,19 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Info, Search, X } from "lucide-react";
+import { Info, Search, X, ChevronDown, Check, AlertCircle, Eye, ShieldAlert } from "lucide-react";
 
 import { MediaPicker } from "@/components/media/media-picker";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/authStore";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 import {
   type Article,
   type Author,
@@ -1127,40 +1135,63 @@ export default function ArticleForm({
                     </Button>
                   )}
 
-                  {/* Workflow buttons */}
+                  {/* Workflow Actions Dropdown */}
                   {initialArticle?._id && (
-                    <>
-                      {/* Request Review: Available if draft, changes_requested, or if published with pending changes (and not already in review) */}
-                      {reviewStatus !== 'in_review' && (reviewStatus === 'draft' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges)) && (isOwner || isAdmin) && (
-                        <Button type="button" variant="outline" onClick={handleRequestReview} disabled={isSubmitting}>
-                          Request Review
+                    <DropdownMenu modal={false}>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="gap-2">
+                          Review Actions
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
                         </Button>
-                      )}
-                      
-                      {reviewStatus === 'in_review' && (isOwner || isAdmin) && (
-                        <Button type="button" variant="outline" onClick={handleUnrequestReview} disabled={isSubmitting}>
-                          Cancel Review Request
-                        </Button>
-                      )}
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>Manage Status</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        
+                        {/* Request Review */}
+                        {reviewStatus !== 'in_review' && (reviewStatus === 'draft' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges)) && (isOwner || isAdmin) && (
+                          <DropdownMenuItem onClick={handleRequestReview} disabled={isSubmitting}>
+                            <Eye className="mr-2 h-4 w-4 text-blue-500" />
+                            Request Review
+                          </DropdownMenuItem>
+                        )}
 
-                      {isAdmin && reviewStatus === 'in_review' && (
-                         <Button type="button" variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50" onClick={handleRequestChanges} disabled={isSubmitting}>
-                           Request Changes
-                         </Button>
-                      )}
+                        {/* Cancel Review */}
+                        {reviewStatus === 'in_review' && (isOwner || isAdmin) && (
+                          <DropdownMenuItem onClick={handleUnrequestReview} disabled={isSubmitting}>
+                            <X className="mr-2 h-4 w-4 text-muted-foreground" />
+                            Cancel Review Request
+                          </DropdownMenuItem>
+                        )}
 
-                      {isAdmin && (reviewStatus === 'in_review' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges)) && (
-                        <Button type="button" variant="default" className="bg-green-600 hover:bg-green-700 text-white" onClick={handleAdminPublish} disabled={isSubmitting}>
-                          {reviewStatus === 'published' ? 'Publish Updates' : 'Approve & Publish'}
-                        </Button>
-                      )}
+                        {/* Admin: Request Changes */}
+                        {isAdmin && reviewStatus === 'in_review' && (
+                          <DropdownMenuItem onClick={handleRequestChanges} disabled={isSubmitting} className="text-orange-600 focus:text-orange-700 focus:bg-orange-50">
+                            <AlertCircle className="mr-2 h-4 w-4" />
+                            Request Changes
+                          </DropdownMenuItem>
+                        )}
 
-                      {isAdmin && reviewStatus === 'published' && (
-                        <Button type="button" variant="destructive" onClick={handleAdminUnpublish} disabled={isSubmitting}>
-                          Unpublish
-                        </Button>
-                      )}
-                    </>
+                        {/* Admin: Publish */}
+                        {isAdmin && (reviewStatus === 'in_review' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges)) && (
+                          <DropdownMenuItem onClick={handleAdminPublish} disabled={isSubmitting} className="text-green-600 focus:text-green-700 focus:bg-green-50">
+                            <Check className="mr-2 h-4 w-4" />
+                            {reviewStatus === 'published' ? 'Publish Updates' : 'Approve & Publish'}
+                          </DropdownMenuItem>
+                        )}
+
+                        {/* Admin: Unpublish */}
+                        {isAdmin && reviewStatus === 'published' && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleAdminUnpublish} disabled={isSubmitting} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                              <ShieldAlert className="mr-2 h-4 w-4" />
+                              Unpublish Article
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   )}
 
                   {!initialArticle?._id && (
