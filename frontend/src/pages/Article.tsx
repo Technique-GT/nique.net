@@ -176,7 +176,9 @@ export default function Article() {
         setRelatedArticles([]);
         setComments([]);
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 

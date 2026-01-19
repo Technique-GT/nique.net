@@ -22,7 +22,7 @@ export function AuthenticatedLayout({ children }: Props) {
           id='content'
           className={cn(
             'ml-auto w-full max-w-full',
-            'sm:w-[calc(100%-var(--sidebar-width))]',
+            'md:w-[calc(100%-var(--sidebar-width))]',
             'flex h-svh flex-col',
             'group-data-[scroll-locked=1]/body:h-full',
             'has-[main.fixed-main]:group-data-[scroll-locked=1]/body:h-svh'

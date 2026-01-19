@@ -54,7 +54,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   } : sidebarData.user
 
   return (
-    <Sidebar collapsible='none' variant='floating' {...props}>
+    <Sidebar variant='floating' {...props}>
       <SidebarHeader>
         <CardTitle className="text-lg p-2 overflow-hidden whitespace-nowrap text-ellipsis">Technique</CardTitle>
       </SidebarHeader>
