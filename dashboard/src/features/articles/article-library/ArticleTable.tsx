@@ -184,7 +184,7 @@ export function ArticleTable({
               
               {/* Quick Actions Column */}
               <TableCell className="text-center hidden sm:table-cell">
-                <div className="flex justify-center gap-1">
+                <div className="flex justify-center gap-1" onClick={(e) => e.stopPropagation()}>
                   {/* Publish/Unpublish Button */}
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -277,7 +277,7 @@ export function ArticleTable({
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
                       <MoreHorizontal className="w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
