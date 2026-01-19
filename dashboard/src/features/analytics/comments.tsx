@@ -150,7 +150,7 @@ export default function CommentsManagement() {
               </div>
               
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-45">
+                <SelectTrigger className="w-full sm:w-40">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -161,15 +161,15 @@ export default function CommentsManagement() {
               </Select>
             </div>
 
-            <div className="rounded-md border">
-              <Table>
+            <div className="rounded-md border overflow-x-auto">
+              <Table className="min-w-[600px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>User</TableHead>
-                    <TableHead className="max-w-md">Comment</TableHead>
-                    <TableHead>Article ID</TableHead>
+                    <TableHead className="min-w-[200px]">Comment</TableHead>
+                    <TableHead className="hidden sm:table-cell">Article ID</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead className="hidden md:table-cell">Date</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -177,14 +177,14 @@ export default function CommentsManagement() {
                   {filteredComments.map((comment) => (
                     <TableRow key={comment._id}>
                       <TableCell className="font-medium">{comment.username}</TableCell>
-                      <TableCell className="max-w-md truncate">{comment.content}</TableCell>
-                      <TableCell className="text-xs font-mono">{comment.articleId.slice(-6)}</TableCell>
+                      <TableCell className="min-w-[200px] max-w-[300px] truncate">{comment.content}</TableCell>
+                      <TableCell className="text-xs font-mono hidden sm:table-cell">{comment.articleId.slice(-6)}</TableCell>
                       <TableCell>
                         <Badge variant={comment.approved ? "default" : "secondary"}>
                           {comment.approved ? "Approved" : "Pending"}
                         </Badge>
                       </TableCell>
-                      <TableCell>{formatDate(comment.createdAt)}</TableCell>
+                      <TableCell className="hidden md:table-cell">{formatDate(comment.createdAt)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button 

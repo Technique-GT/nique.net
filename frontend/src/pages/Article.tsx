@@ -7,6 +7,7 @@ import ArticleBlock from "../components/ArticleBlock";
 import Comment from "../components/Comment";
 import Spinner from "../components/Spinner";
 import articleService from "../services/articleService";
+import { articleCache } from "../services/articleCache";
 import commentService from "../services/commentService";
 import { ArticleDocument, User, Comment as CommentType } from "../types/article";
 
@@ -82,8 +83,15 @@ export default function Article() {
     if (!id) return undefined;
     return /^[a-f0-9]{24}:\d+$/i.test(id) ? id.split(":")[0] : id;
   }, [id, slug]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [article, setArticle] = useState<ArticleDocument | null>(null);
+
+  // Check cache immediately for instant display
+  const initialCachedArticle = useMemo(() => {
+    const cacheKey = slug || normalizedId || '';
+    return cacheKey ? articleCache.get(cacheKey) : null;
+  }, [slug, normalizedId]);
+
+  const [isLoading, setIsLoading] = useState(!initialCachedArticle);
+  const [article, setArticle] = useState<ArticleDocument | null>(initialCachedArticle);
   const [relatedArticles, setRelatedArticles] = useState<ArticleDocument[]>([]);
   const [comments, setComments] = useState<DisplayComment[]>([]);
   const [numCommentsToView, setNumCommentsToView] = useState(5);
@@ -101,7 +109,10 @@ export default function Article() {
     const controller = new AbortController();
     const load = async () => {
       try {
-        setIsLoading(true);
+        // Only show loading if we don't have cached data
+        if (!article) {
+          setIsLoading(true);
+        }
         let fetchedArticle: ArticleDocument;
 
         if (slug) {
@@ -113,6 +124,8 @@ export default function Article() {
         }
 
         setArticle(fetchedArticle);
+        // Update cache with fresh data
+        articleCache.set(fetchedArticle);
 
         // backend uses categoryId (populated object), not categories[]
         const categoryId = fetchedArticle.categoryId?._id;
@@ -197,7 +210,7 @@ export default function Article() {
     setCommentSubmitError(null);
 
     try {
-      const createdComment = await commentService.createComment(articleId, {
+      await commentService.createComment(articleId, {
         content: newCommentText.trim(),
         username: newCommentName.trim() || undefined,
       });

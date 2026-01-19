@@ -23,7 +23,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         .map((group) => {
           const items = group.items
             .map((item) => {
-              if ('items' in item) {
+              if ('items' in item && item.items) {
                 const filteredItems = item.items.filter((child) => {
                   if (typeof child.url !== 'string') return true
                   return !restrictedUrls.has(child.url)

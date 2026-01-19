@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import articleService from '../services/articleService';
+import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
 import { ArticleDocument } from '../types/article';
 import SideArticle from '../components/SideArticle';
@@ -11,98 +12,126 @@ import { Categories } from '../types/categories';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
 import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
 
+// Helper to process raw articles into page sections
+const processEntertainmentArticles = (allEntertainment: ArticleDocument[]) => {
+    const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+        getArticleTimestamp(b) - getArticleTimestamp(a);
+
+    const stickyPosts = allEntertainment.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+    const nonStickyPosts = allEntertainment.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
+    const orderedEntertainment = [...stickyPosts, ...nonStickyPosts];
+    const recentSelection = orderedEntertainment.slice(0, 3);
+    const recentIds = new Set(recentSelection.map(getArticleId));
+    const remainingEntertainment = orderedEntertainment.filter((article) => !recentIds.has(getArticleId(article)));
+
+    const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
+        articles
+            .filter((article) => {
+                if (article.subcategoryId && typeof article.subcategoryId === 'object') {
+                    return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
+                }
+                return false;
+            })
+            .filter((article) => !recentIds.has(getArticleId(article)))
+            .sort(sortByPublishedDesc);
+
+    return {
+        recentEntertainment: recentSelection,
+        entertainmentArticles: remainingEntertainment,
+        filmtv: filterBySubcategory(allEntertainment, 'film & tv'),
+        music: filterBySubcategory(allEntertainment, 'music'),
+        artsTheater: filterBySubcategory(allEntertainment, 'arts & theater'),
+    };
+};
+
 function Entertainment() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentEntertainment, setRecentEntertainment] = useState<ArticleDocument[]>([]);
-    const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>([]);
-    const [filmtv, setFilmAndTV] = useState<ArticleDocument[]>([]);
-    const [music, setMusic] = useState<ArticleDocument[]>([]);
-    const [artsTheater, setArtsTheater] = useState<ArticleDocument[]>([]);
+    // Check cache immediately for instant display
+    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.ENTERTAINMENT), []);
+    const initialData = useMemo(() => cachedArticles ? processEntertainmentArticles(cachedArticles) : null, [cachedArticles]);
+
+    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
+    const [recentEntertainment, setRecentEntertainment] = useState<ArticleDocument[]>(initialData?.recentEntertainment || []);
+    const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>(initialData?.entertainmentArticles || []);
+    const [filmtv, setFilmAndTV] = useState<ArticleDocument[]>(initialData?.filmtv || []);
+    const [music, setMusic] = useState<ArticleDocument[]>(initialData?.music || []);
+    const [artsTheater, setArtsTheater] = useState<ArticleDocument[]>(initialData?.artsTheater || []);
     const [error, setError] = useState<string | null>(null);
-    const [entertainmentCategoryId, setEntertainmentCategoryId] = useState<string | null>(null);
+    const [entertainmentCategoryId, setEntertainmentCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.ENTERTAINMENT));
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
 
         const loadArticles = async () => {
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            // Services now return unwrapped data directly
-            const categories = await articleService.fetchCategories(50, controller.signal);
-
-            const entertainmentCategory = categories.find((category: any) =>
-            category.name?.toLowerCase() === Categories.ENTERTAINMENT.toLowerCase()
-            );
-            setEntertainmentCategoryId(entertainmentCategory?._id || null);
-
-            if (!entertainmentCategory?._id) {
-            if (!isMounted) return;
-            setEntertainmentArticles([]);
-            setError('Entertainment category not found.');
-            return;
+            // Only show loading if we don't have cached data
+            if (!cachedArticles) {
+                setIsLoading(true);
             }
+            setError(null);
 
-            const entertainmentResponse = await articleService.fetchArticlesByCategory(
-                entertainmentCategory._id,
-                undefined,
-                controller.signal
-            );
+            try {
+                // Use cached categories if available
+                let categories = categoryCache.getCategories();
+                if (!categories) {
+                    categories = await articleService.fetchCategories(50, controller.signal);
+                    categoryCache.setCategories(categories);
+                }
 
-            const allEntertainment = entertainmentResponse || [];
-            const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
-                getArticleTimestamp(b) - getArticleTimestamp(a);
+                const entertainmentCategory = categories.find((category: any) =>
+                    category.name?.toLowerCase() === Categories.ENTERTAINMENT.toLowerCase()
+                );
+                setEntertainmentCategoryId(entertainmentCategory?._id || null);
 
-            const stickyPosts = allEntertainment.filter((article) => article.isSticky).sort(sortByPublishedDesc);
-            const nonStickyPosts = allEntertainment.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
-            const orderedEntertainment = [...stickyPosts, ...nonStickyPosts];
-            const recentSelection = orderedEntertainment.slice(0, 3);
-            const recentIds = new Set(recentSelection.map(getArticleId));
-            const remainingEntertainment = orderedEntertainment.filter((article) => !recentIds.has(getArticleId(article)));
+                if (!entertainmentCategory?._id) {
+                    if (!isMounted) return;
+                    setEntertainmentArticles([]);
+                    setError('Entertainment category not found.');
+                    return;
+                }
 
-            const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
-                articles
-                    .filter((article) => {
-                        if (article.subcategoryId && typeof article.subcategoryId === 'object') {
-                            return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
-                        }
+                const entertainmentResponse = await articleService.fetchArticlesByCategory(
+                    entertainmentCategory._id,
+                    undefined,
+                    controller.signal
+                );
 
-                        return false;
-                    })
-                    .filter((article) => !recentIds.has(getArticleId(article)))
-                    .sort(sortByPublishedDesc);
+                const allEntertainment = entertainmentResponse || [];
+                
+                // Update cache with fresh data
+                categoryCache.setCategoryArticles(Categories.ENTERTAINMENT, allEntertainment);
 
-            if (!isMounted) {
-                return;
+                if (!isMounted) {
+                    return;
+                }
+
+                const processed = processEntertainmentArticles(allEntertainment);
+                setRecentEntertainment(processed.recentEntertainment);
+                setEntertainmentArticles(processed.entertainmentArticles);
+                setFilmAndTV(processed.filmtv);
+                setMusic(processed.music);
+                setArtsTheater(processed.artsTheater);
+            } catch (err) {
+                if (!isMounted) {
+                    return;
+                }
+                // Only show error if we don't have cached data to display
+                if (!cachedArticles) {
+                    setError('Unable to load articles. Please try again later.');
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                }
             }
-
-            setRecentEntertainment(recentSelection);
-            setEntertainmentArticles(remainingEntertainment);
-            setFilmAndTV(filterBySubcategory(entertainmentResponse || [], 'film & tv'));
-            setMusic(filterBySubcategory(entertainmentResponse || [], 'music'));
-            setArtsTheater(filterBySubcategory(entertainmentResponse || [], 'arts & theater'));
-
-        } catch (err) {
-            if (!isMounted) {
-                return;
-            }
-            setError('Unable to load articles. Please try again later.');
-        } finally {
-            if (isMounted) {
-                setIsLoading(false);
-            }
-        }
         };
 
         loadArticles();
 
         return () => {
-        isMounted = false;
-        controller.abort();
+            isMounted = false;
+            controller.abort();
         };
-    }, []);
+    }, [cachedArticles]);
 
     if (isLoading) {
         return (

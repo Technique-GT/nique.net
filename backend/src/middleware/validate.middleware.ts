@@ -15,8 +15,8 @@ const withContext = (err: ZodError, req: Request, target: ValidationTarget) => {
 /**
  * Validation-only middleware.
  * Validates input against schema and rejects bad requests.
- * Does NOT replace req.query/params (Express 5+ makes them read-only).
- * Controllers continue reading from req.query/params as strings.
+ * Uses object property definition to override read-only req properties in Express 5+.
+ * Controllers continue reading from req.query/params/body as usual.
  */
 const validate = (target: ValidationTarget, schema: ZodTypeAny) => {
   return (req: Request, _res: Response, next: NextFunction) => {
@@ -28,9 +28,16 @@ const validate = (target: ValidationTarget, schema: ZodTypeAny) => {
       return;
     }
 
-    // For body, we can mutate it (not read-only)
+    // For body, we can mutate it directly.
     if (target === 'body') {
       req.body = parsed.data;
+    } 
+    // For query and params in Express 5, we must use defineProperty to override the getter.
+    else if (target === 'query') {
+      Object.defineProperty(req, 'query', { value: parsed.data, configurable: true });
+    }
+    else if (target === 'params') {
+      Object.defineProperty(req, 'params', { value: parsed.data, configurable: true });
     }
 
     next();

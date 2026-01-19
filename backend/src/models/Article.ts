@@ -28,7 +28,11 @@ export interface IArticle extends Document {
 
   ownerId: mongoose.Types.ObjectId;
   editorState?: any;
-  reviewStatus: 'draft' | 'in_review' | 'published';
+  reviewStatus: 'draft' | 'in_review' | 'changes_requested' | 'published';
+  hasPendingChanges: boolean;
+  reviewedAt?: Date;
+  reviewedBy?: mongoose.Types.ObjectId;
+  reviewNotes?: string;
 
   viewCount: number;
 
@@ -71,10 +75,14 @@ const ArticleSchema = new Schema<IArticle>(
     editorState: { type: Schema.Types.Mixed, required: false },
     reviewStatus: { 
       type: String, 
-      enum: ['draft', 'in_review', 'published'], 
+      enum: ['draft', 'in_review', 'changes_requested', 'published'], 
       required: true, 
       default: 'draft' 
     },
+    hasPendingChanges: { type: Boolean, required: true, default: false },
+    reviewedAt: { type: Date, required: false },
+    reviewedBy: { type: Schema.Types.ObjectId, ref: 'User', required: false },
+    reviewNotes: { type: String, required: false },
 
     viewCount: { type: Number, required: true, default: 0 },
   },

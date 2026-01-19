@@ -21,7 +21,17 @@ export function ProtectedRoute({ children, fallback = '/login' }: ProtectedRoute
   const isAuthenticated = !!user;
 
   if (!isAuthenticated) {
-    return <Navigate to={fallback} search={{ redirect: location.pathname }} replace />;
+    const searchParams = new URLSearchParams(location.search);
+    const error = searchParams.get('error');
+    
+    return <Navigate 
+      to={fallback} 
+      search={{ 
+        redirect: location.pathname,
+        ...(error ? { error } : {})
+      }} 
+      replace 
+    />;
   }
 
   return <>{children}</>;

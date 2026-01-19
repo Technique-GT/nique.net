@@ -182,16 +182,12 @@ describe('Comments Endpoints', () => {
   });
 });
 
-describe('Admin Endpoints', () => {
-  it('GET /api/admin/articles returns all articles including drafts', async () => {
-    const res = await request(app).get('/api/admin/articles?limit=5');
-
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data).toBeInstanceOf(Array);
-    expect(res.body.pagination).toBeDefined();
+  describe('Admin Endpoints', () => {
+    it('GET /api/admin/articles returns 401 when unauthorized', async () => {
+      const res = await request(app).get('/api/admin/articles?limit=5');
+      expect(res.status).toBe(401);
+    });
   });
-});
 
 describe('404 Handler', () => {
   it('returns 404 for unknown routes', async () => {

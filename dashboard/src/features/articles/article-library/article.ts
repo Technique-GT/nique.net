@@ -45,6 +45,11 @@ export interface Article {
   authors: PopulatedAuthor[];
   collaborators: PopulatedAuthor[]; // Assuming collaborators are also authors
   ownerId?: string;
+  reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published';
+  hasPendingChanges?: boolean;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
   featuredMedia: {
     id?: string;
     url?: string;

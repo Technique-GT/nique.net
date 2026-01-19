@@ -17,11 +17,19 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Info, Search, X } from "lucide-react";
+import { Info, Search, X, ChevronDown, Check, AlertCircle, Eye, ShieldAlert } from "lucide-react";
 
 import { MediaPicker } from "@/components/media/media-picker";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/authStore";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 import {
   type Article,
   type Author,
@@ -44,7 +52,11 @@ interface ArticleFormProps {
   mediaLibrary: MediaItem[];
   initialArticle?: Article | null;
   isLoadingData?: boolean;
+  onLastSavedChange?: (date: Date) => void;
 }
+
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/hooks/use-queries";
 
 export default function ArticleForm({
   categories,
@@ -55,8 +67,10 @@ export default function ArticleForm({
   mediaLibrary,
   initialArticle,
   isLoadingData,
+  onLastSavedChange,
 }: ArticleFormProps) {
   const { user: me } = useAuthStore((state) => state.auth);
+  const queryClient = useQueryClient();
 
   const [title, setTitle] = useState(initialArticle?.title || "");
   const [content, setContent] = useState<SerializedEditorState | undefined>(
@@ -84,13 +98,29 @@ export default function ArticleForm({
   const [isFeatured, setIsFeatured] = useState(initialArticle?.isFeatured || false);
   const [isSticky, setIsSticky] = useState(initialArticle?.isSticky || false);
   const [reviewStatus, setReviewStatus] = useState<
-    "draft" | "in_review" | "published"
+    "draft" | "in_review" | "changes_requested" | "published"
   >(initialArticle?.reviewStatus || "draft");
+  const [hasPendingChanges, setHasPendingChanges] = useState(initialArticle?.hasPendingChanges || false);
 
   const isOwner = me?.id === initialArticle?.ownerId;
   const isAdmin = !!me?.isAdmin;
   const isLocked = reviewStatus === "in_review" && !isAdmin;
   const canManageAuthorsPerm = isAdmin || isOwner;
+
+  // Determine available actions
+  const canRequestReview = reviewStatus !== 'in_review' && (reviewStatus === 'draft' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges)) && (isOwner || isAdmin);
+  const canCancelReview = reviewStatus === 'in_review' && (isOwner || isAdmin);
+  const canRequestChanges = isAdmin && reviewStatus === 'in_review';
+  const canPublish = isAdmin && (reviewStatus === 'in_review' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges));
+  const canUnpublish = isAdmin && reviewStatus === 'published';
+
+  // "Request Review" is the only option if:
+  // 1. It is available
+  // 2. We are NOT an admin (admins always have "Publish" available when "Request Review" is available, except maybe purely new draft? but Admin can publish draft)
+  // Actually, even easier:
+  const showRequestReviewDirectly = canRequestReview && !canPublish && !canUnpublish && !canCancelReview && !canRequestChanges;
+  const showCancelReviewDirectly = canCancelReview && !canPublish && !canUnpublish && !canRequestReview && !canRequestChanges;
+  const showUnpublishDirectly = canUnpublish && !canPublish && !canRequestReview && !canCancelReview && !canRequestChanges;
 
   // Sync state with initialArticle when it's loaded
   useEffect(() => {
@@ -107,6 +137,7 @@ export default function ArticleForm({
       setIsFeatured(initialArticle.isFeatured || false);
       setIsSticky(initialArticle.isSticky || false);
       setReviewStatus(initialArticle.reviewStatus || "draft");
+      setHasPendingChanges(initialArticle.hasPendingChanges || false);
       setEditorResetKey((prev) => prev + 1);
     }
   }, [initialArticle]);
@@ -278,7 +309,15 @@ export default function ArticleForm({
            ...(featuredMediaId ? { featuredMediaId } : {}),
          };
 
-         await apiClient.put(`/admin/articles/${initialArticle._id}`, articleData);
+          await apiClient.put(`/admin/articles/${initialArticle._id}`, articleData);
+          
+          onLastSavedChange?.(new Date());
+
+          // Invalidate query to keep state fresh, but do it silently without triggering loading states if possible.
+         // However, useAdminArticle has staleTime: 0, so invalidating will trigger refetch.
+         // This might cause UI flicker if not handled gracefully, but ensures consistency.
+         await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
+
        } catch (error) {
          console.error('Autosave failed:', error);
        }
@@ -338,6 +377,7 @@ export default function ArticleForm({
       setIsSubmitting(true);
       await apiClient.post(`/admin/articles/${initialArticle._id}/request-review`);
       setReviewStatus('in_review');
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Review requested");
     } catch (error) {
       console.error('Failed to request review:', error);
@@ -353,10 +393,29 @@ export default function ArticleForm({
       setIsSubmitting(true);
       await apiClient.post(`/admin/articles/${initialArticle._id}/unrequest-review`);
       setReviewStatus('draft');
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Review cancelled");
     } catch (error) {
       console.error('Failed to cancel review:', error);
       toast.error("Failed to cancel review");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRequestChanges = async () => {
+    if (!initialArticle?._id) return;
+    // Prompt for notes? For now just simple request
+    const notes = prompt("Enter notes for requested changes (optional):");
+    try {
+      setIsSubmitting(true);
+      await apiClient.post(`/admin/articles/${initialArticle._id}/request-changes`, { reviewNotes: notes });
+      setReviewStatus('changes_requested');
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
+      toast.success("Changes requested");
+    } catch (error) {
+      console.error('Failed to request changes:', error);
+      toast.error("Failed to request changes");
     } finally {
       setIsSubmitting(false);
     }
@@ -377,6 +436,8 @@ export default function ArticleForm({
       await apiClient.post(`/admin/articles/${initialArticle._id}/publish`);
       setReviewStatus('published');
       setIsPublished(true);
+      setHasPendingChanges(false);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Article published");
     } catch (error) {
       console.error('Failed to publish:', error);
@@ -393,6 +454,7 @@ export default function ArticleForm({
       await apiClient.post(`/admin/articles/${initialArticle._id}/unpublish`);
       setReviewStatus('draft');
       setIsPublished(false);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Article unpublished");
     } catch (error) {
       console.error('Failed to unpublish:', error);
@@ -602,6 +664,10 @@ export default function ArticleForm({
 
       await apiClient.put(`/admin/articles/${initialArticle._id}`, articleData);
 
+      onLastSavedChange?.(new Date());
+
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
+
       setSubmitMessage({ type: 'success', message: 'Changes saved.' });
     } catch (error: any) {
       console.error('Save failed:', error);
@@ -684,6 +750,18 @@ export default function ArticleForm({
                 <span className="text-sm">This article is currently locked for review.</span>
               </div>
             )}
+            {reviewStatus === 'changes_requested' && (
+              <div className="bg-orange-50 border border-orange-200 text-orange-800 px-4 py-2 rounded-md flex items-center gap-2">
+                <Info className="w-4 h-4" />
+                <span className="text-sm">Changes requested by admin. {initialArticle?.reviewNotes ? `Note: ${initialArticle.reviewNotes}` : ''}</span>
+              </div>
+            )}
+            {hasPendingChanges && reviewStatus === 'published' && (
+              <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-md flex items-center gap-2">
+                <Info className="w-4 h-4" />
+                <span className="text-sm">This article has pending changes that are not yet live. Request review to publish updates.</span>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="title" className='gap-0'><span className='text-destructive'>*</span>Title</Label>
               <Input
@@ -736,7 +814,7 @@ export default function ArticleForm({
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {/* Featured Media */}
               <div className="space-y-2">
                 <Label htmlFor="featured-media" className='gap-0'>Featured Media</Label>
@@ -785,7 +863,7 @@ export default function ArticleForm({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
               <div className="space-y-6">
                 {/* Authors - Searchable Input */}
                 <div className="space-y-2">
@@ -947,7 +1025,7 @@ export default function ArticleForm({
                 </div>
 
                 {/* Category & sub-category */}
-                <div className="space-y-2 flex flex-row gap-4">
+                <div className="space-y-4 sm:space-y-0 sm:flex sm:flex-row sm:gap-4">
                   <div className="space-y-2 flex-1">
                     <Label htmlFor="category" className='gap-0'><span className='text-destructive'>*</span>Category</Label>
                     <Select
@@ -1038,44 +1116,35 @@ export default function ArticleForm({
                 </div>
 
                 {/* New Featured and Sticky Controls */}
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="publish"
-                      checked={isPublished}
-                      disabled={!isAdmin}
-                      onCheckedChange={setIsPublished}
-                    />
-                    <Label htmlFor="publish">Published</Label>
-                    {!isAdmin && <span className="text-xs text-muted-foreground ml-1">(Admin only)</span>}
-                  </div>
+                {isAdmin && (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="featured"
+                        checked={isFeatured}
+                        onCheckedChange={setIsFeatured}
+                        disabled={!isPublished || !isAdmin}
+                      />
+                      <Label htmlFor="featured" className={(!isPublished || !isAdmin) ? "text-muted-foreground" : ""}>
+                        Featured article
+                        {(!isPublished) && <span className="text-xs text-muted-foreground ml-1">(requires publishing)</span>}
+                      </Label>
+                    </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="featured"
-                      checked={isFeatured}
-                      onCheckedChange={setIsFeatured}
-                      disabled={!isPublished || !isAdmin}
-                    />
-                    <Label htmlFor="featured" className={(!isPublished || !isAdmin) ? "text-muted-foreground" : ""}>
-                      Featured article
-                      {(!isPublished || !isAdmin) && <span className="text-xs text-muted-foreground ml-1">(requires publishing & admin)</span>}
-                    </Label>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="sticky"
+                        checked={isSticky}
+                        onCheckedChange={setIsSticky}
+                        disabled={!isPublished || !isAdmin}
+                      />
+                      <Label htmlFor="sticky" className={(!isPublished || !isAdmin) ? "text-muted-foreground" : ""}>
+                        Sticky article (pinned to top)
+                        {(!isPublished) && <span className="text-xs text-muted-foreground ml-1">(requires publishing)</span>}
+                      </Label>
+                    </div>
                   </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="sticky"
-                      checked={isSticky}
-                      onCheckedChange={setIsSticky}
-                      disabled={!isPublished || !isAdmin}
-                    />
-                    <Label htmlFor="sticky" className={(!isPublished || !isAdmin) ? "text-muted-foreground" : ""}>
-                      Sticky article (pinned to top)
-                      {(!isPublished || !isAdmin) && <span className="text-xs text-muted-foreground ml-1">(requires publishing & admin)</span>}
-                    </Label>
-                  </div>
-                </div>
+                )}
 
                 <div className="flex flex-wrap gap-4">
                   {/* Common Save/Create button (only for drafts/published, not in_review unless admin) */}
@@ -1089,31 +1158,87 @@ export default function ArticleForm({
                     </Button>
                   )}
 
-                  {/* Workflow buttons */}
+                  {/* Workflow Actions */}
                   {initialArticle?._id && (
                     <>
-                      {reviewStatus === 'draft' && (isOwner || isAdmin) && (
+                      {/* Direct Button: Request Review (if only option) */}
+                      {showRequestReviewDirectly && (
                         <Button type="button" variant="outline" onClick={handleRequestReview} disabled={isSubmitting}>
                           Request Review
                         </Button>
                       )}
-                      
-                      {reviewStatus === 'in_review' && (isOwner || isAdmin) && (
+
+                      {/* Direct Button: Cancel Review (if only option) */}
+                      {showCancelReviewDirectly && (
                         <Button type="button" variant="outline" onClick={handleUnrequestReview} disabled={isSubmitting}>
                           Cancel Review Request
                         </Button>
                       )}
 
-                      {isAdmin && reviewStatus !== 'published' && (
-                        <Button type="button" variant="default" className="bg-green-600 hover:bg-green-700 text-white" onClick={handleAdminPublish} disabled={isSubmitting}>
-                          Approve & Publish
-                        </Button>
-                      )}
-
-                      {isAdmin && reviewStatus === 'published' && (
+                      {/* Direct Button: Unpublish (if only option) */}
+                      {showUnpublishDirectly && (
                         <Button type="button" variant="destructive" onClick={handleAdminUnpublish} disabled={isSubmitting}>
                           Unpublish
                         </Button>
+                      )}
+
+                      {/* Dropdown: If multiple options or specific admin actions */}
+                      {!showRequestReviewDirectly && !showCancelReviewDirectly && !showUnpublishDirectly && (canRequestReview || canCancelReview || canRequestChanges || canPublish || canUnpublish) && (
+                        <DropdownMenu modal={false}>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="gap-2">
+                              Review Actions
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuLabel>Manage Status</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            
+                            {/* Request Review */}
+                            {canRequestReview && (
+                              <DropdownMenuItem onClick={handleRequestReview} disabled={isSubmitting} className="text-blue-600 focus:text-blue-700 focus:bg-blue-50 dark:focus:bg-blue-950/50">
+                                <Eye className="mr-2 h-4 w-4" />
+                                Request Review
+                              </DropdownMenuItem>
+                            )}
+
+                            {/* Cancel Review */}
+                            {canCancelReview && (
+                              <DropdownMenuItem onClick={handleUnrequestReview} disabled={isSubmitting}>
+                                <X className="mr-2 h-4 w-4 text-muted-foreground" />
+                                Cancel Review Request
+                              </DropdownMenuItem>
+                            )}
+
+                            {/* Admin: Request Changes */}
+                            {canRequestChanges && (
+                              <DropdownMenuItem onClick={handleRequestChanges} disabled={isSubmitting} className="text-orange-600 focus:text-orange-700 focus:bg-orange-50 dark:focus:bg-orange-950/50">
+                                <AlertCircle className="mr-2 h-4 w-4" />
+                                Request Changes
+                              </DropdownMenuItem>
+                            )}
+
+                            {/* Admin: Publish */}
+                            {canPublish && (
+                              <DropdownMenuItem onClick={handleAdminPublish} disabled={isSubmitting} className="text-green-600 focus:text-green-700 focus:bg-green-50 dark:focus:bg-green-950/50">
+                                <Check className="mr-2 h-4 w-4" />
+                                {reviewStatus === 'published' ? 'Publish Updates' : 'Approve & Publish'}
+                              </DropdownMenuItem>
+                            )}
+
+                            {/* Admin: Unpublish */}
+                            {canUnpublish && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={handleAdminUnpublish} disabled={isSubmitting} variant="destructive">
+                                  <ShieldAlert className="mr-2 h-4 w-4" />
+                                  Unpublish Article
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       )}
                     </>
                   )}

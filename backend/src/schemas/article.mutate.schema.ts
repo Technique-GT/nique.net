@@ -28,7 +28,7 @@ export const createArticleBodySchema = z.object({
   imageCaption: z.string().optional(),
 
   editorState: z.any().optional(),
-  reviewStatus: z.enum(['draft', 'in_review', 'published']).optional(),
+  reviewStatus: z.enum(['draft', 'in_review', 'changes_requested', 'published']).optional(),
 
   published: z.boolean().optional(),
   allowComments: z.boolean().optional(),
@@ -39,7 +39,7 @@ export const createArticleBodySchema = z.object({
 export const updateArticleBodySchema = createArticleBodySchema.partial();
 
 export const updateArticleStatusBodySchema = z.object({
-  status: z.string().optional(),
+  status: z.enum(['draft', 'published']).optional(),
   isFeatured: z.boolean().optional(),
   isSticky: z.boolean().optional(),
 });

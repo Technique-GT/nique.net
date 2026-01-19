@@ -23,12 +23,12 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <div
-      className={cn('mb-4 flex items-center justify-between', className)}
+      className={cn('mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between', className)}
       {...props}
     >
-      <div className='space-y-1'>
-        <div className='flex items-center gap-2'>
-          <h1 className='text-2xl font-bold tracking-tight'>{title}</h1>
+      <div className='min-w-0 flex-1 space-y-1'>
+        <div className='flex flex-wrap items-center gap-2'>
+          <h1 className='text-xl font-bold tracking-tight sm:text-2xl'>{title}</h1>
           {badge}
         </div>
         {description && (
@@ -36,7 +36,7 @@ export function PageHeader({
         )}
       </div>
       {actions && (
-        <div className='flex items-center gap-2'>{actions}</div>
+        <div className='flex flex-wrap items-center gap-2 shrink-0'>{actions}</div>
       )}
       {children}
     </div>

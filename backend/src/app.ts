@@ -15,6 +15,7 @@ import tagRoutes from './routes/tag.routes';
 import userRoutes from './routes/user.routes';
 import adminArticleRoutes from './routes/admin.articles.routes';
 import authRoutes from './routes/auth.routes';
+import notificationRoutes from './routes/notification.routes';
 
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import { env } from './utils/env';
@@ -73,6 +74,7 @@ export function createApp() {
   app.use('/api/playlists', playlistRoutes);
   app.use('/api/slivers', sliverRoutes);
   app.use('/api/comments', commentRoutes);
+  app.use('/api/notifications', notificationRoutes);
 
   // Simple health check
   app.get('/api/health', (_req, res) => {

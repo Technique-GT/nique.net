@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import articleService from '../services/articleService';
+import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
 import { ArticleDocument } from '../types/article';
 // SideArticle not currently used
@@ -12,102 +13,127 @@ import { Categories } from '../types/categories';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
 import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
 
+// Helper to process raw articles into page sections
+const processOpinionArticles = (allOpinions: ArticleDocument[]) => {
+    const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+        getArticleTimestamp(b) - getArticleTimestamp(a);
+
+    const stickyPosts = allOpinions.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+    const featuredPosts = allOpinions.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
+    const nonStickyPosts = allOpinions.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
+    const orderedOpinion = [...stickyPosts, ...nonStickyPosts];
+
+    const featured = featuredPosts[0] ?? null;
+    const orderedWithoutFeatured = featured
+        ? orderedOpinion.filter((article) => getArticleId(article) !== getArticleId(featured))
+        : orderedOpinion;
+    const recentSelection = [featured, ...orderedWithoutFeatured].filter(Boolean) as ArticleDocument[];
+    const recentIds = new Set(recentSelection.slice(0, 6).map(getArticleId));
+
+    const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
+        articles
+            .filter((article) => {
+                if (article.subcategoryId && typeof article.subcategoryId === 'object') {
+                    return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
+                }
+                return false;
+            })
+            .filter((article) => !recentIds.has(getArticleId(article)))
+            .sort(sortByPublishedDesc);
+
+    return {
+        recentOpinionArticles: recentSelection,
+        opEdArticles: filterBySubcategory(allOpinions, 'op ed'),
+        consensusArticles: filterBySubcategory(allOpinions, 'consensus'),
+        lettersArticles: filterBySubcategory(allOpinions, 'letter to the editor'),
+    };
+};
+
 function Opinions() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentOpinionArticles, setRecentOpinionArticles] = useState<ArticleDocument[]>([]);
-    // const [opinionArticles, setOpinionArticles] = useState<Post[]>([]);
+    // Check cache immediately for instant display
+    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.OPINION), []);
+    const initialData = useMemo(() => cachedArticles ? processOpinionArticles(cachedArticles) : null, [cachedArticles]);
+
+    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
+    const [recentOpinionArticles, setRecentOpinionArticles] = useState<ArticleDocument[]>(initialData?.recentOpinionArticles || []);
     const [error, setError] = useState<string | null>(null);
-    const [opinionCategoryId, setOpinionCategoryId] = useState<string | null>(null);
-    const [opEdArticles, setOpEdArticles] = useState<ArticleDocument[]>([]);
-    const [consensusArticles, setConsensusArticles] = useState<ArticleDocument[]>([]);
-    const [lettersArticles, setLettersArticles] = useState<ArticleDocument[]>([]);
+    const [opinionCategoryId, setOpinionCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.OPINION));
+    const [opEdArticles, setOpEdArticles] = useState<ArticleDocument[]>(initialData?.opEdArticles || []);
+    const [consensusArticles, setConsensusArticles] = useState<ArticleDocument[]>(initialData?.consensusArticles || []);
+    const [lettersArticles, setLettersArticles] = useState<ArticleDocument[]>(initialData?.lettersArticles || []);
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
 
         const loadArticles = async () => {
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            // Services now return unwrapped data directly
-            const categories = await articleService.fetchCategories(50, controller.signal);
-
-            const opinionCategory = categories.find((category: any) =>
-                category.name?.toLowerCase() === Categories.OPINION.toLowerCase()
-            );
-            setOpinionCategoryId(typeof opinionCategory?._id === 'string' ? opinionCategory._id : null);
-
-            if (!opinionCategory?._id) {
-                if (!isMounted) return;
-                // setOpinionArticles([]);
-                setError('Opinion category not found.');
-                return;
+            // Only show loading if we don't have cached data
+            if (!cachedArticles) {
+                setIsLoading(true);
             }
+            setError(null);
 
-            const opinionResponse = await articleService.fetchArticlesByCategory(
-            opinionCategory._id,
-            undefined,
-            controller.signal
-            );
+            try {
+                // Use cached categories if available
+                let categories = categoryCache.getCategories();
+                if (!categories) {
+                    categories = await articleService.fetchCategories(50, controller.signal);
+                    categoryCache.setCategories(categories);
+                }
 
-            const allOpinions = opinionResponse || [];
-            const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
-                getArticleTimestamp(b) - getArticleTimestamp(a);
+                const opinionCategory = categories.find((category: any) =>
+                    category.name?.toLowerCase() === Categories.OPINION.toLowerCase()
+                );
+                setOpinionCategoryId(typeof opinionCategory?._id === 'string' ? opinionCategory._id : null);
 
-            const stickyPosts = allOpinions.filter((article) => article.isSticky).sort(sortByPublishedDesc);
-            const featuredPosts = allOpinions.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
-            const nonStickyPosts = allOpinions.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
-            const orderedOpinion = [...stickyPosts, ...nonStickyPosts];
+                if (!opinionCategory?._id) {
+                    if (!isMounted) return;
+                    setError('Opinion category not found.');
+                    return;
+                }
 
-            const featured = featuredPosts[0] ?? null;
-            const orderedWithoutFeatured = featured
-              ? orderedOpinion.filter((article) => getArticleId(article) !== getArticleId(featured))
-              : orderedOpinion;
-            const recentSelection = [featured, ...orderedWithoutFeatured].filter(Boolean) as ArticleDocument[];
-            const recentIds = new Set(recentSelection.slice(0, 6).map(getArticleId));
+                const opinionResponse = await articleService.fetchArticlesByCategory(
+                    opinionCategory._id,
+                    undefined,
+                    controller.signal
+                );
 
-            const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
-                articles
-                    .filter((article) => {
-                        if (article.subcategoryId && typeof article.subcategoryId === 'object') {
-                            return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
-                        }
+                const allOpinions = opinionResponse || [];
+                
+                // Update cache with fresh data
+                categoryCache.setCategoryArticles(Categories.OPINION, allOpinions);
 
-                        return false;
-                    })
-                    .filter((article) => !recentIds.has(getArticleId(article)))
-                    .sort(sortByPublishedDesc);
+                if (!isMounted) {
+                    return;
+                }
 
-            if (!isMounted) {
-            return;
+                const processed = processOpinionArticles(allOpinions);
+                setRecentOpinionArticles(processed.recentOpinionArticles);
+                setOpEdArticles(processed.opEdArticles);
+                setConsensusArticles(processed.consensusArticles);
+                setLettersArticles(processed.lettersArticles);
+            } catch (err) {
+                if (!isMounted) {
+                    return;
+                }
+                // Only show error if we don't have cached data to display
+                if (!cachedArticles) {
+                    setError('Unable to load articles. Please try again later.');
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                }
             }
-
-            setRecentOpinionArticles(recentSelection);
-            // setOpinionArticles(remainingOpinion);
-            setOpEdArticles(filterBySubcategory(opinionResponse || [], 'op ed'));
-            setConsensusArticles(filterBySubcategory(opinionResponse || [], 'consensus'));
-            setLettersArticles(filterBySubcategory(opinionResponse || [], 'letter to the editor'));
-        } catch (err) {
-            if (!isMounted) {
-            return;
-            }
-            setError('Unable to load articles. Please try again later.');
-        } finally {
-            if (isMounted) {
-            setIsLoading(false);
-            }
-        }
         };
 
         loadArticles();
 
         return () => {
-        isMounted = false;
-        controller.abort();
+            isMounted = false;
+            controller.abort();
         };
-    }, []);
+    }, [cachedArticles]);
 
     if (isLoading) {
         return (

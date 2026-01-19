@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import articleService from '../services/articleService';
+import { categoryCache } from '../services/categoryCache';
 import { Categories } from '../types/categories';
 import ArticleBlock from "../components/ArticleBlock"
 import { ArticleDocument } from '../types/article'
@@ -13,27 +14,68 @@ import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
 import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
 
-function Sports() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentSportsArticles, setRecentSportsArticles] = useState<ArticleDocument[]>([]);
-    // const [sportsArticles, setSportsArticles] = useState<Post[]>([]);
-    const [techSports, setTechSports] = useState<ArticleDocument[]>([]);
-    const [atlSports, setAtlSports] = useState<ArticleDocument[]>([]);
-    const [seasonScoreboard, setSeasonScoreboard] = useState<ArticleDocument[]>([]);
-    const [error, setError] = useState<string | null>(null);
-    const [sportsCategoryId, setSportsCategoryId] = useState<string | null>(null);
+// Helper to process raw articles into page sections
+const processSportsArticles = (allSportsArticles: ArticleDocument[]) => {
+    const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+        getArticleTimestamp(b) - getArticleTimestamp(a);
 
-        useEffect(() => {
+    const stickyPosts = allSportsArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+    const nonStickyPosts = allSportsArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
+    const orderedSports = [...stickyPosts, ...nonStickyPosts];
+    const recentSelection = orderedSports.slice(0, 5);
+    const recentIds = new Set(recentSelection.map(getArticleId));
+
+    const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
+        articles
+            .filter((article) => {
+                if (article.subcategoryId && typeof article.subcategoryId === 'object') {
+                    return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
+                }
+                return false;
+            })
+            .filter((article) => !recentIds.has(getArticleId(article)))
+            .sort(sortByPublishedDesc);
+
+    return {
+        recentSportsArticles: recentSelection,
+        techSports: filterBySubcategory(allSportsArticles, 'jackets'),
+        atlSports: filterBySubcategory(allSportsArticles, 'atlanta'),
+        seasonScoreboard: [] as ArticleDocument[], // No corresponding backend subcategory
+    };
+};
+
+function Sports() {
+    // Check cache immediately for instant display
+    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.SPORTS), []);
+    const initialData = useMemo(() => cachedArticles ? processSportsArticles(cachedArticles) : null, [cachedArticles]);
+
+    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
+    const [recentSportsArticles, setRecentSportsArticles] = useState<ArticleDocument[]>(initialData?.recentSportsArticles || []);
+    const [techSports, setTechSports] = useState<ArticleDocument[]>(initialData?.techSports || []);
+    const [atlSports, setAtlSports] = useState<ArticleDocument[]>(initialData?.atlSports || []);
+    const [seasonScoreboard, setSeasonScoreboard] = useState<ArticleDocument[]>(initialData?.seasonScoreboard || []);
+    const [error, setError] = useState<string | null>(null);
+    const [sportsCategoryId, setSportsCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.SPORTS));
+
+    useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
     
         const loadArticles = async () => {
-            setIsLoading(true);
+            // Only show loading if we don't have cached data
+            if (!cachedArticles) {
+                setIsLoading(true);
+            }
             setError(null);
 
             try {
-                // Services now return unwrapped data directly
-                const categories = await articleService.fetchCategories(50, controller.signal);
+                // Use cached categories if available
+                let categories = categoryCache.getCategories();
+                if (!categories) {
+                    categories = await articleService.fetchCategories(50, controller.signal);
+                    categoryCache.setCategories(categories);
+                }
+
                 const sportsCategory = categories.find((category: any) =>
                     category.name?.toLowerCase() === Categories.SPORTS.toLowerCase()
                 );
@@ -41,7 +83,6 @@ function Sports() {
 
                 if (!sportsCategory?._id) {
                     if (!isMounted) return;
-                    // setSportsArticles([]);
                     setError('Sports category not found.');
                     return;
                 }
@@ -53,42 +94,27 @@ function Sports() {
                 );
 
                 const allSportsArticles = sportsResponse || [];
-                const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
-                    getArticleTimestamp(b) - getArticleTimestamp(a);
-
-                const stickyPosts = allSportsArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
-                const nonStickyPosts = allSportsArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
-                const orderedSports = [...stickyPosts, ...nonStickyPosts];
-                const recentSelection = orderedSports.slice(0, 5);
-                const recentIds = new Set(recentSelection.map(getArticleId));
-
-                const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
-                    articles
-                        .filter((article) => {
-                            if (article.subcategoryId && typeof article.subcategoryId === 'object') {
-                                return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
-                            }
-
-                            return false;
-                        })
-                        .filter((article) => !recentIds.has(getArticleId(article)))
-                        .sort(sortByPublishedDesc);
+                
+                // Update cache with fresh data
+                categoryCache.setCategoryArticles(Categories.SPORTS, allSportsArticles);
 
                 if (!isMounted) {
                     return;
                 }
 
-                setRecentSportsArticles(recentSelection);
-                // setSportsArticles(remainingSports);
-                setTechSports(filterBySubcategory(sportsResponse || [], 'jackets'));
-                setAtlSports(filterBySubcategory(sportsResponse || [], 'atlanta'));
-                // No corresponding backend subcategory exists for this legacy label.
-                setSeasonScoreboard([]);
+                const processed = processSportsArticles(allSportsArticles);
+                setRecentSportsArticles(processed.recentSportsArticles);
+                setTechSports(processed.techSports);
+                setAtlSports(processed.atlSports);
+                setSeasonScoreboard(processed.seasonScoreboard);
             } catch (err) {
                 if (!isMounted) {
                     return;
                 }
-                setError('Unable to load articles. Please try again later.');
+                // Only show error if we don't have cached data to display
+                if (!cachedArticles) {
+                    setError('Unable to load articles. Please try again later.');
+                }
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -102,7 +128,7 @@ function Sports() {
             isMounted = false;
             controller.abort();
         };
-    }, []);
+    }, [cachedArticles]);
     
     if (isLoading) {
         return (

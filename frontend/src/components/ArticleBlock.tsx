@@ -6,17 +6,25 @@ import {
   getArticleImage,
   getArticleLink,
 } from '../utils/articlePresentation'
+import { articleCache } from '../services/articleCache'
 
 function ArticleBlock({ article, height }: ArticleBlockProps) {
-    const navigate=useNavigate();
+    const navigate = useNavigate();
     const link = getArticleLink(article);
     const image = getArticleImage(article);
     const category = getArticleCategoryName(article);
     const author = getArticleAuthorName(article);
+
+    const handleClick = () => {
+      // Pre-cache the article data so the Article page doesn't flash "not found"
+      articleCache.set(article);
+      navigate(link);
+    };
+
     return (
         <div 
             className='relative cursor-pointer rounded-md max-h-[50vh] md:max-h-none w-full flex items-end p-3 overflow-hidden group'
-            onClick={()=>navigate(link)}
+            onClick={handleClick}
             style={{ height: `${height}` }}
         >
             {image?.url && (
