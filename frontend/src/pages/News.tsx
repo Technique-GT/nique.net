@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import articleService from '../services/articleService';
+import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
-import { Post } from '../types/article';
+import { ArticleDocument } from '../types/article';
 import { Categories } from '../types/categories';
 import FeaturedStory from '../components/FeaturedStory';
 // import MockAd from '../assets/mock_advertisement.jpg';
@@ -12,29 +13,76 @@ import SmallArticle from '../components/SmallArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
-import { mapArticleToPost } from '../utils/articleMapping';
+import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
+
+// Helper to process raw articles into page sections
+const processNewsArticles = (allNewsArticles: ArticleDocument[]) => {
+    const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+        getArticleTimestamp(b) - getArticleTimestamp(a);
+
+    const stickyPosts = allNewsArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+    const featuredPosts = allNewsArticles.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
+    const nonStickyPosts = allNewsArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
+    const orderedNews = [...stickyPosts, ...nonStickyPosts];
+
+    const justIn = stickyPosts[0] ?? orderedNews[0] ?? null;
+    const featured = featuredPosts.find((article) => getArticleId(article) !== getArticleId(justIn)) ?? null;
+    const recentSelection = [justIn, featured].filter(Boolean) as ArticleDocument[];
+    const recentIds = new Set(recentSelection.map(getArticleId));
+    const remainingNews = orderedNews.filter((article) => !recentIds.has(getArticleId(article)));
+
+    const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
+        articles
+            .filter((article) => {
+                if (article.subcategoryId && typeof article.subcategoryId === 'object') {
+                    return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
+                }
+                return false;
+            })
+            .filter((article) => !recentIds.has(getArticleId(article)))
+            .sort(sortByPublishedDesc);
+
+    return {
+        recentNews: recentSelection,
+        newsArticles: remainingNews,
+        theInstituteNews: filterBySubcategory(allNewsArticles, 'the institute'),
+        cityStateNews: filterBySubcategory(allNewsArticles, 'city & state'),
+        scienceResearchNews: filterBySubcategory(allNewsArticles, 'science & research'),
+    };
+};
 
 function News() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentNews, setRecentNews] = useState<Post[]>([]);
-    const [newsArticles, setNewsArticles] = useState<Post[]>([]);
-    const [theInstituteNews, setTheInstituteNews] = useState<Post[]>([]);
-    const [cityStateNews, setCityStateNews] = useState<Post[]>([]);
-    const [scienceResearchNews, setScienceResearchNews] = useState<Post[]>([]);
+    // Check cache immediately for instant display
+    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.NEWS), []);
+    const initialData = useMemo(() => cachedArticles ? processNewsArticles(cachedArticles) : null, [cachedArticles]);
+
+    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
+    const [recentNews, setRecentNews] = useState<ArticleDocument[]>(initialData?.recentNews || []);
+    const [newsArticles, setNewsArticles] = useState<ArticleDocument[]>(initialData?.newsArticles || []);
+    const [theInstituteNews, setTheInstituteNews] = useState<ArticleDocument[]>(initialData?.theInstituteNews || []);
+    const [cityStateNews, setCityStateNews] = useState<ArticleDocument[]>(initialData?.cityStateNews || []);
+    const [scienceResearchNews, setScienceResearchNews] = useState<ArticleDocument[]>(initialData?.scienceResearchNews || []);
     const [error, setError] = useState<string | null>(null);
-    const [newsCategoryId, setNewsCategoryId] = useState<string | null>(null);
+    const [newsCategoryId, setNewsCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.NEWS));
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
     
         const loadArticles = async () => {
-            setIsLoading(true);
+            // Only show loading if we don't have cached data
+            if (!cachedArticles) {
+                setIsLoading(true);
+            }
             setError(null);
 
             try {
-                const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
-                const categories = categoriesResponse.data || [];
+                // Use cached categories if available
+                let categories = categoryCache.getCategories();
+                if (!categories) {
+                    categories = await articleService.fetchCategories(50, controller.signal);
+                    categoryCache.setCategories(categories);
+                }
 
                 const newsCategory = categories.find((category: any) =>
                     category.name?.toLowerCase() === Categories.NEWS.toLowerCase()
@@ -49,56 +97,35 @@ function News() {
                     return;
                 }
 
-                const newsResponse = await articleService.fetchArticles(
-                    { category: categoryId, status: 'published' },
+                const newsResponse = await articleService.fetchArticlesByCategory(
+                    categoryId,
+                    undefined,
                     controller.signal
                 );
 
-                const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
-                const allNewsArticles = mapResponseData(newsResponse.data);
-                const getTimestamp = (post: Post) => {
-                    const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
-                    const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
-                    return Math.max(published, created);
-                };
-                const sortByPublishedDesc = (a: Post, b: Post) => getTimestamp(b) - getTimestamp(a);
-
-                const stickyPosts = allNewsArticles.filter((post) => post.isSticky).sort(sortByPublishedDesc);
-                const nonStickyPosts = allNewsArticles.filter((post) => !post.isSticky).sort(sortByPublishedDesc);
-                const orderedNews = [...stickyPosts, ...nonStickyPosts];
-                const RECENT_COUNT = Math.max(2, stickyPosts.length);
-                const recentSelection = orderedNews.slice(0, RECENT_COUNT);
-                const remainingNews = orderedNews.slice(RECENT_COUNT);
-                const recentIds = new Set(recentSelection.map((post) => post.id));
-
-                const filterBySubcategory = (articles: any[], subcategory: string) =>
-                    articles
-                        .filter((article: any) =>
-                            Array.isArray(article.subcategories) &&
-                            article.subcategories.some(
-                                (sub: any) =>
-                                    typeof sub?.value === 'string' &&
-                                    sub.value.toLowerCase() === subcategory
-                            )
-                        )
-                        .map(mapArticleToPost)
-                        .filter((post) => !recentIds.has(post.id))
-                        .sort(sortByPublishedDesc);
+                const allNewsArticles = newsResponse || [];
+                
+                // Update cache with fresh data
+                categoryCache.setCategoryArticles(Categories.NEWS, allNewsArticles);
 
                 if (!isMounted) {
                     return;
                 }
 
-                setRecentNews(recentSelection);
-                setNewsArticles(remainingNews);
-                setTheInstituteNews(filterBySubcategory(newsResponse.data || [], 'the institute'));
-                setCityStateNews(filterBySubcategory(newsResponse.data || [], 'city & state'));
-                setScienceResearchNews(filterBySubcategory(newsResponse.data || [], 'science & research'));
+                const processed = processNewsArticles(allNewsArticles);
+                setRecentNews(processed.recentNews);
+                setNewsArticles(processed.newsArticles);
+                setTheInstituteNews(processed.theInstituteNews);
+                setCityStateNews(processed.cityStateNews);
+                setScienceResearchNews(processed.scienceResearchNews);
             } catch (err) {
                 if (!isMounted) {
                     return;
                 }
-                setError('Unable to load articles. Please try again later.');
+                // Only show error if we don't have cached data to display
+                if (!cachedArticles) {
+                    setError('Unable to load articles. Please try again later.');
+                }
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -112,7 +139,7 @@ function News() {
             isMounted = false;
             controller.abort();
         };
-    }, []);
+    }, [cachedArticles]);
     
     if (isLoading) {
         return (
@@ -136,11 +163,11 @@ function News() {
     return (
         <>
             <Navbar />
-            <div className='max-w-[1470px] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
-                <div className='w-full'>
-                    <div className='flex flex-col gap-4'>
-                        {recentNews[0] && <JustInBlock post={recentNews[0]} />}
-                        {recentNews[1] && <FeaturedStory post={recentNews[1]} height='695px' />}
+            <div className='max-w-[95%] lg:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
+                <div>
+                    <div className='flex flex-col gap-4 h-[80vh]'>
+                        {recentNews[0] && <JustInBlock article={recentNews[0]} />}
+                        {recentNews[1] && <FeaturedStory article={recentNews[1]} priority={true} />}
                     </div>
 
                     <hr className='my-3' />
@@ -148,26 +175,26 @@ function News() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">The Institute</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='col-span-2'>
-                            {theInstituteNews[0] && <ArticleBlock post={theInstituteNews[0]} height='460px' />}
+                            {theInstituteNews[0] && <ArticleBlock article={theInstituteNews[0]} height='460px' />}
                         </div>
                         <div className='grid col-span-2 gap-4'>
-                            {theInstituteNews[1] && <ArticleBlock post={theInstituteNews[1]} height='222px' />}
-                            {theInstituteNews[2] && <ArticleBlock post={theInstituteNews[2]} height='222px' />}
+                            {theInstituteNews[1] && <ArticleBlock article={theInstituteNews[1]} height='222px' />}
+                            {theInstituteNews[2] && <ArticleBlock article={theInstituteNews[2]} height='222px' />}
                             <div className='col-span-2'>
-                                {theInstituteNews[3] && <ArticleBlock post={theInstituteNews[3]} height='222px' />}
+                                {theInstituteNews[3] && <ArticleBlock article={theInstituteNews[3]} height='222px' />}
                             </div>
                         </div>
                         <div className='col-span-2'>
                             {(() => {
-                                const posts = theInstituteNews.slice(6, 8);
-                                return posts.length ? <SmallArticle posts={posts} direction='left'/> : null;
+                                const articles = theInstituteNews.slice(6, 8);
+                                return articles.length ? <SmallArticle articles={articles} direction='left'/> : null;
                             })()}
                         </div>
                         <hr className="block lg:hidden col-span-2" />
                         <div className='col-span-2'>
                             {(() => {
-                                const posts = theInstituteNews.slice(8, 10);
-                                return posts.length ? <SmallArticle posts={posts} direction='left'/> : null;
+                                const articles = theInstituteNews.slice(8, 10);
+                                return articles.length ? <SmallArticle articles={articles} direction='left'/> : null;
                             })()}
                         </div>
                     </div>
@@ -178,13 +205,13 @@ function News() {
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='grid grid-cols-2 gap-4 col-span-2'>
                             {cityStateNews.slice(0, 4).map((article) => (
-                                <ArticleBlock key={article.id} post={article} height='222px' />
+                                <ArticleBlock key={article._id || article.slug} article={article} height='222px' />
                             ))}
                         </div>
                         <div className='grid col-span-2 gap-4'>
                             {(() => {
-                                const posts = cityStateNews.slice(4, 8);
-                                return posts.length ? <SideArticle posts={posts} width='18%'/> : null;
+                                const articles = cityStateNews.slice(4, 8);
+                                return articles.length ? <SideArticle articles={articles} width='18%'/> : null;
                             })()}
                         </div>
                     </div>
@@ -194,7 +221,7 @@ function News() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Science & Research</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
                         {scienceResearchNews.slice(0, 6).map((article) => (
-                            <ArticleBlock key={article.id} post={article} height='230px' />
+                            <ArticleBlock key={article._id || article.slug} article={article} height='230px' />
                         ))}
                     </div>
 
@@ -204,9 +231,9 @@ function News() {
                 <div className='flex flex-col gap-4'>
                     <hr className="lg:mt-15" />
                     {(() => {
-                        const posts = newsArticles.slice(0, 3);
-                        return posts.length ? (
-                            <SideArticle posts={posts} width='80px' hasDesc={true}/>
+                        const articles = newsArticles.slice(0, 4);
+                        return articles.length ? (
+                            <SideArticle articles={articles} width='80px' hasDesc={true}/>
                         ) : null;
                     })()}
                     {/* <VerticalAd ad={MockAd} /> */}

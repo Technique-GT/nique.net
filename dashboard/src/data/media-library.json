@@ -1,0 +1,32 @@
+[
+  {
+    "id": "image-hero",
+    "title": "Hero Workspace",
+    "description": "Minimal workspace setup with laptop and plants",
+    "url": "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "image-team",
+    "title": "Team Collaboration",
+    "description": "Group of people collaborating on a project",
+    "url": "https://images.unsplash.com/photo-1521737604893-0f8667d5c1c9?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "image-design",
+    "title": "Design Mockups",
+    "description": "Tablet showcasing UI design mockups",
+    "url": "https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "image-coding",
+    "title": "Coding Session",
+    "description": "Developer coding on a laptop with dual monitors",
+    "url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "image-meeting",
+    "title": "Business Meeting",
+    "description": "Colleagues in a business meeting discussing strategies",
+    "url": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80"
+  }
+]

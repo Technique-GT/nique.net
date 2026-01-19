@@ -67,6 +67,25 @@ h5, th, td {
     }
 }
 
+@keyframes submit-toast {
+    0% {
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+.submit-toast {
+    animation: submit-toast 3s ease-in-out forwards;
+}
+
 .scroll-container {
   overflow: hidden;
   width: 100%;

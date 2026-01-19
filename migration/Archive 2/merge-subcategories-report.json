@@ -1,0 +1,16 @@
+{
+  "input": "migration/Archive 2/normalized-articles.json",
+  "newArticlesInput": "migration/Archive 2/new_articles.json",
+  "output": "migration/Archive 2/normalized-articles.json",
+  "totals": {
+    "users": 104,
+    "categories": 5,
+    "tags": 27,
+    "media": 165,
+    "subcategories": 14,
+    "articles": 189
+  },
+  "mergedArticles": 10,
+  "addedArticles": 54,
+  "missingMatches": []
+}

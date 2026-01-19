@@ -1,114 +1,147 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import SuccessTick from "../components/SuccessTick";
 import DOMPurify from "dompurify";
 import Navbar from "../components/Navbar";
 import ArticleBlock from "../components/ArticleBlock";
 import Comment from "../components/Comment";
 import Spinner from "../components/Spinner";
 import articleService from "../services/articleService";
+import { articleCache } from "../services/articleCache";
 import commentService from "../services/commentService";
-import { ArticleDocument, Post } from "../types/article";
-import { mapArticleToPost } from "../utils/articleMapping";
+import { ArticleDocument, User, Comment as CommentType } from "../types/article";
 
-interface LoadedComment {
+type DisplayComment = {
   _id: string;
-  author: {
-    name: string;
-    avatar: string;
-  };
-  createdAt: string;
+  commentId: string;
   content: string;
+  createdAt: string;
   thumbsUp: number;
   thumbsDown: number;
-}
+  myReaction: "up" | "down" | null;
+  parentCommentId?: string;
+  username: string;
+  replies: DisplayComment[];
+};
 
-const mapApiCommentToLoaded = (comment: any): LoadedComment => {
-  const authorInfo = comment.author
-
+/**
+ * Map API comment (backend shape) to display format.
+ * backend uses `username` directly, not `author.name/avatar`.
+ */
+const mapApiCommentToDisplay = (comment: CommentType): DisplayComment => {
   return {
-    _id: comment?._id,
-    content: comment?.content,
-    createdAt: comment?.createdAt,
-    thumbsUp: comment?.thumbsUp ?? comment?.Up ?? 0,
-    thumbsDown: comment?.thumbsDown ?? comment?.Down ?? 0,
-    author: {
-      name: authorInfo.name,
-      avatar: authorInfo.avatar
-    },
+    _id: comment._id,
+    commentId: comment._id,
+    content: comment.content,
+    createdAt: typeof comment.createdAt === "string" ? comment.createdAt : String(comment.createdAt),
+    thumbsUp: comment.thumbsUp ?? 0,
+    thumbsDown: comment.thumbsDown ?? 0,
+    myReaction: comment.myReaction ?? null,
+    parentCommentId: comment.parentCommentId,
+    username: comment.username || "Anonymous",
+    replies: (comment.replies || []).map(mapApiCommentToDisplay),
   };
 };
 
+const sortRepliesByOldest = (list: DisplayComment[]): DisplayComment[] => {
+  const mapped = list.map((comment) => ({
+    ...comment,
+    replies: sortRepliesByOldest(comment.replies || []),
+  }));
+  return mapped.sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+};
+
 const sortComments = (
-  list: LoadedComment[],
+  list: DisplayComment[],
   sortMode: "Best" | "Newest" | "Oldest"
-): LoadedComment[] => {
-  const clone = [...list];
+): DisplayComment[] => {
+  const withSortedReplies = list.map((comment) => ({
+    ...comment,
+    replies: sortRepliesByOldest(comment.replies || []),
+  }));
+
   switch (sortMode) {
     case "Oldest":
-      return clone.sort(
+      return [...withSortedReplies].sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
     case "Newest":
-      return clone.sort(
+      return [...withSortedReplies].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     default:
-      return clone.sort((a, b) => (b.thumbsUp || 0) - (a.thumbsUp || 0));
+      return [...withSortedReplies].sort((a, b) => (b.thumbsUp || 0) - (a.thumbsUp || 0));
   }
 };
 
 export default function Article() {
-  const { id } = useParams();
-  const [isLoading, setIsLoading] = useState(true);
-  const [article, setArticle] = useState<ArticleDocument | null>(null);
-  const [relatedArticles, setRelatedArticles] = useState<Post[]>([]);
-  const [comments, setComments] = useState<LoadedComment[]>([]);
+  const { id, slug } = useParams();
+  const normalizedId = useMemo(() => {
+    if (slug) return undefined; // prefer slug if available
+    if (!id) return undefined;
+    return /^[a-f0-9]{24}:\d+$/i.test(id) ? id.split(":")[0] : id;
+  }, [id, slug]);
+
+  // Check cache immediately for instant display
+  const initialCachedArticle = useMemo(() => {
+    const cacheKey = slug || normalizedId || '';
+    return cacheKey ? articleCache.get(cacheKey) : null;
+  }, [slug, normalizedId]);
+
+  const [isLoading, setIsLoading] = useState(!initialCachedArticle);
+  const [article, setArticle] = useState<ArticleDocument | null>(initialCachedArticle);
+  const [relatedArticles, setRelatedArticles] = useState<ArticleDocument[]>([]);
+  const [comments, setComments] = useState<DisplayComment[]>([]);
   const [numCommentsToView, setNumCommentsToView] = useState(5);
   const [commentsSortBy, setCommentsSort] = useState<"Best" | "Newest" | "Oldest">("Best");
 
   const [newCommentName, setNewCommentName] = useState("");
   const [newCommentText, setNewCommentText] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [showSubmitMessage, setShowSubmitMessage] = useState(false);
   const [commentSubmitError, setCommentSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) return;
+    if (!normalizedId && !slug) return;
 
     const controller = new AbortController();
     const load = async () => {
       try {
-        setIsLoading(true);
-        const articleResponse = await articleService.fetchArticleById(id, controller.signal);
-        const fetchedArticle: ArticleDocument = articleResponse.data;
-        setArticle(fetchedArticle);
+        // Only show loading if we don't have cached data
+        if (!article) {
+          setIsLoading(true);
+        }
+        let fetchedArticle: ArticleDocument;
 
-        const categoryId =
-          fetchedArticle.categories?.[0]?._id ||
-          (typeof fetchedArticle.categories?.[0] === "string"
-            ? fetchedArticle.categories?.[0]
-            : undefined);
+        if (slug) {
+          fetchedArticle = await articleService.fetchArticleBySlug(slug, controller.signal);
+        } else if (normalizedId) {
+          fetchedArticle = await articleService.fetchArticleById(normalizedId, controller.signal);
+        } else {
+          return;
+        }
+
+        setArticle(fetchedArticle);
+        // Update cache with fresh data
+        articleCache.set(fetchedArticle);
+
+        // backend uses categoryId (populated object), not categories[]
+        const categoryId = fetchedArticle.categoryId?._id;
 
         if (categoryId) {
           try {
-            const relatedResponse = await articleService.fetchArticles(
-              { category: categoryId, status: "published", limit: 4 },
+            const relatedArticles = await articleService.fetchArticlesByCategory(
+              categoryId,
+              4,
               controller.signal
             );
 
-            const fetchedArticleId =
-              fetchedArticle.id ||
-              (fetchedArticle as unknown as { _id?: string })._id ||
-              "";
+            const fetchedArticleId = fetchedArticle._id || "";
 
-            const mappedRelated = (relatedResponse.data as ArticleDocument[])
-              .filter((item) => {
-                const candidateId =
-                  item.id || (item as unknown as { _id?: string })._id || "";
-                return candidateId !== fetchedArticleId;
-              })
-              .map(mapArticleToPost);
-
-            setRelatedArticles(mappedRelated);
+            const filteredRelated = relatedArticles.filter((item) => item._id !== fetchedArticleId);
+            setRelatedArticles(filteredRelated);
           } catch (relatedErr) {
             console.warn("Unable to load related articles", relatedErr);
             setRelatedArticles([]);
@@ -119,13 +152,11 @@ export default function Article() {
 
         if (fetchedArticle.allowComments) {
           try {
-            const commentsResponse = await commentService.fetchCommentsByArticle(
-              id,
+            const fetchedComments = await commentService.fetchCommentsByArticle(
+              fetchedArticle._id, // use the real ID from the fetched article
               controller.signal
             );
-            const mappedComments: LoadedComment[] = (commentsResponse.data || []).map(
-              mapApiCommentToLoaded
-            );
+            const mappedComments = fetchedComments.map(mapApiCommentToDisplay);
             setComments(sortComments(mappedComments, commentsSortBy));
           } catch {
             setComments([]);
@@ -145,22 +176,25 @@ export default function Article() {
         setRelatedArticles([]);
         setComments([]);
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
     load();
 
     return () => controller.abort();
-  }, [id]);
+  }, [normalizedId, slug]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [id]);
+  }, [normalizedId, slug]);
 
-  const articleContent =typeof article?.content === "string" ? (article.content as string) : null;
+  const articleContent = typeof article?.content === "string" ? article.content : null;
 
-  const normalizeSpansToParagraphs = (raw: string) => raw.replace(/<\s*span([^>]*)>/gi, "<p$1>").replace(/<\/\s*span\s*>/gi, "</p>");
+  const normalizeSpansToParagraphs = (raw: string) =>
+    raw.replace(/<\s*span([^>]*)>/gi, "<p$1>").replace(/<\/\s*span\s*>/gi, "</p>");
 
   const sanitizedContent = useMemo(() => {
     if (!articleContent) return "";
@@ -169,7 +203,8 @@ export default function Article() {
   }, [articleContent]);
 
   const handleSubmitComment = async () => {
-    if (!id || !newCommentText.trim() || isSubmittingComment) {
+    const articleId = article?._id || normalizedId;
+    if (!articleId || !newCommentText.trim() || isSubmittingComment) {
       return;
     }
 
@@ -177,15 +212,15 @@ export default function Article() {
     setCommentSubmitError(null);
 
     try {
-      const response = await commentService.createComment(id, {
+      await commentService.createComment(articleId, {
         content: newCommentText.trim(),
-        name: newCommentName.trim() || undefined,
+        username: newCommentName.trim() || undefined,
       });
 
-      const createdComment = mapApiCommentToLoaded(response.data);
-      setComments((prev) =>
-        sortComments([createdComment, ...prev], commentsSortBy)
-      );
+      // const displayComment = mapApiCommentToDisplay(createdComment);
+      // setComments((prev) => sortComments([displayComment, ...prev], commentsSortBy));
+      setShowSubmitMessage(true);
+      setTimeout(() => setShowSubmitMessage(false), 3000);
       setNewCommentText("");
       setNewCommentName("");
     } catch (error) {
@@ -228,13 +263,19 @@ export default function Article() {
     );
   }
 
+  // Extract author names from backend's authors[].authorId shape
   const authorNames =
-    article.authors?.map((author) => {
-      const authorUser = author.user;
-      if (!authorUser) return null;
-      if (typeof authorUser === "string") return authorUser;
-      const composedName = [authorUser.firstName, authorUser.lastName].filter(Boolean).join(" ");
-      return composedName || authorUser.username || authorUser.email || null;
+    article.authors?.map((authorEntry) => {
+      const authorId = authorEntry.authorId;
+      if (!authorId) return null;
+      // If populated (User object with name)
+      if (typeof authorId === "object") {
+        const user = authorId as User;
+        return user.name || null;
+      }
+      // If string (shouldn't happen when populated)
+      if (typeof authorId === "string") return authorId;
+      return null;
     }).filter((name): name is string => Boolean(name)) || [];
 
   const authorsDisplay = authorNames.length ? authorNames.join(" • ") : "Technique Staff";
@@ -247,7 +288,12 @@ export default function Article() {
       day: "numeric",
     });
 
-  const tagsDisplay = article.tags?.map((tag) => tag.name).filter(Boolean).join(" • ");
+  // backend uses tagIds, not tags
+  const tagsDisplay = article.tagIds?.map((tag) => tag.name).filter(Boolean).join(" • ");
+  const featuredMedia =
+    article.featuredMediaId && typeof article.featuredMediaId === "object"
+      ? article.featuredMediaId
+      : null;
 
   return (
     <>
@@ -261,39 +307,34 @@ export default function Article() {
               <span>{authorsDisplay}</span>
               {publishedDate && <span> • {publishedDate}</span>}
             </div>
-              {article.categories?.length > 0 &&
-                article.categories
-                  .filter((cat) => !!cat?.name)
-                  .map((cat, idx) => (
-                    <span key={cat._id || cat.name}>
-                      {idx > 0 && " • "}
-                      {cat.name}
-                    </span>
-              ))}
+            {/* backend uses categoryId (single object), not categories[] */}
+            {article.categoryId && (
+              <span>{article.categoryId.name}</span>
+            )}
           </h4>
           {tagsDisplay && <p className="text-xs text-nique-blue">{tagsDisplay}</p>}
           <hr className="opacity-50" />
         </header>
 
-        {/* Featured Image */}
-        {article.featuredImage && (
+        {/* Featured Image - backend uses featuredMediaId, not featuredImage */}
+        {featuredMedia && (
           <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
             <img
               className="w-full aspect-3/2 object-cover rounded-md"
-              src={article.featuredImage.url}
-              alt={article.featuredImage.altText || article.title}
+              src={featuredMedia.url}
+              loading="lazy"
+              alt={featuredMedia.altText || article.title}
             />
-            {(article.featuredImage.title || article.featuredImage.caption) && (
-              <figcaption className="w-full flex flex-col sm:flex-row sm:justify-between text-xs text-nique-blue mt-2 space-y-1 sm:space-y-0">
-                <span>{article.featuredImage.title}</span>
-                <span>{article.featuredImage.caption}</span>
+            {article.imageCaption && (
+              <figcaption className="w-full text-xs text-nique-blue mt-2">
+                {article.imageCaption}
               </figcaption>
             )}
           </figure>
         )}
 
         {/* Article Content */}
-        <section className="prose prose-lg max-w-3xl mx-auto text-[#1A1E47] article-body">
+        <section className="prose prose-lg max-w-4xl mx-auto text-nique-blue article-body">
           {sanitizedContent ? (
             <article dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
           ) : (
@@ -301,13 +342,17 @@ export default function Article() {
           )}
         </section>
 
+        <section>
+          <p className='text-right text-nique-blue'>Views: {article.viewCount || 0}</p>
+        </section>
+
         {/* Related Articles - fetches 4 published articles from the same category */}
         {relatedArticles.length > 0 && (
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-nique-blue">Related Articles</h2>
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-              {relatedArticles.map((related, index) => (
-                <ArticleBlock key={index} post={related} height="230px" />
+              {relatedArticles.map((related) => (
+                <ArticleBlock key={related._id || related.slug} article={related} height="230px" />
               ))}
             </div>
           </section>
@@ -332,14 +377,20 @@ export default function Article() {
               <div className="grid gap-4">
                 {comments.slice(0, numCommentsToView).map((com) => (
                   <Comment
-                    key={com._id}
-                    commentId={com._id}
-                    name={com.author.name}
-                    avatar={com.author.avatar}
+                    key={com.commentId}
+                    commentId={com.commentId}
+                    username={com.username}
                     content={com.content}
-                    createdAt={new Date(com.createdAt).toLocaleString()}
+                    createdAt={String(com.createdAt)}
                     thumbsDown={com.thumbsDown}
                     thumbsUp={com.thumbsUp}
+                    myReaction={com.myReaction}
+                    replies={com.replies}
+                    articleId={article._id}
+                    onReplySubmitted={() => {
+                      setShowSubmitMessage(true);
+                      setTimeout(() => setShowSubmitMessage(false), 3000);
+                    }}
                   />
                 ))}
               </div>
@@ -371,13 +422,21 @@ export default function Article() {
                 {commentSubmitError && (
                   <p className="text-sm text-red-600">{commentSubmitError}</p>
                 )}
-                <button
-                  onClick={handleSubmitComment}
-                  disabled={!newCommentText.trim() || isSubmittingComment}
-                  className="px-4 py-2 bg-nique-blue text-white rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <h4>{isSubmittingComment ? "Submitting..." : "Submit"}</h4>
-                </button>
+                <div className='flex flex-row'>
+                  <button
+                    onClick={handleSubmitComment}
+                    disabled={!newCommentText.trim() || isSubmittingComment}
+                    className="px-4 py-2 bg-nique-blue text-white rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <h4>{isSubmittingComment ? "Submitting..." : "Submit"}</h4>
+                  </button>
+                  {showSubmitMessage && (
+                    <div className="flex flex-row submit-toast fixed top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 bg-gray-200/70 text-nique-blue backdrop-blur-xs py-2 px-4 gap-2 rounded-md items-center">
+                      <SuccessTick className='text-nique-blue'/>
+                      <p>Your comment has been submitted and is awaiting approval. Check back in a bit!</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </>
           ) : (

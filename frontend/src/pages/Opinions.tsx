@@ -1,114 +1,139 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import articleService from '../services/articleService';
+import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
-import { Post } from '../types/article';
-import SideArticle from '../components/SideArticle';
+import { ArticleDocument } from '../types/article';
+// SideArticle not currently used
+// import SideArticle from '../components/SideArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import FeaturedStory from '../components/FeaturedStory';
 import SmallArticle from '../components/SmallArticle';
 import { Categories } from '../types/categories';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
-import { mapArticleToPost } from '../utils/articleMapping';
+import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
+
+// Helper to process raw articles into page sections
+const processOpinionArticles = (allOpinions: ArticleDocument[]) => {
+    const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+        getArticleTimestamp(b) - getArticleTimestamp(a);
+
+    const stickyPosts = allOpinions.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+    const featuredPosts = allOpinions.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
+    const nonStickyPosts = allOpinions.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
+    const orderedOpinion = [...stickyPosts, ...nonStickyPosts];
+
+    const featured = featuredPosts[0] ?? null;
+    const orderedWithoutFeatured = featured
+        ? orderedOpinion.filter((article) => getArticleId(article) !== getArticleId(featured))
+        : orderedOpinion;
+    const recentSelection = [featured, ...orderedWithoutFeatured].filter(Boolean) as ArticleDocument[];
+    const recentIds = new Set(recentSelection.slice(0, 6).map(getArticleId));
+
+    const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
+        articles
+            .filter((article) => {
+                if (article.subcategoryId && typeof article.subcategoryId === 'object') {
+                    return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
+                }
+                return false;
+            })
+            .filter((article) => !recentIds.has(getArticleId(article)))
+            .sort(sortByPublishedDesc);
+
+    return {
+        recentOpinionArticles: recentSelection,
+        opEdArticles: filterBySubcategory(allOpinions, 'op ed'),
+        consensusArticles: filterBySubcategory(allOpinions, 'consensus'),
+        lettersArticles: filterBySubcategory(allOpinions, 'letter to the editor'),
+    };
+};
 
 function Opinions() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentOpinionArticles, setRecentOpinionArticles] = useState<Post[]>([]);
-    // const [opinionArticles, setOpinionArticles] = useState<Post[]>([]);
+    // Check cache immediately for instant display
+    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.OPINION), []);
+    const initialData = useMemo(() => cachedArticles ? processOpinionArticles(cachedArticles) : null, [cachedArticles]);
+
+    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
+    const [recentOpinionArticles, setRecentOpinionArticles] = useState<ArticleDocument[]>(initialData?.recentOpinionArticles || []);
     const [error, setError] = useState<string | null>(null);
-    const [opinionCategoryId, setOpinionCategoryId] = useState<string | null>(null);
-    const [opEdArticles, setOpEdArticles] = useState<Post[]>([]);
-    const [consensusArticles, setConsensusArticles] = useState<Post[]>([]);
-    const [lettersArticles, setLettersArticles] = useState<Post[]>([]);
+    const [opinionCategoryId, setOpinionCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.OPINION));
+    const [opEdArticles, setOpEdArticles] = useState<ArticleDocument[]>(initialData?.opEdArticles || []);
+    const [consensusArticles, setConsensusArticles] = useState<ArticleDocument[]>(initialData?.consensusArticles || []);
+    const [lettersArticles, setLettersArticles] = useState<ArticleDocument[]>(initialData?.lettersArticles || []);
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
 
         const loadArticles = async () => {
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
-            const categories = categoriesResponse.data || [];
-
-            const opinionCategory = categories.find((category: any) =>
-                category.name?.toLowerCase() === Categories.OPINION.toLowerCase()
-            );
-            setOpinionCategoryId(typeof opinionCategory?._id === 'string' ? opinionCategory._id : null);
-
-            if (!opinionCategory?._id) {
-                if (!isMounted) return;
-                // setOpinionArticles([]);
-                setError('Opinion category not found.');
-                return;
+            // Only show loading if we don't have cached data
+            if (!cachedArticles) {
+                setIsLoading(true);
             }
+            setError(null);
 
-            const opinionResponse = await articleService.fetchArticles(
-            { category: opinionCategory._id, status: 'published' },
-            controller.signal
-            );
+            try {
+                // Use cached categories if available
+                let categories = categoryCache.getCategories();
+                if (!categories) {
+                    categories = await articleService.fetchCategories(50, controller.signal);
+                    categoryCache.setCategories(categories);
+                }
 
-            const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
-            const allOpinions = mapResponseData(opinionResponse.data);
-            const getTimestamp = (post: Post) => {
-                const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
-                const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
-                return Math.max(published, created);
-            };
-            const sortByPublishedDesc = (a: Post, b: Post) => getTimestamp(b) - getTimestamp(a);
+                const opinionCategory = categories.find((category: any) =>
+                    category.name?.toLowerCase() === Categories.OPINION.toLowerCase()
+                );
+                setOpinionCategoryId(typeof opinionCategory?._id === 'string' ? opinionCategory._id : null);
 
-            const stickyPosts = allOpinions.filter((post) => post.isSticky).sort(sortByPublishedDesc);
-            const nonStickyPosts = allOpinions.filter((post) => !post.isSticky).sort(sortByPublishedDesc);
-            const orderedOpinion = [...stickyPosts, ...nonStickyPosts];
-            const RECENT_COUNT = Math.max(5, stickyPosts.length);
-            const recentSelection = orderedOpinion.slice(0, RECENT_COUNT);
-            // const remainingOpinion = orderedOpinion.slice(RECENT_COUNT);
-            const recentIds = new Set(recentSelection.map((post) => post.id));
+                if (!opinionCategory?._id) {
+                    if (!isMounted) return;
+                    setError('Opinion category not found.');
+                    return;
+                }
 
-            const filterBySubcategory = (articles: any[], subcategory: string) =>
-                articles
-                    .filter((article: any) =>
-                        Array.isArray(article.subcategories) &&
-                        article.subcategories.some(
-                            (sub: any) =>
-                                typeof sub?.value === 'string' &&
-                                sub.value.toLowerCase() === subcategory
-                        )
-                    )
-                    .map(mapArticleToPost)
-                    .filter((post) => !recentIds.has(post.id))
-                    .sort(sortByPublishedDesc);
+                const opinionResponse = await articleService.fetchArticlesByCategory(
+                    opinionCategory._id,
+                    undefined,
+                    controller.signal
+                );
 
-            if (!isMounted) {
-            return;
+                const allOpinions = opinionResponse || [];
+                
+                // Update cache with fresh data
+                categoryCache.setCategoryArticles(Categories.OPINION, allOpinions);
+
+                if (!isMounted) {
+                    return;
+                }
+
+                const processed = processOpinionArticles(allOpinions);
+                setRecentOpinionArticles(processed.recentOpinionArticles);
+                setOpEdArticles(processed.opEdArticles);
+                setConsensusArticles(processed.consensusArticles);
+                setLettersArticles(processed.lettersArticles);
+            } catch (err) {
+                if (!isMounted) {
+                    return;
+                }
+                // Only show error if we don't have cached data to display
+                if (!cachedArticles) {
+                    setError('Unable to load articles. Please try again later.');
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                }
             }
-
-            setRecentOpinionArticles(recentSelection);
-            // setOpinionArticles(remainingOpinion);
-            setOpEdArticles(filterBySubcategory(opinionResponse.data || [], 'op ed'));
-            setConsensusArticles(filterBySubcategory(opinionResponse.data || [], 'consensus'));
-            setLettersArticles(filterBySubcategory(opinionResponse.data || [], 'letters to the editor'));
-        } catch (err) {
-            if (!isMounted) {
-            return;
-            }
-            setError('Unable to load articles. Please try again later.');
-        } finally {
-            if (isMounted) {
-            setIsLoading(false);
-            }
-        }
         };
 
         loadArticles();
 
         return () => {
-        isMounted = false;
-        controller.abort();
+            isMounted = false;
+            controller.abort();
         };
-    }, []);
+    }, [cachedArticles]);
 
     if (isLoading) {
         return (
@@ -133,10 +158,17 @@ function Opinions() {
         <>
         <Navbar />
 
-        <div className='max-w-[1470px] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
-            <div className='w-full'>
-                <div className='grid grid-cols-1 gap-4'>
-                    {recentOpinionArticles[0] && <FeaturedStory post={recentOpinionArticles[0]} height='670px' />}
+        <div className='max-w-[95%] md:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
+            <div className='w-full h-screen'>
+                <div className='grid gap-5 grid-cols-1 lg:grid-cols-[70%_auto] lg:grid-rows-4 w-full h-[80vh]'>
+                    <div className='flex flex-col gap-4 order-first row-span-4'>
+                        {recentOpinionArticles[0] && <FeaturedStory article={recentOpinionArticles[0]} priority={true} />}
+                    </div>
+                    <div className='flex flex-col gap-4 row-span-4'>
+                        {recentOpinionArticles.slice(1, 6).map((article) => (
+                            <ArticleBlock key={article._id || article.slug} article={article} height='100%' />
+                        ))}
+                    </div>
                 </div>
 
                 <hr className='my-3'/>
@@ -144,7 +176,7 @@ function Opinions() {
                 <h4 className="font-bold mb-2 text-2xl text-nique-blue">Op Ed</h4>
                 <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
                     {opEdArticles.map((article) => (
-                        <ArticleBlock key={article.id} post={article} height='230px' />
+                        <ArticleBlock key={article._id || article.slug} article={article} height='230px' />
                     ))}
                 </div>
 
@@ -153,15 +185,15 @@ function Opinions() {
                 <h4 className="font-bold mb-2 text-2xl text-nique-blue">Consensus</h4>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                     {(() => {
-                        const posts = consensusArticles.slice(0, 2);
-                        return posts.length ? (
-                        <SmallArticle posts={posts} direction="left" />
+                        const articles = consensusArticles.slice(0, 2);
+                        return articles.length ? (
+                        <SmallArticle articles={articles} direction="left" />
                         ) : null;
                     })()}
                     {(() => {
-                        const posts = consensusArticles.slice(2, 4);
-                        return posts.length ? (
-                        <SmallArticle posts={posts} direction="left" />
+                        const articles = consensusArticles.slice(2, 4);
+                        return articles.length ? (
+                        <SmallArticle articles={articles} direction="left" />
                         ) : null;
                     })()}
                 </div>
@@ -171,16 +203,9 @@ function Opinions() {
             </div>
 
             <div className='flex flex-col gap-4'>
-                {(() => {
-                const posts = recentOpinionArticles.slice(1, 6);
-                return posts.length ? (
-                    <SideArticle posts={posts} width='80px' hasDesc={true}/>
-                ) : null;
-                })()}
-
                 <h4 className="font-bold text-2xl text-nique-blue">Letters to the Editor</h4>
                 <hr />
-                <SmallArticle posts={lettersArticles} direction="right" />
+                <SmallArticle articles={lettersArticles} direction="right" />
                 
             </div>
         </div>

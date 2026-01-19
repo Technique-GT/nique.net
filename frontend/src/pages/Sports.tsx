@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import articleService from '../services/articleService';
+import { categoryCache } from '../services/categoryCache';
 import { Categories } from '../types/categories';
 import ArticleBlock from "../components/ArticleBlock"
-import { Post } from '../types/article'
+import { ArticleDocument } from '../types/article'
 // import VerticalAd from "../components/VerticalAd";
 // import MockAd from '../assets/mock_advertisement.jpg';
 import SideArticle from '../components/SideArticle';
@@ -11,29 +12,70 @@ import SmallArticle from '../components/SmallArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
-import { mapArticleToPost } from '../utils/articleMapping';
+import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
+
+// Helper to process raw articles into page sections
+const processSportsArticles = (allSportsArticles: ArticleDocument[]) => {
+    const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+        getArticleTimestamp(b) - getArticleTimestamp(a);
+
+    const stickyPosts = allSportsArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+    const nonStickyPosts = allSportsArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
+    const orderedSports = [...stickyPosts, ...nonStickyPosts];
+    const recentSelection = orderedSports.slice(0, 5);
+    const recentIds = new Set(recentSelection.map(getArticleId));
+
+    const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
+        articles
+            .filter((article) => {
+                if (article.subcategoryId && typeof article.subcategoryId === 'object') {
+                    return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
+                }
+                return false;
+            })
+            .filter((article) => !recentIds.has(getArticleId(article)))
+            .sort(sortByPublishedDesc);
+
+    return {
+        recentSportsArticles: recentSelection,
+        techSports: filterBySubcategory(allSportsArticles, 'jackets'),
+        atlSports: filterBySubcategory(allSportsArticles, 'atlanta'),
+        seasonScoreboard: [] as ArticleDocument[], // No corresponding backend subcategory
+    };
+};
 
 function Sports() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentSportsArticles, setRecentSportsArticles] = useState<Post[]>([]);
-    // const [sportsArticles, setSportsArticles] = useState<Post[]>([]);
-    const [techSports, setTechSports] = useState<Post[]>([]);
-    const [atlSports, setAtlSports] = useState<Post[]>([]);
-    const [seasonScoreboard, setSeasonScoreboard] = useState<Post[]>([]);
-    const [error, setError] = useState<string | null>(null);
-    const [sportsCategoryId, setSportsCategoryId] = useState<string | null>(null);
+    // Check cache immediately for instant display
+    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.SPORTS), []);
+    const initialData = useMemo(() => cachedArticles ? processSportsArticles(cachedArticles) : null, [cachedArticles]);
 
-        useEffect(() => {
+    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
+    const [recentSportsArticles, setRecentSportsArticles] = useState<ArticleDocument[]>(initialData?.recentSportsArticles || []);
+    const [techSports, setTechSports] = useState<ArticleDocument[]>(initialData?.techSports || []);
+    const [atlSports, setAtlSports] = useState<ArticleDocument[]>(initialData?.atlSports || []);
+    const [seasonScoreboard, setSeasonScoreboard] = useState<ArticleDocument[]>(initialData?.seasonScoreboard || []);
+    const [error, setError] = useState<string | null>(null);
+    const [sportsCategoryId, setSportsCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.SPORTS));
+
+    useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
     
         const loadArticles = async () => {
-            setIsLoading(true);
+            // Only show loading if we don't have cached data
+            if (!cachedArticles) {
+                setIsLoading(true);
+            }
             setError(null);
 
             try {
-                const categoriesResponse = await articleService.fetchCategories(50, controller.signal);
-                const categories = categoriesResponse.data || [];
+                // Use cached categories if available
+                let categories = categoryCache.getCategories();
+                if (!categories) {
+                    categories = await articleService.fetchCategories(50, controller.signal);
+                    categoryCache.setCategories(categories);
+                }
+
                 const sportsCategory = categories.find((category: any) =>
                     category.name?.toLowerCase() === Categories.SPORTS.toLowerCase()
                 );
@@ -41,61 +83,38 @@ function Sports() {
 
                 if (!sportsCategory?._id) {
                     if (!isMounted) return;
-                    // setSportsArticles([]);
                     setError('Sports category not found.');
                     return;
                 }
 
-                const sportsResponse = await articleService.fetchArticles(
-                    { category: sportsCategory._id, status: 'published' },
+                const sportsResponse = await articleService.fetchArticlesByCategory(
+                    sportsCategory._id,
+                    undefined,
                     controller.signal
                 );
 
-                const mapResponseData = (data: any[] | undefined) => (data || []).map(mapArticleToPost);
-                const allSportsArticles = mapResponseData(sportsResponse.data);
-                const getTimestamp = (post: Post) => {
-                    const published = post.publishedAt ? new Date(post.publishedAt).getTime() : 0;
-                    const created = post.createdAt ? new Date(post.createdAt).getTime() : 0;
-                    return Math.max(published, created);
-                };
-                const sortByPublishedDesc = (a: Post, b: Post) => getTimestamp(b) - getTimestamp(a);
-
-                const stickyPosts = allSportsArticles.filter((post) => post.isSticky).sort(sortByPublishedDesc);
-                const nonStickyPosts = allSportsArticles.filter((post) => !post.isSticky).sort(sortByPublishedDesc);
-                const orderedSports = [...stickyPosts, ...nonStickyPosts];
-                const RECENT_COUNT = Math.max(5, stickyPosts.length);
-                const recentSelection = orderedSports.slice(0, RECENT_COUNT);
-                // const remainingSports = orderedSports.slice(RECENT_COUNT);
-                const recentIds = new Set(recentSelection.map((post) => post.id));
-
-                const filterBySubcategory = (articles: any[], subcategory: string) =>
-                    articles
-                        .filter((article: any) =>
-                            Array.isArray(article.subcategories) &&
-                            article.subcategories.some(
-                                (sub: any) =>
-                                    typeof sub?.value === 'string' &&
-                                    sub.value.toLowerCase() === subcategory
-                            )
-                        )
-                        .map(mapArticleToPost)
-                        .filter((post) => !recentIds.has(post.id))
-                        .sort(sortByPublishedDesc);
+                const allSportsArticles = sportsResponse || [];
+                
+                // Update cache with fresh data
+                categoryCache.setCategoryArticles(Categories.SPORTS, allSportsArticles);
 
                 if (!isMounted) {
                     return;
                 }
 
-                setRecentSportsArticles(recentSelection);
-                // setSportsArticles(remainingSports);
-                setTechSports(filterBySubcategory(sportsResponse.data || [], 'tech sports'));
-                setAtlSports(filterBySubcategory(sportsResponse.data || [], 'atlanta'));
-                setSeasonScoreboard(filterBySubcategory(sportsResponse.data || [], 'season scoreboard'));
+                const processed = processSportsArticles(allSportsArticles);
+                setRecentSportsArticles(processed.recentSportsArticles);
+                setTechSports(processed.techSports);
+                setAtlSports(processed.atlSports);
+                setSeasonScoreboard(processed.seasonScoreboard);
             } catch (err) {
                 if (!isMounted) {
                     return;
                 }
-                setError('Unable to load articles. Please try again later.');
+                // Only show error if we don't have cached data to display
+                if (!cachedArticles) {
+                    setError('Unable to load articles. Please try again later.');
+                }
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -109,7 +128,7 @@ function Sports() {
             isMounted = false;
             controller.abort();
         };
-    }, []);
+    }, [cachedArticles]);
     
     if (isLoading) {
         return (
@@ -133,17 +152,17 @@ function Sports() {
     return (
         <>
             <Navbar />
-            <div className='max-w-[1470px] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
-                <div className='w-full'>
-                    <div className='grid gap-5 grid-cols-1 lg:grid-cols-[auto_35%] w-full'>
-                        <div className='flex flex-col gap-4'>
-                            {recentSportsArticles[0] && <ArticleBlock post={recentSportsArticles[0]} height='768px' />}
+            <div className='max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
+                <div className='w-full h-screen'>
+                    <div className='grid gap-5 grid-cols-1 lg:grid-cols-[auto_35%] lg:grid-rows-4 w-full h-[80vh]'>
+                        <div className='flex flex-col gap-4 lg:row-span-4'>
+                            {recentSportsArticles[0] && <ArticleBlock article={recentSportsArticles[0]} height="100%" />}
                         </div>
-                        <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1'>
-                            {recentSportsArticles[1] && <ArticleBlock post={recentSportsArticles[1]} height='180px' />}
-                            {recentSportsArticles[2] && <ArticleBlock post={recentSportsArticles[2]} height='180px' />}
-                            {recentSportsArticles[3] && <ArticleBlock post={recentSportsArticles[3]} height='180px' />}
-                            {recentSportsArticles[4] && <ArticleBlock post={recentSportsArticles[4]} height='180px' />}
+                        <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:grid-rows-4 lg:row-span-4 h-full'>
+                            {recentSportsArticles[1] && <ArticleBlock article={recentSportsArticles[1]} height="100%" />}
+                            {recentSportsArticles[2] && <ArticleBlock article={recentSportsArticles[2]} height="100%" />}
+                            {recentSportsArticles[3] && <ArticleBlock article={recentSportsArticles[3]} height="100%" />}
+                            {recentSportsArticles[4] && <ArticleBlock article={recentSportsArticles[4]} height="100%" />}
                         </div>
                     </div>
 
@@ -153,13 +172,13 @@ function Sports() {
                     <div className='grid grid-cols-1 lg:grid-cols-[48%_auto] gap-4'>
                         <div className='w-full'>
                             {(() => {
-                                const posts = techSports.slice(0, 4);
-                                return posts.length ? <SmallArticle posts={posts} direction="left"/> : null;
+                                const articles = techSports.slice(0, 4);
+                                return articles.length ? <SmallArticle articles={articles} direction="left"/> : null;
                             })()}
                         </div>
                         <div className='grid gap-4 grid-cols-1 sm:grid-cols-2'>
                             {techSports.slice(4, 8).map((article) => (
-                                <ArticleBlock key={article.id} post={article} height='190px' />
+                                <ArticleBlock key={article._id || article.slug} article={article} height='190px' />
                             ))}
                         </div>
                     </div>
@@ -169,7 +188,7 @@ function Sports() {
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Atlanta</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
                         {atlSports.slice(0, 4).map((article) => (
-                            <ArticleBlock key={article.id} post={article} height='180px' />
+                            <ArticleBlock key={article._id || article.slug} article={article} height='180px' />
                         ))}
                     </div>
 
@@ -183,8 +202,8 @@ function Sports() {
                     <hr className='my-3' /> */}
                     <h4 className="text-nique-blue font-bold mb-4 text-2xl">Season Scoreboard</h4>
                     {(() => {
-                        const posts = seasonScoreboard.slice(0, 5);
-                        return posts.length ? <SideArticle posts={posts} /> : null;
+                        const articles = seasonScoreboard.slice(0, 5);
+                        return articles.length ? <SideArticle articles={articles} /> : null;
                     })()}
                 </div>
             </div>

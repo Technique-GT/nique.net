@@ -1,0 +1,287 @@
+import { useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Plus, Edit, Trash2, Search } from "lucide-react";
+import { Main } from "@/components/layout/main";
+import { PageHeader } from "@/components/layout/page-header";
+import {
+  useTags,
+  useCreateTag,
+  useUpdateTag,
+  useDeleteTag,
+  type Tag,
+} from "@/hooks/use-queries";
+import { useAuthStore } from "@/stores/authStore";
+import { canManageTaxonomy } from "@/lib/permissions";
+
+export default function Tags() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingTag, setEditingTag] = useState<Tag | null>(null);
+  const [formData, setFormData] = useState({ name: "" });
+  const [error, setError] = useState<string | null>(null);
+  const user = useAuthStore((state) => state.auth.user);
+  const isAdmin = canManageTaxonomy(user);
+
+  // TanStack Query hooks
+  const { data: tags = [], isLoading } = useTags();
+  const createTag = useCreateTag();
+  const updateTag = useUpdateTag();
+  const deleteTag = useDeleteTag();
+
+  // Client-side filtering for search
+  const filteredTags = useMemo(() => {
+    if (!searchTerm) return tags;
+    const term = searchTerm.toLowerCase();
+    return tags.filter(
+      (tag) =>
+        tag.name.toLowerCase().includes(term) ||
+        tag.slug.toLowerCase().includes(term)
+    );
+  }, [tags, searchTerm]);
+
+  const handleAddTag = async () => {
+    if (!isAdmin) return;
+    if (!formData.name.trim()) {
+      setError('Tag name is required');
+      return;
+    }
+
+    try {
+      setError(null);
+      if (editingTag) {
+        await updateTag.mutateAsync({ id: editingTag._id, data: { name: formData.name.trim() } });
+      } else {
+        await createTag.mutateAsync({ name: formData.name.trim() });
+      }
+      resetForm();
+      setIsDialogOpen(false);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || `Error ${editingTag ? 'updating' : 'adding'} tag`);
+    }
+  };
+
+  const handleDeleteTag = async (tag: Tag) => {
+    if (!isAdmin) return;
+    if (!confirm('Are you sure you want to delete this tag?')) return;
+
+    try {
+      await deleteTag.mutateAsync(tag._id);
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Error deleting tag');
+    }
+  };
+
+  const openEditDialog = (tag: Tag) => {
+    if (!isAdmin) return;
+    setFormData({ name: tag.name });
+    setEditingTag(tag);
+    setError(null);
+    setIsDialogOpen(true);
+  };
+
+  const openCreateDialog = () => {
+    if (!isAdmin) return;
+    resetForm();
+    setIsDialogOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({ name: "" });
+    setEditingTag(null);
+    setError(null);
+  };
+
+  if (isLoading) {
+    return (
+      <Main>
+        <PageHeader title="Tags" description="Loading tags..." />
+        <Card>
+          <CardContent>
+            <div className="flex items-center justify-center h-32">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+                <p className="text-muted-foreground">Loading tags...</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </Main>
+    );
+  }
+
+  return (
+    <Main>
+      {/* Error Display */}
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md">
+          {error}
+        </div>
+      )}
+
+      <PageHeader
+        title="Tags"
+          description="Organize your content with tags"
+          badge={
+            !isAdmin ? (
+              <Badge variant="destructive" className="text-xs">
+                View only
+              </Badge>
+            ) : null
+          }
+          actions={
+            <>
+              {isAdmin && (
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={openCreateDialog}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Tag
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingTag ? 'Edit Tag' : 'Add New Tag'}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {editingTag 
+                          ? 'Update your tag information.' 
+                          : 'Create a new tag to organize your content.'
+                        }
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    {/* Show error in dialog if any */}
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
+                        {error}
+                      </div>
+                    )}
+
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="name">Tag Name *</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          placeholder="Enter tag name"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleAddTag} 
+                        disabled={createTag.isPending || updateTag.isPending}
+                      >
+                        {(createTag.isPending || updateTag.isPending) ? 'Saving...' : (editingTag ? 'Update Tag' : 'Create Tag')}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </>
+          }
+        />
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Manage Tags</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex-1 relative">
+                <Label htmlFor="search-tags" className="sr-only">
+                  Search Tags
+                </Label>
+                <Input
+                  id="search-tags"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search tags..."
+                  className="pl-10"
+                />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              </div>
+
+              <div className="border rounded-lg p-4">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-sm font-medium">
+                    Current Tags ({filteredTags.length})
+                  </h3>
+                  {filteredTags.length > 0 && isAdmin && (
+                    <span className="text-sm text-muted-foreground">
+                      Click on a tag to edit
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {filteredTags.map((tag) => (
+                    <div key={tag._id} className="relative group">
+                      <Badge
+                        variant="secondary"
+                        className={`px-3 py-1 text-sm transition-all ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`}
+                        onClick={isAdmin ? () => openEditDialog(tag) : undefined}
+                      >
+                        {tag.name}
+                      </Badge>
+                      {isAdmin && (
+                        <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditDialog(tag);
+                            }}
+                            className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1 shadow-md"
+                            title="Edit tag"
+                          >
+                            <Edit className="w-2 h-2" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteTag(tag);
+                            }}
+                            className="bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-md"
+                            title="Delete tag"
+                            disabled={deleteTag.isPending}
+                          >
+                            <Trash2 className="w-2 h-2" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {filteredTags.length === 0 && (
+                    <div className="text-center w-full py-8">
+                      <p className="text-muted-foreground">No tags found</p>
+                      {searchTerm && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Try adjusting your search terms
+                        </p>
+                      )}
+                      {!searchTerm && isAdmin && (
+                        <Button onClick={openCreateDialog} className="mt-4">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Create Your First Tag
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </Main>
+  );
+}

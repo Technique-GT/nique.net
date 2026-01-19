@@ -1,175 +1,227 @@
-import axios from 'axios';
-import type { ArticleDocument } from '../types/article';
+import apiClient, { unwrap, extractPagination } from './apiClient';
+import type { ArticleDocument, Category, FeedResponse } from '../types/article';
 
-const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api',
-  withCredentials: true,
-});
+// =============================================================================
+// Types
+// =============================================================================
 
 export interface FetchArticleFeedParams {
   page?: number;
   limit?: number;
-  status?: string;
-  category?: string;
-  author?: string;
+  categoryId?: string;
+  tagId?: string;
+  authorId?: string;
   search?: string;
   isSticky?: boolean;
-  offset?: number;
-}
-
-export interface PaginatedArticlesResponse {
-  data: ArticleDocument[];
-  page: number;
-  limit: number;
-  total: number;
-  hasMore: boolean;
-  offset: number;
-  nextOffset: number;
 }
 
 export interface FetchArticlesParams {
-  status?: string;
-  category?: string;
-  author?: string;
+  categoryId?: string;
   search?: string;
   limit?: number;
-  isSticky?: boolean;
+  page?: number;
 }
 
-const fetchRecentArticles = (limit = 5, status = 'published', signal?: AbortSignal) => {
-  const params: Record<string, string | number> = { status };
-  if (limit !== undefined) {
-    params.limit = limit;
+// =============================================================================
+// Article Endpoints (aligned with backend routes)
+// =============================================================================
+
+/**
+ * Fetch published articles with pagination.
+ * backend: GET /articles/published
+ */
+const fetchPublishedArticles = async (
+  params: FetchArticlesParams = {},
+  signal?: AbortSignal
+): Promise<ArticleDocument[]> => {
+  const queryParams: Record<string, string | number> = {};
+
+  if (typeof params.page === 'number') queryParams.page = params.page;
+  if (typeof params.limit === 'number') queryParams.limit = params.limit;
+  if (params.categoryId) queryParams.categoryId = params.categoryId;
+  if (params.search) queryParams.search = params.search;
+
+  // Note: backend currently ignores the categoryId filter for /articles/published.
+  // Keep client-side filtering for now to avoid incorrect cross-category mixes.
+  const response = await apiClient.get('/articles/published', { params: queryParams, signal });
+  const data = unwrap(response.data) as ArticleDocument[];
+
+  if (params.categoryId) {
+    return data.filter((article) => {
+      const category = (article as any).categoryId;
+      // categoryId is typically populated object: { _id, name, slug }
+      const id = typeof category === 'object' && category ? category._id : category;
+      return typeof id === 'string' ? id === params.categoryId : String(id) === params.categoryId;
+    });
   }
 
-  return apiClient.get('/articles', {
-    params,
-    signal,
-  });
+  return data;
 };
 
-const fetchArticles = (params: FetchArticlesParams = {}, signal?: AbortSignal) => {
-  const formattedParams: Record<string, string | number> = {};
+/**
+ * Fetch recent published articles.
+ * Uses /articles/published with limit.
+ */
+const fetchRecentArticles = async (
+  limit = 5,
+  _status = 'published', // kept for signature compat, ignored
+  signal?: AbortSignal
+): Promise<ArticleDocument[]> => {
+  return fetchPublishedArticles({ limit }, signal);
+};
 
-  if (params.status) {
-    formattedParams.status = params.status;
-  }
-  if (params.category) {
-    formattedParams.category = params.category;
-  }
-  if (params.author) {
-    formattedParams.author = params.author;
-  }
-  if (params.search) {
-    formattedParams.search = params.search;
-  }
-  if (typeof params.limit === 'number') {
-    formattedParams.limit = params.limit;
-  }
+/**
+ * Generic fetch for published articles (used by Home.tsx for category sections).
+ * Maps old `category` param to `categoryId`.
+ */
+const fetchArticles = async (
+  params: { category?: string; status?: string; limit?: number; search?: string } = {},
+  signal?: AbortSignal
+): Promise<ArticleDocument[]> => {
+  // backend /articles/published uses categoryId, not category
+  return fetchPublishedArticles(
+    {
+      categoryId: params.category,
+      limit: params.limit,
+      search: params.search,
+    },
+    signal
+  );
+};
+
+/**
+ * Fetch sticky articles.
+ * backend: GET /articles/sticky
+ */
+const fetchStickyArticles = async (
+   _limit?: number, // backend sticky endpoint doesn't support limit, returns all
+  signal?: AbortSignal
+): Promise<ArticleDocument[]> => {
+  const response = await apiClient.get('/articles/sticky', { signal });
+  return unwrap(response.data);
+};
+
+/**
+ * Fetch featured articles.
+ * backend: GET /articles/featured
+ */
+const fetchFeaturedArticles = async (
+  signal?: AbortSignal
+): Promise<ArticleDocument[]> => {
+  const response = await apiClient.get('/articles/featured', { signal });
+  return unwrap(response.data);
+};
+
+/**
+ * Fetch articles by category.
+ * backend: GET /articles/category/:category
+ */
+const fetchArticlesByCategory = async (
+  categoryId: string,
+   _limit?: number, // backend doesn't support limit on this route
+  signal?: AbortSignal
+): Promise<ArticleDocument[]> => {
+  const response = await apiClient.get(`/articles/category/${categoryId}`, { signal });
+  return unwrap(response.data);
+};
+
+/**
+ * Fetch a single article by ID.
+ * backend: GET /articles/:id
+ */
+const fetchArticleById = async (
+  id: string,
+  signal?: AbortSignal
+): Promise<ArticleDocument> => {
+  const response = await apiClient.get(`/articles/${id}`, { signal });
+  return unwrap(response.data);
+};
+
+/**
+ * Fetch a single article by slug.
+ * backend: GET /articles/slug/:slug
+ */
+const fetchArticleBySlug = async (
+  slug: string,
+  signal?: AbortSignal
+): Promise<ArticleDocument> => {
+  const response = await apiClient.get(`/articles/slug/${slug}`, { signal });
+  return unwrap(response.data);
+};
+
+/**
+ * Search published articles.
+ * Uses /articles/published with search param.
+ */
+const searchArticles = async (
+  query: string,
+  limit?: number,
+  signal?: AbortSignal
+): Promise<ArticleDocument[]> => {
+  return fetchPublishedArticles({ search: query, limit }, signal);
+};
+
+/**
+ * Fetch paginated feed for infinite scroll.
+ * backend: GET /articles/feed
+ * Returns page-based pagination.
+ */
+const fetchArticleFeed = async (
+  params: FetchArticleFeedParams = {},
+  signal?: AbortSignal
+): Promise<FeedResponse> => {
+  const queryParams: Record<string, string | number> = {};
+
+  if (typeof params.page === 'number') queryParams.page = params.page;
+  if (typeof params.limit === 'number') queryParams.limit = params.limit;
+  if (params.categoryId) queryParams.categoryId = params.categoryId;
+  if (params.tagId) queryParams.tagId = params.tagId;
+  if (params.authorId) queryParams.authorId = params.authorId;
+  if (params.search) queryParams.search = params.search;
   if (typeof params.isSticky === 'boolean') {
-    formattedParams.isSticky = params.isSticky ? 'true' : 'false';
+    queryParams.isSticky = params.isSticky ? 'true' : 'false';
   }
 
-  return apiClient.get('/articles', {
-    params: formattedParams,
-    signal,
-  });
-};
+  const response = await apiClient.get('/articles/feed', { params: queryParams, signal });
+  const data = unwrap(response.data) as ArticleDocument[];
+  const pagination = extractPagination(response.data);
 
-const fetchStickyArticles = (limit?: number, signal?: AbortSignal) => {
-  const params: Record<string, string | number> = { status: 'published', isSticky: 'true' };
-  if (limit !== undefined) {
-    params.limit = limit;
-  }
-
-  return apiClient.get('/articles', {
-    params,
-    signal,
-  });
-};
-
-const fetchArticlesByCategory = (categoryId: string, limit?: number, signal?: AbortSignal) => {
-  const params: Record<string, number> = {};
-  if (limit !== undefined) {
-    params.limit = limit;
-  }
-
-  return apiClient.get(`/articles/category/${categoryId}`, {
-    params,
-    signal,
-  });
-};
-
-const fetchCategories = (limit = 50, signal?: AbortSignal) => {
-  return apiClient.get('/categories', {
-    params: { limit },
-    signal,
-  });
-};
-
-const fetchArticleById = (id: string, signal?: AbortSignal) => {
-  return apiClient.get(`/articles/${id}`, { signal });
-};
-
-const searchArticles = (query: string, limit?: number, signal?: AbortSignal) => {
-  const params: Record<string, string | number> = {
-    status: 'published',
-    search: query,
+  return {
+    data,
+    pagination: pagination || { total: data.length, page: 1, pages: 1, limit: data.length },
   };
-
-  if (typeof limit === 'number') {
-    params.limit = limit;
-  }
-
-  return apiClient.get('/articles', {
-    params,
-    signal,
-  });
 };
 
-const fetchArticleFeed = (params: FetchArticleFeedParams = {}, signal?: AbortSignal) => {
-  const formattedParams: Record<string, string | number> = {};
+// =============================================================================
+// Category Endpoints
+// =============================================================================
 
-  if (typeof params.page === 'number') {
-    formattedParams.page = params.page;
-  }
-  if (typeof params.limit === 'number') {
-    formattedParams.limit = params.limit;
-  }
-  if (params.status) {
-    formattedParams.status = params.status;
-  }
-  if (params.category) {
-    formattedParams.category = params.category;
-  }
-  if (params.author) {
-    formattedParams.author = params.author;
-  }
-  if (params.search) {
-    formattedParams.search = params.search;
-  }
-  if (typeof params.isSticky === 'boolean') {
-    formattedParams.isSticky = params.isSticky ? 'true' : 'false';
-  }
-  if (typeof params.offset === 'number' && !Number.isNaN(params.offset)) {
-    formattedParams.offset = params.offset;
-  }
-
-  return apiClient
-    .get<PaginatedArticlesResponse>('/articles/feed/paginated', {
-      params: formattedParams,
-      signal,
-    })
-    .then((response) => response.data);
+/**
+ * Fetch all categories.
+ * backend: GET /categories (no limit param)
+ */
+const fetchCategories = async (
+  _limit = 50, // kept for signature compat, ignored
+  signal?: AbortSignal
+): Promise<Category[]> => {
+  const response = await apiClient.get('/categories', { signal });
+  return unwrap(response.data);
 };
+
+// =============================================================================
+// Exports
+// =============================================================================
 
 export default {
   fetchRecentArticles,
   fetchArticles,
+  fetchPublishedArticles,
   fetchStickyArticles,
+  fetchFeaturedArticles,
   fetchArticlesByCategory,
   fetchCategories,
   fetchArticleById,
+  fetchArticleBySlug,
   searchArticles,
   fetchArticleFeed,
 };

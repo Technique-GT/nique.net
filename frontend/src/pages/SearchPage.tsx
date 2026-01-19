@@ -4,8 +4,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Spinner from "../components/Spinner";
 import articleService from "../services/articleService";
-import { Post } from "../types/article";
-import { mapArticleToPost } from "../utils/articleMapping";
+import { ArticleDocument } from "../types/article";
+import {
+  getArticleAuthorName,
+  getArticleCategoryName,
+  getArticleDescription,
+  getArticleImage,
+  getArticleLink,
+} from "../utils/articlePresentation";
 
 const buildPreview = (primary?: string | null, fallback?: string | null) => {
   const source = primary || fallback;
@@ -16,7 +22,7 @@ const buildPreview = (primary?: string | null, fallback?: string | null) => {
 
 const SearchPage = () => {
   const [text, setText] = useState("");
-  const [results, setResults] = useState<Post[]>([]);
+  const [results, setResults] = useState<ArticleDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -55,7 +61,8 @@ const SearchPage = () => {
           return;
         }
 
-        setResults((response.data || []).map(mapArticleToPost));
+        // Services now return unwrapped data directly
+        setResults(response || []);
       } catch (err: any) {
         if (!isMounted || controller.signal.aborted || err?.code === "ERR_CANCELED") {
           return;
@@ -88,11 +95,11 @@ const SearchPage = () => {
     navigate("/search");
   };
 
-  const handleResultClick = (id: string) => {
-    navigate(`/${id}`);
+  const handleResultClick = (article: ArticleDocument) => {
+    navigate(getArticleLink(article));
   };
 
-  function formatTimeSincePublished(publishedAt?: string | Date) {
+  function formatTimeSincePublished(publishedAt?: string | Date | null) {
       if (!publishedAt) {
           return '';
       }
@@ -185,48 +192,50 @@ const SearchPage = () => {
 
         {!isLoading && !error && results.length > 0 && (
           <div className="flex flex-col gap-8">
-            {results.map((post) => {
-              const imageUrl = post.featuredImage?.url;
+            {results.map((article) => {
+              const image = getArticleImage(article);
+              const imageUrl = image?.url;
+              const category = getArticleCategoryName(article);
+              const author = getArticleAuthorName(article);
+              const desc = getArticleDescription(article);
               return (
                 <article
-                  key={post.id}
+                  key={article._id || article.slug}
                   className="flex flex-col w-full gap-4 border-b border-gray-200 pb-8 md:flex-row"
                 >
                   <button
                     type="button"
-                    onClick={() => handleResultClick(post.id)}
+                    onClick={() => handleResultClick(article)}
                     className="text-left flex flex-row gap-4 w-full"
                   >
                     {imageUrl && (
                         <img
                           src={imageUrl}
-                          alt={post.title}
+                          alt={article.title}
+                          loading="lazy"
                           className="size-48 object-cover rounded-xl transition-transform duration-200 hover:scale-105"
-                          style={{
-                            backgroundImage: `linear-gradient(to bottom, rgba(26, 30, 71, 0.15), rgba(26, 30, 71, 1) 75%), url(${post.featuredImage?.url})`,
-                          }}
                         />
                     )}
 
                     <div className="flex flex-1 flex-col gap-3">
                         <h3 className="text-2xl font-bold text-blue-950 hover:underline">
-                          {post.title}
+                          {article.title}
                         </h3>
 
                       <div className="text-sm uppercase text-nique-blue">
-                        {post.category}
+                        {category}
                       </div>
 
                       <p className="text-base text-gray-700">
-                        {buildPreview(post.desc, post.excerpt)}
+                        {buildPreview(desc, article.excerpt)}
                       </p>
 
                       <div className="text-sm text-gray-500">
-                        By {post.author}
+                        By {author}
                       </div>
 
                       <div className="text-sm text-gray-500 text-right">
-                        {formatTimeSincePublished(post.publishedAt)}
+                        {formatTimeSincePublished(article.publishedAt)}
                       </div>
                     </div>
                   </button>

@@ -91,9 +91,9 @@ export default function Navbar() {
   return (
     <>
       {/* header above navbar */}
-      <div className="max-w-[1470px] gap-8 md:px-5 lg:px-8 hidden md:grid grid-cols-[1fr_500px_1fr] items-end mb-2 m-auto">
+      <div className="max-w-[95%] md:max-w-[80%] gap-8 md:px-5 lg:px-8 hidden md:grid grid-cols-[1fr_600px_1fr] items-end mb-2 m-auto">
         {/* large masthead in header */}
-        <a href ='/'><img src={Masthead} alt="Masthead" className="w-[500px] -mb-3 mt-4" /></a>
+        <Link to='/' className="justify-self-center"><img src={Masthead} alt="Masthead" className="w-[600px] -mb-3 mt-4" /></Link>
 
         {/* left of masthead */}
         <div className="order-first">
@@ -117,30 +117,24 @@ export default function Navbar() {
             <Search />
           </div>
           <span className="hidden lg:inline">{formattedDate}</span>
-          {/* <span className="hidden xl:inline"> &bull; </span> */}
-          {/* <span className="inline xl:inline-block"><br></br></span>Volume {currentVolume} */}
-          
         </h4>
-
-        
       </div>
 
       {/* navbar section */}
-      <div className="sticky top-0 z-50 ">
+      <div className="sticky top-0 z-50">
         <header id="navbar"
-          className={`${scrolled ? "scrolled" : ""} ${navAtTop ? "bg-white" : "bg-transparent"}
-        md:border-t border-b border-gray-400 md:border-black`}
+          className={`${scrolled ? "scrolled" : ""} ${navAtTop ? "bg-white" : "bg-transparent"} md:border-t border-b border-gray-400 md:border-black`}
         >
           {/* desktop nav links */}
           <div
-            className={`hidden md:flex justify-evenly items-center w-full max-w-[1200px] m-auto`}
+            className={`hidden md:flex justify-evenly items-center w-full max-w-[80%] m-auto`}
           >
             <NavLinks />
           </div>
 
           {/* mobile navbar with logo and burger */}
           <div className={`flex md:hidden py-1.5 px-4 w-full items-center justify-between `}>
-            <a href ='/'><img src={MastheadMobile} alt="Technique Logo" className="w-[80%] max-w-[300px] my-3" /></a>
+            <Link to='/'><img src={MastheadMobile} alt="Technique Logo" className="w-[80%] max-w-[300px] my-3" /></Link>
             <button onClick={toggleNavbar}>
               {isOpen ? <IoCloseSharp size={25} /> : <IoMenuSharp size={25} />}
             </button>
@@ -157,8 +151,6 @@ export default function Navbar() {
           </div>
         )}
       </div>
-
-
     </>
   );
 }

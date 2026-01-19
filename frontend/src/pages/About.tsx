@@ -1,33 +1,40 @@
 import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
-import { Post } from '../types/article';
+import { categoryCache } from '../services/categoryCache';
+import { ArticleDocument } from '../types/article';
 import { FaFacebook, FaXTwitter, FaInstagram, FaTiktok, FaLinkedin } from "react-icons/fa6";
 import Navbar from "../components/Navbar";
 import Collage from "../components/Collage";
 import Spinner from '../components/Spinner';
-import { mapArticleToPost } from '../utils/articleMapping';
 
 function About() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentArticles, setRecentArticles] = useState<Post[]>([]);
+    // Check cache first to avoid loading spinner
+    const cachedRecent = categoryCache.getRecentArticles();
+    
+    const [isLoading, setIsLoading] = useState<boolean>(!cachedRecent);
+    const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>(cachedRecent || []);
 
     useEffect(() => {
             let isMounted = true;
             const controller = new AbortController();
     
             const loadArticles = async () => {
-                setIsLoading(true);
+                // Only show loading if we don't have cached data
+                if (!cachedRecent) {
+                    setIsLoading(true);
+                }
     
                 try {
-                    const [recentResponse] = await Promise.all([
-                        articleService.fetchRecentArticles(5, 'published', controller.signal),
-                    ]);
+                    // Services now return unwrapped data directly
+                    const recentArticlesData = await articleService.fetchRecentArticles(5, 'published', controller.signal);
     
                     if (!isMounted) {
                         return;
                     }
     
-                    setRecentArticles((recentResponse.data || []).map(mapArticleToPost));
+                    // Update cache
+                    categoryCache.setRecentArticles(recentArticlesData || []);
+                    setRecentArticles(recentArticlesData || []);
                 } catch (err) {
                     if (!isMounted) {
                         return;
@@ -59,14 +66,14 @@ function About() {
         <>
             <Navbar />
 
-            <div className='max-w-[1470px] m-auto p-5'>
+            <div className='max-w-[95%] md:max-w-[80%] m-auto p-5'>
                 <h4 className="font-bold mb-2 text-2xl text-nique-blue">About Us</h4>
             </div>
 
-            <Collage posts={[recentArticles[0], recentArticles[1], recentArticles[2], recentArticles[3], recentArticles[4], recentArticles[5]]} /> {/* collection of best pictures you may want to feature */}
+            <Collage articles={[recentArticles[0], recentArticles[1], recentArticles[2], recentArticles[3], recentArticles[4], recentArticles[5]].filter(Boolean) as ArticleDocument[]} /> {/* collection of best pictures you may want to feature */}
 
             {/* Mission */}
-            <div className='grid grid-cols-1 sm:grid-cols-3 max-w-[1470px] m-auto p-5 gap-x-16'>
+            <div className='grid grid-cols-1 sm:grid-cols-3 max-w-[95%] md:max-w-[80%] m-auto p-5 gap-x-16'>
                 <div className='col-span-1 sm:col-span-2'>
                     <h4 className='text-2xl font-bold text-nique-blue my-6'>Our Mission</h4>
                     <p className='text-lg mt-5'>The purpose of the <i>Technique</i> is to serve the campus community by providing information, analysis and opinions that reflect the needs and interests of the student body at Georgia Tech.</p>
@@ -84,7 +91,7 @@ function About() {
             </div>
 
             {/* Vision */}
-            <div className='max-w-[1470px] m-auto p-5'>
+            <div className='max-w-[80%] m-auto p-5'>
                 <h4 className='text-2xl font-bold text-nique-blue my-6'>Our Vision</h4>
                 <p className='text-lg mt-5'>
                     Founded in 1911, the <i>Technique</i> serves as the campus newspaper for the Tech community. Our mission consists of four main pillars:
@@ -125,7 +132,7 @@ function About() {
             </div>
 
             {/* Getting Involved */}
-            <div className='max-w-[1470px] m-auto p-5'>
+            <div className='max-w-[80%] m-auto p-5'>
                 <h4 className='text-2xl font-bold text-nique-blue my-6'>Getting Involved</h4>
                 <p className='text-lg mt-5'>
                     Interested in writing, photography, sales or design? If so, the Technique has a lot to offer. Our staff is comprised entirely of Tech students interested 

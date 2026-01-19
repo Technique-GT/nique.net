@@ -1,23 +1,24 @@
 
 // app.tsx
 
-// import React, { useEffect } from "react";
+import { Suspense, lazy } from "react";
 // import ReactGA from 'react-ga4';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Spinner from "./components/Spinner";
+import DataPrefetcher from "./components/DataPrefetcher";
 
-import Home from "./pages/Home";
-import Life from "./pages/Life";
-import Article from "./pages/Article";
-import AdminPage from "./pages/AdminPage";
-import Sports from "./pages/Sports";
+const Home = lazy(() => import("./pages/Home"));
+const Life = lazy(() => import("./pages/Life"));
+const Article = lazy(() => import("./pages/Article"));
+const Sports = lazy(() => import("./pages/Sports"));
 
-import Opinions from "./pages/Opinions";
-import SearchPage from "./pages/SearchPage";
-import Contact from "./pages/Contact";
-import News from "./pages/News";
-import Entertainment from "./pages/Entertainment";
-import SubmitAd from "./pages/SubmitAd";
-import About from "./pages/About";
+const Opinions = lazy(() => import("./pages/Opinions"));
+const SearchPage = lazy(() => import("./pages/SearchPage"));
+const Contact = lazy(() => import("./pages/Contact"));
+const News = lazy(() => import("./pages/News"));
+const Entertainment = lazy(() => import("./pages/Entertainment"));
+const SubmitAd = lazy(() => import("./pages/SubmitAd"));
+const About = lazy(() => import("./pages/About"));
 
 
 // const PROD_TRACKING_ID = "G-Q3NL210D85"; // replace with Technique staff tracking ID. probably want to put in .env file
@@ -38,22 +39,29 @@ import About from "./pages/About";
 function App() {
   return (
     <Router>
+      <DataPrefetcher />
       <div className="App">
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/life" element={<Life />} />
-          <Route path="/:id" element={<Article />} />
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/sports" element={<Sports />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/news" element={<News />} />
-          <Route path="/entertainment" element={<Entertainment />} />
-          <Route path="/submit-ad" element={<SubmitAd />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/opinions" element={<Opinions />} />
-        </Routes>
+        <Suspense fallback={
+            <div className="flex justify-center items-center h-screen">
+                <Spinner />
+            </div>
+        }>
+            <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Home />} />
+            <Route path="/life" element={<Life />} />
+            <Route path="/:category/:slug" element={<Article />} />
+            <Route path="/:id" element={<Article />} />
+            <Route path="/sports" element={<Sports />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/news" element={<News />} />
+            <Route path="/entertainment" element={<Entertainment />} />
+            <Route path="/submit-ad" element={<SubmitAd />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/opinions" element={<Opinions />} />
+            </Routes>
+        </Suspense>
       </div>
     </Router>
   );

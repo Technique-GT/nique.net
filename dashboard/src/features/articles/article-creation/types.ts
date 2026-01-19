@@ -1,0 +1,105 @@
+// Define types for fetched data
+export interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  isActive: boolean;
+}
+
+export interface SubCategory {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  isActive: boolean;
+  categoryId?: string;
+  category: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
+}
+
+export interface Tag {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  color: string;
+  isActive: boolean;
+}
+
+export interface Author {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  role: string;
+  status: string;
+}
+
+export interface Article {
+  _id: string;
+  title: string;
+  content: string;
+  excerpt: string;
+  category: Category;
+  subcategory?: SubCategory;
+  tags: Tag[];
+  authors: Author[];
+  ownerId?: string;
+  editorState?: any;
+  reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published';
+  hasPendingChanges?: boolean;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
+  featuredMedia: {
+    id: string;
+    url: string;
+    alt?: string;
+  };
+  isPublished: boolean;
+  isFeatured: boolean;
+  isSticky: boolean;
+  status: string;
+  allowComments: boolean;
+  publishedAt?: string;
+  slug: string;
+  views: number;
+  seoTitle?: string;
+  seoDescription?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MediaItem {
+  id: string;
+  title: string;
+  url: string;
+  description?: string;
+}
+
+// Define SerializedEditorState type based on Lexical's structure
+export interface SerializedEditorState {
+  root: {
+    children: any[];
+    direction: "ltr" | "rtl" | null;
+    format: any;
+    indent: number;
+    type: string;
+    version: number;
+  };
+}
+
+export type FieldErrorKey =
+  | "title"
+  | "content"
+  | "featuredMedia"
+  | "excerpt"
+  | "authors"
+  | "category"
+  | "subcategory"
+  | "tags";

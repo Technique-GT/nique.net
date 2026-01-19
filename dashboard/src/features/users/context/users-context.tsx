@@ -1,0 +1,115 @@
+import React, { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import useDialogState from '@/hooks/use-dialog-state'
+import { User, userListSchema } from '../data/schema'
+import { getUsersPage, type PaginationMeta } from '@/services/users'
+import { queryKeys } from '@/hooks/use-queries'
+import type { PaginationState } from '@tanstack/react-table'
+import type { SortingState } from '@tanstack/react-table'
+
+type UsersDialogType = 'invite' | 'add' | 'edit' | 'delete'
+
+interface UsersContextType {
+  open: UsersDialogType | null
+  setOpen: (str: UsersDialogType | null) => void
+  currentRow: User | null
+  setCurrentRow: React.Dispatch<React.SetStateAction<User | null>>
+  users: User[]
+  loading: boolean
+  pagination: PaginationState
+  setPagination: React.Dispatch<React.SetStateAction<PaginationState>>
+  sorting: SortingState
+  setSorting: React.Dispatch<React.SetStateAction<SortingState>>
+  pageCount: number
+  total: number
+  refetchUsers: () => Promise<void>
+}
+
+const UsersContext = React.createContext<UsersContextType | null>(null)
+
+interface Props {
+  children: React.ReactNode
+}
+
+export default function UsersProvider({ children }: Props) {
+  const [open, setOpen] = useDialogState<UsersDialogType>(null)
+  const [currentRow, setCurrentRow] = useState<User | null>(null)
+  const queryClient = useQueryClient()
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 20,
+  })
+  const [sorting, setSorting] = useState<SortingState>([])
+  const page = pagination.pageIndex + 1
+  const limit = pagination.pageSize
+  const sortBy = sorting[0]?.id
+  const sortDir = sorting[0]?.desc ? 'desc' : 'asc'
+
+  // Use TanStack Query for users (not persisted - contains PII)
+  const { data: usersResponse, isLoading } = useQuery({
+    queryKey: queryKeys.users({ page, limit, sortBy, sortDir }),
+    queryFn: () => getUsersPage({ page, limit, sortBy, sortDir }),
+    staleTime: 30 * 1000, // 30 seconds
+  })
+  const rawUsers = usersResponse?.data ?? []
+  const paginationMeta: PaginationMeta | undefined = usersResponse?.pagination
+
+  // Map backend users to frontend User schema
+  const users: User[] = React.useMemo(() => {
+      const mappedUsers = rawUsers.map((u: any) => ({
+        _id: u._id,
+        id: u._id,
+        name: typeof u.name === 'string' ? u.name : 'Unknown',
+        bio: typeof u.bio === 'string' ? u.bio : undefined,
+        isAdmin: !!u.isAdmin,
+        email: typeof u.email === 'string' ? u.email : undefined,
+        googleSub: typeof u.googleSub === 'string' ? u.googleSub : undefined,
+        profilePictureMediaId: typeof u.profilePictureMediaId === 'string' ? u.profilePictureMediaId : undefined,
+        socialLinks: Array.isArray(u.socialLinks) ? u.socialLinks : [],
+      }))
+
+    // Validate against schema to be safe
+    try {
+      return userListSchema.parse(mappedUsers)
+    } catch {
+      return mappedUsers as User[]
+    }
+  }, [rawUsers])
+
+  const refetchUsers = React.useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['users'] })
+  }, [queryClient])
+  const pageCount = Math.max(paginationMeta?.pages ?? 1, 1)
+  const total = paginationMeta?.total ?? rawUsers.length
+
+  return (
+    <UsersContext.Provider value={{ 
+      open, 
+      setOpen, 
+      currentRow, 
+      setCurrentRow, 
+      users,
+      loading: isLoading,
+      pagination,
+      setPagination,
+      sorting,
+      setSorting,
+      pageCount,
+      total,
+      refetchUsers
+    }}>
+      {children}
+    </UsersContext.Provider>
+  )
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const useUsers = () => {
+  const usersContext = React.useContext(UsersContext)
+
+  if (!usersContext) {
+    throw new Error('useUsers has to be used within <UsersContext>')
+  }
+
+  return usersContext
+}

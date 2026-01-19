@@ -8,8 +8,9 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import '../index.css';
 import { ArticleListProps } from '../types/article';
+import { getArticleDescription, getArticleImage, getArticleLink } from '../utils/articlePresentation';
 
-export default function Carousel( {posts, width}: ArticleListProps ) {
+export default function Carousel( {articles, width}: ArticleListProps ) {
   const navigate=useNavigate();
   
   return (
@@ -37,26 +38,43 @@ export default function Carousel( {posts, width}: ArticleListProps ) {
           style={{ width: `${width}` }}
           className="coverflow h-96"
         >
-          {posts.map((p, index) => {
+          {articles.map((article, index) => {
+            const link = getArticleLink(article);
+            const image = getArticleImage(article);
+            const desc = getArticleDescription(article);
             return (
               <SwiperSlide 
                 key={index} 
-                onClick={()=>navigate('/'+p.id)} 
-                style={{
-                  backgroundImage: p.featuredImage ? `linear-gradient(to bottom, rgba(0,0,0,0) 80%, rgba(255,255,255,1)), url(${p.featuredImage.url})` : undefined
-                }}
-                className={`cursor-pointer rounded-lg bg-cover bg-center relative flex items-end ${
-                  p.featuredImage ? "" : "bg-gradient-to-b from-nique-blue/10 to-white"
+                onClick={()=>navigate(link)} 
+                className={`cursor-pointer rounded-lg relative flex items-end h-full overflow-hidden group ${
+                  image ? "" : "bg-gradient-to-b from-nique-blue/10 to-white"
                 }`}
               >
+                {image?.url && (
+                    <img 
+                        src={image.url} 
+                        alt={article.title}
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 will-change-transform"
+                    />
+                )}
+                
+                <div 
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                        background: image ? 'linear-gradient(to bottom, rgba(0,0,0,0) 80%, rgba(255,255,255,1))' : undefined
+                    }}
+                />
+
                 <h6 
-                  className="text-[#1A1E47] text-sm absolute bottom-0 left-0 m-6 overflow-hidden"
+                  className="text-[#1A1E47] text-sm absolute bottom-0 left-0 m-6 overflow-hidden z-10"
                   style={{
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
                 }}>
-                    { p.desc }
+                    {desc}
                 </h6>
               </SwiperSlide>
             );

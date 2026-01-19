@@ -26,6 +26,8 @@ const renderMediaContent = (item: MediaItem) => {
       <img
         src={item.url}
         alt={item.altText || item.title || 'Untitled Image'}
+        loading="lazy"
+        decoding="async"
         className="w-full rounded-xl"
       />
     );
