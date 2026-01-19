@@ -275,7 +275,7 @@ export function ArticleTable({
                       </Button>
                     </TooltipTrigger>
                      <TooltipContent>
-                       {article.isSticky ? 'Unpin' : 'Pin to top'}
+                       {article.isSticky ? 'Unsticky' : 'Make sticky'}
                        {article.status !== 'published' && ' (Published only)'}
                      </TooltipContent>
 

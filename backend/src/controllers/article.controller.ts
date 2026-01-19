@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { NotificationService } from '../services/notification.service';
 import mongoose from 'mongoose';
 import Article, { IArticle } from '../models/Article';
+import User from '../models/User';
 import { 
   canEditArticle, 
   canManageAuthors, 
@@ -230,6 +231,12 @@ const hasArticleChanged = (existing: IArticle, update: Partial<IArticle>): boole
 
 export const createArticle = async (req: Request, res: Response): Promise<void> => {
   try {
+    const ownerId = (req as any)?.user?.id;
+    if (!ownerId) {
+      res.status(401).json({ success: false, message: 'Unauthorized' });
+      return;
+    }
+
     const titleRaw = typeof req.body?.title === 'string' ? req.body.title : '';
     const contentRaw = typeof req.body?.content === 'string' ? req.body.content : '';
 
@@ -262,13 +269,16 @@ export const createArticle = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const authors = update.authors ?? [];
+    const authors = update.authors && update.authors.length > 0
+      ? update.authors
+      : [{ authorId: new mongoose.Types.ObjectId(ownerId), order: 0 }];
     const tagIds = update.tagIds ?? [];
 
     const article = await Article.create({
       ...update,
       slug,
       authors,
+      ownerId,
       tagIds,
       viewCount: 0,
     });
@@ -288,28 +298,55 @@ export const createArticle = async (req: Request, res: Response): Promise<void> 
 export const getArticles = async (req: any, res: Response): Promise<void> => {
   try {
     // In case validateQuery mutation fails or behaves unexpectedly, allow safe parsing
-    const { page, limit, search } = req.query;
+    const { page, limit, search, status, categoryId, hideDrafts } = req.query;
+    const andFilters: any[] = [];
+    const orFilters: any[] = [];
 
-    const filter: any = {};
     if (typeof search === 'string' && search.trim().length > 0) {
       const rx = new RegExp(search.trim(), 'i');
-      filter.$or = [{ title: rx }, { excerpt: rx }];
+      orFilters.push({ title: rx }, { excerpt: rx });
+
+      const matchedUsers = await User.find({ name: rx }).select('_id');
+      if (matchedUsers.length > 0) {
+        orFilters.push({ 'authors.authorId': { $in: matchedUsers.map((u) => u._id) } });
+      }
+    }
+
+    if (typeof categoryId === 'string') {
+      const categoryObjectId = toObjectId(categoryId);
+      if (categoryObjectId) {
+        andFilters.push({ categoryId: categoryObjectId });
+      }
+    }
+
+    if (typeof status === 'string') {
+      if (status === 'published' || status === 'draft') {
+        andFilters.push({
+          $or: [
+            { reviewStatus: status },
+            { reviewStatus: { $exists: false }, published: status === 'published' },
+          ],
+        });
+      } else {
+        andFilters.push({ reviewStatus: status });
+      }
+    }
+
+    if (hideDrafts === true || hideDrafts === 'true') {
+      andFilters.push({ reviewStatus: { $ne: 'draft' } });
     }
 
     // Filter for non-admins: only show owned or authored articles
     if (!req.user.isAdmin) {
       const userId = new mongoose.Types.ObjectId(req.user.id);
-      if (filter.$or) {
-        // combine search with ownership check
-        filter.$and = [
-          { $or: filter.$or },
-          { $or: [{ ownerId: userId }, { 'authors.authorId': userId }] }
-        ];
-        delete filter.$or;
-      } else {
-        filter.$or = [{ ownerId: userId }, { 'authors.authorId': userId }];
-      }
+      andFilters.push({ $or: [{ ownerId: userId }, { 'authors.authorId': userId }] });
     }
+
+    if (orFilters.length > 0) {
+      andFilters.push({ $or: orFilters });
+    }
+
+    const filter = andFilters.length > 0 ? { $and: andFilters } : {};
 
     const pageNum = Math.max(Number(page) || 1, 1);
     const limitNum = Math.max(Number(limit) || 20, 1);

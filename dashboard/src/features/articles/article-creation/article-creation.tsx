@@ -52,6 +52,8 @@ export default function ArticleCreation() {
         category: backendArticle.categoryId,
         subcategory: backendArticle.subcategoryId,
         tags: backendArticle.tagIds,
+        isPublished: backendArticle.published,
+        allowComments: backendArticle.allowComments,
 
         // Dashboard caption field maps to backend imageCaption (fallback to excerpt)
         excerpt: backendArticle.imageCaption ?? backendArticle.excerpt ?? "",
@@ -91,7 +93,7 @@ export default function ArticleCreation() {
     if (!isEditMode) return "Draft, schedule, or publish a new post";
     
     if (lastSavedAt) {
-      return `Autosaved ${formatDistanceToNow(lastSavedAt, { addSuffix: true })}`;
+      return `Saved ${formatDistanceToNow(lastSavedAt, { addSuffix: true })}`;
     }
     
     return "";

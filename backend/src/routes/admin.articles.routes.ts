@@ -3,6 +3,7 @@ import { Router } from 'express';
 import {
   adminPublish,
   adminUnpublish,
+  createArticle,
   createDraft,
   deleteArticle,
   getAdminArticleById,
@@ -17,7 +18,7 @@ import {
   updateArticleStatus,
 } from '../controllers/article.controller';
 import { validateBody, validateParams, validateQuery } from '../middleware/validate.middleware';
-import { updateArticleBodySchema, updateArticleStatusBodySchema } from '../schemas/article.mutate.schema';
+import { createArticleBodySchema, updateArticleBodySchema, updateArticleStatusBodySchema } from '../schemas/article.mutate.schema';
 import { listArticlesQuerySchema } from '../schemas/article.query.schema';
 import { idParamSchema } from '../schemas/params.schema';
 import { authMiddleware } from '../middleware/auth.middleware';
@@ -28,6 +29,7 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get('/articles', validateQuery(listArticlesQuerySchema), getArticles);
+router.post('/articles', validateBody(createArticleBodySchema), createArticle);
 router.post('/articles/draft', createDraft);
 router.get('/articles/:id', validateParams(idParamSchema), getAdminArticleById);
 router.put('/articles/:id', validateParams(idParamSchema), validateBody(updateArticleBodySchema), updateArticle);

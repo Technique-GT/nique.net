@@ -17,7 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Info, Search, X, ChevronDown, Check, AlertCircle, Eye, ShieldAlert } from "lucide-react";
+import { Info, Search, X, ChevronDown, Check, AlertCircle } from "lucide-react";
 
 import { MediaPicker } from "@/components/media/media-picker";
 import { toast } from "sonner";
@@ -41,6 +41,18 @@ import {
   type Tag,
 } from "./types";
 import { apiClient } from "@/lib/api-client";
+import { createAdminArticle } from "@/services/articles";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ArticleFormProps {
   categories: Category[];
@@ -68,6 +80,7 @@ export default function ArticleForm({
 }: ArticleFormProps) {
   const { user: me } = useAuthStore((state) => state.auth);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [title, setTitle] = useState(initialArticle?.title || "");
   const [content, setContent] = useState<SerializedEditorState | undefined>(
@@ -89,38 +102,75 @@ export default function ArticleForm({
     initialArticle?.featuredMedia?.id || "",
   );
   const [isPublished, setIsPublished] = useState(initialArticle?.isPublished || false);
+  const [allowComments, setAllowComments] = useState(initialArticle?.allowComments ?? true);
   const [isFeatured, setIsFeatured] = useState(initialArticle?.isFeatured || false);
   const [isSticky, setIsSticky] = useState(initialArticle?.isSticky || false);
   const [reviewStatus, setReviewStatus] = useState<
     "draft" | "in_review" | "changes_requested" | "published"
   >(initialArticle?.reviewStatus || "draft");
   const [hasPendingChanges, setHasPendingChanges] = useState(initialArticle?.hasPendingChanges || false);
+  const [reviewConfirmOpen, setReviewConfirmOpen] = useState(false);
 
   const isOwner = me?.id === initialArticle?.ownerId;
   const isAdmin = !!me?.isAdmin;
   const isLocked = reviewStatus === "in_review" && !isAdmin;
-  const canManageAuthorsPerm = isAdmin || isOwner;
+  const canManageAuthorsPerm = isAdmin || isOwner || !initialArticle?._id;
 
-  // Determine available actions
-  const canRequestReview = reviewStatus !== 'in_review' && (reviewStatus === 'draft' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges)) && (isOwner || isAdmin);
+  useEffect(() => {
+    if (initialArticle?._id) return;
+    if (!me?.id) return;
+    setSelectedAuthors((prev) => {
+      if (prev.some((author) => author?._id === me.id)) {
+        return prev;
+      }
+      const defaultAuthor: Author = {
+        _id: me.id,
+        firstName: (me.name || "Unknown").split(" ")[0] || "Unknown",
+        lastName: (me.name || "Unknown").split(" ").slice(1).join(" "),
+        username: me.name || "Unknown",
+        email: me.email || "",
+        role: me.isAdmin ? "admin" : "writer",
+        status: "active",
+      };
+      return [...prev, defaultAuthor];
+    });
+  }, [initialArticle?._id, me]);
+
+  const canRequestReview = !isAdmin
+    && !!initialArticle?._id
+    && (reviewStatus === 'draft' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges))
+    && isOwner;
   const canCancelReview = reviewStatus === 'in_review' && (isOwner || isAdmin);
   const canRequestChanges = isAdmin && reviewStatus === 'in_review';
-  const canPublish = isAdmin && (reviewStatus === 'in_review' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges));
+  const canApproveAndPublish = isAdmin && reviewStatus === 'in_review';
+  const canAdminPublishDraft = isAdmin && reviewStatus === 'draft';
   const canUnpublish = isAdmin && reviewStatus === 'published';
 
-  // "Request Review" is the only option if:
-  // 1. It is available
-  // 2. We are NOT an admin (admins always have "Publish" available when "Request Review" is available, except maybe purely new draft? but Admin can publish draft)
-  // Actually, even easier:
-  const showRequestReviewDirectly = canRequestReview && !canPublish && !canUnpublish && !canCancelReview && !canRequestChanges;
-  const showCancelReviewDirectly = canCancelReview && !canPublish && !canUnpublish && !canRequestReview && !canRequestChanges;
-  const showUnpublishDirectly = canUnpublish && !canPublish && !canRequestReview && !canCancelReview && !canRequestChanges;
+  const extractTextFromEditorState = (editorState?: SerializedEditorState): string => {
+    if (!editorState?.root?.children) return "";
+
+    const extractTextFromNode = (node: any): string => {
+      if (node.type === "text") {
+        return node.text || "";
+      }
+      if (node.type === "linebreak") {
+        return "\n";
+      }
+      if (Array.isArray(node.children)) {
+        return node.children.map(extractTextFromNode).join("");
+      }
+      return "";
+    };
+
+    return editorState.root.children.map(extractTextFromNode).join("").trim();
+  };
 
   // Sync state with initialArticle when it's loaded
   useEffect(() => {
     if (initialArticle) {
       setTitle(initialArticle.title || "");
       setContent(initialArticle.editorState);
+      setContentText(extractTextFromEditorState(initialArticle.editorState));
       setExcerpt(initialArticle.excerpt || "");
       setCategory(initialArticle.category?._id || "");
       setSubcategory(initialArticle.subcategory?._id || "");
@@ -128,6 +178,7 @@ export default function ArticleForm({
       setSelectedAuthors(initialArticle.authors || []);
       setFeaturedMediaId(initialArticle.featuredMedia?.id || "");
       setIsPublished(initialArticle.isPublished || false);
+      setAllowComments(initialArticle.allowComments ?? true);
       setIsFeatured(initialArticle.isFeatured || false);
       setIsSticky(initialArticle.isSticky || false);
       setReviewStatus(initialArticle.reviewStatus || "draft");
@@ -275,55 +326,20 @@ export default function ArticleForm({
     }
   };  
 
-  // Autosave logic
-   useEffect(() => {
-     if (!initialArticle?._id || reviewStatus === 'in_review') return;
+  useEffect(() => {
+    if (content) {
+      setContentText(extractTextFromEditorState(content));
+    }
+  }, [content]);
 
-     // Don't autosave until required backend validators will pass
-     // Relaxed for drafts: allow saving even with partial data
-     // if (!category) return;
-     // if (!excerpt?.trim()) return;
-     // if (!selectedAuthors?.some((a) => !!a?._id)) return;
-
-     const timer = setTimeout(async () => {
-       try {
-         const htmlContent = content ? convertLexicalToHtml(content) : ""
-         const articleData = {
-           title,
-           content: htmlContent,
-           editorState: content,
-           ...(excerpt?.trim() ? { excerpt: excerpt.trim() } : {}),
-           ...(category ? { categoryId: category } : {}),
-           ...(subcategory ? { subcategoryId: subcategory } : {}),
-           ...(selectedTags?.length ? { tagIds: selectedTags } : {}),
-           // Only include authors if user has permission to manage them
-           ...(canManageAuthorsPerm && selectedAuthors?.length
-             ? { authors: selectedAuthors.filter((a) => !!a?._id).map((a) => ({ authorId: a._id })) }
-             : {}),
-           ...(featuredMediaId ? { featuredMediaId } : {}),
-         };
-
-          await apiClient.put(`/admin/articles/${initialArticle._id}`, articleData);
-          
-          onLastSavedChange?.(new Date());
-
-          // Invalidate query to keep state fresh, but do it silently without triggering loading states if possible.
-         // However, useAdminArticle has staleTime: 0, so invalidating will trigger refetch.
-         // This might cause UI flicker if not handled gracefully, but ensures consistency.
-         await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
-
-       } catch (error) {
-         console.error('Autosave failed:', error);
-       }
-     }, 2000); // 2 second debounce
-
-     return () => clearTimeout(timer);
-   }, [title, content, excerpt, category, subcategory, selectedTags, selectedAuthors, featuredMediaId, initialArticle?._id, reviewStatus]);
+  // Autosave disabled; saving happens only on explicit button actions.
 
   const [formErrors, setFormErrors] = useState<Partial<Record<FieldErrorKey, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [editorResetKey, setEditorResetKey] = useState(0);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   
   // Search functionality
   const [authorSearch, setAuthorSearch] = useState("");
@@ -441,6 +457,23 @@ export default function ArticleForm({
       toast.error("Failed to unpublish");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const canDeleteArticle = !!initialArticle?._id && (isAdmin || (isOwner && reviewStatus === "draft"));
+
+  const handleDeleteArticle = async () => {
+    if (!initialArticle?._id) return;
+    try {
+      setIsDeleting(true);
+      await apiClient.delete(`/admin/articles/${initialArticle._id}`);
+      await queryClient.invalidateQueries({ queryKey: ["admin-articles"] });
+      navigate({ to: "/articles" as any, replace: true });
+    } catch (error) {
+      console.error("Failed to delete article:", error);
+      toast.error("Failed to delete article");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -618,6 +651,7 @@ export default function ArticleForm({
         } : {}),
         ...(featuredMediaId ? { featuredMediaId } : {}),
         published: isPublished,
+        allowComments,
         isFeatured: isPublished ? isFeatured : false,
         isSticky: isPublished ? isSticky : false,
       };
@@ -638,7 +672,7 @@ export default function ArticleForm({
     }
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     // Existing articles: Save immediately (no confirm dialog flow)
@@ -658,26 +692,91 @@ export default function ArticleForm({
     }
 
     setFormErrors({});
+    setIsSubmitting(true);
+    setSubmitMessage(null);
 
-    // Convert Lexical content to HTML using enhanced conversion
-    // const htmlContent = content ? convertLexicalToHtml(content) : "";
+    try {
+      const htmlContent = content ? convertLexicalToHtml(content) : "<p></p>";
 
-    // setPendingSubmission({
-    //   title,
-    //   content: htmlContent,
-    //   categoryId: category,
-    //   subcategoryId: subcategory,
-    //   tagIds: selectedTags,
-    //   authors: selectedAuthors.filter((a) => !!a?._id).map((author) => author._id),
-    //   featuredMediaId,
-    //   imageCaption: excerpt,
-    //   published: isPublished,
-    //   isFeatured: isPublished ? isFeatured : false,
-    //   isSticky: isPublished ? isSticky : false,
-    // });
-    // setConfirmOpen(true);
-    // Since we are not using ArticleSubmission anymore, we just call handleSaveChanges.
-    handleSaveChanges();
+      const articleData = {
+        title: title.trim(),
+        content: htmlContent,
+        editorState: content,
+        ...(excerpt.trim() ? { excerpt: excerpt.trim() } : {}),
+        categoryId: category,
+        ...(subcategory ? { subcategoryId: subcategory } : {}),
+        ...(selectedTags.length ? { tagIds: selectedTags } : {}),
+        ...(canManageAuthorsPerm
+          ? { authors: selectedAuthors.filter((a) => !!a?._id).map((a) => a._id) }
+          : {}),
+        ...(featuredMediaId ? { featuredMediaId } : {}),
+        published: isPublished,
+        allowComments,
+        isFeatured: isPublished ? isFeatured : false,
+        isSticky: isPublished ? isSticky : false,
+      };
+
+      const created = await createAdminArticle(articleData);
+      navigate({
+        to: '/articles/$articleId/edit' as any,
+        params: { articleId: created._id } as any,
+        replace: true,
+      });
+    } catch (error: any) {
+      console.error('Create failed:', error);
+      const msg = error?.response?.data?.message || 'Failed to create article.';
+      setSubmitMessage({ type: 'error', message: msg });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCreateAndPublish = async () => {
+    const errors = validateRequiredFields();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    setFormErrors({});
+    setIsSubmitting(true);
+    setSubmitMessage(null);
+
+    try {
+      const htmlContent = content ? convertLexicalToHtml(content) : "<p></p>";
+
+      const articleData = {
+        title: title.trim(),
+        content: htmlContent,
+        editorState: content,
+        ...(excerpt.trim() ? { excerpt: excerpt.trim() } : {}),
+        categoryId: category,
+        ...(subcategory ? { subcategoryId: subcategory } : {}),
+        ...(selectedTags.length ? { tagIds: selectedTags } : {}),
+        ...(canManageAuthorsPerm
+          ? { authors: selectedAuthors.filter((a) => !!a?._id).map((a) => a._id) }
+          : {}),
+        ...(featuredMediaId ? { featuredMediaId } : {}),
+        published: true,
+        allowComments,
+        reviewStatus: "published" as const,
+        isFeatured,
+        isSticky,
+      };
+
+      const created = await createAdminArticle(articleData);
+      navigate({
+        to: '/articles/$articleId/edit' as any,
+        params: { articleId: created._id } as any,
+        replace: true,
+      });
+    } catch (error: any) {
+      console.error('Create and publish failed:', error);
+      const msg = error?.response?.data?.message || 'Failed to publish article.';
+      setSubmitMessage({ type: 'error', message: msg });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoadingData) {
@@ -694,8 +793,8 @@ export default function ArticleForm({
       {submitMessage && (
         <div className={`mb-4 p-4 rounded-md ${
           submitMessage.type === 'success' 
-            ? 'bg-green-50 border border-green-200 text-green-800' 
-            : 'bg-red-50 border border-red-200 text-red-800'
+            ? 'bg-green-100/80 border border-green-200 text-green-800' 
+            : 'bg-red-100/80 border border-red-200 text-red-800'
         }`}>
           {submitMessage.message}
         </div>
@@ -1021,75 +1120,73 @@ export default function ArticleForm({
                         {(!isPublished) && <span className="text-xs text-muted-foreground ml-1">(requires publishing)</span>}
                       </Label>
                     </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="allow-comments"
+                        checked={allowComments}
+                        onCheckedChange={setAllowComments}
+                      />
+                      <Label htmlFor="allow-comments">
+                        Allow comments
+                      </Label>
+                    </div>
                   </div>
                 )}
 
                 <div className="flex flex-wrap gap-4">
-                  {/* Common Save/Create button (only for drafts/published, not in_review unless admin) */}
+                  {/* Save/Create button (hidden for non-admins when in review) */}
                   {(!isLocked || isAdmin) && (
                     <Button
                       type={initialArticle?._id ? "button" : "submit"}
                       onClick={initialArticle?._id ? handleSaveChanges : undefined}
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? "Saving..." : (initialArticle?._id ? "Save Changes" : "Create Article")}
+                      {isSubmitting ? "Saving..." : (initialArticle?._id ? "Save Changes" : "Create Draft")}
                     </Button>
                   )}
 
-                  {/* Workflow Actions */}
+                  {/* Review & Publish Actions for EXISTING articles */}
                   {initialArticle?._id && (
                     <>
-                      {/* Direct Button: Request Review (if only option) */}
-                      {showRequestReviewDirectly && (
-                        <Button type="button" variant="outline" onClick={handleRequestReview} disabled={isSubmitting}>
-                          Request Review
+                      {canRequestReview && (
+                        <AlertDialog open={reviewConfirmOpen} onOpenChange={setReviewConfirmOpen}>
+                          <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => setReviewConfirmOpen(true)}>
+                            Request Review
+                          </Button>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Request review?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Once you request review, this article will be locked until an admin approves or requests changes.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleRequestReview}>Request Review</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+
+                      {canAdminPublishDraft && (
+                        <Button type="button" variant="constructive" onClick={handleAdminPublish} disabled={isSubmitting}>
+                          Publish Article
                         </Button>
                       )}
 
-                      {/* Direct Button: Cancel Review (if only option) */}
-                      {showCancelReviewDirectly && (
-                        <Button type="button" variant="outline" onClick={handleUnrequestReview} disabled={isSubmitting}>
-                          Cancel Review Request
-                        </Button>
-                      )}
-
-                      {/* Direct Button: Unpublish (if only option) */}
-                      {showUnpublishDirectly && (
-                        <Button type="button" variant="destructive" onClick={handleAdminUnpublish} disabled={isSubmitting}>
-                          Unpublish
-                        </Button>
-                      )}
-
-                      {/* Dropdown: If multiple options or specific admin actions */}
-                      {!showRequestReviewDirectly && !showCancelReviewDirectly && !showUnpublishDirectly && (canRequestReview || canCancelReview || canRequestChanges || canPublish || canUnpublish) && (
+                      {isAdmin && reviewStatus === 'in_review' && (
                         <DropdownMenu modal={false}>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="gap-2">
+                            <Button variant="outline" className="gap-2" disabled={isSubmitting}>
                               Review Actions
                               <ChevronDown className="h-4 w-4 text-muted-foreground" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuLabel>Manage Status</DropdownMenuLabel>
+                            <DropdownMenuLabel>Admin Review</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            
-                            {/* Request Review */}
-                            {canRequestReview && (
-                              <DropdownMenuItem onClick={handleRequestReview} disabled={isSubmitting} className="text-blue-600 focus:text-blue-700 focus:bg-blue-50 dark:focus:bg-blue-950/50">
-                                <Eye className="mr-2 h-4 w-4" />
-                                Request Review
-                              </DropdownMenuItem>
-                            )}
 
-                            {/* Cancel Review */}
-                            {canCancelReview && (
-                              <DropdownMenuItem onClick={handleUnrequestReview} disabled={isSubmitting}>
-                                <X className="mr-2 h-4 w-4 text-muted-foreground" />
-                                Cancel Review Request
-                              </DropdownMenuItem>
-                            )}
-
-                            {/* Admin: Request Changes */}
                             {canRequestChanges && (
                               <DropdownMenuItem onClick={handleRequestChanges} disabled={isSubmitting} className="text-orange-600 focus:text-orange-700 focus:bg-orange-50 dark:focus:bg-orange-950/50">
                                 <AlertCircle className="mr-2 h-4 w-4" />
@@ -1097,33 +1194,41 @@ export default function ArticleForm({
                               </DropdownMenuItem>
                             )}
 
-                            {/* Admin: Publish */}
-                            {canPublish && (
+                            {canApproveAndPublish && (
                               <DropdownMenuItem onClick={handleAdminPublish} disabled={isSubmitting} className="text-green-600 focus:text-green-700 focus:bg-green-50 dark:focus:bg-green-950/50">
                                 <Check className="mr-2 h-4 w-4" />
-                                {reviewStatus === 'published' ? 'Publish Updates' : 'Approve & Publish'}
+                                Approve & Publish
                               </DropdownMenuItem>
                             )}
 
-                            {/* Admin: Unpublish */}
-                            {canUnpublish && (
+                            {canCancelReview && (
                               <>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={handleAdminUnpublish} disabled={isSubmitting} variant="destructive">
-                                  <ShieldAlert className="mr-2 h-4 w-4" />
-                                  Unpublish Article
+                                <DropdownMenuItem onClick={handleUnrequestReview} disabled={isSubmitting}>
+                                  <X className="mr-2 h-4 w-4 text-muted-foreground" />
+                                  Cancel Review Request
                                 </DropdownMenuItem>
                               </>
                             )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       )}
+
+                      {canUnpublish && (
+                        <Button type="button" variant="destructive" onClick={handleAdminUnpublish} disabled={isSubmitting}>
+                          Unpublish
+                        </Button>
+                      )}
                     </>
                   )}
 
-                  {!initialArticle?._id && (
-                    <div className="text-muted-foreground">Initializing draft...</div>
+                  {/* Create & Publish for NEW articles */}
+                  {!initialArticle?._id && isAdmin && (
+                    <Button type="button" variant="constructive" onClick={handleCreateAndPublish} disabled={isSubmitting}>
+                      Publish Article
+                    </Button>
                   )}
+
                 </div>
               </div>
 
@@ -1171,6 +1276,30 @@ export default function ArticleForm({
                 )}
               </div>
             </div>
+
+            {canDeleteArticle && (
+              <div className="pt-6 border-t border-border">
+                <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                  <Button type="button" variant="destructive" disabled={isDeleting} onClick={() => setDeleteConfirmOpen(true)}>
+                    {isDeleting ? "Deleting..." : "Delete Article"}
+                  </Button>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete this article?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. The article and its content will be permanently removed.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                      <AlertDialogAction className='bg-destructive text-white hover:bg-destructive/90' disabled={isDeleting} onClick={handleDeleteArticle}>
+                        Delete Article
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>

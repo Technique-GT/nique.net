@@ -13,7 +13,7 @@ import { ArticleTable } from "./ArticleTable";
 import { ArticleDialogs } from "./ArticleDialogs";
 import { Article } from "./article";
 import { apiClient } from "@/lib/api-client";
-import { useCreateArticleDraft, queryKeys } from "@/hooks/use-queries";
+import { queryKeys } from "@/hooks/use-queries";
 import { getAdminArticleById } from "@/services/articles";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/authStore";
@@ -25,7 +25,6 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 export default function ArticleList() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const createDraftMutation = useCreateArticleDraft();
   const { user: me } = useAuthStore((state) => state.auth);
   const isAdmin = !!me?.isAdmin;
   const currentUserId = me?.id || null;
@@ -222,17 +221,7 @@ export default function ArticleList() {
 
   // Navigation
   const handleNewArticle = async () => {
-    try {
-      const draft = await createDraftMutation.mutateAsync();
-      navigate({ 
-        to: '/articles/$articleId/edit' as any, 
-        params: { articleId: draft._id } as any
-      });
-      // toast.success("Draft created successfully");
-    } catch (error) {
-      console.error('Failed to create draft:', error);
-      toast.error("Failed to create draft");
-    }
+    navigate({ to: '/articles/new' as any });
   };
 
   // Helper functions

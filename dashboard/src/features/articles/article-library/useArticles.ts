@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Article, PopulatedCategory, PopulatedSubCategory, PopulatedTag, PopulatedAuthor, MessageType } from "./article";
 import { getAdminArticlesPage } from "@/services/articles";
@@ -9,7 +9,14 @@ import {
 } from "@/hooks/use-queries";
 
 // Query key for articles
-const articlesQueryKey = (params: { page: number; limit: number; search?: string }) => 
+const articlesQueryKey = (params: { 
+  page: number; 
+  limit: number; 
+  search?: string; 
+  status?: string;
+  categoryId?: string;
+  hideDrafts?: boolean;
+}) => 
   ['admin-articles', params] as const;
 
 export const useArticles = () => {
@@ -93,12 +100,22 @@ export const useArticles = () => {
 
   // TanStack Query for articles (NOT persisted - large/fast-changing list)
   const articlesQuery = useQuery({
-    queryKey: articlesQueryKey({ page: currentPage, limit: pageSize, search: searchTerm || undefined }),
+    queryKey: articlesQueryKey({ 
+      page: currentPage, 
+      limit: pageSize, 
+      search: searchTerm || undefined,
+      status: statusFilter !== "all" ? statusFilter : undefined,
+      categoryId: categoryFilter !== "all" ? categoryFilter : undefined,
+      hideDrafts: hideDrafts || undefined,
+    }),
     queryFn: async () => {
       const response = await getAdminArticlesPage({ 
         page: currentPage, 
         limit: pageSize,
-        search: searchTerm || undefined 
+        search: searchTerm || undefined,
+        status: statusFilter !== "all" ? (statusFilter as any) : undefined,
+        categoryId: categoryFilter !== "all" ? categoryFilter : undefined,
+        hideDrafts: hideDrafts || undefined,
       });
       return {
         articles: response.data.map(transformArticleData),
@@ -113,6 +130,10 @@ export const useArticles = () => {
   const articles = articlesQuery.data?.articles ?? [];
   const pagination = articlesQuery.data?.pagination ?? null;
   const loading = articlesQuery.isLoading;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, categoryFilter, hideDrafts]);
 
   // Use centralized taxonomy hooks (PERSISTED)
   const { categories: rawCategories, subCategories: rawSubCategories, tags: rawTags } = useTaxonomy();
@@ -204,32 +225,7 @@ export const useArticles = () => {
     return `${author.firstName} ${author.lastName}`;
   };
 
-  // Filter articles based on search and filters (client-side filtering for status/category)
-  const filteredArticles = useMemo(() => 
-    articles.filter(article => {
-      const matchesSearch = 
-        article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.authors.some(author => 
-          getAuthorName(author).toLowerCase().includes(searchTerm.toLowerCase()) ||
-          author.username.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      
-      const effectiveStatus = article.reviewStatus || article.status;
-      const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "published" && effectiveStatus === "published") ||
-        (statusFilter === "draft" && effectiveStatus === "draft") ||
-        (statusFilter === "in_review" && effectiveStatus === "in_review") ||
-        (statusFilter === "changes_requested" && effectiveStatus === "changes_requested");
-      
-      const matchesCategory = categoryFilter === "all" || article.category?._id === categoryFilter;
-
-      const matchesDraftVisibility = !hideDrafts || article.reviewStatus !== "draft";
-      
-      return matchesSearch && matchesStatus && matchesCategory && matchesDraftVisibility;
-    }),
-    [articles, searchTerm, statusFilter, categoryFilter, hideDrafts]
-  );
+  const filteredArticles = articles;
 
   // Clear message after 5 seconds
   useMemo(() => {

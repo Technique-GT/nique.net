@@ -4,6 +4,9 @@ export type AdminArticlesQuery = {
   page?: number
   limit?: number
   search?: string
+  status?: 'published' | 'draft' | 'in_review' | 'changes_requested'
+  categoryId?: string
+  hideDrafts?: boolean
 }
 
 export type BackendArticle = {
@@ -40,9 +43,19 @@ export async function getAdminArticlesPage(query: AdminArticlesQuery = {}): Prom
   const page = query.page ?? 1
   const limit = query.limit ?? 100
   const search = query.search
+  const status = query.status
+  const categoryId = query.categoryId
+  const hideDrafts = query.hideDrafts
 
   const res = await apiClient.get('/admin/articles', {
-    params: { page, limit, ...(search ? { search } : {}) },
+    params: { 
+      page, 
+      limit, 
+      ...(search ? { search } : {}),
+      ...(status ? { status } : {}),
+      ...(categoryId ? { categoryId } : {}),
+      ...(hideDrafts ? { hideDrafts } : {}),
+    },
   })
 
   // After api-client unwrapping, paginated endpoints return the full envelope:
@@ -94,6 +107,29 @@ export async function getAdminArticlesAll(params: {
 
 export async function createAdminArticleDraft(): Promise<BackendArticle> {
   const res = await apiClient.post('/admin/articles/draft')
+  return res as unknown as BackendArticle
+}
+
+export type CreateAdminArticlePayload = {
+  title: string
+  content: string
+  excerpt?: string
+  categoryId: string
+  subcategoryId?: string
+  tagIds?: string[]
+  authors?: string[]
+  featuredMediaId?: string
+  editorState?: any
+  published?: boolean
+  reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published'
+  isFeatured?: boolean
+  isSticky?: boolean
+}
+
+export async function createAdminArticle(
+  payload: CreateAdminArticlePayload,
+): Promise<BackendArticle> {
+  const res = await apiClient.post('/admin/articles', payload)
   return res as unknown as BackendArticle
 }
 
