@@ -364,6 +364,14 @@ export default function ArticleForm({
 
   const handleAdminPublish = async () => {
     if (!initialArticle?._id) return;
+
+    const errors = validateRequiredFields();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      toast.error("Please fill in required fields before publishing.");
+      return;
+    }
+    
     try {
       setIsSubmitting(true);
       await apiClient.post(`/admin/articles/${initialArticle._id}/publish`);
@@ -561,16 +569,11 @@ export default function ArticleForm({
       return;
     }
 
-    // const errors = validateRequiredFields(); // Used for final publish check or highlighting, but not blocking save
-    // Only block saving if title is missing (minimal requirement)
-    if (!title.trim()) {
-      setFormErrors({ title: "Title is required." });
+    const errors = validateRequiredFields();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       return;
     }
-    // if (Object.keys(errors).length > 0) {
-    //   setFormErrors(errors);
-    //   return;
-    // }
 
     setFormErrors({});
     setIsSubmitting(true);
@@ -647,8 +650,7 @@ export default function ArticleForm({
     //   isSticky: isPublished ? isSticky : false,
     // });
     // setConfirmOpen(true);
-    // Since we are not using ArticleSubmission anymore, we just call handleSaveChanges or maybe a prompt?
-    // But draft-first flow means we just save.
+    // Since we are not using ArticleSubmission anymore, we just call handleSaveChanges.
     handleSaveChanges();
   };
 
