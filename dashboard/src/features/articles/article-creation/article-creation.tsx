@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import ArticleForm from "./ArticleForm";
 import { Main } from "@/components/layout/main";
 import { PageHeader } from "@/components/layout/page-header";
+import { formatDistanceToNow } from "date-fns";
 import {
   useTaxonomy,
   useUsers,
@@ -15,6 +16,7 @@ import { useParams } from "@tanstack/react-router";
 export default function ArticleCreation() {
   const { articleId } = useParams({ strict: false }) as { articleId?: string };
   const isEditMode = !!articleId;
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
   const {
     data: initialArticle,
@@ -86,6 +88,16 @@ export default function ArticleCreation() {
     collabLoading ||
     mediaLoading ||
     articleLoading;
+
+  const subtitle = useMemo(() => {
+    if (!isEditMode) return "Draft, schedule, or publish a new post";
+    
+    if (lastSavedAt) {
+      return `Autosaved ${formatDistanceToNow(lastSavedAt, { addSuffix: true })}`;
+    }
+    
+    return "";
+  }, [isEditMode, lastSavedAt]);
 
   // Map to UI shapes with default values for missing fields
   const categories: Category[] = useMemo(() => {
@@ -222,7 +234,7 @@ export default function ArticleCreation() {
     <Main>
       <PageHeader
         title={isEditMode ? "Edit Article" : "Create New Article"}
-        description={isEditMode && initialArticle?.title ? `Editing: ${initialArticle.title}` : "Draft, schedule, or publish a new post"}
+        description={subtitle}
       />
       <ArticleForm
         categories={categories}
@@ -233,6 +245,7 @@ export default function ArticleCreation() {
         mediaLibrary={mediaItems}
         initialArticle={transformedArticle as any}
         isLoadingData={isLoading}
+        onLastSavedChange={setLastSavedAt}
       />
     </Main>
   );

@@ -52,6 +52,7 @@ interface ArticleFormProps {
   mediaLibrary: MediaItem[];
   initialArticle?: Article | null;
   isLoadingData?: boolean;
+  onLastSavedChange?: (date: Date) => void;
 }
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -66,6 +67,7 @@ export default function ArticleForm({
   mediaLibrary,
   initialArticle,
   isLoadingData,
+  onLastSavedChange,
 }: ArticleFormProps) {
   const { user: me } = useAuthStore((state) => state.auth);
   const queryClient = useQueryClient();
@@ -292,9 +294,11 @@ export default function ArticleForm({
            ...(featuredMediaId ? { featuredMediaId } : {}),
          };
 
-         await apiClient.put(`/admin/articles/${initialArticle._id}`, articleData);
-         
-         // Invalidate query to keep state fresh, but do it silently without triggering loading states if possible.
+          await apiClient.put(`/admin/articles/${initialArticle._id}`, articleData);
+          
+          onLastSavedChange?.(new Date());
+
+          // Invalidate query to keep state fresh, but do it silently without triggering loading states if possible.
          // However, useAdminArticle has staleTime: 0, so invalidating will trigger refetch.
          // This might cause UI flicker if not handled gracefully, but ensures consistency.
          await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
@@ -641,6 +645,8 @@ export default function ArticleForm({
       };
 
       await apiClient.put(`/admin/articles/${initialArticle._id}`, articleData);
+
+      onLastSavedChange?.(new Date());
 
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
 
