@@ -43,9 +43,10 @@ interface DataTableProps {
     limit: number
   }
   onPageChange?: (page: number) => void
+  onRowsPerPageChange?: (limit: number) => void
 }
 
-export function UsersTable({ columns, data, isLoading, pagination, onPageChange }: DataTableProps) {
+export function UsersTable({ columns, data, isLoading, pagination, onPageChange, onRowsPerPageChange }: DataTableProps) {
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -77,8 +78,20 @@ export function UsersTable({ columns, data, isLoading, pagination, onPageChange 
           pageIndex: (pagination?.page || 1) - 1,
           pageSize: pagination?.limit || 10,
         })
-        onPageChange?.(newState.pageIndex + 1)
+        
+        // Handle page change
+        if (newState.pageIndex !== (pagination?.page || 1) - 1) {
+          onPageChange?.(newState.pageIndex + 1)
+        }
+        
+        // Handle page size change
+        if (newState.pageSize !== (pagination?.limit || 10)) {
+          onRowsPerPageChange?.(newState.pageSize)
+          // Reset to page 1 on limit change as standard practice
+          onPageChange?.(1) 
+        }
       } else {
+        // Direct value update (rare in react-table)
         onPageChange?.(updater.pageIndex + 1)
       }
     },

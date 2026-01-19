@@ -118,7 +118,8 @@ export const useArticles = () => {
   const { categories: rawCategories, subCategories: rawSubCategories, tags: rawTags } = useTaxonomy();
   
   // Use centralized users hook (NOT persisted - PII)
-  const { data: rawUsers = [] } = useUsers();
+  const { data: usersData } = useUsers();
+  const rawUsers = usersData?.data || [];
   
   // Use centralized media hook (NOT persisted - large)
   const { data: mediaData } = useMedia({ limit: 100 });

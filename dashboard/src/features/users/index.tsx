@@ -12,7 +12,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { canManageStaff } from '@/lib/permissions'
 
 function UsersContent() {
-  const { users, loading, pagination, setPage, limit } = useUsers()
+  const { users, loading, pagination, setPage, setLimit, limit } = useUsers()
   const user = useAuthStore((state) => state.auth.user)
   const hasEditAccess = canManageStaff(user)
 
@@ -50,6 +50,7 @@ function UsersContent() {
               isLoading={loading}
               pagination={pagination}
               onPageChange={setPage}
+              onRowsPerPageChange={setLimit}
             />
           </CardContent>
         </Card>

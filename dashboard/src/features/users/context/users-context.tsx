@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import useDialogState from '@/hooks/use-dialog-state'
 import { User, userListSchema } from '../data/schema'
@@ -47,6 +47,17 @@ export default function UsersProvider({ children }: Props) {
     data: [], 
     pagination: { total: 0, page: 1, pages: 1, limit: 10 } 
   };
+
+  // Prefetch next page
+  useEffect(() => {
+    if (responseData.pagination.page < responseData.pagination.pages) {
+      const nextPage = page + 1
+      queryClient.prefetchQuery({
+        queryKey: queryKeys.usersList(nextPage, limit),
+        queryFn: () => getUsers({ page: nextPage, limit }),
+      })
+    }
+  }, [page, limit, responseData.pagination, queryClient])
 
   // Map backend users to frontend User schema
   const users: User[] = React.useMemo(() => {
