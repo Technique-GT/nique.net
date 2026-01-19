@@ -165,7 +165,7 @@ export function ArticleTable({
                 </div>
               </TableCell>
               <TableCell className="hidden lg:table-cell">
-                {article.category?.name || 'Unknown'}
+                {article.category?.name || 'Not Set'}
               </TableCell>
               <TableCell>
                 <div className="flex flex-col gap-1">
