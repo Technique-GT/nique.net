@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
+import { categoryCache } from '../services/categoryCache';
 import { ArticleDocument } from '../types/article';
 import { FaFacebook, FaXTwitter, FaInstagram, FaTiktok, FaLinkedin } from "react-icons/fa6";
 import Navbar from "../components/Navbar";
@@ -7,15 +8,21 @@ import Collage from "../components/Collage";
 import Spinner from '../components/Spinner';
 
 function About() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>([]);
+    // Check cache first to avoid loading spinner
+    const cachedRecent = categoryCache.getRecentArticles();
+    
+    const [isLoading, setIsLoading] = useState<boolean>(!cachedRecent);
+    const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>(cachedRecent || []);
 
     useEffect(() => {
             let isMounted = true;
             const controller = new AbortController();
     
             const loadArticles = async () => {
-                setIsLoading(true);
+                // Only show loading if we don't have cached data
+                if (!cachedRecent) {
+                    setIsLoading(true);
+                }
     
                 try {
                     // Services now return unwrapped data directly
@@ -25,6 +32,8 @@ function About() {
                         return;
                     }
     
+                    // Update cache
+                    categoryCache.setRecentArticles(recentArticlesData || []);
                     setRecentArticles(recentArticlesData || []);
                 } catch (err) {
                     if (!isMounted) {

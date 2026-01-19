@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Fragment } from "react";
 import { Plus, Edit, Trash2, Search, FolderOpen, FolderTree, ChevronDown, ChevronRight } from "lucide-react";
 import { Main } from "@/components/layout/main";
 import { PageHeader } from "@/components/layout/page-header";
@@ -606,8 +607,8 @@ export default function Categories() {
                       const isExpanded = expandedCategories.has(category._id);
                       
                       return (
-                        <>
-                          <TableRow key={category._id}>
+                        <Fragment key={category._id}>
+                          <TableRow>
                             <TableCell>
                               {categorySubCategories.length > 0 && (
                                 <Button
@@ -709,7 +710,7 @@ export default function Categories() {
                               </TableCell>
                             </TableRow>
                           )}
-                        </>
+                        </Fragment>
                       );
                     })}
                     

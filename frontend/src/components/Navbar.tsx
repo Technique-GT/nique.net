@@ -93,7 +93,7 @@ export default function Navbar() {
       {/* header above navbar */}
       <div className="max-w-[95%] md:max-w-[80%] gap-8 md:px-5 lg:px-8 hidden md:grid grid-cols-[1fr_600px_1fr] items-end mb-2 m-auto">
         {/* large masthead in header */}
-        <a href ='/'><img src={Masthead} alt="Masthead" className="w-[600px] -mb-3 mt-4" /></a>
+        <Link to='/' className="justify-self-center"><img src={Masthead} alt="Masthead" className="w-[600px] -mb-3 mt-4" /></Link>
 
         {/* left of masthead */}
         <div className="order-first">
@@ -134,7 +134,7 @@ export default function Navbar() {
 
           {/* mobile navbar with logo and burger */}
           <div className={`flex md:hidden py-1.5 px-4 w-full items-center justify-between `}>
-            <a href ='/'><img src={MastheadMobile} alt="Technique Logo" className="w-[80%] max-w-[300px] my-3" /></a>
+            <Link to='/'><img src={MastheadMobile} alt="Technique Logo" className="w-[80%] max-w-[300px] my-3" /></Link>
             <button onClick={toggleNavbar}>
               {isOpen ? <IoCloseSharp size={25} /> : <IoMenuSharp size={25} />}
             </button>

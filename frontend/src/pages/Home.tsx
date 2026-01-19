@@ -14,14 +14,69 @@ import InfiniteScrollModule from '../components/InfiniteScrollModule';
 import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
 
 function Home() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>([]);
-    const [featuredArticle, setFeaturedArticle] = useState<ArticleDocument | null>(null);
-    const [lifeArticles, setLifeArticles] = useState<ArticleDocument[]>([]);
-    const [newsArticles, setNewsArticles] = useState<ArticleDocument[]>([]);
-    const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>([]);
-    const [opinionArticles, setOpinionArticles] = useState<ArticleDocument[]>([]);
-    const [sportsArticles, setSportsArticles] = useState<ArticleDocument[]>([]);
+    // Check cache for initial state to avoid loading spinner on return visits
+    const cachedSticky = categoryCache.getStickyArticles();
+    const cachedFeatured = categoryCache.getFeaturedArticles();
+    const cachedRecent = categoryCache.getRecentArticles();
+    const cachedLife = categoryCache.getCategoryArticles(Categories.LIFE);
+    const cachedNews = categoryCache.getCategoryArticles(Categories.NEWS);
+    const cachedEntertainment = categoryCache.getCategoryArticles(Categories.ENTERTAINMENT);
+    const cachedOpinion = categoryCache.getCategoryArticles(Categories.OPINION);
+    const cachedSports = categoryCache.getCategoryArticles(Categories.SPORTS);
+    
+    // Helper to compute derived state from raw data
+    const computeDerivedState = (
+        stickyArticles: ArticleDocument[],
+        featuredArticles: ArticleDocument[],
+        recentArticlesData: ArticleDocument[],
+        lifeData: ArticleDocument[],
+        newsData: ArticleDocument[],
+        entertainmentData: ArticleDocument[],
+        opinionData: ArticleDocument[],
+        sportsData: ArticleDocument[]
+    ) => {
+        const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+            getArticleTimestamp(b) - getArticleTimestamp(a);
+
+        const stickySorted = stickyArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+        const featuredSorted = featuredArticles.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
+        const latestFeatured = featuredSorted[0] ?? null;
+        const stickyIds = new Set(stickySorted.map(getArticleId));
+        const nonStickyRecent = recentArticlesData
+            .filter((article) => !stickyIds.has(getArticleId(article)))
+            .sort(sortByPublishedDesc);
+        const sortedRecent = [...stickySorted, ...nonStickyRecent];
+        const recentIds = new Set(sortedRecent.map(getArticleId));
+        const filterAndSort = (articles: ArticleDocument[]) =>
+            articles.filter((article) => !recentIds.has(getArticleId(article))).sort(sortByPublishedDesc);
+
+        return {
+            recentArticles: sortedRecent,
+            featuredArticle: latestFeatured,
+            lifeArticles: filterAndSort(lifeData),
+            newsArticles: filterAndSort(newsData),
+            entertainmentArticles: filterAndSort(entertainmentData),
+            opinionArticles: filterAndSort(opinionData),
+            sportsArticles: filterAndSort(sportsData),
+        };
+    };
+
+    // Compute initial state from cache if available
+    const hasCache = cachedSticky && cachedFeatured && cachedRecent && cachedLife && 
+                     cachedNews && cachedEntertainment && cachedOpinion && cachedSports;
+    const initialState = hasCache
+        ? computeDerivedState(cachedSticky, cachedFeatured, cachedRecent, cachedLife, 
+                              cachedNews, cachedEntertainment, cachedOpinion, cachedSports)
+        : null;
+
+    const [isLoading, setIsLoading] = useState<boolean>(!initialState);
+    const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>(initialState?.recentArticles || []);
+    const [featuredArticle, setFeaturedArticle] = useState<ArticleDocument | null>(initialState?.featuredArticle || null);
+    const [lifeArticles, setLifeArticles] = useState<ArticleDocument[]>(initialState?.lifeArticles || []);
+    const [newsArticles, setNewsArticles] = useState<ArticleDocument[]>(initialState?.newsArticles || []);
+    const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>(initialState?.entertainmentArticles || []);
+    const [opinionArticles, setOpinionArticles] = useState<ArticleDocument[]>(initialState?.opinionArticles || []);
+    const [sportsArticles, setSportsArticles] = useState<ArticleDocument[]>(initialState?.sportsArticles || []);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -29,7 +84,10 @@ function Home() {
         const controller = new AbortController();
 
         const loadArticles = async () => {
-            setIsLoading(true);
+            // Only show loading spinner if we don't have cached data
+            if (!hasCache) {
+                setIsLoading(true);
+            }
             setError(null);
 
             try {
@@ -85,34 +143,32 @@ function Home() {
                 categoryCache.setCategories(categories);
                 categoryCache.setStickyArticles(stickyArticles || []);
                 categoryCache.setFeaturedArticles(featuredArticles || []);
+                categoryCache.setRecentArticles(recentArticlesData || []);
                 categoryCache.setCategoryArticles(Categories.LIFE, lifeArticlesData || []);
                 categoryCache.setCategoryArticles(Categories.NEWS, newsArticlesData || []);
                 categoryCache.setCategoryArticles(Categories.ENTERTAINMENT, entertainmentArticlesData || []);
                 categoryCache.setCategoryArticles(Categories.OPINION, opinionArticlesData || []);
                 categoryCache.setCategoryArticles(Categories.SPORTS, sportsArticlesData || []);
 
-                const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
-                    getArticleTimestamp(b) - getArticleTimestamp(a);
+                // Compute derived state
+                const derived = computeDerivedState(
+                    stickyArticles || [],
+                    featuredArticles || [],
+                    recentArticlesData || [],
+                    lifeArticlesData || [],
+                    newsArticlesData || [],
+                    entertainmentArticlesData || [],
+                    opinionArticlesData || [],
+                    sportsArticlesData || []
+                );
 
-                const stickySorted = (stickyArticles || []).filter((article) => article.isSticky).sort(sortByPublishedDesc);
-                const featuredSorted = (featuredArticles || []).filter((article) => article.isFeatured).sort(sortByPublishedDesc);
-                const latestFeatured = featuredSorted[0] ?? null;
-                const stickyIds = new Set(stickySorted.map(getArticleId));
-                const nonStickyRecent = (recentArticlesData || [])
-                    .filter((article) => !stickyIds.has(getArticleId(article)))
-                    .sort(sortByPublishedDesc);
-                const sortedRecent = [...stickySorted, ...nonStickyRecent];
-                const recentIds = new Set(sortedRecent.map(getArticleId));
-                const filterAndSort = (articles: ArticleDocument[]) =>
-                    articles.filter((article) => !recentIds.has(getArticleId(article))).sort(sortByPublishedDesc);
-
-                setRecentArticles(sortedRecent);
-                setFeaturedArticle(latestFeatured);
-                setLifeArticles(filterAndSort(lifeArticlesData));
-                setNewsArticles(filterAndSort(newsArticlesData));
-                setEntertainmentArticles(filterAndSort(entertainmentArticlesData));
-                setOpinionArticles(filterAndSort(opinionArticlesData));
-                setSportsArticles(filterAndSort(sportsArticlesData)); 
+                setRecentArticles(derived.recentArticles);
+                setFeaturedArticle(derived.featuredArticle);
+                setLifeArticles(derived.lifeArticles);
+                setNewsArticles(derived.newsArticles);
+                setEntertainmentArticles(derived.entertainmentArticles);
+                setOpinionArticles(derived.opinionArticles);
+                setSportsArticles(derived.sportsArticles); 
             } catch (err) {
                 if (!isMounted) {
                     return;

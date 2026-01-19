@@ -16,6 +16,7 @@ class CategoryCache {
   private articlesByCategory: Map<string, CacheEntry<ArticleDocument[]>> = new Map();
   private stickyArticles: CacheEntry<ArticleDocument[]> | null = null;
   private featuredArticles: CacheEntry<ArticleDocument[]> | null = null;
+  private recentArticles: CacheEntry<ArticleDocument[]> | null = null;
   
   // 5 minute TTL
   private maxAge = 5 * 60 * 1000;
@@ -115,6 +116,24 @@ class CategoryCache {
   }
 
   // ============================================================================
+  // Recent Articles (for About page)
+  // ============================================================================
+
+  setRecentArticles(articles: ArticleDocument[]): void {
+    this.recentArticles = {
+      data: articles,
+      timestamp: Date.now(),
+    };
+  }
+
+  getRecentArticles(): ArticleDocument[] | null {
+    if (!this.recentArticles || this.isExpired(this.recentArticles.timestamp)) {
+      return null;
+    }
+    return this.recentArticles.data;
+  }
+
+  // ============================================================================
   // Utility
   // ============================================================================
 
@@ -123,13 +142,14 @@ class CategoryCache {
     this.articlesByCategory.clear();
     this.stickyArticles = null;
     this.featuredArticles = null;
+    this.recentArticles = null;
   }
 
   /**
    * Check if all main categories have cached data
    */
   isFullyPopulated(): boolean {
-    const requiredCategories = ['life', 'news', 'entertainment', 'opinions', 'sports'];
+    const requiredCategories = ['life', 'news', 'entertainment', 'opinion', 'sports'];
     return requiredCategories.every((cat) => this.hasCategoryArticles(cat));
   }
 }

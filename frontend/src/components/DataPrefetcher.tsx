@@ -47,6 +47,7 @@ export function DataPrefetcher() {
         const [
           stickyArticles,
           featuredArticles,
+          recentArticles,
           lifeArticles,
           newsArticles,
           entertainmentArticles,
@@ -55,6 +56,7 @@ export function DataPrefetcher() {
         ] = await Promise.all([
           articleService.fetchStickyArticles(undefined, controller.signal).catch(() => []),
           articleService.fetchFeaturedArticles(controller.signal).catch(() => []),
+          articleService.fetchRecentArticles(5, 'published', controller.signal).catch(() => []),
           lifeCategoryId
             ? articleService.fetchArticlesByCategory(lifeCategoryId, undefined, controller.signal).catch(() => [])
             : Promise.resolve([]),
@@ -75,6 +77,7 @@ export function DataPrefetcher() {
         // Populate cache
         categoryCache.setStickyArticles(stickyArticles);
         categoryCache.setFeaturedArticles(featuredArticles);
+        categoryCache.setRecentArticles(recentArticles);
         categoryCache.setCategoryArticles(Categories.LIFE, lifeArticles);
         categoryCache.setCategoryArticles(Categories.NEWS, newsArticles);
         categoryCache.setCategoryArticles(Categories.ENTERTAINMENT, entertainmentArticles);
