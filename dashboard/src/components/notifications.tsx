@@ -4,16 +4,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Bell, Mail, MessageSquare, CheckCircle, AlertCircle } from "lucide-react"
-import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { useEffect, useState } from "react"
 import { getNotifications, markAllNotificationsAsRead, markNotificationAsRead, Notification } from "@/services/notifications"
@@ -121,68 +113,64 @@ export function Notifications() {
           <span className="sr-only">Toggle notifications</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <Card className="border-0 shadow-none">
-          <CardHeader className="p-4 border-b">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Inbox</CardTitle>
-              {unreadCount > 0 && (
-                <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-blue-500" onClick={handleMarkAllAsRead}>
-                  Mark all as read
-                </Button>
-              )}
+      <PopoverContent className="w-[380px] p-0" align="end">
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <h4 className="font-semibold text-sm">Inbox</h4>
+          {unreadCount > 0 && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-auto px-2 py-1 text-xs text-muted-foreground hover:text-foreground" 
+              onClick={handleMarkAllAsRead}
+            >
+              Mark all as read
+            </Button>
+          )}
+        </div>
+        <ScrollArea className="h-[300px]">
+          {notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-[200px] text-center p-4">
+              <Bell className="h-8 w-8 text-muted-foreground/30 mb-2" />
+              <p className="text-sm text-muted-foreground">No notifications</p>
             </div>
-            <CardDescription>
-              Recent activity and requests
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <ScrollArea className="h-[300px]">
-              <div className="flex flex-col">
-                {notifications.length === 0 && (
-                   <div className="p-8 text-center text-sm text-muted-foreground">
-                     No notifications
-                   </div>
-                )}
-                {notifications.map((notification, index) => (
-                  <div key={notification._id}>
-                    <button
-                      onClick={() => handleNotificationClick(notification)}
-                      className={cn(
-                        "w-full text-left p-4 hover:bg-muted/50 transition-colors flex items-start gap-3",
-                        !notification.read ? "bg-muted/20" : ""
-                      )}
-                    >
-                      <div className={`mt-1 p-2 rounded-full ${getColors(notification.type)}`}>
-                        {getIcon(notification.type)}
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <p className={cn("text-sm leading-none", !notification.read ? "font-semibold" : "font-medium")}>
-                          {notification.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground line-clamp-2">
-                          {notification.message}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground pt-1">
-                          {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                        </p>
-                      </div>
-                      {!notification.read && (
-                        <div className="h-2 w-2 rounded-full bg-blue-600 mt-2" />
-                      )}
-                    </button>
-                    {index < notifications.length - 1 && <Separator />}
+          ) : (
+            <div className="flex flex-col">
+              {notifications.map((notification) => (
+                <button
+                  key={notification._id}
+                  onClick={() => handleNotificationClick(notification)}
+                  className={cn(
+                    "w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3 border-b last:border-0",
+                    !notification.read ? "bg-muted/20" : ""
+                  )}
+                >
+                  <div className={cn(
+                    "flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center mt-0.5",
+                    getColors(notification.type)
+                  )}>
+                    {getIcon(notification.type)}
                   </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-          <div className="p-2 border-t text-center">
-            {/* <Button variant="ghost" size="sm" className="w-full text-xs h-8">
-              View all notifications
-            </Button> */}
-          </div>
-        </Card>
+                  <div className="flex-1 space-y-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className={cn("text-sm leading-tight truncate pr-2", !notification.read ? "font-semibold" : "font-medium")}>
+                        {notification.title}
+                      </p>
+                      {!notification.read && (
+                        <div className="h-2 w-2 rounded-full bg-blue-600 flex-shrink-0 mt-1" />
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                      {notification.message}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/70">
+                      {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
       </PopoverContent>
     </Popover>
   )
