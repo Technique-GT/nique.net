@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Search, RefreshCw } from "lucide-react";
+import { Plus, Edit, Trash2, Search } from "lucide-react";
 import { Main } from "@/components/layout/main";
 import { PageHeader } from "@/components/layout/page-header";
 import {
@@ -28,7 +28,7 @@ export default function Tags() {
   const isAdmin = canManageTaxonomy(user);
 
   // TanStack Query hooks
-  const { data: tags = [], isLoading, refetch } = useTags();
+  const { data: tags = [], isLoading } = useTags();
   const createTag = useCreateTag();
   const updateTag = useUpdateTag();
   const deleteTag = useDeleteTag();
@@ -135,10 +135,6 @@ export default function Tags() {
           }
           actions={
             <>
-              <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
-                <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
               {isAdmin && (
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>

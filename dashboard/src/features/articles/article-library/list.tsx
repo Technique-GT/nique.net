@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, RefreshCw } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { Main } from "@/components/layout/main";
 import { PageHeader } from "@/components/layout/page-header";
 import { useArticles } from "./useArticles";
@@ -295,10 +295,6 @@ export default function ArticleList() {
           }
           actions={
             <>
-              <Button variant="outline" onClick={() => fetchArticles()} disabled={loading}>
-                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
               <Button onClick={handleNewArticle}>
                 <Plus className="w-4 h-4 mr-2" />
                 New Article
