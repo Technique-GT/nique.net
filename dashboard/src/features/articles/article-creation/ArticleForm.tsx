@@ -107,6 +107,19 @@ export default function ArticleForm({
   const isLocked = reviewStatus === "in_review" && !isAdmin;
   const canManageAuthorsPerm = isAdmin || isOwner;
 
+  // Determine available actions
+  const canRequestReview = reviewStatus !== 'in_review' && (reviewStatus === 'draft' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges)) && (isOwner || isAdmin);
+  const canCancelReview = reviewStatus === 'in_review' && (isOwner || isAdmin);
+  const canRequestChanges = isAdmin && reviewStatus === 'in_review';
+  const canPublish = isAdmin && (reviewStatus === 'in_review' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges));
+  const canUnpublish = isAdmin && reviewStatus === 'published';
+
+  // "Request Review" is the only option if:
+  // 1. It is available
+  // 2. We are NOT an admin (admins always have "Publish" available when "Request Review" is available, except maybe purely new draft? but Admin can publish draft)
+  // Actually, even easier:
+  const showRequestReviewDirectly = canRequestReview && !canPublish && !canUnpublish && !canCancelReview && !canRequestChanges;
+
   // Sync state with initialArticle when it's loaded
   useEffect(() => {
     if (initialArticle) {
@@ -1141,63 +1154,75 @@ export default function ArticleForm({
                     </Button>
                   )}
 
-                  {/* Workflow Actions Dropdown */}
+                  {/* Workflow Actions */}
                   {initialArticle?._id && (
-                    <DropdownMenu modal={false}>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="gap-2">
-                          Review Actions
-                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    <>
+                      {/* Direct Button: Request Review (if only option) */}
+                      {showRequestReviewDirectly && (
+                        <Button type="button" variant="outline" onClick={handleRequestReview} disabled={isSubmitting}>
+                          Request Review
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuLabel>Manage Status</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        
-                        {/* Request Review */}
-                        {reviewStatus !== 'in_review' && (reviewStatus === 'draft' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges)) && (isOwner || isAdmin) && (
-                          <DropdownMenuItem onClick={handleRequestReview} disabled={isSubmitting} className="text-blue-600 focus:text-blue-700 focus:bg-blue-50 dark:focus:bg-blue-950/50">
-                            <Eye className="mr-2 h-4 w-4" />
-                            Request Review
-                          </DropdownMenuItem>
-                        )}
+                      )}
 
-                        {/* Cancel Review */}
-                        {reviewStatus === 'in_review' && (isOwner || isAdmin) && (
-                          <DropdownMenuItem onClick={handleUnrequestReview} disabled={isSubmitting}>
-                            <X className="mr-2 h-4 w-4 text-muted-foreground" />
-                            Cancel Review Request
-                          </DropdownMenuItem>
-                        )}
-
-                        {/* Admin: Request Changes */}
-                        {isAdmin && reviewStatus === 'in_review' && (
-                          <DropdownMenuItem onClick={handleRequestChanges} disabled={isSubmitting} className="text-orange-600 focus:text-orange-700 focus:bg-orange-50 dark:focus:bg-orange-950/50">
-                            <AlertCircle className="mr-2 h-4 w-4" />
-                            Request Changes
-                          </DropdownMenuItem>
-                        )}
-
-                        {/* Admin: Publish */}
-                        {isAdmin && (reviewStatus === 'in_review' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges)) && (
-                          <DropdownMenuItem onClick={handleAdminPublish} disabled={isSubmitting} className="text-green-600 focus:text-green-700 focus:bg-green-50 dark:focus:bg-green-950/50">
-                            <Check className="mr-2 h-4 w-4" />
-                            {reviewStatus === 'published' ? 'Publish Updates' : 'Approve & Publish'}
-                          </DropdownMenuItem>
-                        )}
-
-                        {/* Admin: Unpublish */}
-                        {isAdmin && reviewStatus === 'published' && (
-                          <>
+                      {/* Dropdown: If multiple options or specific admin actions */}
+                      {!showRequestReviewDirectly && (canRequestReview || canCancelReview || canRequestChanges || canPublish || canUnpublish) && (
+                        <DropdownMenu modal={false}>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="gap-2">
+                              Review Actions
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuLabel>Manage Status</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={handleAdminUnpublish} disabled={isSubmitting} variant="destructive">
-                              <ShieldAlert className="mr-2 h-4 w-4" />
-                              Unpublish Article
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                            
+                            {/* Request Review */}
+                            {canRequestReview && (
+                              <DropdownMenuItem onClick={handleRequestReview} disabled={isSubmitting} className="text-blue-600 focus:text-blue-700 focus:bg-blue-50 dark:focus:bg-blue-950/50">
+                                <Eye className="mr-2 h-4 w-4" />
+                                Request Review
+                              </DropdownMenuItem>
+                            )}
+
+                            {/* Cancel Review */}
+                            {canCancelReview && (
+                              <DropdownMenuItem onClick={handleUnrequestReview} disabled={isSubmitting}>
+                                <X className="mr-2 h-4 w-4 text-muted-foreground" />
+                                Cancel Review Request
+                              </DropdownMenuItem>
+                            )}
+
+                            {/* Admin: Request Changes */}
+                            {canRequestChanges && (
+                              <DropdownMenuItem onClick={handleRequestChanges} disabled={isSubmitting} className="text-orange-600 focus:text-orange-700 focus:bg-orange-50 dark:focus:bg-orange-950/50">
+                                <AlertCircle className="mr-2 h-4 w-4" />
+                                Request Changes
+                              </DropdownMenuItem>
+                            )}
+
+                            {/* Admin: Publish */}
+                            {canPublish && (
+                              <DropdownMenuItem onClick={handleAdminPublish} disabled={isSubmitting} className="text-green-600 focus:text-green-700 focus:bg-green-50 dark:focus:bg-green-950/50">
+                                <Check className="mr-2 h-4 w-4" />
+                                {reviewStatus === 'published' ? 'Publish Updates' : 'Approve & Publish'}
+                              </DropdownMenuItem>
+                            )}
+
+                            {/* Admin: Unpublish */}
+                            {canUnpublish && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={handleAdminUnpublish} disabled={isSubmitting} variant="destructive">
+                                  <ShieldAlert className="mr-2 h-4 w-4" />
+                                  Unpublish Article
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </>
                   )}
 
                   {!initialArticle?._id && (
