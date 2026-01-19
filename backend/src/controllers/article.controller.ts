@@ -804,7 +804,7 @@ export const requestReview = async (req: any, res: Response): Promise<void> => {
       'review_requested',
       'Review Requested',
       `${req.user.name || 'An author'} requested a review for "${article.title}"`,
-      `/articles/${article._id}/review`, // Dashboard link (to be verified)
+      `/articles/${article._id}/edit`,
       { articleId: article._id }
     );
 
