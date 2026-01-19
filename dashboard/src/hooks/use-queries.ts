@@ -69,6 +69,7 @@ export const queryKeys = {
   // Users - NOT persisted (PII)
   users: (params?: { page?: number; limit?: number; search?: string }) =>
     ['users', params] as const,
+  usersList: (page: number, limit: number) => ['users-list', page, limit] as const,
 
   // Media - NOT persisted (can be large)
   media: (query?: MediaQuery) => ['media', query] as const,

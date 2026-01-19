@@ -8,9 +8,8 @@ export type User = {
   updatedAt: string
 }
 
-type PaginatedResponse<T> = {
-  success: boolean
-  data: T[]
+export type PaginatedUsersResponse = {
+  data: User[]
   pagination: {
     total: number
     page: number
@@ -24,13 +23,34 @@ export async function getUsers(params?: {
   limit?: number
   search?: string
   isAdmin?: boolean
-}): Promise<User[]> {
+}): Promise<PaginatedUsersResponse> {
   const res: any = await apiClient.get('/users', { params })
 
-  if (Array.isArray(res)) return res as User[]
-  if (res && Array.isArray((res as PaginatedResponse<User>).data)) return (res as PaginatedResponse<User>).data
+  // If response is already in the expected format (standard backend response)
+  if (res && res.data && res.pagination) {
+    return {
+      data: res.data as User[],
+      pagination: res.pagination
+    }
+  }
 
-  return []
+  // Fallback for legacy or direct array responses
+  if (Array.isArray(res)) {
+    return {
+      data: res as User[],
+      pagination: {
+        total: res.length,
+        page: 1,
+        pages: 1,
+        limit: res.length
+      }
+    }
+  }
+
+  return {
+    data: [],
+    pagination: { total: 0, page: 1, pages: 1, limit: 10 }
+  }
 }
 
 export async function getMe(): Promise<User> {

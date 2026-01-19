@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import useDialogState from '@/hooks/use-dialog-state'
 import { User, userListSchema } from '../data/schema'
-import { getUsers } from '@/services/users'
+import { getUsers, PaginatedUsersResponse } from '@/services/users'
 import { queryKeys } from '@/hooks/use-queries'
 
 type UsersDialogType = 'invite' | 'add' | 'edit' | 'delete'
@@ -15,6 +15,11 @@ interface UsersContextType {
   users: User[]
   loading: boolean
   refetchUsers: () => Promise<void>
+  pagination: PaginatedUsersResponse['pagination']
+  page: number
+  setPage: (page: number) => void
+  limit: number
+  setLimit: (limit: number) => void
 }
 
 const UsersContext = React.createContext<UsersContextType | null>(null)
@@ -26,19 +31,26 @@ interface Props {
 export default function UsersProvider({ children }: Props) {
   const [open, setOpen] = useDialogState<UsersDialogType>(null)
   const [currentRow, setCurrentRow] = useState<User | null>(null)
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
   const queryClient = useQueryClient()
 
   // Use TanStack Query for users (not persisted - contains PII)
-  const { data: rawUsers = [], isLoading } = useQuery({
-    queryKey: queryKeys.users(),
-    queryFn: () => getUsers(),
+  const { data, isLoading } = useQuery({
+    queryKey: queryKeys.usersList(page, limit), // Include pagination in key
+    queryFn: () => getUsers({ page, limit }),
     staleTime: 30 * 1000, // 30 seconds
-    // No meta.persist - users contain PII
   })
+
+  // Normalize data to always ensure we have valid pagination even if loading/error
+  const responseData = data || { 
+    data: [], 
+    pagination: { total: 0, page: 1, pages: 1, limit: 10 } 
+  };
 
   // Map backend users to frontend User schema
   const users: User[] = React.useMemo(() => {
-      const mappedUsers = rawUsers.map((u: any) => ({
+      const mappedUsers = responseData.data.map((u: any) => ({
         _id: u._id,
         id: u._id,
         name: typeof u.name === 'string' ? u.name : 'Unknown',
@@ -56,21 +68,26 @@ export default function UsersProvider({ children }: Props) {
     } catch {
       return mappedUsers as User[]
     }
-  }, [rawUsers])
+  }, [responseData.data])
 
   const refetchUsers = React.useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.users() })
-  }, [queryClient])
+    await queryClient.invalidateQueries({ queryKey: queryKeys.usersList(page, limit) })
+  }, [queryClient, page, limit])
 
   return (
     <UsersContext.Provider value={{ 
       open, 
       setOpen, 
       currentRow, 
-      setCurrentRow,
+      setCurrentRow, 
       users,
       loading: isLoading,
-      refetchUsers
+      refetchUsers,
+      pagination: responseData.pagination,
+      page,
+      setPage,
+      limit,
+      setLimit
     }}>
       {children}
     </UsersContext.Provider>
