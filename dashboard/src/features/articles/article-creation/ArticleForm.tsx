@@ -119,6 +119,7 @@ export default function ArticleForm({
   // 2. We are NOT an admin (admins always have "Publish" available when "Request Review" is available, except maybe purely new draft? but Admin can publish draft)
   // Actually, even easier:
   const showRequestReviewDirectly = canRequestReview && !canPublish && !canUnpublish && !canCancelReview && !canRequestChanges;
+  const showCancelReviewDirectly = canCancelReview && !canPublish && !canUnpublish && !canRequestReview && !canRequestChanges;
 
   // Sync state with initialArticle when it's loaded
   useEffect(() => {
@@ -1164,8 +1165,15 @@ export default function ArticleForm({
                         </Button>
                       )}
 
+                      {/* Direct Button: Cancel Review (if only option) */}
+                      {showCancelReviewDirectly && (
+                        <Button type="button" variant="outline" onClick={handleUnrequestReview} disabled={isSubmitting}>
+                          Cancel Review Request
+                        </Button>
+                      )}
+
                       {/* Dropdown: If multiple options or specific admin actions */}
-                      {!showRequestReviewDirectly && (canRequestReview || canCancelReview || canRequestChanges || canPublish || canUnpublish) && (
+                      {!showRequestReviewDirectly && !showCancelReviewDirectly && (canRequestReview || canCancelReview || canRequestChanges || canPublish || canUnpublish) && (
                         <DropdownMenu modal={false}>
                           <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="gap-2">
