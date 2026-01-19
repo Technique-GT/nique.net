@@ -55,14 +55,8 @@ export function ProfileForm() {
     mode: 'onChange',
   })
 
-  function onSubmit(data: ProfileFormValues) {
-    toast.success('You submitted the following values:', {
-      description: (
-        <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
-          <code className='text-white'>{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    })
+  function onSubmit(_data: ProfileFormValues) {
+    toast.success('Profile updated successfully.')
   }
 
   return (
