@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import User from '../models/User';
+import { safeRegex, safeErrorResponse } from '../utils/security';
 
 const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId | null => {
   if (!id || Array.isArray(id) || !mongoose.Types.ObjectId.isValid(id)) return null;
@@ -25,7 +26,7 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
     }
 
     if (typeof search === 'string' && search.trim().length > 0) {
-      const rx = new RegExp(search.trim(), 'i');
+      const rx = safeRegex(search.trim());
       filter.$or = [{ name: rx }, { bio: rx }, { email: rx }];
     }
 
@@ -63,7 +64,7 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching users', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching users', error));
   }
 };
 
@@ -78,7 +79,7 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
 
     res.status(200).json({ success: true, data: user });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching user', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching user', error));
   }
 };
 
@@ -129,7 +130,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
 
     res.status(201).json({ success: true, message: 'User created successfully', data: user });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error creating user', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error creating user', error));
   }
 };
 
@@ -209,7 +210,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
 
     res.status(200).json({ success: true, message: 'User updated successfully', data: user });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error updating user', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error updating user', error));
   }
 };
 
@@ -223,7 +224,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
 
     res.status(200).json({ success: true, message: 'User deleted successfully' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error deleting user', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error deleting user', error));
   }
 };
 
@@ -244,6 +245,6 @@ export const bulkDeleteUsers = async (req: Request, res: Response): Promise<void
     const result = await User.deleteMany({ _id: { $in: objectIds } });
     res.status(200).json({ success: true, message: 'Users deleted successfully', data: { deletedCount: result.deletedCount } });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error deleting users', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error deleting users', error));
   }
 };

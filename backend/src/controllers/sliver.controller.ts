@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Sliver from '../models/Sliver';
+import { safeRegex, safeErrorResponse } from '../utils/security';
 
 const SLIVER_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -25,7 +26,7 @@ export const createSliver = async (req: Request, res: Response): Promise<void> =
 
     res.status(201).json({ success: true, data: sliver });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error creating sliver', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error creating sliver', error));
   }
 };
 
@@ -48,7 +49,7 @@ export const getAllSlivers = async (req: Request, res: Response): Promise<void> 
     }
 
     if (typeof search === 'string' && search.trim().length > 0) {
-      const rx = new RegExp(search.trim(), 'i');
+      const rx = safeRegex(search.trim());
       query.text = rx;
     }
 
@@ -76,7 +77,7 @@ export const getAllSlivers = async (req: Request, res: Response): Promise<void> 
       },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching slivers', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching slivers', error));
   }
 };
 
@@ -96,6 +97,6 @@ export const deleteSliver = async (req: Request, res: Response): Promise<void> =
 
     res.status(200).json({ success: true, message: 'Sliver deleted successfully' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error deleting sliver', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error deleting sliver', error));
   }
 };

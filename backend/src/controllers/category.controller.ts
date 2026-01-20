@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Category from '../models/Category';
 import SubCategory from '../models/Subcategory';
+import { escapeRegex, safeRegex, safeErrorResponse } from '../utils/security';
 
 const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId | null => {
   if (!id || Array.isArray(id) || !mongoose.Types.ObjectId.isValid(id)) return null;
@@ -27,7 +28,7 @@ export const createCategory = async (req: Request, res: Response): Promise<void>
 
     const slug = typeof req.body?.slug === 'string' && req.body.slug.trim().length > 0 ? req.body.slug.trim() : slugify(name);
 
-    const existing = await Category.findOne({ $or: [{ slug }, { name: { $regex: new RegExp(`^${name}$`, 'i') } }] });
+    const existing = await Category.findOne({ $or: [{ slug }, { name: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } }] });
     if (existing) {
       res.status(409).json({ success: false, message: 'Category with this name or slug already exists' });
       return;
@@ -41,7 +42,7 @@ export const createCategory = async (req: Request, res: Response): Promise<void>
       res.status(409).json({ success: false, message: 'Category with this slug already exists' });
       return;
     }
-    res.status(500).json({ success: false, message: 'Server error', error: error?.message });
+    res.status(500).json(safeErrorResponse('Server error', error));
   }
 };
 
@@ -51,7 +52,7 @@ export const getCategories = async (req: Request, res: Response): Promise<void> 
 
     const query: any = {};
     if (typeof search === 'string' && search.trim().length > 0) {
-      const rx = new RegExp(search.trim(), 'i');
+      const rx = safeRegex(search.trim());
       query.$or = [{ name: rx }, { slug: rx }];
     }
 
@@ -59,7 +60,7 @@ export const getCategories = async (req: Request, res: Response): Promise<void> 
 
     res.status(200).json({ success: true, data: categories, count: categories.length });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching categories', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching categories', error));
   }
 };
 
@@ -79,7 +80,7 @@ export const getCategoryById = async (req: Request, res: Response): Promise<void
 
     res.status(200).json({ success: true, data: category });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching category', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching category', error));
   }
 };
 
@@ -94,7 +95,7 @@ export const getCategoryBySlug = async (req: Request, res: Response): Promise<vo
 
     res.status(200).json({ success: true, data: category });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching category', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching category', error));
   }
 };
 
@@ -133,7 +134,7 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
       res.status(409).json({ success: false, message: 'Category with this slug already exists' });
       return;
     }
-    res.status(500).json({ success: false, message: 'Error updating category', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error updating category', error));
   }
 };
 
@@ -155,7 +156,7 @@ export const deleteCategory = async (req: Request, res: Response): Promise<void>
 
     res.status(200).json({ success: true, message: 'Category deleted successfully' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error deleting category', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error deleting category', error));
   }
 };
 
@@ -166,6 +167,6 @@ export const getCategoryStats = async (_req: Request, res: Response): Promise<vo
     const totalCategories = await Category.countDocuments({});
     res.status(200).json({ success: true, data: { totalCategories } });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching category stats', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching category stats', error));
   }
 };

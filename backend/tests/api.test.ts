@@ -1,8 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 import { createApp } from '../src/app';
 
 const app = createApp();
+
+// Helper to generate test JWT tokens
+const generateToken = (payload: { id: string; name: string; isAdmin: boolean }) => {
+  return jwt.sign(payload, process.env.JWT_TOKEN || 'test-secret', { expiresIn: '1h' });
+};
+
+const adminToken = generateToken({ id: '000000000000000000000001', name: 'Admin User', isAdmin: true });
 
 describe('Health Endpoint', () => {
   it('GET /api/health returns success', async () => {
@@ -84,7 +92,7 @@ describe('Articles Endpoints', () => {
 });
 
 describe('Categories Endpoints', () => {
-  it('GET /api/categories returns all categories', async () => {
+  it('GET /api/categories returns all categories (public)', async () => {
     const res = await request(app).get('/api/categories');
 
     expect(res.status).toBe(200);
@@ -94,7 +102,7 @@ describe('Categories Endpoints', () => {
 });
 
 describe('Tags Endpoints', () => {
-  it('GET /api/tags returns all tags', async () => {
+  it('GET /api/tags returns all tags (public)', async () => {
     const res = await request(app).get('/api/tags');
 
     expect(res.status).toBe(200);
@@ -104,23 +112,31 @@ describe('Tags Endpoints', () => {
 });
 
 describe('Users Endpoints', () => {
-  it('GET /api/users returns all users', async () => {
+  it('GET /api/users requires authentication', async () => {
     const res = await request(app).get('/api/users');
+
+    expect(res.status).toBe(401);
+  });
+
+  it('GET /api/users returns data for admin', async () => {
+    const res = await request(app)
+      .get('/api/users')
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toBeInstanceOf(Array);
   });
 
-  it('GET /api/users/:id returns 400 for invalid id', async () => {
-    const res = await request(app).get('/api/users/invalid');
+  it('GET /api/users/:id requires authentication', async () => {
+    const res = await request(app).get('/api/users/000000000000000000000001');
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
   });
 });
 
 describe('Slivers Endpoints', () => {
-  it('GET /api/slivers returns all slivers', async () => {
+  it('GET /api/slivers returns all slivers (public)', async () => {
     const res = await request(app).get('/api/slivers');
 
     expect(res.status).toBe(200);
@@ -129,7 +145,7 @@ describe('Slivers Endpoints', () => {
     expect(res.body.count).toBeDefined();
   });
 
-  it('GET /api/slivers/active returns only active slivers', async () => {
+  it('GET /api/slivers/active returns only active slivers (public)', async () => {
     const res = await request(app).get('/api/slivers/active');
 
     expect(res.status).toBe(200);
@@ -139,33 +155,36 @@ describe('Slivers Endpoints', () => {
 });
 
 describe('Comments Endpoints', () => {
-  describe('GET /api/comments', () => {
-    it('returns all comments', async () => {
+  describe('GET /api/comments (admin)', () => {
+    it('requires authentication', async () => {
       const res = await request(app).get('/api/comments');
+
+      expect(res.status).toBe(401);
+    });
+
+    it('returns comments for admin', async () => {
+      const res = await request(app)
+        .get('/api/comments')
+        .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data).toBeInstanceOf(Array);
       expect(res.body.pagination).toBeDefined();
     });
+  });
 
-    it('filters by articleId', async () => {
-      const res = await request(app).get('/api/comments?articleId=000000000000000000000000');
+  describe('GET /api/comments/by-article (public)', () => {
+    it('returns comments for article', async () => {
+      const res = await request(app).get('/api/comments/by-article?articleId=000000000000000000000000');
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data).toBeInstanceOf(Array);
     });
-
-    it('rejects invalid articleId', async () => {
-      const res = await request(app).get('/api/comments?articleId=invalid');
-
-      expect(res.status).toBe(400);
-      expect(res.body.success).toBe(false);
-    });
   });
 
-  describe('POST /api/comments', () => {
+  describe('POST /api/comments (public)', () => {
     it('rejects empty content', async () => {
       const res = await request(app)
         .post('/api/comments')
@@ -182,12 +201,12 @@ describe('Comments Endpoints', () => {
   });
 });
 
-  describe('Admin Endpoints', () => {
-    it('GET /api/admin/articles returns 401 when unauthorized', async () => {
-      const res = await request(app).get('/api/admin/articles?limit=5');
-      expect(res.status).toBe(401);
-    });
+describe('Admin Endpoints', () => {
+  it('GET /api/admin/articles returns 401 when unauthorized', async () => {
+    const res = await request(app).get('/api/admin/articles?limit=5');
+    expect(res.status).toBe(401);
   });
+});
 
 describe('404 Handler', () => {
   it('returns 404 for unknown routes', async () => {

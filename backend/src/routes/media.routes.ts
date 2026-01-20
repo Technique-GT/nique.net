@@ -8,19 +8,18 @@ import {
   serveMedia,
   uploadMiddleware,
 } from '../controllers/media.controller';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
-// GET routes
+// Public routes (read-only)
 router.get('/', getMedia);
 router.get('/:id', getMediaById);
 router.get('/file/:id', serveMedia);
 
-// POST routes
-router.post('/upload', uploadMiddleware.single('file'), uploadMedia);
-
-// DELETE routes
-router.delete('/:id', deleteMedia);
-router.delete('/:id/hard', hardDeleteMedia);
+// Protected routes (require authentication)
+router.post('/upload', authMiddleware, uploadMiddleware.single('file'), uploadMedia);
+router.delete('/:id', authMiddleware, deleteMedia);
+router.delete('/:id/hard', authMiddleware, hardDeleteMedia);
 
 export default router;

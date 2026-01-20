@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import Comment from '../models/Comment';
 import Article from '../models/Article';
 import CommentReaction from '../models/CommentReaction';
+import { stripHtml, safeErrorResponse } from '../utils/security';
 
 const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId | null => {
   if (!id || Array.isArray(id) || !mongoose.Types.ObjectId.isValid(id)) return null;
@@ -21,7 +22,8 @@ const getDeviceId = (req: Request): string | null => {
 export const createComment = async (req: Request, res: Response): Promise<void> => {
   try {
     const contentRaw = typeof req.body?.content === 'string' ? req.body.content : '';
-    const content = contentRaw.trim();
+    // Sanitize comment content to prevent XSS
+    const content = stripHtml(contentRaw.trim());
 
     const articleIdRaw = typeof req.body?.articleId === 'string' ? req.body.articleId : typeof req.body?.article === 'string' ? req.body.article : undefined;
     const articleId = toObjectId(articleIdRaw);
@@ -30,7 +32,8 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
     const parentCommentId = toObjectId(parentCommentIdRaw) ?? undefined;
 
     const usernameRaw = typeof req.body?.username === 'string' ? req.body.username : '';
-    const username = usernameRaw.trim() || 'Anonymous';
+    // Sanitize username to prevent XSS
+    const username = stripHtml(usernameRaw.trim()) || 'Anonymous';
 
     if (!content) {
       res.status(400).json({ success: false, message: 'Comment content is required' });
@@ -80,7 +83,7 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
       data: comment,
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Server error', error: error?.message });
+    res.status(500).json(safeErrorResponse('Server error', error));
   }
 };
 
@@ -150,7 +153,7 @@ export const getCommentsByArticle = async (req: Request, res: Response): Promise
       pagination: { total, page: pageNum, pages: Math.ceil(total / limitNum), limit: limitNum },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching comments', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching comments', error));
   }
 };
 
@@ -179,7 +182,7 @@ export const getCommentById = async (req: Request, res: Response): Promise<void>
 
     res.status(200).json({ success: true, data: { ...comment, myReaction } });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching comment', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching comment', error));
   }
 };
 
@@ -210,18 +213,9 @@ export const getAllComments = async (req: Request, res: Response): Promise<void>
       Comment.countDocuments(filter),
     ]);
 
-    res.status(200).json({
-      success: true,
-      data: comments,
-      pagination: {
-        total,
-        page: pageNum,
-        pages: Math.ceil(total / limitNum),
-        limit: limitNum,
-      },
-    });
+    res.status(200).json({ success: true, data: comments, pagination: { total, page: pageNum, pages: Math.ceil(total / limitNum), limit: limitNum } });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching comments', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching comments', error));
   }
 };
 
@@ -254,7 +248,7 @@ export const updateComment = async (req: Request, res: Response): Promise<void> 
 
     res.status(200).json({ success: true, message: 'Comment updated successfully', data: comment });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error updating comment', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error updating comment', error));
   }
 };
 
@@ -274,7 +268,7 @@ export const deleteComment = async (req: Request, res: Response): Promise<void> 
 
     res.status(200).json({ success: true, message: 'Comment deleted successfully' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error deleting comment', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error deleting comment', error));
   }
 };
 
@@ -303,7 +297,7 @@ export const updateCommentStatus = async (req: Request, res: Response): Promise<
 
     res.status(200).json({ success: true, message: 'Comment status updated successfully', data: comment });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error updating comment status', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error updating comment status', error));
   }
 };
 
@@ -317,7 +311,7 @@ export const likeComment = async (req: Request, res: Response): Promise<void> =>
 
     res.status(200).json({ success: true, data: comment });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error liking comment', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error liking comment', error));
   }
 };
 
@@ -331,7 +325,7 @@ export const dislikeComment = async (req: Request, res: Response): Promise<void>
 
     res.status(200).json({ success: true, data: comment });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error disliking comment', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error disliking comment', error));
   }
 };
 
@@ -407,7 +401,7 @@ export const setCommentReaction = async (req: Request, res: Response): Promise<v
 
     res.status(200).json({ success: true, data: { ...comment.toObject(), myReaction: nextReaction } });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error updating comment reaction', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error updating comment reaction', error));
   }
 };
 
@@ -420,6 +414,6 @@ export const getCommentStats = async (_req: Request, res: Response): Promise<voi
 
     res.status(200).json({ success: true, data: { totalComments: total, approvedComments: approved, pendingComments: total - approved } });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching comment stats', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching comment stats', error));
   }
 };

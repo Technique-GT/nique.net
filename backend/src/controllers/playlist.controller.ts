@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Playlist, { IPlaylist } from '../models/Playlist';
 import mongoose from 'mongoose';
+import { safeErrorResponse } from '../utils/security';
 
 // Helper function to validate and convert string to ObjectId
 const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId | null => {
@@ -38,11 +39,7 @@ export const createPlaylist = async (req: Request, res: Response): Promise<void>
         errors
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'Server error',
-        error: error.message
-      });
+      res.status(500).json(safeErrorResponse('Server error', error));
     }
   }
 };
@@ -59,11 +56,7 @@ export const getPlaylists = async (_req: Request, res: Response): Promise<void> 
       count: playlists.length
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching playlists',
-      error: error.message
-    });
+    res.status(500).json(safeErrorResponse('Error fetching playlists', error));
   }
 };
 
@@ -94,11 +87,7 @@ export const getPlaylistById = async (req: Request, res: Response): Promise<void
       data: playlist
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching playlist',
-      error: error.message
-    });
+    res.status(500).json(safeErrorResponse('Error fetching playlist', error));
   }
 };
 
@@ -149,11 +138,7 @@ export const updatePlaylist = async (req: Request, res: Response): Promise<void>
         errors
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'Error updating playlist',
-        error: error.message
-      });
+      res.status(500).json(safeErrorResponse('Error updating playlist', error));
     }
   }
 };
@@ -185,11 +170,7 @@ export const deletePlaylist = async (req: Request, res: Response): Promise<void>
       message: 'Playlist deleted successfully'
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Error deleting playlist',
-      error: error.message
-    });
+    res.status(500).json(safeErrorResponse('Error deleting playlist', error));
   }
 };
 
@@ -229,11 +210,7 @@ export const setActivePlaylist = async (req: Request, res: Response): Promise<vo
       data: playlist
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Error setting active playlist',
-      error: error.message
-    });
+    res.status(500).json(safeErrorResponse('Error setting active playlist', error));
   }
 };
 
@@ -246,10 +223,6 @@ export const getActivePlaylist = async (_req: Request, res: Response): Promise<v
       data: playlist
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching active playlist',
-      error: error.message
-    });
+    res.status(500).json(safeErrorResponse('Error fetching active playlist', error));
   }
 };
