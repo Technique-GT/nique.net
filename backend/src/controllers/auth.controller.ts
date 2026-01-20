@@ -3,7 +3,9 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import User from '../models/User';
-import { AuthRequest } from '../middleware/auth.middleware';
+import { AuthRequest, getTokenFromRequest } from '../middleware/auth.middleware';
+import { hashToken, safeErrorResponse } from '../utils/security';
+import RevokedToken from '../models/RevokedToken';
 
 type GoogleProfile = { name?: string; sub?: string; email?: string; email_verified?: boolean };
 
@@ -73,13 +75,46 @@ export const register = async (req: AuthRequest, res: Response): Promise<void> =
       },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json(safeErrorResponse('Registration failed', error));
   }
 };
 
-export const logout = (_req: Request, res: Response): void => {
+export const logout = async (req: Request, res: Response): Promise<void> => {
+  const token = getTokenFromRequest(req);
+
   res.clearCookie('jwt');
-  res.json({ success: true, message: 'Logged out successfully' });
+
+  if (!token) {
+    res.json({ success: true, message: 'Logged out successfully' });
+    return;
+  }
+
+  try {
+    const decoded = jwt.decode(token) as { exp?: number; id?: string } | null;
+    const expiresAt = decoded?.exp ? new Date(decoded.exp * 1000) : null;
+
+    if (!expiresAt) {
+      res.json({ success: true, message: 'Logged out successfully' });
+      return;
+    }
+
+    const tokenHash = hashToken(token);
+    await RevokedToken.updateOne(
+      { tokenHash },
+      {
+        $setOnInsert: {
+          tokenHash,
+          userId: decoded?.id ? new mongoose.Types.ObjectId(decoded.id) : undefined,
+          expiresAt,
+        },
+      },
+      { upsert: true },
+    );
+
+    res.json({ success: true, message: 'Logged out successfully' });
+  } catch (error: any) {
+    res.status(500).json(safeErrorResponse('Logout failed', error));
+  }
 };
 
 export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -97,7 +132,7 @@ export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<v
 
     res.json({ success: true, data: user });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json(safeErrorResponse('Error fetching user', error));
   }
 };
 
@@ -165,7 +200,7 @@ export const googleAuth = (req: Request, res: Response): void => {
 
     res.redirect(url);
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(safeErrorResponse('Authentication failed', error));
   }
 };
 
@@ -252,6 +287,6 @@ export const googleAuthCallback = async (req: Request, res: Response): Promise<v
     const appRedirect = redirect || process.env.APP_BASE_URL || '/';
     res.redirect(appRedirect);
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(safeErrorResponse('Authentication callback failed', error));
   }
 };
