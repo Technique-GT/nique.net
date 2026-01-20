@@ -49,17 +49,21 @@
 - Article organization
 - Article page layout changes?
 
+- fix captions on article page (text size smaller than body text) -- 1
+- sports article change to featured story -- 2
+- change media wiring -- 2
+- footer (copyright) (Copyright c 2026, Alec Grosswlad, Editor-in-Chief, Technique) -- 2
+- wire up spotify -- 3
+- optimize for mobile -- 4
+
 - TODO: start adding smaller features
-- optimize for mobile
-- wire up spotify
-- change media wiring
-- fix captions on article page (text size smaller than body text)
 - fix rich text editor font size (not storing)
-- increase body text size (14pt)
-- remove paragraph indents, decrease article width
+- increase body text size (14pt) -- done
+- remove paragraph indents, decrease article width -- done
 - user table
 - ad sense
 - expandable rows in comments and slivers table
 - opinion articles duplicates showing up
-- sports article change to featured story
 - season scoreboard sports APIs? look up
+- adding user not responding to db
+- big migration
