@@ -217,6 +217,7 @@ const AuthenticatedArticlesArticleIdEditRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof UnauthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
@@ -229,7 +230,6 @@ export interface FileRoutesByFullPath {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
-  '/': typeof UnauthenticatedIndexRoute
   '/articles/categories': typeof AuthenticatedArticlesCategoriesRoute
   '/articles/list': typeof AuthenticatedArticlesListRoute
   '/articles/media': typeof AuthenticatedArticlesMediaRoute
@@ -237,18 +237,19 @@ export interface FileRoutesByFullPath {
   '/articles/tags': typeof AuthenticatedArticlesTagsRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
-  '/articles': typeof AuthenticatedArticlesIndexRoute
-  '/comments': typeof AuthenticatedCommentsIndexRoute
-  '/dash': typeof AuthenticatedDashIndexRoute
-  '/help-center': typeof AuthenticatedHelpCenterIndexRoute
+  '/articles/': typeof AuthenticatedArticlesIndexRoute
+  '/comments/': typeof AuthenticatedCommentsIndexRoute
+  '/dash/': typeof AuthenticatedDashIndexRoute
+  '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
-  '/slivers': typeof AuthenticatedSliversIndexRoute
-  '/spotify': typeof AuthenticatedSpotifyIndexRoute
-  '/stats': typeof AuthenticatedStatsIndexRoute
-  '/users': typeof AuthenticatedUsersIndexRoute
+  '/slivers/': typeof AuthenticatedSliversIndexRoute
+  '/spotify/': typeof AuthenticatedSpotifyIndexRoute
+  '/stats/': typeof AuthenticatedStatsIndexRoute
+  '/users/': typeof AuthenticatedUsersIndexRoute
   '/articles/$articleId/edit': typeof AuthenticatedArticlesArticleIdEditRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof UnauthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
@@ -260,7 +261,6 @@ export interface FileRoutesByTo {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
-  '/': typeof UnauthenticatedIndexRoute
   '/articles/categories': typeof AuthenticatedArticlesCategoriesRoute
   '/articles/list': typeof AuthenticatedArticlesListRoute
   '/articles/media': typeof AuthenticatedArticlesMediaRoute
@@ -317,6 +317,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/login'
     | '/settings'
     | '/forgot-password'
@@ -329,7 +330,6 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
-    | '/'
     | '/articles/categories'
     | '/articles/list'
     | '/articles/media'
@@ -337,18 +337,19 @@ export interface FileRouteTypes {
     | '/articles/tags'
     | '/settings/appearance'
     | '/settings/profile'
-    | '/articles'
-    | '/comments'
-    | '/dash'
-    | '/help-center'
+    | '/articles/'
+    | '/comments/'
+    | '/dash/'
+    | '/help-center/'
     | '/settings/'
-    | '/slivers'
-    | '/spotify'
-    | '/stats'
-    | '/users'
+    | '/slivers/'
+    | '/spotify/'
+    | '/stats/'
+    | '/users/'
     | '/articles/$articleId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/login'
     | '/forgot-password'
     | '/otp'
@@ -360,7 +361,6 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
-    | '/'
     | '/articles/categories'
     | '/articles/list'
     | '/articles/media'
@@ -442,14 +442,14 @@ declare module '@tanstack/react-router' {
     '/_unauthenticated': {
       id: '/_unauthenticated'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof UnauthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -540,28 +540,28 @@ declare module '@tanstack/react-router' {
     '/_authenticated/users/': {
       id: '/_authenticated/users/'
       path: '/users'
-      fullPath: '/users'
+      fullPath: '/users/'
       preLoaderRoute: typeof AuthenticatedUsersIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/stats/': {
       id: '/_authenticated/stats/'
       path: '/stats'
-      fullPath: '/stats'
+      fullPath: '/stats/'
       preLoaderRoute: typeof AuthenticatedStatsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/spotify/': {
       id: '/_authenticated/spotify/'
       path: '/spotify'
-      fullPath: '/spotify'
+      fullPath: '/spotify/'
       preLoaderRoute: typeof AuthenticatedSpotifyIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/slivers/': {
       id: '/_authenticated/slivers/'
       path: '/slivers'
-      fullPath: '/slivers'
+      fullPath: '/slivers/'
       preLoaderRoute: typeof AuthenticatedSliversIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
@@ -575,28 +575,28 @@ declare module '@tanstack/react-router' {
     '/_authenticated/help-center/': {
       id: '/_authenticated/help-center/'
       path: '/help-center'
-      fullPath: '/help-center'
+      fullPath: '/help-center/'
       preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dash/': {
       id: '/_authenticated/dash/'
       path: '/dash'
-      fullPath: '/dash'
+      fullPath: '/dash/'
       preLoaderRoute: typeof AuthenticatedDashIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/comments/': {
       id: '/_authenticated/comments/'
       path: '/comments'
-      fullPath: '/comments'
+      fullPath: '/comments/'
       preLoaderRoute: typeof AuthenticatedCommentsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/articles/': {
       id: '/_authenticated/articles/'
       path: '/articles'
-      fullPath: '/articles'
+      fullPath: '/articles/'
       preLoaderRoute: typeof AuthenticatedArticlesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }

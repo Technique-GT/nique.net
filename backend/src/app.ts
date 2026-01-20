@@ -39,6 +39,8 @@ export function createApp() {
     'http://localhost:4173',
     'http://localhost:3000',
     'https://technique-dash-5men.vercel.app',
+    'https://nique.net',
+    'https://technique-4t5.pages.dev',
   ];
 
   if (env.CLIENT_URL) {
