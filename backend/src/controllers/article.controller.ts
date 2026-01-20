@@ -9,6 +9,7 @@ import {
   canDeleteArticle, 
   canPublishArticle 
 } from '../utils/permissions';
+import { safeRegex, sanitizeHtml, safeErrorResponse } from '../utils/security';
 
 const slugify = (value: string) =>
   value
@@ -66,7 +67,8 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
   const { body, existing } = params;
 
   const title = typeof body?.title === 'string' ? body.title : undefined;
-  const content = typeof body?.content === 'string' ? body.content : undefined;
+  // Sanitize HTML content to prevent XSS
+  const content = typeof body?.content === 'string' ? sanitizeHtml(body.content) : undefined;
   const excerpt = body?.excerpt === null ? undefined : typeof body?.excerpt === 'string' ? body.excerpt : undefined;
 
   const categoryId = toObjectId(body?.categoryId ?? body?.category) ?? undefined;
@@ -291,7 +293,7 @@ export const createArticle = async (req: Request, res: Response): Promise<void> 
       res.status(409).json({ success: false, message: 'Duplicate key error' });
       return;
     }
-    res.status(500).json({ success: false, message: 'Failed to create article', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to create article', error));
   }
 };
 
@@ -303,7 +305,7 @@ export const getArticles = async (req: any, res: Response): Promise<void> => {
     const orFilters: any[] = [];
 
     if (typeof search === 'string' && search.trim().length > 0) {
-      const rx = new RegExp(search.trim(), 'i');
+      const rx = safeRegex(search.trim());
       orFilters.push({ title: rx }, { excerpt: rx });
 
       const matchedUsers = await User.find({ name: rx }).select('_id');
@@ -363,7 +365,7 @@ export const getArticles = async (req: any, res: Response): Promise<void> => {
       pagination: { total, page: pageNum, pages: Math.ceil(total / limitNum), limit: limitNum },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch articles', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch articles', error));
   }
 };
 
@@ -374,7 +376,7 @@ export const getPublishedArticles = async (req: Request, res: Response): Promise
 
     const filter: any = { published: true };
     if (search) {
-      const rx = new RegExp(search, 'i');
+      const rx = safeRegex(search);
       filter.$or = [{ title: rx }, { excerpt: rx }];
     }
 
@@ -396,7 +398,7 @@ export const getPublishedArticles = async (req: Request, res: Response): Promise
       pagination: { total, page, pages: Math.ceil(total / limit), limit },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch published articles', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch published articles', error));
   }
 };
 
@@ -415,7 +417,7 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
     const filter: any = { published: true };
 
     if (search) {
-      const rx = new RegExp(search, 'i');
+      const rx = safeRegex(search);
       filter.$or = [{ title: rx }, { excerpt: rx }];
     }
 
@@ -442,7 +444,7 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
       pagination: { total, page, pages: Math.ceil(total / limit), limit },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch feed', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch feed', error));
   }
 };
 
@@ -454,7 +456,7 @@ export const getFeaturedArticles = async (_req: Request, res: Response): Promise
 
     res.json({ success: true, data: articles });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch featured articles', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch featured articles', error));
   }
 };
 
@@ -466,7 +468,7 @@ export const getStickyArticles = async (_req: Request, res: Response): Promise<v
 
     res.json({ success: true, data: articles });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch sticky articles', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch sticky articles', error));
   }
 };
 
@@ -484,7 +486,7 @@ export const getArticlesByCategory = async (req: Request, res: Response): Promis
 
     res.json({ success: true, data: articles });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch articles by category', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch articles by category', error));
   }
 };
 
@@ -501,7 +503,7 @@ export const getArticleById = async (req: Request, res: Response): Promise<void>
 
     res.json({ success: true, data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch article', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch article', error));
   }
 };
 
@@ -520,7 +522,7 @@ export const getArticleBySlug = async (req: Request, res: Response): Promise<voi
 
     res.json({ success: true, data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch article', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch article', error));
   }
 };
 
@@ -585,7 +587,7 @@ export const updateArticle = async (req: any, res: Response): Promise<void> => {
 
     res.json({ success: true, message: 'Article updated successfully', data: populatedArticle });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to update article', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to update article', error));
   }
 };
 
@@ -606,7 +608,7 @@ export const deleteArticle = async (req: any, res: Response): Promise<void> => {
 
     res.json({ success: true, message: 'Article deleted successfully' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to delete article', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to delete article', error));
   }
 };
 
@@ -639,7 +641,7 @@ export const toggleFeatured = async (req: any, res: Response): Promise<void> => 
       data: populatedArticle,
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to toggle featured status', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to toggle featured status', error));
   }
 };
 
@@ -672,7 +674,7 @@ export const toggleSticky = async (req: any, res: Response): Promise<void> => {
       data: populatedArticle,
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to toggle sticky status', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to toggle sticky status', error));
   }
 };
 
@@ -764,7 +766,7 @@ export const updateArticleStatus = async (req: any, res: Response): Promise<void
 
     res.json({ success: true, message: 'Article status updated successfully', data: populatedArticle });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to update article status', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to update article status', error));
   }
 };
 
@@ -788,7 +790,7 @@ export const createDraft = async (req: any, res: Response): Promise<void> => {
 
     res.status(201).json({ success: true, data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to create draft', error: error.message });
+    res.status(500).json(safeErrorResponse('Failed to create draft', error));
   }
 };
 
@@ -808,7 +810,7 @@ export const getAdminArticleById = async (req: any, res: Response): Promise<void
 
     res.json({ success: true, data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch article', error: error.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch article', error));
   }
 };
 
@@ -847,7 +849,7 @@ export const requestReview = async (req: any, res: Response): Promise<void> => {
 
     res.json({ success: true, message: 'Review requested', data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error requesting review', error: error.message });
+    res.status(500).json(safeErrorResponse('Error requesting review', error));
   }
 };
 
@@ -891,7 +893,7 @@ export const unrequestReview = async (req: any, res: Response): Promise<void> =>
 
     res.json({ success: true, message: 'Review cancelled', data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error cancelling review', error: error.message });
+    res.status(500).json(safeErrorResponse('Error cancelling review', error));
   }
 };
 
@@ -930,7 +932,7 @@ export const adminPublish = async (req: any, res: Response): Promise<void> => {
 
     res.json({ success: true, message: 'Article published', data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error publishing article', error: error.message });
+    res.status(500).json(safeErrorResponse('Error publishing article', error));
   }
 };
 
@@ -955,7 +957,7 @@ export const adminUnpublish = async (req: any, res: Response): Promise<void> => 
 
     res.json({ success: true, message: 'Article unpublished', data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error unpublishing article', error: error.message });
+    res.status(500).json(safeErrorResponse('Error unpublishing article', error));
   }
 };
 
@@ -995,7 +997,7 @@ export const requestChanges = async (req: any, res: Response): Promise<void> => 
 
     res.json({ success: true, message: 'Changes requested', data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error requesting changes', error: error.message });
+    res.status(500).json(safeErrorResponse('Error requesting changes', error));
   }
 };
 
@@ -1023,6 +1025,6 @@ export const transferOwnership = async (req: any, res: Response): Promise<void> 
 
     res.json({ success: true, message: 'Ownership transferred', data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error transferring ownership', error: error.message });
+    res.status(500).json(safeErrorResponse('Error transferring ownership', error));
   }
 };
