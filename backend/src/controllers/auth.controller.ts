@@ -126,7 +126,7 @@ export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<v
 
     const user = await AuthUser.findById(req.user.id).select('-password').populate('profilePictureMediaId');
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      res.status(401).json({ success: false, message: 'User not found' });
       return;
     }
 

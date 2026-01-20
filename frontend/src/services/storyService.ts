@@ -1,9 +1,4 @@
-import axios from 'axios';
-
-const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api',
-  withCredentials: true,
-});
+import apiClient from './apiClient';
 
 export const createStory = async (title: string, content: string) => {
     try {

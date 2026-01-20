@@ -9,6 +9,10 @@ export default defineConfig({
   server: {
     port: 5174,
   },
+  preview: {
+    port: 4174,
+    strictPort: true,
+  },
   plugins: [
     tanstackRouter({
       target: 'react',
