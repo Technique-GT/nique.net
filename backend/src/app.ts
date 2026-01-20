@@ -41,7 +41,8 @@ export function createApp() {
     'https://technique-dash-5men.vercel.app',
     'https://nique.net',
     'https://technique-4t5.pages.dev',
-    'https://technique-dashboard.pages.dev'
+    'https://technique-dashboard.pages.dev',
+    'https://dashboard.nique.net'
   ];
 
   if (env.CLIENT_URL) {

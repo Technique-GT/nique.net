@@ -13,12 +13,15 @@ const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 const OAUTH_STATE_COOKIE = 'oauth_state';
 const OAUTH_REDIRECT_COOKIE = 'oauth_redirect';
 
-const getCookieOptions = () => ({
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
-  maxAge: COOKIE_MAX_AGE,
-});
+const getCookieOptions = () => {
+  const isProd = process.env.NODE_ENV === 'production';
+  return {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
+    maxAge: COOKIE_MAX_AGE,
+  };
+};
 
 const generateToken = (user: any) => {
   return jwt.sign({ id: user._id, name: user.name, isAdmin: user.isAdmin }, process.env.JWT_TOKEN as string, {
@@ -78,7 +81,7 @@ export const register = async (req: AuthRequest, res: Response): Promise<void> =
 };
 
 export const logout = (_req: Request, res: Response): void => {
-  res.clearCookie('jwt');
+  res.clearCookie('jwt', getCookieOptions());
   res.json({ success: true, message: 'Logged out successfully' });
 };
 
@@ -177,8 +180,8 @@ export const googleAuthCallback = async (req: Request, res: Response): Promise<v
     const storedState = req.cookies?.[OAUTH_STATE_COOKIE] as string | undefined;
     const redirect = req.cookies?.[OAUTH_REDIRECT_COOKIE] as string | undefined;
 
-    res.clearCookie(OAUTH_STATE_COOKIE);
-    res.clearCookie(OAUTH_REDIRECT_COOKIE);
+    res.clearCookie(OAUTH_STATE_COOKIE, getCookieOptions());
+    res.clearCookie(OAUTH_REDIRECT_COOKIE, getCookieOptions());
 
     if (error) {
       // User likely canceled the login or access was denied.
