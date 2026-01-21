@@ -181,7 +181,6 @@
           "title": { "bsonType": "string" },
           "slug": { "bsonType": "string" },
           "content": { "bsonType": "string" },
-          "excerpt": { "bsonType": "string" },
           "authors": {
             "bsonType": "array",
             "items": {

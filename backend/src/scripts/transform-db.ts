@@ -31,7 +31,6 @@ export type CanonicalArticle = {
   title: string;
   slug: string;
   content: string;
-  excerpt?: string;
 
   authors: CanonicalAuthorRef[];
   categoryId: string;
@@ -68,7 +67,6 @@ export type MongoArticle = {
   title: string;
   slug: string;
   content: string;
-  excerpt?: string;
 
   authors: MongoAuthorRef[];
   categoryId: MongoId;
@@ -537,13 +535,6 @@ const toMongoArticle = (input: any): TransformResult<MongoArticle> => {
   const content = typeof input?.content === 'string' ? input.content : '';
   if (!content) warnings.push('missing content');
 
-  const excerpt =
-    input?.excerpt === undefined || input?.excerpt === null
-      ? undefined
-      : typeof input.excerpt === 'string'
-        ? input.excerpt
-        : (warnings.push('excerpt present but not a string'), undefined);
-
   const authorsRaw = Array.isArray(input?.authors) ? input.authors : [];
   if (!Array.isArray(input?.authors)) warnings.push('authors missing or not an array');
 
@@ -661,7 +652,6 @@ const toMongoArticle = (input: any): TransformResult<MongoArticle> => {
       title,
       slug,
       content,
-      ...(excerpt ? { excerpt } : {}),
       authors,
       categoryId: categoryId ?? new mongoose.Types.ObjectId('000000000000000000000000'),
       ...(subcategoryId ? { subcategoryId } : {}),
@@ -754,13 +744,6 @@ export function toCanonicalArticle(input: any): TransformResult<CanonicalArticle
 
   const content = typeof input?.content === 'string' ? input.content : '';
   if (!content) warnings.push('missing content');
-
-  const excerpt =
-    input?.excerpt === undefined || input?.excerpt === null
-      ? undefined
-      : typeof input.excerpt === 'string'
-        ? input.excerpt
-        : (warnings.push('excerpt present but not a string'), undefined);
 
   const authorsRaw = Array.isArray(input?.authors) ? input.authors : [];
   if (!Array.isArray(input?.authors)) warnings.push('authors missing or not an array');
@@ -883,7 +866,6 @@ export function toCanonicalArticle(input: any): TransformResult<CanonicalArticle
     title,
     slug,
     content,
-    ...(excerpt ? { excerpt } : {}),
     authors,
     categoryId: categoryId ?? '000000000000000000000000',
     ...(subcategoryId ? { subcategoryId } : {}),

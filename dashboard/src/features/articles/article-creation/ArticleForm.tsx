@@ -87,7 +87,7 @@ export default function ArticleForm({
     initialArticle?.editorState,
   );
   const [contentText, setContentText] = useState("");
-  const [excerpt, setExcerpt] = useState(initialArticle?.excerpt || "");
+  const [imageCaption, setImageCaption] = useState(initialArticle?.imageCaption || "");
   const [category, setCategory] = useState(initialArticle?.category?._id || "");
   const [subcategory, setSubcategory] = useState(
     initialArticle?.subcategory?._id || "",
@@ -171,7 +171,7 @@ export default function ArticleForm({
       setTitle(initialArticle.title || "");
       setContent(initialArticle.editorState);
       setContentText(extractTextFromEditorState(initialArticle.editorState));
-      setExcerpt(initialArticle.excerpt || "");
+      setImageCaption(initialArticle.imageCaption || "");
       setCategory(initialArticle.category?._id || "");
       setSubcategory(initialArticle.subcategory?._id || "");
       setSelectedTags(initialArticle.tags?.map((t) => t._id) || []);
@@ -641,7 +641,7 @@ export default function ArticleForm({
         title: title.trim(),
         content: htmlContent,
         editorState: content,
-        ...(excerpt.trim() ? { excerpt: excerpt.trim() } : {}),
+        ...(imageCaption.trim() ? { imageCaption: imageCaption.trim() } : {}),
         ...(category ? { categoryId: category } : {}),
         ...(subcategory ? { subcategoryId: subcategory } : {}),
         ...(selectedTags.length ? { tagIds: selectedTags } : {}),
@@ -702,7 +702,7 @@ export default function ArticleForm({
         title: title.trim(),
         content: htmlContent,
         editorState: content,
-        ...(excerpt.trim() ? { excerpt: excerpt.trim() } : {}),
+        ...(imageCaption.trim() ? { imageCaption: imageCaption.trim() } : {}),
         categoryId: category,
         ...(subcategory ? { subcategoryId: subcategory } : {}),
         ...(selectedTags.length ? { tagIds: selectedTags } : {}),
@@ -749,7 +749,7 @@ export default function ArticleForm({
         title: title.trim(),
         content: htmlContent,
         editorState: content,
-        ...(excerpt.trim() ? { excerpt: excerpt.trim() } : {}),
+        ...(imageCaption.trim() ? { imageCaption: imageCaption.trim() } : {}),
         categoryId: category,
         ...(subcategory ? { subcategoryId: subcategory } : {}),
         ...(selectedTags.length ? { tagIds: selectedTags } : {}),
@@ -895,30 +895,20 @@ export default function ArticleForm({
                 )}
               </div>
               
-              {/* Caption */}
+              {/* Image Caption */}
               <div className="space-y-2">
-                <Label htmlFor="excerpt" className='gap-0'>Caption</Label>
+                <Label htmlFor="image-caption" className='gap-0'>Image Caption</Label>
                 <Input
-                  id="excerpt"
-                  value={excerpt}
+                  id="image-caption"
+                  value={imageCaption}
                   disabled={isLocked}
                   onChange={(e) => {
                     const value = e.target.value;
-                    setExcerpt(value);
-                    if (formErrors.excerpt && value.trim()) {
-                      clearFieldError("excerpt");
-                    }
+                    setImageCaption(value);
                   }}
                   placeholder="Enter caption"
-                  className={cn(
-                    "italic",
-                    formErrors.excerpt && "border-destructive focus-visible:ring-destructive"
-                  )}
-                  aria-invalid={Boolean(formErrors.excerpt)}
+                  className="italic"
                 />
-                {formErrors.excerpt && (
-                  <p className="text-xs text-destructive">{formErrors.excerpt}</p>
-                )}
               </div>
             </div>
 

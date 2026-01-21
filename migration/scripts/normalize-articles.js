@@ -267,7 +267,6 @@ const normalizedArticles = articleList.map((article, index) => {
     title,
     slug,
     content,
-    ...(article?.excerpt ? { excerpt: String(article.excerpt).trim() } : {}),
     authors,
     ...(categoryId ? { categoryId } : {}),
     ...(tagIds.length ? { tagIds } : {}),

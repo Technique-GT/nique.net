@@ -38,7 +38,6 @@ export interface Article {
   _id: string;
   title: string;
   content: string;
-  excerpt: string;
   category: PopulatedCategory;
   subcategory?: PopulatedSubCategory;
   tags: PopulatedTag[];

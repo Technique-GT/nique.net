@@ -121,7 +121,6 @@ describe('Zod Schemas', () => {
         title: 'Test Article',
         content: '<p>Test content</p>',
         categoryId: '65f0a305095c8b6a0b100004',
-        excerpt: 'A short excerpt',
         tagIds: ['65f0a305095c8b6a0b100001', '65f0a305095c8b6a0b100002'],
         published: true,
         isFeatured: false,

@@ -117,7 +117,7 @@ server/
 **Feed Query Parameters:**
 - `page` (default: 1)
 - `limit` (default: 20, max: 50)
-- `search` - Search in title/excerpt
+- `search` - Search in title
 - `categoryId` - Filter by category
 - `tagId` - Filter by tag
 - `authorId` - Filter by author
@@ -199,7 +199,7 @@ The canonical MongoDB schema is defined in `json-schemas/canonical-contract.json
 ### Key Design Decisions
 
 1. **Articles use `published: boolean`** - No multi-status workflow
-2. **Search is title + excerpt only** - Content search not supported
+2. **Search is title only** - Content search not supported
 3. **Slivers expire after 30 days** - Server sets `expiresAt` automatically
 4. **Content stored as HTML** - WYSIWYG output, sanitization deferred
 

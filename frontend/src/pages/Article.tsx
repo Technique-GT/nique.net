@@ -337,9 +337,7 @@ export default function Article() {
         <section className="prose prose-lg max-w-3xl mx-auto text-nique-blue article-body">
           {sanitizedContent ? (
             <article dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
-          ) : (
-            <p>{article.excerpt}</p>
-          )}
+          ) : null}
         </section>
 
         {/* Comments */}

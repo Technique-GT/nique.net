@@ -67,8 +67,6 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
 
   const title = typeof body?.title === 'string' ? body.title : undefined;
   const content = typeof body?.content === 'string' ? body.content : undefined;
-  const excerpt = body?.excerpt === null ? undefined : typeof body?.excerpt === 'string' ? body.excerpt : undefined;
-
   const categoryId = toObjectId(body?.categoryId ?? body?.category) ?? undefined;
   const subcategoryId = toObjectId(body?.subcategoryId ?? body?.subcategory) ?? undefined;
 
@@ -122,8 +120,6 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
 
   if (title !== undefined) update.title = title;
   if (content !== undefined) update.content = content;
-  if (excerpt !== undefined) update.excerpt = excerpt;
-
   if (categoryId) update.categoryId = categoryId;
   if (subcategoryId !== undefined) update.subcategoryId = subcategoryId;
 
@@ -194,8 +190,6 @@ const hasArticleChanged = (existing: IArticle, update: Partial<IArticle>): boole
   if (update.title !== undefined && update.title !== existing.title) return true;
   // Content can be large, but string comparison is efficient enough
   if (update.content !== undefined && update.content !== existing.content) return true;
-  if (update.excerpt !== undefined && update.excerpt !== existing.excerpt) return true;
-
   if ('categoryId' in update && !idsAreEqual(update.categoryId, existing.categoryId)) return true;
   if ('subcategoryId' in update && !idsAreEqual(update.subcategoryId, existing.subcategoryId)) return true;
   if ('featuredMediaId' in update && !idsAreEqual(update.featuredMediaId, existing.featuredMediaId)) return true;
@@ -304,7 +298,7 @@ export const getArticles = async (req: any, res: Response): Promise<void> => {
 
     if (typeof search === 'string' && search.trim().length > 0) {
       const rx = new RegExp(search.trim(), 'i');
-      orFilters.push({ title: rx }, { excerpt: rx });
+      orFilters.push({ title: rx });
 
       const matchedUsers = await User.find({ name: rx }).select('_id');
       if (matchedUsers.length > 0) {
@@ -375,7 +369,7 @@ export const getPublishedArticles = async (req: Request, res: Response): Promise
     const filter: any = { published: true };
     if (search) {
       const rx = new RegExp(search, 'i');
-      filter.$or = [{ title: rx }, { excerpt: rx }];
+      filter.$or = [{ title: rx }];
     }
 
     const skip = (page - 1) * limit;
@@ -416,7 +410,7 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
 
     if (search) {
       const rx = new RegExp(search, 'i');
-      filter.$or = [{ title: rx }, { excerpt: rx }];
+      filter.$or = [{ title: rx }];
     }
 
     if (categoryId) filter.categoryId = new mongoose.Types.ObjectId(categoryId);

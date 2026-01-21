@@ -126,7 +126,6 @@ function InfiniteScrollModule({ categoryId, startPage = 1 }: InfiniteScrollModul
           &#8226; {category}
         </p>
         <h3 className="mt-1 text-xl font-semibold text-nique-blue">{article.title}</h3>
-        {article.excerpt && <h6 className="text-sm text-slate-600">{article.excerpt}</h6>}
       </article>
     );
   };

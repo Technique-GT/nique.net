@@ -347,7 +347,6 @@ async function main() {
         title: article.title || 'Untitled Article',
         slug: article.slug || slug,
         content: article.content || '',
-        excerpt: article.excerpt || undefined,
         authors,
         categoryId:
           categoryIdByLegacy.get(String(article.categoryId)) || toObjectId(article.categoryId) || undefined,
@@ -660,7 +659,6 @@ async function main() {
       title,
       slug: uniqueSlug,
       content,
-      excerpt: article.excerpt || undefined,
       authors,
       categoryId,
       subcategoryId,
