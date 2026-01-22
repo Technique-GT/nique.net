@@ -334,29 +334,11 @@ export default function Article() {
         )}
 
         {/* Article Content */}
-        <section className="prose prose-lg max-w-4xl mx-auto text-nique-blue article-body">
+        <section className="prose prose-lg max-w-3xl mx-auto text-nique-blue article-body">
           {sanitizedContent ? (
             <article dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
-          ) : (
-            <p>{article.excerpt}</p>
-          )}
+          ) : null}
         </section>
-
-        <section>
-          <p className='text-right text-nique-blue'>Views: {article.viewCount || 0}</p>
-        </section>
-
-        {/* Related Articles - fetches 4 published articles from the same category */}
-        {relatedArticles.length > 0 && (
-          <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-nique-blue">Related Articles</h2>
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-              {relatedArticles.map((related) => (
-                <ArticleBlock key={related._id || related.slug} article={related} height="230px" />
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Comments */}
         <section className="space-y-4">
@@ -443,6 +425,19 @@ export default function Article() {
             <p className="text-sm text-nique-blue">Comments are disabled for this article.</p>
           )}
         </section>
+
+        {/* Related Articles - fetches 4 published articles from the same category */}
+        {relatedArticles.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold text-nique-blue">Related Articles</h2>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+              {relatedArticles.map((related) => (
+                <ArticleBlock key={related._id || related.slug} article={related} height="230px" />
+              ))}
+            </div>
+          </section>
+        )}
+
       </div>
     </>
   );

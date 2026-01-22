@@ -44,7 +44,7 @@ export interface Article {
   _id: string;
   title: string;
   content: string;
-  excerpt: string;
+  imageCaption?: string;
   category: Category;
   subcategory?: SubCategory;
   tags: Tag[];
@@ -98,7 +98,6 @@ export type FieldErrorKey =
   | "title"
   | "content"
   | "featuredMedia"
-  | "excerpt"
   | "authors"
   | "category"
   | "subcategory"

@@ -13,8 +13,8 @@ import {
   getArticleLink,
 } from "../utils/articlePresentation";
 
-const buildPreview = (primary?: string | null, fallback?: string | null) => {
-  const source = primary || fallback;
+const buildPreview = (primary?: string | null) => {
+  const source = primary;
   if (!source) return "Read more...";
   const snippet = source.slice(0, 200);
   return snippet.length === 200 ? `${snippet}...` : snippet;
@@ -227,7 +227,7 @@ const SearchPage = () => {
                       </div>
 
                       <p className="text-base text-gray-700">
-                        {buildPreview(desc, article.excerpt)}
+                        {buildPreview(desc)}
                       </p>
 
                       <div className="text-sm text-gray-500">

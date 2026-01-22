@@ -292,7 +292,6 @@ articleList.forEach((article, index) => {
     title,
     slug,
     content,
-    ...(article?.excerpt ? { excerpt: String(article.excerpt).trim() } : {}),
     authors,
     ...(categoryId ? { categoryId } : {}),
     ...(subcategoryId ? { subcategoryId } : {}),

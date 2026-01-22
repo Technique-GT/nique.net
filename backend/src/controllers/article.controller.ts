@@ -124,8 +124,6 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
 
   if (title !== undefined) update.title = title;
   if (content !== undefined) update.content = content;
-  if (excerpt !== undefined) update.excerpt = excerpt;
-
   if (categoryId) update.categoryId = categoryId;
   if (subcategoryId !== undefined) update.subcategoryId = subcategoryId;
 
@@ -196,8 +194,6 @@ const hasArticleChanged = (existing: IArticle, update: Partial<IArticle>): boole
   if (update.title !== undefined && update.title !== existing.title) return true;
   // Content can be large, but string comparison is efficient enough
   if (update.content !== undefined && update.content !== existing.content) return true;
-  if (update.excerpt !== undefined && update.excerpt !== existing.excerpt) return true;
-
   if ('categoryId' in update && !idsAreEqual(update.categoryId, existing.categoryId)) return true;
   if ('subcategoryId' in update && !idsAreEqual(update.subcategoryId, existing.subcategoryId)) return true;
   if ('featuredMediaId' in update && !idsAreEqual(update.featuredMediaId, existing.featuredMediaId)) return true;

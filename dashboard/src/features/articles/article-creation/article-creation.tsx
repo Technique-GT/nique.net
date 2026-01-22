@@ -55,8 +55,7 @@ export default function ArticleCreation() {
         isPublished: backendArticle.published,
         allowComments: backendArticle.allowComments,
 
-        // Dashboard caption field maps to backend imageCaption (fallback to excerpt)
-        excerpt: backendArticle.imageCaption ?? backendArticle.excerpt ?? "",
+        imageCaption: backendArticle.imageCaption ?? "",
 
       
       // Map authors array structure

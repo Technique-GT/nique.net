@@ -50,7 +50,6 @@ export const useArticles = () => {
       _id: article._id?.$oid || article._id,
       title: article.title || '',
       content: article.content || '',
-      excerpt: article.excerpt || '',
       category: article.categoryId ? {
         _id: article.categoryId._id || article.categoryId,
         name: article.categoryId.name || 'Unknown',

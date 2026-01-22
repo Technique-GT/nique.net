@@ -30,7 +30,9 @@ import { NavCollapsible, NavItem, NavLink, type NavGroup } from './types'
 
 export function NavGroup({ title, items }: NavGroup) {
   const { state, isMobile } = useSidebar()
-  const href = useLocation({ select: (location) => location.href })
+  const href = useLocation({
+    select: (location) => location.href ?? `${location.pathname}${location.search}`,
+  })
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{title}</SidebarGroupLabel>
@@ -168,7 +170,8 @@ const SidebarMenuCollapsedDropdown = ({
   )
 }
 
-function checkIsActive(href: string, item: NavItem, mainNav = false) {
+function checkIsActive(href: string | undefined, item: NavItem, mainNav = false) {
+  if (!href) return false
   return (
     href === item.url || // /endpint?search=param
     href.split('?')[0] === item.url || // endpoint

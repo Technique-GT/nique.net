@@ -55,7 +55,6 @@ export interface ArticleDocument {
   title: string;
   slug: string;
   content: string;
-  excerpt?: string;
   categoryId: Category | null;
   subcategoryId?: Subcategory | null;
   tagIds: Tag[];

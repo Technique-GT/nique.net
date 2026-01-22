@@ -86,26 +86,17 @@ export function createApp() {
     }),
   );
 
-  const isProduction = process.env.NODE_ENV === 'production';
-
-  const parseOrigins = (raw?: string) =>
-    (raw || '')
-      .split(',')
-      .map((value) => value.trim())
-      .filter(Boolean);
-
-  const allowedOrigins = isProduction
-    ? [
-        ...parseOrigins(env.CLIENT_URL),
-        ...parseOrigins(process.env.APP_BASE_URL),
-      ]
-    : [
-        'http://localhost:5173',
-        'http://localhost:5174',
-        'http://localhost:4173',
-        'http://localhost:3000',
-        'https://technique-dash-5men.vercel.app',
-      ];
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:4173',
+    'http://localhost:3000',
+    'https://technique-dash-5men.vercel.app',
+    'https://nique.net',
+    'https://technique-4t5.pages.dev',
+    'https://technique-dashboard.pages.dev',
+    'https://dashboard.nique.net'
+  ];
 
   if (!isProduction && env.CLIENT_URL && !allowedOrigins.includes(env.CLIENT_URL)) {
     allowedOrigins.push(env.CLIENT_URL);

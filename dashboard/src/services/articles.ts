@@ -13,7 +13,7 @@ export type BackendArticle = {
   _id: string
   title: string
   slug: string
-  excerpt?: string
+  imageCaption?: string
   published: boolean
   publishedAt: string | null
   createdAt: string
@@ -113,7 +113,7 @@ export async function createAdminArticleDraft(): Promise<BackendArticle> {
 export type CreateAdminArticlePayload = {
   title: string
   content: string
-  excerpt?: string
+  imageCaption?: string
   categoryId: string
   subcategoryId?: string
   tagIds?: string[]

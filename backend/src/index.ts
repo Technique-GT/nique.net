@@ -4,7 +4,7 @@ import { createApp } from './app';
 import { env } from './utils/env';
 import { logger } from './utils/logger';
 
-if (env.MONGO_DB_NAME === 'technique') {
+if (env.MONGO_DB_NAME === 'technique' && env.NODE_ENV !== 'production') {
   throw new Error('Refusing to start with MONGO_DB_NAME=technique (read-only safety rule)');
 }
 

@@ -1,101 +1,69 @@
-# Remediation Plan
+# Article Review & Publishing Flow — Phased Checklist (Dashboard + Backend)
 
-This plan addresses the critical security vulnerabilities identified in `ISSUES.MD`.
+## Phase 1 — Roles & States
 
-## Phase 1: Critical Authorization Fixes (Immediate) - COMPLETED
+- [x] Define roles: owner (draft/edit/request review/manage authors), admin (all + publish/unpublish/request changes/transfer), non-owner author (edit only when unlocked; no author management).
+- [x] Track states: `reviewStatus` = `draft` | `in_review` | `changes_requested` | `published`.
+- [x] Track flags: `hasPendingChanges` for edits not yet live; keep `published` boolean + `publishedAt` for live visibility.
+- [ ] Add metadata: `reviewedAt`, `reviewedBy`, optional `reviewNotes` (when admin requests changes).
 
-### 1.1 Secure User Management
-- [x] **Middleware:** Apply `authMiddleware` to all routes in `backend/src/routes/user.routes.ts`.
-- [x] **Controller:** All user operations now require admin access via middleware.
-- [x] **Read Access:** `getUsers` (list) restricted to admins only.
+## Phase 2 — State Transitions
 
-### 1.2 Secure Media Management
-- [x] **Middleware:** Apply `authMiddleware` to `POST /upload` and `DELETE /:id` in `backend/src/routes/media.routes.ts`.
+- [x] Draft → Request review (owner/admin): set `in_review`, lock non-admin edits, notify admins.
+- [x] In review → Publish (admin): set `published=true`, `reviewStatus=published`, clear `hasPendingChanges`, set `reviewedAt/by`.
+- [x] In review → Changes requested (admin): set `changes_requested`, store `reviewNotes`, unlock for edits, keep `published` unchanged.
+- [x] Changes requested → Draft/editable: allow owner/authors to edit; they can request review again.
+- [x] Published edits: saving sets `hasPendingChanges=true` and `reviewStatus=changes_requested` (or `draft`) while keeping `published=true` so the live version stays up; admin publish applies pending changes and clears the flag.
 
-### 1.3 Secure Taxonomy (Categories, Tags, Subcategories)
-- [x] **Middleware:** Apply `authMiddleware` + `adminMiddleware` to all mutation routes (POST, PUT, DELETE) in:
-    - `category.routes.ts`
-    - `tag.routes.ts`
-    - `subCategory.routes.ts`
-- [x] **Logic:** Only admins can modify taxonomy.
+## Phase 3 — Locking & Permissions (Server)
 
-### 1.4 Secure Content Curation (Playlists, Slivers)
-- [x] **Middleware:** Apply `authMiddleware` + `adminMiddleware` to all mutation routes in `playlist.routes.ts` and `sliver.routes.ts`.
+- [x] Enforce locks: reject PUT/PATCH content changes when `reviewStatus=in_review` for non-admins (409/423); allow admin override.
+- [x] Allow edits when `changes_requested` or `draft` per role; block author management unless owner/admin.
+- [x] Saving a published article by non-admin sets `hasPendingChanges=true` and requires re-review; do not auto-unpublish.
 
-### 1.5 Secure Comments & Moderation
-- [x] **Route Split:** Separate public comment routes (create, read approved) from admin routes.
-- [x] **Middleware:** Apply `authMiddleware` + `adminMiddleware` to `getAllComments` (admin list), `updateCommentStatus`, `deleteComment`.
-- [x] **Logic:** Public can create comments and use reactions; admins can moderate.
+## Phase 4 — API Surface (`/api/admin/articles`)
 
----
+- [x] `POST /:id/request-review` (owner/admin) → `in_review`.
+- [x] `POST /:id/unrequest-review` (owner/admin) → back to `draft`.
+- [x] `POST /:id/request-changes` (admin, optional `reviewNotes`) → `changes_requested`.
+- [x] `POST /:id/publish` (admin) → apply pending edits, set `published=true`, `reviewStatus=published`, clear pending flag, set `reviewedAt/by`.
+- [x] `POST /:id/unpublish` (admin) → set `published=false`, `reviewStatus=draft`.
+- [x] `PATCH /:id` (save edits) → enforce locks, set `hasPendingChanges` when editing a published article.
 
-## Phase 2: Security Hardening (High Priority) - COMPLETED
+## Phase 5 — Dashboard UX
 
-### 2.1 Rate Limiting
-- [x] **Global:** Configure `express-rate-limit` in `app.ts` for all API routes (100 req/15min).
-- [x] **Auth:** Stricter limits for `/api/auth/*` (10 req/min).
-- [x] **Write:** Stricter limits for comment creation and media uploads (20 req/min).
+- [x] Editor: disable autosave/manual save for non-admin when `in_review`; show lock banner; allow edits in `draft/changes_requested`; surface 409/423 as “locked for review”.
+- [x] Buttons: Request Review (draft/changes_requested), Cancel Review (in_review), Admin Request Changes, Admin Publish/Unpublish.
+- [x] Badges: show `in_review`, `changes_requested`, `pending changes` (`hasPendingChanges`).
+- [x] Library: respect permissions; disable quick publish/unpublish when `in_review` for non-admin; require admin; show state badges and `hasPendingChanges` indicator.
+- [x] Author controls hidden for non-owner authors (with server enforcement backing it).
 
-### 2.2 Input Sanitization & Safety
-- [x] **XSS:** Implement `sanitizeHtml` for article content and `stripHtml` for comments/usernames.
-- [x] **ReDoS:** Created `escapeRegex` and `safeRegex` utilities; applied to all search endpoints.
+## Acceptance Checklist
 
-### 2.3 HTTP Security Headers
-- [x] **Helmet:** Initialize `helmet` middleware in `app.ts` with CSP, X-Frame-Options, etc.
+- [x] Owner can request review → article locks for them/other authors; admin sees it.
+- [x] Admin can publish or request changes; publish makes it live; request changes unlocks and records notes.
+- [x] Edits to a published article keep it visible; mark pending changes and require re-review before updates go live.
+- [x] Server blocks non-admin edits during review and allows them otherwise according to state.
+- [x] Dashboard reflects states/badges and honors permissions in editor and list views.
 
----
+- Article organization
+- Article page layout changes?
 
-## Phase 3: Data Integrity & Configuration (Medium Priority)
+- fix captions on article page (text size smaller than body text) -- 1
+- sports article change to featured story -- 2
+- change media wiring -- 2
+- footer (copyright) (Copyright c 2026, Alec Grosswlad, Editor-in-Chief, Technique) -- 2
+- wire up spotify -- 3
+- optimize for mobile -- 4
 
-### 3.1 File Uploads
-- [ ] **Validation:** Implement magic-byte detection for file uploads (replace simple mimetype check).
-
-### 3.2 Data Exposure
-- [x] **User List:** `getUsers` now requires admin authentication.
-
-### 3.3 Auth Logic
-- [x] **Registration:** OAuth flow correctly handles admin status via allowlist.
-- [ ] **CORS:** Review and tighten allowed origins based on environment.
-- [ ] **Token Revocation:** Consider implementing token revocation strategy.
-
----
-
-## Files Modified
-
-### New Files Created
-- `backend/src/middleware/admin.middleware.ts` - Admin role check middleware
-- `backend/src/utils/security.ts` - Security utilities (regex escape, XSS sanitization)
-- `backend/tests/security.test.ts` - Comprehensive security tests (47 tests)
-
-### Routes Secured
-- `backend/src/routes/user.routes.ts` - Full auth + admin protection
-- `backend/src/routes/media.routes.ts` - Auth for upload/delete
-- `backend/src/routes/category.routes.ts` - Auth + admin for mutations
-- `backend/src/routes/tag.routes.ts` - Auth + admin for mutations
-- `backend/src/routes/subCategory.routes.ts` - Auth + admin for mutations
-- `backend/src/routes/comment.routes.ts` - Split public/admin routes
-- `backend/src/routes/playlist.routes.ts` - Auth + admin for mutations
-- `backend/src/routes/sliver.routes.ts` - Auth + admin for mutations
-
-### Controllers Updated (ReDoS + XSS fixes)
-- `backend/src/controllers/article.controller.ts`
-- `backend/src/controllers/user.controller.ts`
-- `backend/src/controllers/category.controller.ts`
-- `backend/src/controllers/tag.controller.ts`
-- `backend/src/controllers/subCategory.controller.ts`
-- `backend/src/controllers/media.controller.ts`
-- `backend/src/controllers/sliver.controller.ts`
-- `backend/src/controllers/comment.controller.ts`
-
-### App Configuration
-- `backend/src/app.ts` - Added helmet, rate limiting
-
----
-
-## Test Coverage
-
-All 91 tests pass, including:
-- 47 new security tests covering authorization boundaries
-- ReDoS prevention tests
-- Security header verification
-- Public endpoint accessibility verification
+- TODO: start adding smaller features
+- fix rich text editor font size (not storing)
+- increase body text size (14pt) -- done
+- remove paragraph indents, decrease article width -- done
+- user table
+- ad sense
+- expandable rows in comments and slivers table
+- opinion articles duplicates showing up
+- season scoreboard sports APIs? look up
+- adding user not responding to db
+- big migration

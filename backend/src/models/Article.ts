@@ -9,7 +9,6 @@ export interface IArticle extends Document {
   title: string;
   slug: string;
   content: string;
-  excerpt?: string;
 
   authors: AuthorRef[];
   categoryId: mongoose.Types.ObjectId;
@@ -53,7 +52,6 @@ const ArticleSchema = new Schema<IArticle>(
     title: { type: String, required: true, trim: true, maxlength: 200 },
     slug: { type: String, required: true, unique: true, trim: true },
     content: { type: String, required: true },
-    excerpt: { type: String, required: false, maxlength: 300 },
 
     authors: { type: [AuthorRefSchema], required: true, default: [] },
 
