@@ -13,13 +13,12 @@ const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId 
 
 export const createPlaylist = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, description, spotifyUrl, image } = req.body;
+    const { name, description, spotifyUrl } = req.body;
     
     const playlist: IPlaylist = new Playlist({
       name,
       description: description || '',
       spotifyUrl,
-      image: image || '',
       isActive: false
     });
 
@@ -103,15 +102,14 @@ export const updatePlaylist = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const { name, description, spotifyUrl, image } = req.body;
+    const { name, description, spotifyUrl } = req.body;
     
     const playlist = await Playlist.findByIdAndUpdate(
       objectId,
       {
         name,
         description: description || '',
-        spotifyUrl,
-        image: image || ''
+        spotifyUrl
       },
       { new: true, runValidators: true }
     );
@@ -186,6 +184,31 @@ export const setActivePlaylist = async (req: Request, res: Response): Promise<vo
       return;
     }
 
+    const existing = await Playlist.findById(objectId);
+
+    if (!existing) {
+      res.status(404).json({
+        success: false,
+        message: 'Playlist not found'
+      });
+      return;
+    }
+
+    if (existing.isActive) {
+      const playlist = await Playlist.findByIdAndUpdate(
+        objectId,
+        { isActive: false },
+        { new: true }
+      );
+
+      res.status(200).json({
+        success: true,
+        message: 'Playlist deactivated',
+        data: playlist
+      });
+      return;
+    }
+
     // Set all playlists to inactive first
     await Playlist.updateMany({}, { isActive: false });
 
@@ -195,14 +218,6 @@ export const setActivePlaylist = async (req: Request, res: Response): Promise<vo
       { isActive: true },
       { new: true }
     );
-
-    if (!playlist) {
-      res.status(404).json({
-        success: false,
-        message: 'Playlist not found'
-      });
-      return;
-    }
 
     res.status(200).json({
       success: true,

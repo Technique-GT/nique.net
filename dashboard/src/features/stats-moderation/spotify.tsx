@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Play, Pause, Music, ExternalLink } from "lucide-react";
+import { Plus, Edit, Trash2, Music, ExternalLink } from "lucide-react";
 import { Main } from "@/components/layout/main";
 import { PageHeader } from "@/components/layout/page-header";
 import {
@@ -18,13 +18,41 @@ import {
   type Playlist,
 } from "@/hooks/use-queries";
 
+const toSpotifyEmbedUrl = (input: string): string | null => {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  const uriMatch = trimmed.match(/^spotify:playlist:([A-Za-z0-9]+)$/);
+  if (uriMatch) {
+    return `https://open.spotify.com/embed/playlist/${uriMatch[1]}`;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.hostname !== "open.spotify.com") return null;
+    const parts = parsed.pathname.split("/").filter(Boolean);
+
+    if (parts[0] === "embed" && parts[1] === "playlist" && parts[2]) {
+      return parsed.toString();
+    }
+
+    if (parts[0] === "playlist" && parts[1]) {
+      const embedUrl = new URL(`https://open.spotify.com/embed/playlist/${parts[1]}`);
+      embedUrl.search = parsed.search;
+      return embedUrl.toString();
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+};
+
 export default function SpotifyPlaylistManager() {
-  const [isPlaying, setIsPlaying] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    spotifyUrl: "",
-    image: ""
+    spotifyUrl: ""
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null);
@@ -40,6 +68,7 @@ export default function SpotifyPlaylistManager() {
   const activePlaylist = useMemo(() => {
     return playlists.find(p => p.isActive) || null;
   }, [playlists]);
+  const activeEmbedUrl = activePlaylist ? toSpotifyEmbedUrl(activePlaylist.spotifyUrl) : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,8 +107,7 @@ export default function SpotifyPlaylistManager() {
     setFormData({
       name: "",
       description: "",
-      spotifyUrl: "",
-      image: ""
+      spotifyUrl: ""
     });
     setEditingPlaylist(null);
   };
@@ -88,8 +116,7 @@ export default function SpotifyPlaylistManager() {
     setFormData({
       name: playlist.name,
       description: playlist.description,
-      spotifyUrl: playlist.spotifyUrl,
-      image: playlist.image
+      spotifyUrl: playlist.spotifyUrl
     });
     setEditingPlaylist(playlist);
     setIsDialogOpen(true);
@@ -140,7 +167,7 @@ export default function SpotifyPlaylistManager() {
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Playlist Name</Label>
+                    <Label htmlFor="name">Playlist Name<span className="text-destructive">*</span></Label>
                     <Input
                       id="name"
                       value={formData.name}
@@ -159,7 +186,7 @@ export default function SpotifyPlaylistManager() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="spotifyUrl">Spotify Playlist URL</Label>
+                    <Label htmlFor="spotifyUrl">Spotify Playlist URL<span className="text-destructive">*</span></Label>
                     <Input
                       id="spotifyUrl"
                       type="url"
@@ -168,19 +195,6 @@ export default function SpotifyPlaylistManager() {
                       placeholder="https://open.spotify.com/playlist/..."
                       required
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="image">Cover Image URL</Label>
-                    <Input
-                      id="image"
-                      type="url"
-                      value={formData.image}
-                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                      placeholder="https://example.com/playlist-cover.jpg"
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Leave empty to use default music icon
-                    </p>
                   </div>
                   <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
@@ -222,41 +236,76 @@ export default function SpotifyPlaylistManager() {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {playlists.map((playlist) => (
-                <div key={playlist._id}>
-                  <Card className={`h-full transition-all hover:shadow-lg ${
-                    playlist.isActive ? 'ring-2 ring-green-500' : ''
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {playlists.map((playlist) => {
+                const embedUrl = toSpotifyEmbedUrl(playlist.spotifyUrl);
+                return (
+                  <div key={playlist._id} className={`h-[60vh] ${
+                    playlist.isActive ? 'ring-3 ring-green-500 rounded-md' : ''
                   }`}>
-                    <CardContent className="p-0">
-                      <div className="aspect-square w-full bg-muted relative group">
-                        {playlist.image ? (
-                          <img
-                            src={playlist.image}
-                            alt={playlist.name}
-                            className="w-full h-full object-cover"
+                      <div className="relative group h-full">
+                        {embedUrl ? (
+                          <iframe
+                            className="w-full h-full"
+                            src={embedUrl}
+                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                            loading="lazy"
+                            title={`${playlist.name} playlist`}
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center">
+                          <div className="w-full h-80 bg-muted flex items-center justify-center">
                             <Music className="w-16 h-16 text-muted-foreground" />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <div className="absolute inset-0 rounded-md bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 pointer-events-none">
+                          <div className="absolute top-2 left-2 flex items-center gap-2 rounded-full bg-black/60 px-3 py-2 pointer-events-auto">
+                            <Switch
+                              checked={playlist.isActive}
+                              onCheckedChange={() => handleSetActive(playlist._id)}
+                              disabled={setActivePlaylistMutation.isPending}
+                              aria-label={playlist.isActive ? "Deactivate playlist" : "Set active playlist"}
+                            />
+                            <span className="text-xs text-white">
+                              {playlist.isActive ? "Active" : "Inactive"}
+                            </span>
+                          </div>
+                          <div className="absolute bottom-2 left-2 flex items-center gap-2 pointer-events-auto">
                           <Button
                             variant="secondary"
-                            size="sm"
+                            size="icon"
                             onClick={() => openEditDialog(playlist)}
+                            aria-label="Edit playlist"
+                            className="pointer-events-auto shadow-md"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
                           <Button
                             variant="secondary"
-                            size="sm"
+                            size="icon"
+                            asChild
+                            className="pointer-events-auto shadow-md"
+                          >
+                            <a
+                              href={playlist.spotifyUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label="Open in Spotify"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="icon"
                             onClick={() => handleDelete(playlist._id)}
                             disabled={deletePlaylistMutation.isPending}
+                            aria-label="Delete playlist"
+                            className="pointer-events-auto shadow-md"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
+                          </div>
                         </div>
                         {playlist.isActive && (
                           <Badge className="absolute top-2 right-2 bg-green-500">
@@ -264,97 +313,46 @@ export default function SpotifyPlaylistManager() {
                           </Badge>
                         )}
                       </div>
-                      <div className="p-4">
+                      {/* <div className="p-4">
                         <h3 className="font-semibold text-lg mb-1">{playlist.name}</h3>
-                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                        <p className="text-sm text-muted-foreground line-clamp-2">
                           {playlist.description}
                         </p>
-                        <div className="flex justify-between items-center">
-                          <Button
-                            variant={playlist.isActive ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handleSetActive(playlist._id)}
-                            disabled={playlist.isActive || setActivePlaylistMutation.isPending}
-                          >
-                            {playlist.isActive ? 'Active' : 'Set Active'}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            asChild
-                          >
-                            <a
-                              href={playlist.spotifyUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </a>
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              ))}
+                      </div> */}
+                  </div>
+                );
+              })}
             </div>
           )}
         </TabsContent>
 
         <TabsContent value="player">
-          <Card>
-            <CardHeader>
-              <CardTitle>Now Playing</CardTitle>
-              <CardDescription>
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+            <div className="p-6 border-b">
+              <h2 className="text-lg font-semibold">Now Playing</h2>
+              <p className="text-sm text-muted-foreground">
                 {activePlaylist 
                   ? `Active Playlist: ${activePlaylist.name}`
                   : 'No active playlist selected'
                 }
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+              </p>
+            </div>
+            <div className="p-6 space-y-6">
               {activePlaylist ? (
-                <>
-                  <div className="flex items-center gap-4">
-                    <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-                      {activePlaylist.image ? (
-                        <img
-                          src={activePlaylist.image}
-                          alt={activePlaylist.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Music className="w-8 h-8 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-xl">{activePlaylist.name}</h3>
-                      <p className="text-muted-foreground">{activePlaylist.description}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Spotify Playlist • {new Date(activePlaylist.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="h-1 bg-muted rounded-full">
-                      <div className="h-1 bg-primary rounded-full w-1/3"></div>
-                    </div>
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>1:15</span>
-                      <span>3:45</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-center gap-4">
-                    <Button
-                      size="icon"
-                      className="w-12 h-12"
-                      onClick={() => setIsPlaying(!isPlaying)}
-                    >
-                      {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-                    </Button>
-                  </div>
+                <div className="h-[70vh]">
+                  {activeEmbedUrl ? (
+                    <iframe
+                      className="w-full h-full rounded-md border"
+                      src={activeEmbedUrl}
+                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                      loading="lazy"
+                      title={`${activePlaylist.name} playlist`}
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Unable to generate an embed URL from this playlist link.
+                    </p>
+                  )}
 
                   <div className="text-center">
                     <Button asChild variant="outline">
@@ -369,7 +367,7 @@ export default function SpotifyPlaylistManager() {
                       </a>
                     </Button>
                   </div>
-                </>
+                </div>
               ) : (
                 <div className="text-center py-8">
                   <Music className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
@@ -383,8 +381,8 @@ export default function SpotifyPlaylistManager() {
                   </Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
         </Tabs>
       </Main>

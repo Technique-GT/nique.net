@@ -4,7 +4,6 @@ export interface IPlaylist extends Document {
   name: string;
   description: string;
   spotifyUrl: string;
-  image: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -34,10 +33,6 @@ const PlaylistSchema: Schema = new Schema({
       },
       message: 'Please provide a valid Spotify playlist URL'
     }
-  },
-  image: {
-    type: String,
-    default: ''
   },
   isActive: {
     type: Boolean,

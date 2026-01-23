@@ -230,7 +230,6 @@ export type Playlist = {
   name: string
   description: string
   spotifyUrl: string
-  image: string
   isActive: boolean
   createdAt: string
   updatedAt: string

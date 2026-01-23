@@ -11,6 +11,8 @@ import Spinner from '../components/Spinner';
 import { Categories } from '../types/categories';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
 import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
+import spotifyService from '../services/spotifyService';
+import { toSpotifyEmbedUrl } from '../utils/spotify';
 
 // Helper to process raw articles into page sections
 const processEntertainmentArticles = (allEntertainment: ArticleDocument[]) => {
@@ -57,6 +59,7 @@ function Entertainment() {
     const [artsTheater, setArtsTheater] = useState<ArticleDocument[]>(initialData?.artsTheater || []);
     const [error, setError] = useState<string | null>(null);
     const [entertainmentCategoryId, setEntertainmentCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.ENTERTAINMENT));
+    const [activePlaylistEmbedUrl, setActivePlaylistEmbedUrl] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -133,6 +136,24 @@ function Entertainment() {
         };
     }, [cachedArticles]);
 
+    useEffect(() => {
+        const controller = new AbortController();
+        const loadActivePlaylist = async () => {
+            try {
+                const playlist = await spotifyService.fetchActivePlaylist(controller.signal);
+                setActivePlaylistEmbedUrl(playlist ? toSpotifyEmbedUrl(playlist.spotifyUrl) : null);
+            } catch {
+                setActivePlaylistEmbedUrl(null);
+            }
+        };
+
+        loadActivePlaylist();
+
+        return () => {
+            controller.abort();
+        };
+    }, []);
+
     if (isLoading) {
         return (
         <div className="flex justify-center items-center h-screen">
@@ -206,12 +227,15 @@ function Entertainment() {
             </div>
 
             <div className='flex flex-col gap-4'>
-                <iframe
-                    className="rounded-md w-full h-137.5"
-                    src="https://open.spotify.com/embed/playlist/6hWrY7npl9UIbUzlRgpwoo?utm_source=generator"
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                    loading="lazy"
-                />
+                {activePlaylistEmbedUrl && (
+                    <iframe
+                        className="rounded-md w-full h-137.5"
+                        src={activePlaylistEmbedUrl}
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                        loading="lazy"
+                        title="Active Spotify playlist"
+                    />
+                )}
                 {(() => {
                     const articles = entertainmentArticles.slice(0, 5)
                     .filter(Boolean) as ArticleDocument[];

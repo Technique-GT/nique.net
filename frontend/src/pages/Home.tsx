@@ -12,6 +12,8 @@ import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
 import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
+import spotifyService from '../services/spotifyService';
+import { toSpotifyEmbedUrl } from '../utils/spotify';
 
 function Home() {
     // Check cache for initial state to avoid loading spinner on return visits
@@ -81,6 +83,7 @@ function Home() {
     const [opinionArticles, setOpinionArticles] = useState<ArticleDocument[]>(initialState?.opinionArticles || []);
     const [sportsArticles, setSportsArticles] = useState<ArticleDocument[]>(initialState?.sportsArticles || []);
     const [error, setError] = useState<string | null>(null);
+    const [activePlaylistEmbedUrl, setActivePlaylistEmbedUrl] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -192,6 +195,24 @@ function Home() {
         };
     }, []);
 
+    useEffect(() => {
+        const controller = new AbortController();
+        const loadActivePlaylist = async () => {
+            try {
+                const playlist = await spotifyService.fetchActivePlaylist(controller.signal);
+                setActivePlaylistEmbedUrl(playlist ? toSpotifyEmbedUrl(playlist.spotifyUrl) : null);
+            } catch {
+                setActivePlaylistEmbedUrl(null);
+            }
+        };
+
+        loadActivePlaylist();
+
+        return () => {
+            controller.abort();
+        };
+    }, []);
+
     const sideArticles = useMemo(() => { 
         return opinionArticles.slice(0, 4);
     }, [opinionArticles]);
@@ -284,7 +305,15 @@ function Home() {
                 <div className='flex flex-col gap-4'>
                     <SideWidget />
                     <SideArticle articles={sideArticles}/>
-                    <iframe className="rounded-md w-full h-137.5" src="https://open.spotify.com/embed/playlist/6hWrY7npl9UIbUzlRgpwoo?utm_source=generator" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                    {activePlaylistEmbedUrl && (
+                        <iframe
+                            className="rounded-md w-full h-137.5"
+                            src={activePlaylistEmbedUrl}
+                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                            loading="lazy"
+                            title="Active Spotify playlist"
+                        />
+                    )}
                 </div>
             </div>
         </>
