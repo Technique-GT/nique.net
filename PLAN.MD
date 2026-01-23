@@ -51,7 +51,7 @@
 - sports article change to featured story -- done
 - change media wiring -- done
 - migrate media IDs to URL strings (articles/users) and drop media collection data -- done
-- footer (copyright) (Copyright c 2026, Alec Grosswald, Editor-in-Chief, Technique) -- 2
+- footer (copyright) (Copyright c 2026, Alec Grosswald, Editor-in-Chief, Technique) -- done
 - wire up spotify -- 3
 - optimize for mobile -- 4
 - TODO: start adding smaller features

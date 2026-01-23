@@ -67,7 +67,6 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
   const title = typeof body?.title === 'string' ? body.title : undefined;
   // Sanitize HTML content to prevent XSS
   const content = typeof body?.content === 'string' ? sanitizeHtml(body.content) : undefined;
-  const excerpt = body?.excerpt === null ? undefined : typeof body?.excerpt === 'string' ? body.excerpt : undefined;
 
   const categoryId = toObjectId(body?.categoryId ?? body?.category) ?? undefined;
   const subcategoryId = toObjectId(body?.subcategoryId ?? body?.subcategory) ?? undefined;
