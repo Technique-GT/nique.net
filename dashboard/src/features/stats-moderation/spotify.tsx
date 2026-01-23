@@ -241,7 +241,7 @@ export default function SpotifyPlaylistManager() {
                 const embedUrl = toSpotifyEmbedUrl(playlist.spotifyUrl);
                 return (
                   <div key={playlist._id} className={`h-[60vh] ${
-                    playlist.isActive ? 'ring-3 ring-green-500 rounded-md' : ''
+                    playlist.isActive ? 'ring-3 ring-emerald-500 rounded-[11px]' : ''
                   }`}>
                       <div className="relative group h-full">
                         {embedUrl ? (
@@ -265,6 +265,7 @@ export default function SpotifyPlaylistManager() {
                               onCheckedChange={() => handleSetActive(playlist._id)}
                               disabled={setActivePlaylistMutation.isPending}
                               aria-label={playlist.isActive ? "Deactivate playlist" : "Set active playlist"}
+                              className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-white/30"
                             />
                             <span className="text-xs text-white">
                               {playlist.isActive ? "Active" : "Inactive"}
