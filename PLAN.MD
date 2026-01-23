@@ -52,16 +52,19 @@
 - change media wiring -- done
 - migrate media IDs to URL strings (articles/users) and drop media collection data -- done
 - footer (copyright) (Copyright c 2026, Alec Grosswald, Editor-in-Chief, Technique) -- done
-- wire up spotify -- 3
+- wire up spotify -- Done
+- increase body text size (14pt) -- done
+- user table -- Done
+- remove paragraph indents, decrease article width -- done
+- expandable rows in comments and slivers table -- Done
+- opinion articles duplicates showing up -- Done
+- adding user not responding to db -- Done
+
+
+
 - optimize for mobile -- 4
 - TODO: start adding smaller features
 - fix rich text editor font size (not storing)
-- increase body text size (14pt) -- done
-- remove paragraph indents, decrease article width -- done
-- user table
 - ad sense
-- expandable rows in comments and slivers table
-- opinion articles duplicates showing up
 - season scoreboard sports APIs? look up
-- adding user not responding to db
 - big migration

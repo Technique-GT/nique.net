@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/layout/page-header'
@@ -20,13 +20,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { RefreshCw, Search, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, RefreshCw, Search, Trash2 } from 'lucide-react'
 import { useDeleteSliver, useSlivers } from '@/hooks/use-queries'
 
 export default function SliversManagement() {
   const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(20)
+  const [expandedSlivers, setExpandedSlivers] = useState<Set<string>>(new Set())
 
   const query = useMemo(() => {
     const params: any = { page, limit }
@@ -64,6 +65,18 @@ export default function SliversManagement() {
       console.error('Error deleting sliver:', error)
       toast.error('Failed to delete sliver')
     }
+  }
+
+  const toggleExpandedSliver = (id: string) => {
+    setExpandedSlivers((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
   }
 
   return (
@@ -123,6 +136,7 @@ export default function SliversManagement() {
               <Table className='min-w-[700px]'>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className='max-w-1'></TableHead>
                     <TableHead className='min-w-[280px]'>Text</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Expires</TableHead>
@@ -130,26 +144,53 @@ export default function SliversManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {slivers.map((sliver) => (
-                    <TableRow key={sliver._id}>
-                      <TableCell className='max-w-[320px] truncate font-medium'>
-                        {sliver.text}
-                      </TableCell>
-                      <TableCell>{formatDate(sliver.createdAt)}</TableCell>
-                      <TableCell>{formatDate(sliver.expiresAt)}</TableCell>
-                      <TableCell className='text-right'>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          onClick={() => handleDelete(sliver._id)}
-                          className='text-destructive'
-                          disabled={deleteSliverMutation.isPending}
-                        >
-                          <Trash2 className='h-4 w-4' />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {slivers.map((sliver) => {
+                    const isExpanded = expandedSlivers.has(sliver._id)
+                    return (
+                      <Fragment key={sliver._id}>
+                        <TableRow>
+                          <TableCell className='max-w-1 p-0'>
+                            <div className='flex items-center justify-between gap-2 ml-2'>
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                onClick={() => toggleExpandedSliver(sliver._id)}
+                                aria-expanded={isExpanded}
+                              >
+                                {isExpanded ? (
+                                  <ChevronUp className='h-4 w-4' />
+                                ) : (
+                                  <ChevronDown className='h-4 w-4' />
+                                )}
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className='max-w-[320px] font-medium'>
+                              <span
+                                className={`block ${
+                                  isExpanded ? 'whitespace-pre-wrap wrap-break-word' : 'truncate'
+                                }`}
+                              >
+                                {sliver.text}
+                              </span>
+                          </TableCell>
+                          <TableCell>{formatDate(sliver.createdAt)}</TableCell>
+                          <TableCell>{formatDate(sliver.expiresAt)}</TableCell>
+                          <TableCell className='text-right'>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              onClick={() => handleDelete(sliver._id)}
+                              className='text-destructive'
+                              disabled={deleteSliverMutation.isPending}
+                            >
+                              <Trash2 className='h-4 w-4' />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      </Fragment>
+                    )
+                  })}
                   {slivers.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={4} className='py-8 text-center text-muted-foreground'>

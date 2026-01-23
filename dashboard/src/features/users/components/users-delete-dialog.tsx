@@ -6,7 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ConfirmDialog } from '@/components/confirm-dialog'
-import { API_BASE_URL } from '../../../config'
+import { apiClient } from '@/lib/api-client'
 import { User } from '../data/schema'
 import { useUsers } from '../context/users-context'
 
@@ -27,14 +27,8 @@ export function UsersDeleteDialog({ open, onOpenChange, currentRow }: Props) {
     setDeleting(true)
     try {
       // Use _id for the API call
-      const response = await fetch(`${API_BASE_URL}/users/${currentRow._id}`, {
-        method: 'DELETE',
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete user')
-      }
-      
+      await apiClient.delete(`/users/${currentRow._id}`)
+
       await refetchUsers()
       onOpenChange(false)
     } catch (error) {

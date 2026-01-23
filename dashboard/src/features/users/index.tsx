@@ -13,6 +13,8 @@ import { canManageStaff } from '@/lib/permissions'
 function UsersContent() {
   const {
     users,
+    columnFilters,
+    setColumnFilters,
     pagination,
     setPagination,
     sorting,
@@ -45,6 +47,8 @@ function UsersContent() {
           <UsersTable
             data={users}
             columns={columns}
+            columnFilters={columnFilters}
+            setColumnFilters={setColumnFilters}
             pagination={pagination}
             setPagination={setPagination}
             sorting={sorting}

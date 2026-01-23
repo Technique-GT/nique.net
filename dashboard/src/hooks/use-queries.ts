@@ -61,6 +61,7 @@ export const queryKeys = {
     search?: string
     sortBy?: string
     sortDir?: 'asc' | 'desc'
+    isAdmin?: boolean
   }) =>
     ['users', params] as const,
   usersList: (page: number, limit: number) => ['users-list', page, limit] as const,

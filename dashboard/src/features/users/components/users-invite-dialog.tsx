@@ -24,7 +24,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useUsers } from '../context/users-context'
-import { API_BASE_URL } from '../../../config'
+import { apiClient } from '@/lib/api-client'
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email.'),
@@ -49,20 +49,10 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
   const onSubmit = async (values: UserInviteForm) => {
     setSubmitting(true)
     try {
-      const response = await fetch(`${API_BASE_URL}/users/invite`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: values.email,
-        }),
+      await apiClient.post('/users/invite', {
+        email: values.email,
       })
-      
-      if (!response.ok) {
-        throw new Error('Failed to invite user')
-      }
-      
+
       await refetchUsers()
       form.reset()
       onOpenChange(false)

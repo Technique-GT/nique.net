@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { API_BASE_URL } from '../../../config'
+import { apiClient } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -76,17 +76,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
             : {}),
         }
         
-        const response = await fetch(`${API_BASE_URL}/users/${currentRow._id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(userData),
-        })
-        
-        if (!response.ok) {
-          throw new Error('Failed to update user')
-        }
+        await apiClient.put(`/users/${currentRow._id}`, userData)
       } else {
         // Create user
         const userData = {
@@ -97,18 +87,8 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
             ? { profilePictureUrl: values.profilePictureUrl.trim() }
             : {}),
         }
-        
-        const response = await fetch(`${API_BASE_URL}/users`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(userData),
-        })
-        
-        if (!response.ok) {
-          throw new Error('Failed to create user')
-        }
+
+        await apiClient.post('/users', userData)
       }
       
       await refetchUsers()
