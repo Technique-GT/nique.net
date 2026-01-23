@@ -194,7 +194,7 @@ const SearchPage = () => {
           <div className="flex flex-col gap-8">
             {results.map((article) => {
               const image = getArticleImage(article);
-              const imageUrl = image?.url;
+              const imageUrl = image;
               const category = getArticleCategoryName(article);
               const author = getArticleAuthorName(article);
               const desc = getArticleDescription(article);
