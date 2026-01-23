@@ -22,10 +22,6 @@ const processEntertainmentArticles = (allEntertainment: ArticleDocument[]) => {
     const stickyPosts = allEntertainment.filter((article) => article.isSticky).sort(sortByPublishedDesc);
     const nonStickyPosts = allEntertainment.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
     const orderedEntertainment = [...stickyPosts, ...nonStickyPosts];
-    const recentSelection = orderedEntertainment.slice(0, 3);
-    const recentIds = new Set(recentSelection.map(getArticleId));
-    const remainingEntertainment = orderedEntertainment.filter((article) => !recentIds.has(getArticleId(article)));
-
     const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
         articles
             .filter((article) => {
@@ -37,12 +33,25 @@ const processEntertainmentArticles = (allEntertainment: ArticleDocument[]) => {
             .filter((article) => !recentIds.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
 
+    const recentSelection = orderedEntertainment.slice(0, 3);
+    const recentIds = new Set(recentSelection.map(getArticleId));
+    const filmtv = filterBySubcategory(allEntertainment, 'film & tv');
+    const music = filterBySubcategory(allEntertainment, 'music');
+    const artsTheater = filterBySubcategory(allEntertainment, 'arts & theater');
+    const subcategoryIds = new Set(
+        [...filmtv, ...music, ...artsTheater].map(getArticleId)
+    );
+    const remainingEntertainment = orderedEntertainment.filter((article) => {
+        const id = getArticleId(article);
+        return !recentIds.has(id) && !subcategoryIds.has(id);
+    });
+
     return {
         recentEntertainment: recentSelection,
         entertainmentArticles: remainingEntertainment,
-        filmtv: filterBySubcategory(allEntertainment, 'film & tv'),
-        music: filterBySubcategory(allEntertainment, 'music'),
-        artsTheater: filterBySubcategory(allEntertainment, 'arts & theater'),
+        filmtv,
+        music,
+        artsTheater,
     };
 };
 
