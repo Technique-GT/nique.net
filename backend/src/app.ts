@@ -49,7 +49,7 @@ export function createApp() {
   // Global API rate limiter
   const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: isTest ? 100000 : 100, // Higher limit in tests
+    max: isTest ? 100000 : 2000, // Higher limit in tests
     standardHeaders: true,
     legacyHeaders: false,
     message: { success: false, message: 'Too many requests, please try again later.' },
