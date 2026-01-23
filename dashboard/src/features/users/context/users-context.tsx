@@ -64,7 +64,7 @@ export default function UsersProvider({ children }: Props) {
         isAdmin: !!u.isAdmin,
         email: typeof u.email === 'string' ? u.email : undefined,
         googleSub: typeof u.googleSub === 'string' ? u.googleSub : undefined,
-        profilePictureMediaId: typeof u.profilePictureMediaId === 'string' ? u.profilePictureMediaId : undefined,
+        profilePictureUrl: typeof u.profilePictureUrl === 'string' ? u.profilePictureUrl : undefined,
         socialLinks: Array.isArray(u.socialLinks) ? u.socialLinks : [],
       }))
 

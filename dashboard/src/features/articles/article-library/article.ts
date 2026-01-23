@@ -44,15 +44,10 @@ export interface Article {
   authors: PopulatedAuthor[];
   ownerId?: string;
   reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published';
-  hasPendingChanges?: boolean;
   reviewedAt?: string;
   reviewedBy?: string;
   reviewNotes?: string;
-  featuredMedia: {
-    id?: string;
-    url?: string;
-    alt: string;
-  };
+  featuredMediaUrl?: string;
   isPublished: boolean;
   isFeatured: boolean;
   isSticky: boolean;

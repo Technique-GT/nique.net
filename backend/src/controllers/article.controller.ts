@@ -36,15 +36,13 @@ const populateArticle = (query: any) =>
     .populate('categoryId', 'name slug')
     .populate('subcategoryId', 'name slug categoryId')
     .populate('tagIds', 'name slug')
-    .populate('authors.authorId', 'name isAdmin profilePictureMediaId')
-    .populate('featuredMediaId', 'url altText');
+    .populate('authors.authorId', 'name isAdmin profilePictureUrl');
 
 const populateArticleForFeed = (query: any) =>
   query
     .populate('categoryId', 'name slug')
     .populate('tagIds', 'name slug')
-    .populate('authors.authorId', 'name profilePictureMediaId')
-    .populate('featuredMediaId', 'url altText');
+    .populate('authors.authorId', 'name profilePictureUrl');
 
 // parsePublished is removed or commented out as it's no longer used in the new buildArticleUpdate logic (we check typeof directly)
 // const parsePublished = (body: any): boolean => { ... };
@@ -103,7 +101,8 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
     }
   }
 
-  const featuredMediaId = toObjectId(body?.featuredMediaId) ?? undefined;
+  const featuredMediaUrlRaw = typeof body?.featuredMediaUrl === 'string' ? body.featuredMediaUrl.trim() : '';
+  const featuredMediaUrl = featuredMediaUrlRaw.length > 0 ? featuredMediaUrlRaw : undefined;
   const imageCaption = typeof body?.imageCaption === 'string' ? body.imageCaption : undefined;
 
   const published = typeof body?.published === 'boolean' ? body.published : undefined;
@@ -130,7 +129,7 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
   if (authors !== undefined) update.authors = authors as any;
   if (tagIds !== undefined) update.tagIds = tagIds as any;
 
-  if (featuredMediaId !== undefined) update.featuredMediaId = featuredMediaId;
+  if (featuredMediaUrl !== undefined) update.featuredMediaUrl = featuredMediaUrl;
   if (imageCaption !== undefined) update.imageCaption = imageCaption;
 
   if (editorState !== undefined) update.editorState = editorState;
@@ -196,7 +195,7 @@ const hasArticleChanged = (existing: IArticle, update: Partial<IArticle>): boole
   if (update.content !== undefined && update.content !== existing.content) return true;
   if ('categoryId' in update && !idsAreEqual(update.categoryId, existing.categoryId)) return true;
   if ('subcategoryId' in update && !idsAreEqual(update.subcategoryId, existing.subcategoryId)) return true;
-  if ('featuredMediaId' in update && !idsAreEqual(update.featuredMediaId, existing.featuredMediaId)) return true;
+  if ('featuredMediaUrl' in update && update.featuredMediaUrl !== existing.featuredMediaUrl) return true;
 
   if (update.tagIds && !arraysAreEqual(update.tagIds, existing.tagIds, idsAreEqual)) return true;
 
@@ -559,18 +558,12 @@ export const updateArticle = async (req: any, res: Response): Promise<void> => {
       delete update.reviewStatus; // Ensure non-admins use transitions
     }
 
-    // Logic for pending changes on published articles
-    if (existing.published) {
-       // Check for actual changes before flagging as pending
-       const hasChanges = hasArticleChanged(existing, update);
-
-       if (hasChanges) {
-           update.hasPendingChanges = true;
-           // If not admin, force status change to ensure re-review
-           if (!req.user.isAdmin) {
-             update.reviewStatus = 'changes_requested';
-           }
-       }
+    // If a non-admin updates a published article with actual changes, require re-review.
+    if (existing.published && !req.user.isAdmin) {
+      const hasChanges = hasArticleChanged(existing, update);
+      if (hasChanges) {
+        update.reviewStatus = 'changes_requested';
+      }
     }
 
     const article = await Article.findByIdAndUpdate(id, update, { new: true, runValidators: true });
@@ -700,7 +693,6 @@ export const updateArticleStatus = async (req: any, res: Response): Promise<void
 
       if (published) {
         updateData.reviewStatus = 'published';
-        updateData.hasPendingChanges = false;
         updateData.reviewedAt = new Date();
         updateData.reviewedBy = req.user.id;
       } else {
@@ -819,11 +811,8 @@ export const requestReview = async (req: any, res: Response): Promise<void> => {
     }
 
     if (article.reviewStatus !== 'draft' && article.reviewStatus !== 'changes_requested') {
-      // Allow re-requesting if published but has pending changes
-      if (!(article.reviewStatus === 'published' && article.hasPendingChanges)) {
-         res.status(400).json({ success: false, message: 'Article is already in review or published' });
-         return;
-      }
+      res.status(400).json({ success: false, message: 'Article is already in review or published' });
+      return;
     }
 
     if (article.ownerId.toString() !== req.user.id && !req.user.isAdmin) {
@@ -908,7 +897,6 @@ export const adminPublish = async (req: any, res: Response): Promise<void> => {
 
     article.published = true;
     article.reviewStatus = 'published';
-    article.hasPendingChanges = false;
     article.publishedAt = article.publishedAt || new Date();
     article.reviewedAt = new Date();
     article.reviewedBy = req.user.id;

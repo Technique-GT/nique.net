@@ -26,7 +26,7 @@ function SideArticle({ articles, hasBreak = true, hasDesc = false }: SideArticle
                         </div>
                         {image && (
                             <img
-                                src={image.url}
+                                src={image}
                                 loading="lazy"
                                 alt={article.title}
                                 className='aspect-square w-full rounded-md object-cover col-span-1'

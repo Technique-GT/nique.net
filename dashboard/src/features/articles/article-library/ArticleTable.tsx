@@ -181,11 +181,6 @@ export function ArticleTable({
                   <Badge variant={getStatusVariant(article.reviewStatus || article.status)}>
                     {prettifyStatus(article.reviewStatus || article.status)}
                   </Badge>
-                  {article.hasPendingChanges && article.reviewStatus === 'published' && (
-                    <Badge variant="outline" className="text-[10px] border-orange-200 bg-orange-50 text-orange-700 w-fit">
-                      Pending Changes
-                    </Badge>
-                  )}
                 </div>
               </TableCell>
               <TableCell className="hidden sm:table-cell">{formatDate(article.createdAt)}</TableCell>

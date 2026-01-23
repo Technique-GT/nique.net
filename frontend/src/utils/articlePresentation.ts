@@ -42,8 +42,8 @@ export const getArticleDescription = (article: ArticleDocument) => {
 };
 
 export const getArticleImage = (article: ArticleDocument) => {
-  const media = article.featuredMediaId;
-  if (media && typeof media === 'object' && 'url' in media) {
+  const media = article.featuredMediaUrl;
+  if (media && typeof media === 'string') {
     // console.log('Article featured media:', media);
     return media;
   }

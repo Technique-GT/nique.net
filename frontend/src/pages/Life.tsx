@@ -6,7 +6,6 @@ import { ArticleDocument } from '../types/article';
 import { Categories } from '../types/categories';
 import SideArticle from '../components/SideArticle';
 import FeaturedStory from '../components/FeaturedStory';
-import JustInBlock from '../components/JustIn';
 import SmallArticle from '../components/SmallArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
@@ -23,9 +22,9 @@ const processLifeArticles = (allLifeArticles: ArticleDocument[]) => {
     const nonStickyPosts = allLifeArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
     const orderedLife = [...stickyPosts, ...nonStickyPosts];
 
-    const justIn = stickyPosts[0] ?? orderedLife[0] ?? null;
-    const featured = featuredPosts.find((article) => getArticleId(article) !== getArticleId(justIn)) ?? null;
-    const recentSelection = [justIn, featured].filter(Boolean) as ArticleDocument[];
+    const featured = featuredPosts[0] ?? null;
+    const primaryStory = featured ?? orderedLife[0] ?? null;
+    const recentSelection = [primaryStory].filter(Boolean) as ArticleDocument[];
     const recentIds = new Set(recentSelection.map(getArticleId));
     const remainingLife = orderedLife.filter((article) => !recentIds.has(getArticleId(article)));
 
@@ -164,8 +163,7 @@ function Life() {
             <div className='max-w-[95%] lg:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div>
                     <div className='flex flex-col gap-4 h-[80vh]'>
-                        {recentLifeArticles[0] && <JustInBlock article={recentLifeArticles[0]} />}
-                        {recentLifeArticles[1] && <FeaturedStory article={recentLifeArticles[1]} priority={true} />}
+                        {recentLifeArticles[0] && <FeaturedStory article={recentLifeArticles[0]} priority={true} />}
                     </div>
 
                     <hr className='my-3' />
@@ -227,9 +225,9 @@ function Life() {
                 </div>
 
                 <div className='flex flex-col gap-4'>
-                    <hr className="lg:mt-15" />
+                    <hr/>
                     {(() => {
-                        const articles = lifeArticles.slice(0, 4);
+                        const articles = lifeArticles.slice(0, 5);
                         return articles.length ? (
                             <SideArticle articles={articles} width='80px' hasDesc={true}/>
                         ) : null;

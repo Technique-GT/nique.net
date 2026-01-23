@@ -6,6 +6,7 @@ import { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Spinner from "./components/Spinner";
 import DataPrefetcher from "./components/DataPrefetcher";
+import Footer from "./components/Footer";
 
 const Home = lazy(() => import("./pages/Home"));
 const Life = lazy(() => import("./pages/Life"));
@@ -40,13 +41,14 @@ function App() {
   return (
     <Router>
       <DataPrefetcher />
-      <div className="App">
-        <Suspense fallback={
-            <div className="flex justify-center items-center h-screen">
-                <Spinner />
-            </div>
-        }>
-            <Routes>
+      <div className="App min-h-screen flex flex-col">
+        <div className="flex-1">
+          <Suspense fallback={
+              <div className="flex justify-center items-center h-screen">
+                  <Spinner />
+              </div>
+          }>
+              <Routes>
             {/* Public routes */}
             <Route path="/" element={<Home />} />
             <Route path="/life" element={<Life />} />
@@ -60,8 +62,10 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/opinions" element={<Opinions />} />
-            </Routes>
-        </Suspense>
+              </Routes>
+          </Suspense>
+        </div>
+        <Footer />
       </div>
     </Router>
   );

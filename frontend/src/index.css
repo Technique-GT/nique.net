@@ -95,8 +95,8 @@ h5, th, td {
 
 .scroll-content {
     display: flex;
+    flex: inline;
     animation: scroll 120s linear infinite;
-    width: calc(400%);
 }
 
 @media (min-width: 768px) {

@@ -26,7 +26,7 @@ function About() {
     
                 try {
                     // Services now return unwrapped data directly
-                    const recentArticlesData = await articleService.fetchRecentArticles(5, 'published', controller.signal);
+                    const recentArticlesData = await articleService.fetchRecentArticles(7, 'published', controller.signal);
     
                     if (!isMounted) {
                         return;
@@ -70,7 +70,7 @@ function About() {
                 <h4 className="font-bold mb-2 text-2xl text-nique-blue">About Us</h4>
             </div>
 
-            <Collage articles={[recentArticles[0], recentArticles[1], recentArticles[2], recentArticles[3], recentArticles[4], recentArticles[5]].filter(Boolean) as ArticleDocument[]} /> {/* collection of best pictures you may want to feature */}
+            <Collage articles={[recentArticles[0], recentArticles[1], recentArticles[2], recentArticles[3], recentArticles[4], recentArticles[5], recentArticles[6]].filter(Boolean) as ArticleDocument[]} /> {/* collection of best pictures you may want to feature */}
 
             {/* Mission */}
             <div className='grid grid-cols-1 sm:grid-cols-3 max-w-[95%] md:max-w-[80%] m-auto p-5 gap-x-16'>

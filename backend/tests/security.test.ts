@@ -67,22 +67,22 @@ describe('Security: Authorization Boundary Tests', () => {
     });
   });
 
-  describe('Media Routes (Auth required for mutations)', () => {
-    it('GET /api/media is public (returns 200)', async () => {
+  describe('Media Routes (removed from API)', () => {
+    it('GET /api/media returns 404', async () => {
       const res = await request(app).get('/api/media');
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(404);
     });
 
-    it('POST /api/media/upload returns 401 without auth', async () => {
+    it('POST /api/media/upload returns 404', async () => {
       const res = await request(app)
         .post('/api/media/upload')
         .attach('file', Buffer.from('test'), 'test.txt');
-      expect(res.status).toBe(401);
+      expect(res.status).toBe(404);
     });
 
-    it('DELETE /api/media/:id returns 401 without auth', async () => {
+    it('DELETE /api/media/:id returns 404', async () => {
       const res = await request(app).delete('/api/media/000000000000000000000001');
-      expect(res.status).toBe(401);
+      expect(res.status).toBe(404);
     });
   });
 

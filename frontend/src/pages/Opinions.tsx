@@ -159,7 +159,7 @@ function Opinions() {
         <Navbar />
 
         <div className='max-w-[95%] md:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
-            <div className='w-full h-screen'>
+            <div className='w-full min-h-screen'>
                 <div className='grid gap-5 grid-cols-1 lg:grid-cols-[70%_auto] lg:grid-rows-4 w-full h-[80vh]'>
                     <div className='flex flex-col gap-4 order-first row-span-4'>
                         {recentOpinionArticles[0] && <FeaturedStory article={recentOpinionArticles[0]} priority={true} />}

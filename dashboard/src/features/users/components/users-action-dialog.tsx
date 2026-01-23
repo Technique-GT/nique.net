@@ -31,7 +31,7 @@ const formSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
   isAdmin: z.boolean(),
   email: z.string().trim().email('Please enter a valid email.').optional().or(z.literal('')),
-  profilePictureMediaId: z.string().optional(),
+  profilePictureUrl: z.string().optional(),
 })
 type UserForm = z.infer<typeof formSchema>
 
@@ -53,13 +53,13 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           name: currentRow.name,
           isAdmin: currentRow.isAdmin,
           email: currentRow.email || '',
-          profilePictureMediaId: currentRow.profilePictureMediaId || '',
+          profilePictureUrl: currentRow.profilePictureUrl || '',
         }
       : {
           name: '',
           isAdmin: false,
           email: '',
-          profilePictureMediaId: '',
+          profilePictureUrl: '',
         },
   })
 
@@ -71,8 +71,8 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           name: values.name.trim(),
           isAdmin: values.isAdmin,
           ...(values.email?.trim() ? { email: values.email.trim() } : {}),
-          ...(values.profilePictureMediaId?.trim()
-            ? { profilePictureMediaId: values.profilePictureMediaId.trim() }
+          ...(values.profilePictureUrl?.trim()
+            ? { profilePictureUrl: values.profilePictureUrl.trim() }
             : {}),
         }
         
@@ -93,8 +93,8 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           name: values.name.trim(),
           isAdmin: values.isAdmin,
           ...(values.email?.trim() ? { email: values.email.trim() } : {}),
-          ...(values.profilePictureMediaId?.trim()
-            ? { profilePictureMediaId: values.profilePictureMediaId.trim() }
+          ...(values.profilePictureUrl?.trim()
+            ? { profilePictureUrl: values.profilePictureUrl.trim() }
             : {}),
         }
         
@@ -186,15 +186,15 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               />
               <FormField
                 control={form.control}
-                name='profilePictureMediaId'
+                name='profilePictureUrl'
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-right'>
-                      Profile Media ID
+                      Profile Picture URL
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='Media ID (optional)'
+                        placeholder='https://cdn.example.com/avatar.jpg'
                         className='col-span-4'
                         {...field}
                       />

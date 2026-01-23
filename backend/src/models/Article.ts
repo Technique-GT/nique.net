@@ -15,7 +15,7 @@ export interface IArticle extends Document {
   subcategoryId?: mongoose.Types.ObjectId;
   tagIds: mongoose.Types.ObjectId[];
 
-  featuredMediaId?: mongoose.Types.ObjectId;
+  featuredMediaUrl?: string;
   imageCaption?: string;
 
   published: boolean;
@@ -28,7 +28,6 @@ export interface IArticle extends Document {
   ownerId: mongoose.Types.ObjectId;
   editorState?: any;
   reviewStatus: 'draft' | 'in_review' | 'changes_requested' | 'published';
-  hasPendingChanges: boolean;
   reviewedAt?: Date;
   reviewedBy?: mongoose.Types.ObjectId;
   reviewNotes?: string;
@@ -59,7 +58,7 @@ const ArticleSchema = new Schema<IArticle>(
     subcategoryId: { type: Schema.Types.ObjectId, ref: 'SubCategory', required: false },
     tagIds: { type: [Schema.Types.ObjectId], ref: 'Tag', required: true, default: [] },
 
-    featuredMediaId: { type: Schema.Types.ObjectId, ref: 'Media', required: false },
+    featuredMediaUrl: { type: String, required: false, trim: true },
     imageCaption: { type: String, required: false },
 
     published: { type: Boolean, required: true, default: false },
@@ -77,7 +76,6 @@ const ArticleSchema = new Schema<IArticle>(
       required: true, 
       default: 'draft' 
     },
-    hasPendingChanges: { type: Boolean, required: true, default: false },
     reviewedAt: { type: Date, required: false },
     reviewedBy: { type: Schema.Types.ObjectId, ref: 'User', required: false },
     reviewNotes: { type: String, required: false },

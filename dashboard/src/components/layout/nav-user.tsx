@@ -32,12 +32,9 @@ export function NavUser({
   const { isMobile } = useSidebar()
   const { logout } = useAuthStore((state) => state.auth)
   const navigate = useNavigate()
-
   const handleLogout = async () => {
     // Reset auth state
     await logout()
-    // Redirect to login page
-    navigate({ to: '/' })
   }
 
   return (

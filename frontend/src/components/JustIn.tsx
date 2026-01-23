@@ -41,7 +41,7 @@ function JustInBlock({ article }: ArticleProps) {
 
     return (
         <div className='flex flex-col sm:flex-row gap-4 content-center cursor-pointer' onClick={() => navigate(link)}>
-            <button className='bg-[#1A1E47] m-auto sm:m-0 rounded-md text-white h-[42px] lg:h-full w-[94px] py-2 cursor-pointer' onClick={() => navigate(link)}><h4 className='font-bold uppercase text-xl'>Just In</h4></button>
+            <button className='bg-[#1A1E47] m-auto sm:m-0 rounded-md text-white h-[42px] lg:h-full w-[94px] p-2 cursor-pointer' onClick={() => navigate(link)}><h4 className='font-bold uppercase text-xl'>Just In</h4></button>
             <div>
                 <h3 className="title text-center sm:text-left text-black font-bold text-2xl/5 mb-1">{article.title}</h3>
                 <h6 className="text-center sm:text-left text-[#BAC0FF] text-sm">{formatTimeSincePublished(article.publishedAt)}</h6>

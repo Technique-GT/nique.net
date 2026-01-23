@@ -45,17 +45,15 @@
 - [x] Edits to a published article keep it visible; mark pending changes and require re-review before updates go live.
 - [x] Server blocks non-admin edits during review and allows them otherwise according to state.
 - [x] Dashboard reflects states/badges and honors permissions in editor and list views.
-
 - Article organization
 - Article page layout changes?
-
-- fix captions on article page (text size smaller than body text) -- 1
-- sports article change to featured story -- 2
-- change media wiring -- 2
-- footer (copyright) (Copyright c 2026, Alec Grosswlad, Editor-in-Chief, Technique) -- 2
+- fix captions on article page (text size smaller than body text) -- done
+- sports article change to featured story -- done
+- change media wiring -- done
+- migrate media IDs to URL strings (articles/users) and drop media collection data -- done
+- footer (copyright) (Copyright c 2026, Alec Grosswald, Editor-in-Chief, Technique) -- 2
 - wire up spotify -- 3
 - optimize for mobile -- 4
-
 - TODO: start adding smaller features
 - fix rich text editor font size (not storing)
 - increase body text size (14pt) -- done

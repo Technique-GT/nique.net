@@ -11,7 +11,7 @@ export const createUserBodySchema = z.object({
   bio: z.string().optional(),
   isAdmin: z.boolean().optional(),
   email: z.string().email().optional(),
-  profilePictureMediaId: objectIdString.optional(),
+  profilePictureUrl: z.string().trim().min(1).optional(),
   socialLinks: z.array(socialLinkSchema).optional(),
 });
 
@@ -20,7 +20,7 @@ export const updateUserBodySchema = z.object({
   bio: z.string().nullable().optional(),
   isAdmin: z.boolean().optional(),
   email: z.string().email().nullable().optional(),
-  profilePictureMediaId: objectIdString.nullable().optional(),
+  profilePictureUrl: z.string().trim().min(1).nullable().optional(),
   socialLinks: z.array(socialLinkSchema).optional(),
 });
 

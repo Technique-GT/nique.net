@@ -14,6 +14,7 @@ export type BackendArticle = {
   title: string
   slug: string
   imageCaption?: string
+  featuredMediaUrl?: string
   published: boolean
   publishedAt: string | null
   createdAt: string
@@ -21,7 +22,6 @@ export type BackendArticle = {
   viewCount?: number
   categoryId?: { _id: string; name: string; slug: string } | string | null
   reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published'
-  hasPendingChanges?: boolean
   reviewedAt?: string
   reviewedBy?: string
   reviewNotes?: string
@@ -118,7 +118,7 @@ export type CreateAdminArticlePayload = {
   subcategoryId?: string
   tagIds?: string[]
   authors?: string[]
-  featuredMediaId?: string
+  featuredMediaUrl?: string
   editorState?: any
   published?: boolean
   reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published'

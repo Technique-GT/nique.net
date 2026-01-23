@@ -11,7 +11,7 @@ export interface IUser extends Document {
   isAdmin: boolean;
   email?: string;
   googleSub?: string;
-  profilePictureMediaId?: mongoose.Types.ObjectId;
+  profilePictureUrl?: string;
   socialLinks: SocialLink[];
 }
 
@@ -30,7 +30,7 @@ const UserSchema = new Schema<IUser>(
     isAdmin: { type: Boolean, required: true, default: false },
     email: { type: String, required: false, unique: true, sparse: true, lowercase: true, trim: true },
     googleSub: { type: String, required: false, unique: true, sparse: true, trim: true },
-    profilePictureMediaId: { type: Schema.Types.ObjectId, ref: 'Media', required: false },
+    profilePictureUrl: { type: String, required: false, trim: true },
     socialLinks: { type: [SocialLinkSchema], required: true, default: [] },
   },
   {

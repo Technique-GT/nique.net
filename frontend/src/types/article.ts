@@ -59,7 +59,7 @@ export interface ArticleDocument {
   subcategoryId?: Subcategory | null;
   tagIds: Tag[];
   authors: ArticleAuthor[];
-  featuredMediaId?: Media | null;
+  featuredMediaUrl?: string | null;
   imageCaption?: string;
   published: boolean;
   publishedAt: Date | string | null;

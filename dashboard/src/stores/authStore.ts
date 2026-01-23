@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
           name: user.name,
           isAdmin: user.isAdmin,
           role: user.isAdmin ? ['admin', 'superadmin'] : ['user'], // Map boolean to roles
-          avatar: user.profilePictureMediaId?.url,
+          avatar: user.profilePictureUrl,
         };
         
         set((state) => ({ 
@@ -60,8 +60,6 @@ export const useAuthStore = create<AuthState>()((set) => ({
         set((state) => ({ 
           auth: { ...state.auth, user: null } 
         }));
-        // Force reload to clear any other state
-        window.location.href = '/login';
       } catch (error) {
         console.error('Logout failed', error);
       }

@@ -8,7 +8,6 @@ import rateLimit from 'express-rate-limit';
 import articleRoutes from './routes/article.routes';
 import categoryRoutes from './routes/category.routes';
 import commentRoutes from './routes/comment.routes';
-import mediaRoutes from './routes/media.routes';
 import playlistRoutes from './routes/playlist.routes';
 import sliverRoutes from './routes/sliver.routes';
 import subCategoryRoutes from './routes/subCategory.routes';
@@ -24,6 +23,7 @@ import { logger } from './utils/logger';
 
 export function createApp() {
   const app = express();
+  const isProduction = env.NODE_ENV === 'production';
 
   // Security: HTTP headers
   app.use(helmet({
@@ -49,7 +49,7 @@ export function createApp() {
   // Global API rate limiter
   const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: isTest ? 10000 : 100, // Higher limit in tests
+    max: isTest ? 100000 : 100, // Higher limit in tests
     standardHeaders: true,
     legacyHeaders: false,
     message: { success: false, message: 'Too many requests, please try again later.' },
@@ -59,7 +59,7 @@ export function createApp() {
   // Stricter rate limiter for auth endpoints
   const authLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
-    max: isTest ? 10000 : 10, // 10 requests per minute
+    max: isTest ? 100000 : 10, // 10 requests per minute
     standardHeaders: true,
     legacyHeaders: false,
     message: { success: false, message: 'Too many authentication attempts, please try again later.' },
@@ -129,9 +129,8 @@ export function createApp() {
   // Apply stricter rate limiting to auth routes
   app.use('/api/auth', authLimiter);
 
-  // Apply write rate limiting to comment creation and media upload
+  // Apply write rate limiting to comment creation
   app.use('/api/comments', writeLimiter);
-  app.use('/api/media/upload', writeLimiter);
 
   // Serve uploaded files statically
   app.use('/uploads', express.static('uploads'));
@@ -144,7 +143,6 @@ export function createApp() {
   app.use('/api/sub-categories', subCategoryRoutes);
   app.use('/api/tags', tagRoutes);
   app.use('/api/users', userRoutes);
-  app.use('/api/media', mediaRoutes);
   app.use('/api/playlists', playlistRoutes);
   app.use('/api/slivers', sliverRoutes);
   app.use('/api/comments', commentRoutes);

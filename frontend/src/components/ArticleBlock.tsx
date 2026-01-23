@@ -27,9 +27,9 @@ function ArticleBlock({ article, height }: ArticleBlockProps) {
             onClick={handleClick}
             style={{ height: `${height}` }}
         >
-            {image?.url && (
+            {image && (
                 <img 
-                    src={image.url} 
+                    src={image} 
                     alt={article.title}
                     loading="lazy"
                     decoding="async"

@@ -3,11 +3,6 @@ import mongoose from 'mongoose';
 import User from '../models/User';
 import { safeRegex, safeErrorResponse } from '../utils/security';
 
-const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId | null => {
-  if (!id || Array.isArray(id) || !mongoose.Types.ObjectId.isValid(id)) return null;
-  return new mongoose.Types.ObjectId(id);
-};
-
 const readSocialLinks = (value: any): Array<{ platform: string; url: string }> => {
   if (!Array.isArray(value)) return [];
   return value
@@ -113,8 +108,8 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       }
     }
 
-    const profilePictureMediaIdRaw = typeof req.body?.profilePictureMediaId === 'string' ? req.body.profilePictureMediaId : undefined;
-    const profilePictureMediaId = toObjectId(profilePictureMediaIdRaw) ?? undefined;
+    const profilePictureUrlRaw = typeof req.body?.profilePictureUrl === 'string' ? req.body.profilePictureUrl.trim() : '';
+    const profilePictureUrl = profilePictureUrlRaw.length > 0 ? profilePictureUrlRaw : undefined;
 
     const socialLinks = readSocialLinks(req.body?.socialLinks);
 
@@ -124,7 +119,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       isAdmin,
       ...(email ? { email } : {}),
       ...(googleSub ? { googleSub } : {}),
-      ...(profilePictureMediaId ? { profilePictureMediaId } : {}),
+      ...(profilePictureUrl ? { profilePictureUrl } : {}),
       socialLinks,
     });
 
@@ -189,13 +184,9 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
       }
     }
 
-    if (typeof req.body?.profilePictureMediaId === 'string' || req.body?.profilePictureMediaId === null) {
-      const pid = toObjectId(req.body.profilePictureMediaId);
-      if (req.body.profilePictureMediaId !== null && !pid) {
-        res.status(400).json({ success: false, message: 'Invalid profilePictureMediaId' });
-        return;
-      }
-      update.profilePictureMediaId = pid ?? undefined;
+    if (typeof req.body?.profilePictureUrl === 'string' || req.body?.profilePictureUrl === null) {
+      const url = typeof req.body.profilePictureUrl === 'string' ? req.body.profilePictureUrl.trim() : '';
+      update.profilePictureUrl = url ? url : undefined;
     }
 
     if (req.body?.socialLinks !== undefined) {

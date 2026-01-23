@@ -26,7 +26,7 @@ function SmallArticle({ articles, direction }: SmallArticleProps) {
                         {
                             image && 
                             <img 
-                                src={image.url} 
+                                src={image} 
                                 loading="lazy"
                                 decoding="async"
                                 alt={article.title}

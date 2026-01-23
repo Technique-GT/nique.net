@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Image } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -19,7 +21,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import { Info, Search, X, ChevronDown, Check, AlertCircle } from "lucide-react";
 
-import { MediaPicker } from "@/components/media/media-picker";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -35,7 +36,6 @@ import {
   type Author,
   type Category,
   type FieldErrorKey,
-  type MediaItem,
   type SerializedEditorState,
   type SubCategory,
   type Tag,
@@ -59,7 +59,6 @@ interface ArticleFormProps {
   subcategories: SubCategory[];
   tags: Tag[];
   authors: Author[];
-  mediaLibrary: MediaItem[];
   initialArticle?: Article | null;
   isLoadingData?: boolean;
   onLastSavedChange?: (date: Date) => void;
@@ -73,7 +72,6 @@ export default function ArticleForm({
   subcategories,
   tags,
   authors,
-  mediaLibrary,
   initialArticle,
   isLoadingData,
   onLastSavedChange,
@@ -98,8 +96,8 @@ export default function ArticleForm({
   const [selectedAuthors, setSelectedAuthors] = useState<Author[]>(
     initialArticle?.authors || [],
   );
-  const [featuredMediaId, setFeaturedMediaId] = useState<string>(
-    initialArticle?.featuredMedia?.id || "",
+  const [featuredMediaUrl, setFeaturedMediaUrl] = useState<string>(
+    initialArticle?.featuredMediaUrl || "",
   );
   const [isPublished, setIsPublished] = useState(initialArticle?.isPublished || false);
   const [allowComments, setAllowComments] = useState(initialArticle?.allowComments ?? true);
@@ -108,13 +106,18 @@ export default function ArticleForm({
   const [reviewStatus, setReviewStatus] = useState<
     "draft" | "in_review" | "changes_requested" | "published"
   >(initialArticle?.reviewStatus || "draft");
-  const [hasPendingChanges, setHasPendingChanges] = useState(initialArticle?.hasPendingChanges || false);
   const [reviewConfirmOpen, setReviewConfirmOpen] = useState(false);
+  const [mediaPreviewFailed, setMediaPreviewFailed] = useState(false);
+  const [hideImage, setHideImage] = useState(true);
 
   const isOwner = me?.id === initialArticle?.ownerId;
   const isAdmin = !!me?.isAdmin;
   const isLocked = reviewStatus === "in_review" && !isAdmin;
   const canManageAuthorsPerm = isAdmin || isOwner || !initialArticle?._id;
+
+  useEffect(() => {
+    setMediaPreviewFailed(false);
+  }, [featuredMediaUrl]);
 
   useEffect(() => {
     if (initialArticle?._id) return;
@@ -138,7 +141,7 @@ export default function ArticleForm({
 
   const canRequestReview = !isAdmin
     && !!initialArticle?._id
-    && (reviewStatus === 'draft' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges))
+    && (reviewStatus === 'draft' || reviewStatus === 'changes_requested')
     && isOwner;
   const canCancelReview = reviewStatus === 'in_review' && (isOwner || isAdmin);
   const canRequestChanges = isAdmin && reviewStatus === 'in_review';
@@ -176,13 +179,12 @@ export default function ArticleForm({
       setSubcategory(initialArticle.subcategory?._id || "");
       setSelectedTags(initialArticle.tags?.map((t) => t._id) || []);
       setSelectedAuthors(initialArticle.authors || []);
-      setFeaturedMediaId(initialArticle.featuredMedia?.id || "");
+      setFeaturedMediaUrl(initialArticle.featuredMediaUrl || "");
       setIsPublished(initialArticle.isPublished || false);
       setAllowComments(initialArticle.allowComments ?? true);
       setIsFeatured(initialArticle.isFeatured || false);
       setIsSticky(initialArticle.isSticky || false);
       setReviewStatus(initialArticle.reviewStatus || "draft");
-      setHasPendingChanges(initialArticle.hasPendingChanges || false);
       setEditorResetKey((prev) => prev + 1);
     }
   }, [initialArticle]);
@@ -432,7 +434,6 @@ export default function ArticleForm({
       await apiClient.post(`/admin/articles/${initialArticle._id}/publish`);
       setReviewStatus('published');
       setIsPublished(true);
-      setHasPendingChanges(false);
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Article published");
     } catch (error) {
@@ -649,7 +650,7 @@ export default function ArticleForm({
         ...(canManageAuthorsPerm ? { 
           authors: selectedAuthors.filter((a) => !!a?._id).map((a) => a._id) 
         } : {}),
-        ...(featuredMediaId ? { featuredMediaId } : {}),
+        ...(featuredMediaUrl.trim() ? { featuredMediaUrl: featuredMediaUrl.trim() } : {}),
         published: isPublished,
         allowComments,
         isFeatured: isPublished ? isFeatured : false,
@@ -709,7 +710,7 @@ export default function ArticleForm({
         ...(canManageAuthorsPerm
           ? { authors: selectedAuthors.filter((a) => !!a?._id).map((a) => a._id) }
           : {}),
-        ...(featuredMediaId ? { featuredMediaId } : {}),
+        ...(featuredMediaUrl.trim() ? { featuredMediaUrl: featuredMediaUrl.trim() } : {}),
         published: isPublished,
         allowComments,
         isFeatured: isPublished ? isFeatured : false,
@@ -756,7 +757,7 @@ export default function ArticleForm({
         ...(canManageAuthorsPerm
           ? { authors: selectedAuthors.filter((a) => !!a?._id).map((a) => a._id) }
           : {}),
-        ...(featuredMediaId ? { featuredMediaId } : {}),
+        ...(featuredMediaUrl.trim() ? { featuredMediaUrl: featuredMediaUrl.trim() } : {}),
         published: true,
         allowComments,
         reviewStatus: "published" as const,
@@ -815,12 +816,6 @@ export default function ArticleForm({
                 <span className="text-sm">Changes requested by admin. {initialArticle?.reviewNotes ? `Note: ${initialArticle.reviewNotes}` : ''}</span>
               </div>
             )}
-            {hasPendingChanges && reviewStatus === 'published' && (
-              <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-md flex items-center gap-2">
-                <Info className="w-4 h-4" />
-                <span className="text-sm">This article has pending changes that are not yet live. Request review to publish updates.</span>
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="title" className='gap-0'>Title<span className='text-destructive'>*</span></Label>
               <Input
@@ -873,47 +868,214 @@ export default function ArticleForm({
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
-              {/* Featured Media */}
-              <div className="space-y-2">
-                <Label htmlFor="featured-media" className='gap-0'>Featured Media</Label>
-                <MediaPicker
-                  value={featuredMediaId || undefined}
-                  items={mediaLibrary}
-                  disabled={isLocked}
-                  onChange={(id) => {
-                    setFeaturedMediaId(id || "");
-                    if (formErrors.featuredMedia && id) {
-                      clearFieldError("featuredMedia");
-                    }
-                  }}
-                  placeholder="Choose featured media"
-                  error={Boolean(formErrors.featuredMedia)}
-                />
-                {formErrors.featuredMedia && (
-                  <p className="text-xs text-destructive">{formErrors.featuredMedia}</p>
-                )}
-              </div>
-              
-              {/* Image Caption */}
-              <div className="space-y-2">
-                <Label htmlFor="image-caption" className='gap-0'>Image Caption</Label>
-                <Input
-                  id="image-caption"
-                  value={imageCaption}
-                  disabled={isLocked}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setImageCaption(value);
-                  }}
-                  placeholder="Enter caption"
-                  className="italic"
-                />
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
               <div className="space-y-6">
+                {/* Featured Media */}
+                <div className="space-y-2">
+                  <Label htmlFor="featured-media" className='gap-0'>Featured Media</Label>
+                  <Input
+                    id="featured-media"
+                    value={featuredMediaUrl}
+                    disabled={isLocked}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFeaturedMediaUrl(value);
+                      if (formErrors.featuredMedia && value.trim()) {
+                        clearFieldError("featuredMedia");
+                      }
+                    }}
+                    placeholder="Paste featured media URL"
+                    className={cn(
+                      formErrors.featuredMedia && "border-destructive focus-visible:ring-destructive"
+                    )}
+                    aria-invalid={Boolean(formErrors.featuredMedia)}
+                  />
+                  
+                  {formErrors.featuredMedia && (
+                    <p className="text-xs text-destructive">{formErrors.featuredMedia}</p>
+                  )}
+                </div>
+                
+                {/* Image Caption */}
+                <div className="space-y-2">
+                  <Label htmlFor="image-caption" className='gap-0'>Image Caption</Label>
+                  <Input
+                    id="image-caption"
+                    value={imageCaption}
+                    disabled={isLocked}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setImageCaption(value);
+                    }}
+                    placeholder="Enter caption"
+                    className="italic"
+                  />
+                </div>
+
+                <Button
+                    className="flex bg-white text-nique-blue hover:bg-white/80 shadow-none hover:underline text-xs px-0 my-0"
+                    type="button"
+                    onClick={() => {setHideImage(!hideImage)}}
+                  >
+                  <p>{hideImage ? "Show Preview" : "Hide Preview"}</p>
+                </Button>
+
+                {!hideImage &&<AspectRatio ratio={16 / 9} className="bg-muted/50 rounded-md overflow-hidden">
+                  {featuredMediaUrl && !mediaPreviewFailed ? (
+                    <img
+                      src={featuredMediaUrl}
+                      className="object-cover h-full w-full"
+                      onError={() => setMediaPreviewFailed(true)}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      <Image className="w-6 h-6" />
+                      <span className="ml-2">Featured media preview</span>
+                    </div>
+                  )}
+                </AspectRatio>}
+
+                {/* New Featured and Sticky Controls */}
+                {isAdmin && (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="featured"
+                        checked={isFeatured}
+                        onCheckedChange={setIsFeatured}
+                        disabled={!isPublished || !isAdmin}
+                      />
+                      <Label htmlFor="featured" className={(!isPublished || !isAdmin) ? "text-muted-foreground" : ""}>
+                        Featured article
+                        {(!isPublished) && <span className="text-xs text-muted-foreground ml-1">(requires publishing)</span>}
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="sticky"
+                        checked={isSticky}
+                        onCheckedChange={setIsSticky}
+                        disabled={!isPublished || !isAdmin}
+                      />
+                      <Label htmlFor="sticky" className={(!isPublished || !isAdmin) ? "text-muted-foreground" : ""}>
+                        Sticky article (pinned to top)
+                        {(!isPublished) && <span className="text-xs text-muted-foreground ml-1">(requires publishing)</span>}
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="allow-comments"
+                        checked={allowComments}
+                        onCheckedChange={setAllowComments}
+                      />
+                      <Label htmlFor="allow-comments">
+                        Allow comments
+                      </Label>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-4">
+                  {/* Save/Create button (hidden for non-admins when in review) */}
+                  {(!isLocked || isAdmin) && (
+                    <Button
+                      type={initialArticle?._id ? "button" : "submit"}
+                      onClick={initialArticle?._id ? handleSaveChanges : undefined}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Saving..." : (initialArticle?._id ? "Save Changes" : "Create Draft")}
+                    </Button>
+                  )}
+
+                  {/* Review & Publish Actions for EXISTING articles */}
+                  {initialArticle?._id && (
+                    <>
+                      {canRequestReview && (
+                        <AlertDialog open={reviewConfirmOpen} onOpenChange={setReviewConfirmOpen}>
+                          <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => setReviewConfirmOpen(true)}>
+                            Request Review
+                          </Button>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Request review?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Once you request review, this article will be locked until an admin approves or requests changes.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleRequestReview}>Request Review</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+
+                      {canAdminPublishDraft && (
+                        <Button type="button" variant="constructive" onClick={handleAdminPublish} disabled={isSubmitting}>
+                          Publish Article
+                        </Button>
+                      )}
+
+                      {isAdmin && reviewStatus === 'in_review' && (
+                        <DropdownMenu modal={false}>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="gap-2" disabled={isSubmitting}>
+                              Review Actions
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuLabel>Admin Review</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+
+                            {canRequestChanges && (
+                              <DropdownMenuItem onClick={handleRequestChanges} disabled={isSubmitting} className="text-orange-600 focus:text-orange-700 focus:bg-orange-50 dark:focus:bg-orange-950/50">
+                                <AlertCircle className="mr-2 h-4 w-4" />
+                                Request Changes
+                              </DropdownMenuItem>
+                            )}
+
+                            {canApproveAndPublish && (
+                              <DropdownMenuItem onClick={handleAdminPublish} disabled={isSubmitting} className="text-green-600 focus:text-green-700 focus:bg-green-50 dark:focus:bg-green-950/50">
+                                <Check className="mr-2 h-4 w-4" />
+                                Approve & Publish
+                              </DropdownMenuItem>
+                            )}
+
+                            {canCancelReview && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={handleUnrequestReview} disabled={isSubmitting}>
+                                  <X className="mr-2 h-4 w-4 text-muted-foreground" />
+                                  Cancel Review Request
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+
+                      {canUnpublish && (
+                        <Button type="button" variant="destructive" onClick={handleAdminUnpublish} disabled={isSubmitting}>
+                          Unpublish
+                        </Button>
+                      )}
+                    </>
+                  )}
+
+                  {/* Create & Publish for NEW articles */}
+                  {!initialArticle?._id && isAdmin && (
+                    <Button type="button" variant="constructive" onClick={handleCreateAndPublish} disabled={isSubmitting}>
+                      Publish Article
+                    </Button>
+                  )}
+
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 {/* Authors - Searchable Input */}
                 <div className="space-y-2">
                   <Label htmlFor="authors" className='gap-0'>Author(s)<span className='text-destructive'>*</span></Label>
@@ -1082,147 +1244,7 @@ export default function ArticleForm({
                   </div>
                 </div>
 
-                {/* New Featured and Sticky Controls */}
-                {isAdmin && (
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="featured"
-                        checked={isFeatured}
-                        onCheckedChange={setIsFeatured}
-                        disabled={!isPublished || !isAdmin}
-                      />
-                      <Label htmlFor="featured" className={(!isPublished || !isAdmin) ? "text-muted-foreground" : ""}>
-                        Featured article
-                        {(!isPublished) && <span className="text-xs text-muted-foreground ml-1">(requires publishing)</span>}
-                      </Label>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="sticky"
-                        checked={isSticky}
-                        onCheckedChange={setIsSticky}
-                        disabled={!isPublished || !isAdmin}
-                      />
-                      <Label htmlFor="sticky" className={(!isPublished || !isAdmin) ? "text-muted-foreground" : ""}>
-                        Sticky article (pinned to top)
-                        {(!isPublished) && <span className="text-xs text-muted-foreground ml-1">(requires publishing)</span>}
-                      </Label>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="allow-comments"
-                        checked={allowComments}
-                        onCheckedChange={setAllowComments}
-                      />
-                      <Label htmlFor="allow-comments">
-                        Allow comments
-                      </Label>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap gap-4">
-                  {/* Save/Create button (hidden for non-admins when in review) */}
-                  {(!isLocked || isAdmin) && (
-                    <Button
-                      type={initialArticle?._id ? "button" : "submit"}
-                      onClick={initialArticle?._id ? handleSaveChanges : undefined}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? "Saving..." : (initialArticle?._id ? "Save Changes" : "Create Draft")}
-                    </Button>
-                  )}
-
-                  {/* Review & Publish Actions for EXISTING articles */}
-                  {initialArticle?._id && (
-                    <>
-                      {canRequestReview && (
-                        <AlertDialog open={reviewConfirmOpen} onOpenChange={setReviewConfirmOpen}>
-                          <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => setReviewConfirmOpen(true)}>
-                            Request Review
-                          </Button>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Request review?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Once you request review, this article will be locked until an admin approves or requests changes.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={handleRequestReview}>Request Review</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-
-                      {canAdminPublishDraft && (
-                        <Button type="button" variant="constructive" onClick={handleAdminPublish} disabled={isSubmitting}>
-                          Publish Article
-                        </Button>
-                      )}
-
-                      {isAdmin && reviewStatus === 'in_review' && (
-                        <DropdownMenu modal={false}>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="gap-2" disabled={isSubmitting}>
-                              Review Actions
-                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuLabel>Admin Review</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-
-                            {canRequestChanges && (
-                              <DropdownMenuItem onClick={handleRequestChanges} disabled={isSubmitting} className="text-orange-600 focus:text-orange-700 focus:bg-orange-50 dark:focus:bg-orange-950/50">
-                                <AlertCircle className="mr-2 h-4 w-4" />
-                                Request Changes
-                              </DropdownMenuItem>
-                            )}
-
-                            {canApproveAndPublish && (
-                              <DropdownMenuItem onClick={handleAdminPublish} disabled={isSubmitting} className="text-green-600 focus:text-green-700 focus:bg-green-50 dark:focus:bg-green-950/50">
-                                <Check className="mr-2 h-4 w-4" />
-                                Approve & Publish
-                              </DropdownMenuItem>
-                            )}
-
-                            {canCancelReview && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={handleUnrequestReview} disabled={isSubmitting}>
-                                  <X className="mr-2 h-4 w-4 text-muted-foreground" />
-                                  Cancel Review Request
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-
-                      {canUnpublish && (
-                        <Button type="button" variant="destructive" onClick={handleAdminUnpublish} disabled={isSubmitting}>
-                          Unpublish
-                        </Button>
-                      )}
-                    </>
-                  )}
-
-                  {/* Create & Publish for NEW articles */}
-                  {!initialArticle?._id && isAdmin && (
-                    <Button type="button" variant="constructive" onClick={handleCreateAndPublish} disabled={isSubmitting}>
-                      Publish Article
-                    </Button>
-                  )}
-
-                </div>
-              </div>
-
-              <div className="space-y-2">
+                {/* Tags Selection */}
                 <Label htmlFor="tags" className='gap-0'>Tags</Label>
                 <div className={cn(
                   "flex flex-wrap gap-2 p-2 border rounded-md min-h-10",

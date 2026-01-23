@@ -52,23 +52,6 @@
     }
   },
   {
-    "collection": "media",
-    "validationLevel": "moderate",
-    "validationAction": "error",
-    "validator": {
-      "$jsonSchema": {
-        "bsonType": "object",
-        "required": ["_id", "__v", "url", "altText"],
-        "properties": {
-          "_id": { "bsonType": "objectId" },
-          "__v": { "bsonType": ["int", "long", "double", "decimal"] },
-          "url": { "bsonType": "string" },
-          "altText": { "bsonType": "string" }
-        }
-      }
-    }
-  },
-  {
     "collection": "slivers",
     "validationLevel": "moderate",
     "validationAction": "error",
@@ -99,7 +82,7 @@
           "name": { "bsonType": "string" },
           "bio": { "bsonType": "string" },
           "isAdmin": { "bsonType": "bool" },
-          "profilePictureMediaId": { "bsonType": "objectId" },
+          "profilePictureUrl": { "bsonType": "string" },
           "socialLinks": {
             "bsonType": "array",
             "items": {
@@ -195,7 +178,7 @@
           "categoryId": { "bsonType": "objectId" },
           "subcategoryId": { "bsonType": "objectId" },
           "tagIds": { "bsonType": "array", "items": { "bsonType": "objectId" } },
-          "featuredMediaId": { "bsonType": "objectId" },
+          "featuredMediaUrl": { "bsonType": "string" },
           "imageCaption": { "bsonType": "string" },
           "published": { "bsonType": "bool" },
           "publishedAt": { "bsonType": ["date", "null"] },

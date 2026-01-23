@@ -341,8 +341,6 @@ const labelForCollection = (collection: string, doc: any): string | undefined =>
       return typeof doc?.name === 'string' ? doc.name : undefined;
     case 'users':
       return typeof doc?.name === 'string' ? doc.name : undefined;
-    case 'media':
-      return typeof doc?.url === 'string' ? doc.url : undefined;
     case 'slivers':
       return typeof doc?.text === 'string' ? String(doc.text).slice(0, 60) : undefined;
     case 'comments':

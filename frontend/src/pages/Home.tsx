@@ -41,11 +41,14 @@ function Home() {
         const stickySorted = stickyArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
         const featuredSorted = featuredArticles.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
         const latestFeatured = featuredSorted[0] ?? null;
+        const featuredId = latestFeatured ? getArticleId(latestFeatured) : null;
         const stickyIds = new Set(stickySorted.map(getArticleId));
         const nonStickyRecent = recentArticlesData
             .filter((article) => !stickyIds.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
-        const sortedRecent = [...stickySorted, ...nonStickyRecent];
+        const sortedRecent = [...stickySorted, ...nonStickyRecent].filter(
+            (article) => getArticleId(article) !== featuredId
+        );
         const recentIds = new Set(sortedRecent.map(getArticleId));
         const filterAndSort = (articles: ArticleDocument[]) =>
             articles.filter((article) => !recentIds.has(getArticleId(article))).sort(sortByPublishedDesc);

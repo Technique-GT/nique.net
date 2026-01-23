@@ -23,7 +23,7 @@ export const createArticleBodySchema = z.object({
     )
     .optional(),
 
-  featuredMediaId: objectIdString.optional(),
+  featuredMediaUrl: z.string().trim().min(1).optional(),
   imageCaption: z.string().optional(),
 
   editorState: z.any().optional(),

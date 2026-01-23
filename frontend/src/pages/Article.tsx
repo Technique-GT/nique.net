@@ -290,9 +290,8 @@ export default function Article() {
 
   // backend uses tagIds, not tags
   const tagsDisplay = article.tagIds?.map((tag) => tag.name).filter(Boolean).join(" • ");
-  const featuredMedia =
-    article.featuredMediaId && typeof article.featuredMediaId === "object"
-      ? article.featuredMediaId
+  const featuredMedia = article.featuredMediaUrl && typeof article.featuredMediaUrl === "string"
+      ? article.featuredMediaUrl
       : null;
 
   return (
@@ -316,14 +315,14 @@ export default function Article() {
           <hr className="opacity-50" />
         </header>
 
-        {/* Featured Image - backend uses featuredMediaId, not featuredImage */}
+        {/* Featured Image - backend uses featuredMediaUrl, not featuredImage */}
         {featuredMedia && (
           <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
             <img
               className="w-full aspect-3/2 object-cover rounded-md"
-              src={featuredMedia.url}
+              src={featuredMedia}
               loading="lazy"
-              alt={featuredMedia.altText || article.title}
+              alt={article.title}
             />
             {article.imageCaption && (
               <figcaption className="w-full text-xs text-nique-blue mt-2">

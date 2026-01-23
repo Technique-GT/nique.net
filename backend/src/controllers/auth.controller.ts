@@ -127,7 +127,7 @@ export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const user = await AuthUser.findById(req.user.id).select('-password').populate('profilePictureMediaId');
+    const user = await AuthUser.findById(req.user.id).select('-password');
     if (!user) {
       res.status(401).json({ success: false, message: 'User not found' });
       return;
@@ -252,12 +252,15 @@ export const googleAuthCallback = async (req: Request, res: Response): Promise<v
     }
 
     let user = await AuthUser.findOne({ googleSub });
-    if (!user && isAllowlistedAdmin && email) {
-      user = await AuthUser.findOne({ email });
+    const emailUser = !user && email ? await AuthUser.findOne({ email }) : null;
+
+    if (!user && !emailUser && !isAllowlistedAdmin) {
+      res.status(403).json({ message: 'Email not authorized' });
+      return;
     }
 
     if (!user) {
-      user = await AuthUser.create({
+      user = emailUser ?? await AuthUser.create({
         name: fullName,
         socialLinks: [],
         isAdmin: isAllowlistedAdmin,

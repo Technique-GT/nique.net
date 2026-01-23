@@ -4,8 +4,7 @@ import { categoryCache } from '../services/categoryCache';
 import { Categories } from '../types/categories';
 import ArticleBlock from "../components/ArticleBlock"
 import { ArticleDocument } from '../types/article'
-// import VerticalAd from "../components/VerticalAd";
-// import MockAd from '../assets/mock_advertisement.jpg';
+import FeaturedStory from '../components/FeaturedStory';
 import SideArticle from '../components/SideArticle';
 import InstaEmbed from '../components/InstaEmbed';
 import SmallArticle from '../components/SmallArticle';
@@ -20,10 +19,17 @@ const processSportsArticles = (allSportsArticles: ArticleDocument[]) => {
         getArticleTimestamp(b) - getArticleTimestamp(a);
 
     const stickyPosts = allSportsArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+    const featuredPosts = allSportsArticles.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
     const nonStickyPosts = allSportsArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
     const orderedSports = [...stickyPosts, ...nonStickyPosts];
-    const recentSelection = orderedSports.slice(0, 5);
-    const recentIds = new Set(recentSelection.map(getArticleId));
+
+    const featured = featuredPosts[0] ?? null;
+    const orderedWithoutFeatured = featured
+        ? orderedSports.filter((article) => getArticleId(article) !== getArticleId(featured))
+        : orderedSports;
+    const recentSelection = [featured, ...orderedWithoutFeatured].filter(Boolean) as ArticleDocument[];
+    const visibleRecent = recentSelection.slice(0, 5);
+    const recentIds = new Set(visibleRecent.map(getArticleId));
 
     const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
         articles
@@ -37,7 +43,7 @@ const processSportsArticles = (allSportsArticles: ArticleDocument[]) => {
             .sort(sortByPublishedDesc);
 
     return {
-        recentSportsArticles: recentSelection,
+        recentSportsArticles: visibleRecent,
         techSports: filterBySubcategory(allSportsArticles, 'jackets'),
         atlSports: filterBySubcategory(allSportsArticles, 'atlanta'),
         seasonScoreboard: [] as ArticleDocument[], // No corresponding backend subcategory
@@ -153,10 +159,10 @@ function Sports() {
         <>
             <Navbar />
             <div className='max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
-                <div className='w-full h-screen'>
+                <div className='w-full min-h-screen'>
                     <div className='grid gap-5 grid-cols-1 lg:grid-cols-[auto_35%] lg:grid-rows-4 w-full h-[80vh]'>
                         <div className='flex flex-col gap-4 lg:row-span-4'>
-                            {recentSportsArticles[0] && <ArticleBlock article={recentSportsArticles[0]} height="100%" />}
+                            {recentSportsArticles[0] && <FeaturedStory article={recentSportsArticles[0]} height="100%" />}
                         </div>
                         <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:grid-rows-4 lg:row-span-4 h-full'>
                             {recentSportsArticles[1] && <ArticleBlock article={recentSportsArticles[1]} height="100%" />}

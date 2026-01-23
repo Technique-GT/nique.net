@@ -13,7 +13,7 @@ const userSchema = z.object({
   isAdmin: z.boolean(),
   email: z.string().email().optional(),
   googleSub: z.string().optional(),
-  profilePictureMediaId: z.string().optional(),
+  profilePictureUrl: z.string().optional(),
   socialLinks: z.array(socialLinkSchema),
 })
 

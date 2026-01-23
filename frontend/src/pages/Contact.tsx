@@ -3,7 +3,7 @@ import { staff } from "../types/staff";
 
 function Contact() {
   return (
-    <div className='max-h-screen'>
+    <div className='min-h-screen'>
         <Navbar />
         <div className='max-w-[95%] md:max-w-[80%] h-full m-auto py-5 px-30 gap-4'>
             <div className='flex flex-col'>
