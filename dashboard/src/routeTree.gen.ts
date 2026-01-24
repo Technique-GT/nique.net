@@ -37,7 +37,6 @@ import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_auth
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedArticlesTagsRouteImport } from './routes/_authenticated/articles/tags'
 import { Route as AuthenticatedArticlesNewRouteImport } from './routes/_authenticated/articles/new'
-import { Route as AuthenticatedArticlesMediaRouteImport } from './routes/_authenticated/articles/media'
 import { Route as AuthenticatedArticlesListRouteImport } from './routes/_authenticated/articles/list'
 import { Route as AuthenticatedArticlesCategoriesRouteImport } from './routes/_authenticated/articles/categories'
 import { Route as AuthenticatedArticlesArticleIdEditRouteImport } from './routes/_authenticated/articles/$articleId/edit'
@@ -191,12 +190,6 @@ const AuthenticatedArticlesNewRoute =
     path: '/articles/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedArticlesMediaRoute =
-  AuthenticatedArticlesMediaRouteImport.update({
-    id: '/articles/media',
-    path: '/articles/media',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedArticlesListRoute =
   AuthenticatedArticlesListRouteImport.update({
     id: '/articles/list',
@@ -232,7 +225,6 @@ export interface FileRoutesByFullPath {
   '/503': typeof errors503Route
   '/articles/categories': typeof AuthenticatedArticlesCategoriesRoute
   '/articles/list': typeof AuthenticatedArticlesListRoute
-  '/articles/media': typeof AuthenticatedArticlesMediaRoute
   '/articles/new': typeof AuthenticatedArticlesNewRoute
   '/articles/tags': typeof AuthenticatedArticlesTagsRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -263,7 +255,6 @@ export interface FileRoutesByTo {
   '/503': typeof errors503Route
   '/articles/categories': typeof AuthenticatedArticlesCategoriesRoute
   '/articles/list': typeof AuthenticatedArticlesListRoute
-  '/articles/media': typeof AuthenticatedArticlesMediaRoute
   '/articles/new': typeof AuthenticatedArticlesNewRoute
   '/articles/tags': typeof AuthenticatedArticlesTagsRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -298,7 +289,6 @@ export interface FileRoutesById {
   '/_unauthenticated/': typeof UnauthenticatedIndexRoute
   '/_authenticated/articles/categories': typeof AuthenticatedArticlesCategoriesRoute
   '/_authenticated/articles/list': typeof AuthenticatedArticlesListRoute
-  '/_authenticated/articles/media': typeof AuthenticatedArticlesMediaRoute
   '/_authenticated/articles/new': typeof AuthenticatedArticlesNewRoute
   '/_authenticated/articles/tags': typeof AuthenticatedArticlesTagsRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -332,7 +322,6 @@ export interface FileRouteTypes {
     | '/503'
     | '/articles/categories'
     | '/articles/list'
-    | '/articles/media'
     | '/articles/new'
     | '/articles/tags'
     | '/settings/appearance'
@@ -363,7 +352,6 @@ export interface FileRouteTypes {
     | '/503'
     | '/articles/categories'
     | '/articles/list'
-    | '/articles/media'
     | '/articles/new'
     | '/articles/tags'
     | '/settings/appearance'
@@ -397,7 +385,6 @@ export interface FileRouteTypes {
     | '/_unauthenticated/'
     | '/_authenticated/articles/categories'
     | '/_authenticated/articles/list'
-    | '/_authenticated/articles/media'
     | '/_authenticated/articles/new'
     | '/_authenticated/articles/tags'
     | '/_authenticated/settings/appearance'
@@ -628,13 +615,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedArticlesNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/articles/media': {
-      id: '/_authenticated/articles/media'
-      path: '/articles/media'
-      fullPath: '/articles/media'
-      preLoaderRoute: typeof AuthenticatedArticlesMediaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/articles/list': {
       id: '/_authenticated/articles/list'
       path: '/articles/list'
@@ -681,7 +661,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedArticlesCategoriesRoute: typeof AuthenticatedArticlesCategoriesRoute
   AuthenticatedArticlesListRoute: typeof AuthenticatedArticlesListRoute
-  AuthenticatedArticlesMediaRoute: typeof AuthenticatedArticlesMediaRoute
   AuthenticatedArticlesNewRoute: typeof AuthenticatedArticlesNewRoute
   AuthenticatedArticlesTagsRoute: typeof AuthenticatedArticlesTagsRoute
   AuthenticatedArticlesIndexRoute: typeof AuthenticatedArticlesIndexRoute
@@ -699,7 +678,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedArticlesCategoriesRoute: AuthenticatedArticlesCategoriesRoute,
   AuthenticatedArticlesListRoute: AuthenticatedArticlesListRoute,
-  AuthenticatedArticlesMediaRoute: AuthenticatedArticlesMediaRoute,
   AuthenticatedArticlesNewRoute: AuthenticatedArticlesNewRoute,
   AuthenticatedArticlesTagsRoute: AuthenticatedArticlesTagsRoute,
   AuthenticatedArticlesIndexRoute: AuthenticatedArticlesIndexRoute,
