@@ -41,6 +41,10 @@ const processOpinionArticles = (allOpinions: ArticleDocument[]) => {
             .filter((article) => !recentIds.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
 
+    console.log('Processed Opinion Articles:', {
+        lettersArticles: filterBySubcategory(allOpinions, 'letter to the editor'),
+    });
+
     return {
         recentOpinionArticles: recentSelection,
         opEdArticles: filterBySubcategory(allOpinions, 'op ed'),
