@@ -29,7 +29,9 @@ const processNewsArticles = (allNewsArticles: ArticleDocument[]) => {
     const featured = featuredPosts.find((article) => getArticleId(article) !== getArticleId(justIn)) ?? null;
     const recentSelection = [justIn, featured].filter(Boolean) as ArticleDocument[];
     const recentIds = new Set(recentSelection.map(getArticleId));
-    const remainingNews = orderedNews.filter((article) => !recentIds.has(getArticleId(article)));
+    const sideNewsArticles = orderedNews.filter((article) => !recentIds.has(getArticleId(article))).slice(0, 5);
+    const sideIds = new Set(sideNewsArticles.map(getArticleId));
+    const excludedIds = new Set([...recentIds, ...sideIds]);
 
     const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
         articles
@@ -39,12 +41,12 @@ const processNewsArticles = (allNewsArticles: ArticleDocument[]) => {
                 }
                 return false;
             })
-            .filter((article) => !recentIds.has(getArticleId(article)))
+            .filter((article) => !excludedIds.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
 
     return {
         recentNews: recentSelection,
-        newsArticles: remainingNews,
+        sideNewsArticles,
         theInstituteNews: filterBySubcategory(allNewsArticles, 'the institute'),
         cityStateNews: filterBySubcategory(allNewsArticles, 'city & state'),
         scienceResearchNews: filterBySubcategory(allNewsArticles, 'science & research'),
@@ -58,7 +60,7 @@ function News() {
 
     const [isLoading, setIsLoading] = useState<boolean>(!initialData);
     const [recentNews, setRecentNews] = useState<ArticleDocument[]>(initialData?.recentNews || []);
-    const [newsArticles, setNewsArticles] = useState<ArticleDocument[]>(initialData?.newsArticles || []);
+    const [sideNewsArticles, setSideNewsArticles] = useState<ArticleDocument[]>(initialData?.sideNewsArticles || []);
     const [theInstituteNews, setTheInstituteNews] = useState<ArticleDocument[]>(initialData?.theInstituteNews || []);
     const [cityStateNews, setCityStateNews] = useState<ArticleDocument[]>(initialData?.cityStateNews || []);
     const [scienceResearchNews, setScienceResearchNews] = useState<ArticleDocument[]>(initialData?.scienceResearchNews || []);
@@ -92,7 +94,7 @@ function News() {
 
                 if (!categoryId) {
                     if (!isMounted) return;
-                    setNewsArticles([]);
+                    setSideNewsArticles([]);
                     setError('News category not found.');
                     return;
                 }
@@ -114,7 +116,7 @@ function News() {
 
                 const processed = processNewsArticles(allNewsArticles);
                 setRecentNews(processed.recentNews);
-                setNewsArticles(processed.newsArticles);
+                setSideNewsArticles(processed.sideNewsArticles);
                 setTheInstituteNews(processed.theInstituteNews);
                 setCityStateNews(processed.cityStateNews);
                 setScienceResearchNews(processed.scienceResearchNews);
@@ -231,7 +233,7 @@ function News() {
                 <div className='flex flex-col gap-4'>
                     <hr className="lg:mt-15" />
                     {(() => {
-                        const articles = newsArticles.slice(0, 4);
+                        const articles = sideNewsArticles.slice(0, 5);
                         return articles.length ? (
                             <SideArticle articles={articles} width='80px' hasDesc={true}/>
                         ) : null;

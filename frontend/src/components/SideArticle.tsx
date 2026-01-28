@@ -36,7 +36,7 @@ function SideArticle({ articles, hasBreak = true, hasDesc = false }: SideArticle
                     {hasDesc && 
                         <p className="text-[#1A1E47] text-sm overflow-hidden" style={{
                             display: '-webkit-box',
-                            WebkitLineClamp: 3,
+                            WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
                             }}>
                             {desc}

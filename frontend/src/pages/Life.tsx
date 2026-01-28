@@ -26,8 +26,9 @@ const processLifeArticles = (allLifeArticles: ArticleDocument[]) => {
     const primaryStory = featured ?? orderedLife[0] ?? null;
     const recentSelection = [primaryStory].filter(Boolean) as ArticleDocument[];
     const recentIds = new Set(recentSelection.map(getArticleId));
-    const remainingLife = orderedLife.filter((article) => !recentIds.has(getArticleId(article)));
-
+    const sideLifeArticles = orderedLife.filter((article) => !recentIds.has(getArticleId(article))).slice(0, 5);
+    const sideIds = new Set(sideLifeArticles.map(getArticleId));
+    const excludedIds = new Set([...recentIds, ...sideIds]);
     const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
         articles
             .filter((article) => {
@@ -36,12 +37,12 @@ const processLifeArticles = (allLifeArticles: ArticleDocument[]) => {
                 }
                 return false;
             })
-            .filter((article) => !recentIds.has(getArticleId(article)))
+            .filter((article) => !excludedIds.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
 
     return {
         recentLifeArticles: recentSelection,
-        lifeArticles: remainingLife,
+        sideLifeArticles,
         events: filterBySubcategory(allLifeArticles, 'events'),
         rsos: filterBySubcategory(allLifeArticles, 'rsos'),
         featuresArticles: filterBySubcategory(allLifeArticles, 'student features'),
@@ -55,7 +56,7 @@ function Life() {
 
     const [isLoading, setIsLoading] = useState<boolean>(!initialData);
     const [recentLifeArticles, setRecentLifeArticles] = useState<ArticleDocument[]>(initialData?.recentLifeArticles || []);
-    const [lifeArticles, setLifeArticles] = useState<ArticleDocument[]>(initialData?.lifeArticles || []);
+    const [sideLifeArticles, setSideLifeArticles] = useState<ArticleDocument[]>(initialData?.sideLifeArticles || []);
     const [events, setEvents] = useState<ArticleDocument[]>(initialData?.events || []);
     const [rsos, setRsos] = useState<ArticleDocument[]>(initialData?.rsos || []);
     const [featuresArticles, setFeaturesArticles] = useState<ArticleDocument[]>(initialData?.featuresArticles || []);
@@ -89,7 +90,7 @@ function Life() {
 
                 if (!lifeCategory?._id) {
                     if (!isMounted) return;
-                    setLifeArticles([]);
+                    setSideLifeArticles([]);
                     setError('Life category not found.');
                     return;
                 }
@@ -111,7 +112,7 @@ function Life() {
 
                 const processed = processLifeArticles(allLifeArticles);
                 setRecentLifeArticles(processed.recentLifeArticles);
-                setLifeArticles(processed.lifeArticles);
+                setSideLifeArticles(processed.sideLifeArticles);
                 setEvents(processed.events);
                 setRsos(processed.rsos);
                 setFeaturesArticles(processed.featuresArticles);
@@ -227,7 +228,7 @@ function Life() {
                 <div className='flex flex-col gap-4'>
                     <hr/>
                     {(() => {
-                        const articles = lifeArticles.slice(0, 5);
+                        const articles = sideLifeArticles.slice(0, 5);
                         return articles.length ? (
                             <SideArticle articles={articles} width='80px' hasDesc={true}/>
                         ) : null;

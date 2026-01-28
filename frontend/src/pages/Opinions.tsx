@@ -41,15 +41,11 @@ const processOpinionArticles = (allOpinions: ArticleDocument[]) => {
             .filter((article) => !recentIds.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
 
-    console.log('Processed Opinion Articles:', {
-        lettersArticles: filterBySubcategory(allOpinions, 'letter to the editor'),
-    });
-
     return {
         recentOpinionArticles: recentSelection,
         opEdArticles: filterBySubcategory(allOpinions, 'op ed'),
         consensusArticles: filterBySubcategory(allOpinions, 'consensus'),
-        lettersArticles: filterBySubcategory(allOpinions, 'letter to the editor'),
+        lettersArticles: filterBySubcategory(allOpinions, 'letters to the editor'),
     };
 };
 
@@ -179,7 +175,7 @@ function Opinions() {
 
                 <h4 className="font-bold mb-2 text-2xl text-nique-blue">Op Ed</h4>
                 <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
-                    {opEdArticles.map((article) => (
+                    {opEdArticles.slice(0,8).map((article) => (
                         <ArticleBlock key={article._id || article.slug} article={article} height='230px' />
                     ))}
                 </div>
