@@ -3,8 +3,6 @@ import articleService from '../services/articleService';
 import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
 import { ArticleDocument } from '../types/article';
-// SideArticle not currently used
-// import SideArticle from '../components/SideArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import FeaturedStory from '../components/FeaturedStory';

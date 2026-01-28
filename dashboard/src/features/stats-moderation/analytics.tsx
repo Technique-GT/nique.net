@@ -8,6 +8,7 @@ import { Eye, MessageSquare, RefreshCw, BarChart3 } from "lucide-react";
 import { Main } from "@/components/layout/main";
 import { PageHeader } from "@/components/layout/page-header";
 import { useAnalyticsData } from "./useAnalyticsData";
+import { TriangleAlert } from "lucide-react";
 
 export default function Analytics() {
   const [timeRange, setTimeRange] = useState("30d");
@@ -98,7 +99,7 @@ export default function Analytics() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending Comments</CardTitle>
+                <CardTitle className='text-sm font-medium flex flex-row items-center'>Pending Comments {data.commentStats.pending !== 0 && <TriangleAlert size={18} className='ml-2 text-destructive'/>}</CardTitle>
                 <MessageSquare className="h-4 w-4 text-yellow-600" />
               </CardHeader>
               <CardContent>
