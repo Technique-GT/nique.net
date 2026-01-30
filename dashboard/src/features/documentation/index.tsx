@@ -113,7 +113,7 @@ export default function Documentation() {
                 </figure>
                 <div className='space-y-4 text-sm text-muted-foreground dark:text-foreground/80'>
                   <p>
-                    Each page's structure contains a <code>main</code> section, which holds the latest and most important content. Each page's <code>main</code> section is separated by a divider across the page. <code>FeaturedStory</code> components are given first priority, i.e. pages hydrate the <code>FeaturedStory</code> before any other article if present. If no <code>FeaturedStory</code> is set for that category, the page will display the <b>latest article in that section</b>.
+                    Each page's structure contains a <code>main</code> section, which holds the latest and most important content. Each page's <code>main</code> section is separated from the rest of the page by a divider across the page. <code>FeaturedStory</code> components are given first priority, i.e. pages hydrate the <code>FeaturedStory</code> before any other article if present. If there is no <code>isFeatured</code> article set for that category, the page will display the <b>latest article in that section</b>.
                   </p><p>
                     After setting the <code>FeaturedStory</code>, each page then creates a <code>recentArticles</code> array that fetches articles <code>[...sticky, ...nonSticky]</code> in descending order by published date. <code>sticky</code> articles are prioritized first, followed by non-sticky articles to fill the remaining slots.
                     The <code>JustIn</code> component, if present, takes the first article in the array and other <code>ArticleBlocks</code> in the <code>main</code> section are populated by subsequent articles in the array. 
@@ -139,7 +139,7 @@ export default function Documentation() {
                   <Separator />
                   <h1>Staff Management</h1>
                   <p>
-                    The names/roles in <code>/Contact Us</code> and the footer are managed in an json array in the codebase. To update, edit the array in <code>frontend/src/types/staff.ts</code> and deploy.
+                    The names/roles in <code>/Contact Us</code> and the footer are managed in a .json array in the codebase. To update, edit the array in <code>frontend/src/types/staff.ts</code> and deploy.
                   </p>
                   <Separator />
                   <h1>Comments & Reactions</h1>
@@ -165,7 +165,7 @@ export default function Documentation() {
                 The main flow is creating an article as an admin. Navigate to <Link to='/articles' className='text-primary hover:underline'>Article Library</Link>{' '} to view existing articles. To create a new article, click the <b>New Article</b> button in the top-right and populate the form accordingly. The dashboard is built around this flow, so most actions will center around creating, reviewing, and publishing articles and supporting content. Admins have the ability to publish and unpublish articles. Comments made by readers must be approved by admins before they appear publicly. To maintain engagement, it's recommended to review comments regularly.
               </p>
               <p>
-                For non-admin users, the flow is similar but without publishing capabilities. Users can create and edit drafts, submit articles for review, and make changes based on admin feedback. Users can view their authored content in the <Link to='/articles' className='text-primary hover:underline'>Article Library</Link>. Owners are users who created the article and may not be the author. If an article is created by an admin on behalf of a user, the user will be the author but not the owner. Non-admin users cannot view or moderate comments, slivers, playlists, content performance or manage categories/tags.
+                For non-admin users, the flow is similar but without publishing capabilities. Users can create and edit drafts, submit articles for review, and make changes based on admin feedback. Users can view content they <b>own</b> in the <Link to='/articles' className='text-primary hover:underline'>Article Library</Link>. Owners are users who created the article and may not necessarily be the author. If an article is created by an admin on behalf of a user, the user will be the author but not the owner. Non-admin users cannot view or moderate comments, slivers, playlists, content performance or manage categories/tags.
               </p>
 
             </CardContent>
