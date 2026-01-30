@@ -198,3 +198,15 @@
     height: 0;
   }
 }
+
+h1 {
+  @apply text-xl font-semibold;
+}
+
+code {
+  background-color: var(--muted);
+  color: var(--foreground);
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.2rem;
+  font-size: 0.8rem;
+}

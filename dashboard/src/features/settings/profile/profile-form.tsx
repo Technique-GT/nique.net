@@ -42,6 +42,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>
 
 export function ProfileForm() {
   const { user } = useAuthStore((state) => state.auth)
+  console.log(user?.email)
 
   const defaultValues: Partial<ProfileFormValues> = {
     username: user?.name || '',

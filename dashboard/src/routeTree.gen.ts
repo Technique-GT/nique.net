@@ -30,6 +30,7 @@ import { Route as AuthenticatedSpotifyIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedSliversIndexRouteImport } from './routes/_authenticated/slivers/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
+import { Route as AuthenticatedDocumentationIndexRouteImport } from './routes/_authenticated/documentation/index'
 import { Route as AuthenticatedDashIndexRouteImport } from './routes/_authenticated/dash/index'
 import { Route as AuthenticatedCommentsIndexRouteImport } from './routes/_authenticated/comments/index'
 import { Route as AuthenticatedArticlesIndexRouteImport } from './routes/_authenticated/articles/index'
@@ -149,6 +150,12 @@ const AuthenticatedHelpCenterIndexRoute =
     path: '/help-center/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDocumentationIndexRoute =
+  AuthenticatedDocumentationIndexRouteImport.update({
+    id: '/documentation/',
+    path: '/documentation/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashIndexRoute = AuthenticatedDashIndexRouteImport.update({
   id: '/dash/',
   path: '/dash/',
@@ -232,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/articles/': typeof AuthenticatedArticlesIndexRoute
   '/comments/': typeof AuthenticatedCommentsIndexRoute
   '/dash/': typeof AuthenticatedDashIndexRoute
+  '/documentation/': typeof AuthenticatedDocumentationIndexRoute
   '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/slivers/': typeof AuthenticatedSliversIndexRoute
@@ -262,6 +270,7 @@ export interface FileRoutesByTo {
   '/articles': typeof AuthenticatedArticlesIndexRoute
   '/comments': typeof AuthenticatedCommentsIndexRoute
   '/dash': typeof AuthenticatedDashIndexRoute
+  '/documentation': typeof AuthenticatedDocumentationIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/slivers': typeof AuthenticatedSliversIndexRoute
@@ -296,6 +305,7 @@ export interface FileRoutesById {
   '/_authenticated/articles/': typeof AuthenticatedArticlesIndexRoute
   '/_authenticated/comments/': typeof AuthenticatedCommentsIndexRoute
   '/_authenticated/dash/': typeof AuthenticatedDashIndexRoute
+  '/_authenticated/documentation/': typeof AuthenticatedDocumentationIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/slivers/': typeof AuthenticatedSliversIndexRoute
@@ -329,6 +339,7 @@ export interface FileRouteTypes {
     | '/articles/'
     | '/comments/'
     | '/dash/'
+    | '/documentation/'
     | '/help-center/'
     | '/settings/'
     | '/slivers/'
@@ -359,6 +370,7 @@ export interface FileRouteTypes {
     | '/articles'
     | '/comments'
     | '/dash'
+    | '/documentation'
     | '/help-center'
     | '/settings'
     | '/slivers'
@@ -392,6 +404,7 @@ export interface FileRouteTypes {
     | '/_authenticated/articles/'
     | '/_authenticated/comments/'
     | '/_authenticated/dash/'
+    | '/_authenticated/documentation/'
     | '/_authenticated/help-center/'
     | '/_authenticated/settings/'
     | '/_authenticated/slivers/'
@@ -566,6 +579,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/documentation/': {
+      id: '/_authenticated/documentation/'
+      path: '/documentation'
+      fullPath: '/documentation/'
+      preLoaderRoute: typeof AuthenticatedDocumentationIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dash/': {
       id: '/_authenticated/dash/'
       path: '/dash'
@@ -666,6 +686,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedArticlesIndexRoute: typeof AuthenticatedArticlesIndexRoute
   AuthenticatedCommentsIndexRoute: typeof AuthenticatedCommentsIndexRoute
   AuthenticatedDashIndexRoute: typeof AuthenticatedDashIndexRoute
+  AuthenticatedDocumentationIndexRoute: typeof AuthenticatedDocumentationIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
   AuthenticatedSliversIndexRoute: typeof AuthenticatedSliversIndexRoute
   AuthenticatedSpotifyIndexRoute: typeof AuthenticatedSpotifyIndexRoute
@@ -683,6 +704,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedArticlesIndexRoute: AuthenticatedArticlesIndexRoute,
   AuthenticatedCommentsIndexRoute: AuthenticatedCommentsIndexRoute,
   AuthenticatedDashIndexRoute: AuthenticatedDashIndexRoute,
+  AuthenticatedDocumentationIndexRoute: AuthenticatedDocumentationIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
   AuthenticatedSliversIndexRoute: AuthenticatedSliversIndexRoute,
   AuthenticatedSpotifyIndexRoute: AuthenticatedSpotifyIndexRoute,

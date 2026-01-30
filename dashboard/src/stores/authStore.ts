@@ -38,6 +38,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
         const mappedUser: AuthUser = {
           id: user._id,
           name: user.name,
+          email: user.email,
           isAdmin: user.isAdmin,
           role: user.isAdmin ? ['admin', 'superadmin'] : ['user'], // Map boolean to roles
           avatar: user.profilePictureUrl,
