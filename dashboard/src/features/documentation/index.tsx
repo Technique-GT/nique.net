@@ -21,6 +21,8 @@ const navItems = [
   { id: 'roles', label: 'Roles & Permissions' },
   { id: 'content_organization', label: 'Content Organization' },
   { id: 'flows', label: 'Flows' },
+  { id: 'misc', label: 'Misc' },
+  { id: 'schema', label: 'Schema' },
   { id: 'statuses', label: 'Status Definitions' },
   { id: 'common-tasks', label: 'Common Tasks' },
   { id: 'faq', label: 'FAQ' },
@@ -130,25 +132,36 @@ export default function Documentation() {
                   </p>
                   <p>
                     Prefetching is best-effort: it starts after a short delay to avoid blocking first paint, silently ignores failures, and cancels in-flight requests on unmount. Because the cache is in-memory only, it resets on refresh, and the stale-while-revalidate behavior keeps content fresh without a loading flash.
-                  </p>
-                  <p>
+                  </p><p>
                     Each page employs caching for both articles and categories to reduce server requests. (Ensure to check request limits on Render's free tier instance.) The TTL for articles and categories is set to 5 minutes. The caching logic could be further optimized but will require further study. Perhaps the TTL could adjusted based on traffic patterns or content update frequency and invalidate cache selectively when new content is published.
                   </p><p>
                     On load, an <code>Article</code> tries <code>articleCache.get(slugOrId)</code> to render the article from cache. If not found, it fetches from the database and sets the cache with <code>articleCache.set(slugOrId, article)</code>. On click, <code>ArticleBlock</code> components prefetch the article data and set it in the cache to prevent redundant fetches as well as speed up the fetch request before navigating to the article.
                   </p>
-                  <Separator />
-                  <h1>Staff Management</h1>
-                  <p>
-                    The names/roles in <code>/Contact Us</code> and the footer are managed in a .json array in the codebase. To update, edit the array in <code>frontend/src/types/staff.ts</code> and deploy.
-                  </p>
-                  <Separator />
-                  <h1>Comments & Reactions</h1>
-                  <p>
-                    Comments are associated with articles and can be nested with replies. <code>/frontend</code> fetches approved comments per article and renders them as a threaded tree, so replies appear under their parent comment.
-                  </p>
-                  <p>
-                    Reader reactions (thumbs up/down) are tracked per device. The frontend stores a persistent device ID in local storage and sends it with reaction requests so the backend can remember a reader's reaction and return <code>myReaction</code> in the comment payload. <b>Note:</b> If a user wipes their <code>localStorage</code>, their reaction history is lost, allowing them to react again.
-                  </p>
+                  <div className='rounded-lg border bg-muted/30 p-3 text-xs leading-5 text-muted-foreground'>
+                    <pre className='whitespace-pre-wrap'>
+{`CACHE FLOW (FRONTEND)
+
+[App Mount]
+    |
+    v
+DataPrefetcher ── fetch categories + lists ──► categoryCache (TTL 5m)
+    |                                            ^
+    |                                            |
+    v                                            |
+Category Page ── read cache ──► render instantly |
+    |                                            |
+    └─ fetch fresh data ──► update cache ────────┘
+
+ArticleBlock click ── pre-cache article ──► articleCache (TTL 5m)
+    |
+    v
+Article Page ── read cache ──► render instantly
+    |
+    └─ fetch article ──► update cache
+
+Legend: in-memory caches, stale-while-revalidate pattern`}
+                    </pre>
+                  </div>
                   <Separator />
                   <p><i>Tip: The free tier of Render spins down after 15 mins of no inbound requests and may experience cold starts if idle for some time. A quick workaround would be to ping the <code>/health</code> route frequently although this may balloon requests to the server. MongoDB's free tier also has limitations: 512MB storage and shared cluster resources, 16MB document size limit. The instance will also go stale if idle for 90 days, requiring a manual restart to regain responsiveness.</i></p>
                 </div>
@@ -168,6 +181,66 @@ export default function Documentation() {
                 For non-admin users, the flow is similar but without publishing capabilities. Users can create and edit drafts, submit articles for review, and make changes based on admin feedback. Users can view content they <b>own</b> in the <Link to='/articles' className='text-primary hover:underline'>Article Library</Link>. Owners are users who created the article and may not necessarily be the author. If an article is created by an admin on behalf of a user, the user will be the author but not the owner. Non-admin users cannot view or moderate comments, slivers, playlists, content performance or manage categories/tags.
               </p>
 
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle id='misc'>Miscellaneous</CardTitle>
+            </CardHeader>
+            <CardContent className='space-y-3 text-sm text-muted-foreground dark:text-foreground/80'>
+                  <h1>Staff Management</h1>
+                  <p>
+                    The names/roles in <code>/Contact Us</code> and the footer are managed in a .json array in the codebase. To update, edit the array in <code>frontend/src/types/staff.ts</code> and deploy.
+                  </p>
+                  <Separator />
+                  <h1>Comments & Reactions</h1>
+                  <p>
+                    Comments are associated with articles and can be nested with replies. <code>/frontend</code> fetches approved comments per article and renders them as a threaded tree, so replies appear under their parent comment.
+                  </p>
+                  <p>
+                    Reader reactions (thumbs up/down) are tracked per device. The frontend stores a persistent device ID in local storage and sends it with reaction requests so the backend can remember a reader's reaction and return <code>myReaction</code> in the comment payload. <b>Note:</b> If a user wipes their <code>localStorage</code>, their reaction history is lost, allowing them to react again.
+                  </p>
+                {/* </div> */}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle id='schema'>Schema</CardTitle>
+              <CardDescription>MongoDB collection fields at a glance.</CardDescription>
+            </CardHeader>
+            <CardContent className='space-y-3 text-sm text-muted-foreground dark:text-foreground/80'>
+              <p>
+                <code>Article</code>: title, slug, content, authors (authorId + order), categoryId, subcategoryId, tagIds, featuredMediaUrl, imageCaption, published flags + publishedAt, allowComments, isFeatured, isSticky, ownerId, editorState, reviewStatus (+ reviewedAt/reviewedBy/reviewNotes), viewCount, timestamps.
+              </p>
+              <p>
+                <code>Category</code> and <code>SubCategory</code>: name + slug. SubCategory also stores categoryId. Slugs are generated from names; timestamps are disabled.
+              </p>
+              <p>
+                <code>Tag</code>: name + slug with the same slugify rules as categories; timestamps are disabled.
+              </p>
+              <p>
+                <code>User</code>: name, bio, isAdmin, email (unique + sparse), googleSub (unique + sparse), profilePictureUrl, socialLinks (platform + url). Timestamps are disabled.
+              </p>
+              <p>
+                <code>Comment</code>: articleId, parentCommentId, content, username, thumbsUp, thumbsDown, approved, timestamps.
+              </p>
+              <p>
+                <code>CommentReaction</code>: commentId, deviceId, reaction (up/down), timestamps. Enforces uniqueness on (commentId, deviceId).
+              </p>
+              <p>
+                <code>Sliver</code>: text, expiresAt, timestamps. Uses a TTL index on expiresAt to auto-expire.
+              </p>
+              <p>
+                <code>Playlist</code>: name, description, spotifyUrl (validated), isActive, timestamps. Enforces one active playlist on save.
+              </p>
+              <p>
+                <code>Notification</code>: recipientId, type, title, message, link, data, read, createdAt.
+              </p>
+              <p>
+                <code>RevokedToken</code>: tokenHash, userId, expiresAt, timestamps. Uses a TTL index on expiresAt.
+              </p>
             </CardContent>
           </Card>
 
