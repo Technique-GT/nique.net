@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { $getRoot } from "lexical";
 
 import { Editor } from "@/components/blocks/editor-00/editor";
@@ -344,14 +344,80 @@ export default function ArticleForm({
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   
   // Search functionality
+  const [availableAuthors, setAvailableAuthors] = useState<Author[]>(
+    Array.isArray(authors) ? authors : [],
+  );
+  const [availableTagOptions, setAvailableTagOptions] = useState<Tag[]>(
+    Array.isArray(tags) ? tags : [],
+  );
   const [authorSearch, setAuthorSearch] = useState("");
   const [showAuthorResults, setShowAuthorResults] = useState(false);
+  const [tagInput, setTagInput] = useState("");
+  const [isCreatingAuthor, setIsCreatingAuthor] = useState(false);
+  const [isCreatingTag, setIsCreatingTag] = useState(false);
+
+  useEffect(() => {
+    setAvailableAuthors(Array.isArray(authors) ? authors : []);
+  }, [authors]);
+
+  useEffect(() => {
+    setAvailableTagOptions(Array.isArray(tags) ? tags : []);
+  }, [tags]);
+
+  const normalize = (value: string) => value.trim().toLowerCase();
+  const getAuthorFullName = (author: Author) => `${author.firstName || ''} ${author.lastName || ''}`.trim();
+  const hasExactAuthorMatch = (author: Author, searchTerm: string) => {
+    const term = normalize(searchTerm);
+    if (!term) return false;
+
+    return [
+      getAuthorFullName(author),
+      author.username || '',
+      author.email || '',
+    ].some((field) => normalize(field) === term);
+  };
+
+  const getApiErrorMessage = (error: unknown, fallback: string) => {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "response" in error &&
+      typeof (error as { response?: unknown }).response === "object" &&
+      (error as { response?: { data?: unknown } }).response?.data &&
+      typeof (error as { response?: { data?: { message?: unknown } } }).response?.data?.message === "string"
+    ) {
+      return (error as { response?: { data?: { message?: string } } }).response?.data?.message || fallback;
+    }
+
+    return fallback;
+  };
+
+  const mapUserToAuthor = (user: unknown): Author => {
+    const mappedUser = (typeof user === "object" && user !== null ? user : {}) as {
+      _id?: string;
+      name?: string;
+      email?: string;
+      isAdmin?: boolean;
+    };
+    const fullName = typeof mappedUser.name === "string" ? mappedUser.name.trim() : "";
+    const parts = fullName.split(/\s+/).filter(Boolean);
+
+    return {
+      _id: mappedUser._id || "",
+      firstName: parts[0] || "Unknown",
+      lastName: parts.slice(1).join(" "),
+      username: fullName || "Unknown",
+      email: typeof mappedUser.email === "string" ? mappedUser.email : "",
+      role: mappedUser.isAdmin ? "admin" : "writer",
+      status: "active",
+    };
+  };
 
   // Filter authors based on search
   const filteredAuthors = useMemo(() => {
     if (!authorSearch.trim()) return [];
 
-    const list = Array.isArray(authors) ? authors : [];
+    const list = Array.isArray(availableAuthors) ? availableAuthors : [];
     const searchTerm = authorSearch.toLowerCase();
 
     return list.filter((author) => {
@@ -367,7 +433,7 @@ export default function ArticleForm({
         email.toLowerCase().includes(searchTerm)
       );
     });
-  }, [authorSearch, authors]);
+  }, [authorSearch, availableAuthors]);
 
   const handleRequestReview = async () => {
     if (!initialArticle?._id) return;
@@ -491,17 +557,26 @@ export default function ArticleForm({
 
   const selectedTagNames = useMemo(() => {
     return selectedTags.map(tagId => {
-      const found = tags.find(tag => tag._id === tagId);
+      const found = availableTagOptions.find(tag => tag._id === tagId);
       return found ? found.name : tagId;
     });
-  }, [selectedTags, tags]);
+  }, [selectedTags, availableTagOptions]);
 
   // Transform data for frontend use
   const availableTags = useMemo(() => 
-    tags.map(tag => ({
+    availableTagOptions.map(tag => ({
       id: tag._id,
       name: tag.name
-    })), [tags]);
+    })), [availableTagOptions]);
+
+  const filteredTagOptions = useMemo(() => {
+    const term = normalize(tagInput);
+    return availableTags.filter((tag) => {
+      if (selectedTags.includes(tag.id)) return false;
+      if (!term) return true;
+      return normalize(tag.name).includes(term);
+    });
+  }, [availableTags, selectedTags, tagInput]);
 
   const categoriesData = useMemo(() => 
     categories.map(cat => ({
@@ -573,22 +648,128 @@ export default function ArticleForm({
     }
   };
 
+  const handleAuthorEnter = async (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const term = authorSearch.trim();
+    if (!term || isLocked || !canManageAuthorsPerm || isCreatingAuthor) return;
+
+    const exactMatch = availableAuthors.find((author) => hasExactAuthorMatch(author, term));
+    if (exactMatch) {
+      handleAuthorSelect(exactMatch);
+      return;
+    }
+
+    if (filteredAuthors.length > 0) return;
+
+    if (!isAdmin) {
+      toast.error("Only admins can create new authors.");
+      return;
+    }
+
+    try {
+      setIsCreatingAuthor(true);
+      const createdUser = await apiClient.post('/users', {
+        name: term,
+        isAdmin: false,
+      });
+      const createdAuthor = mapUserToAuthor(createdUser);
+      if (!createdAuthor._id) {
+        toast.error("Failed to create author.");
+        return;
+      }
+
+      setAvailableAuthors((prev) =>
+        prev.some((author) => author._id === createdAuthor._id) ? prev : [...prev, createdAuthor],
+      );
+      handleAuthorSelect(createdAuthor);
+
+      await queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success(`Author "${term}" created`);
+    } catch (error: unknown) {
+      const message = getApiErrorMessage(error, "Failed to create author.");
+      toast.error(message);
+    } finally {
+      setIsCreatingAuthor(false);
+    }
+  };
+
   const handleAuthorRemove = (authorId: string) => {
     setSelectedAuthors(prev => prev.filter(a => a._id !== authorId));
   };
 
   // Tag selection functions
   const handleTagSelect = (tagId: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tagId) ? prev : [...prev, tagId]
-    );
-    if (formErrors.tags && selectedTags.length > 0) {
-      clearFieldError("tags");
-    }
+    setSelectedTags((prev) => {
+      const next = prev.includes(tagId) ? prev : [...prev, tagId];
+      if (formErrors.tags && next.length > 0) {
+        clearFieldError("tags");
+      }
+      return next;
+    });
   };
 
   const handleTagRemove = (tagId: string) => {
     setSelectedTags((prev) => prev.filter(id => id !== tagId));
+  };
+
+  const handleTagEnter = async (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const term = tagInput.trim();
+    if (!term || isLocked || isCreatingTag) return;
+
+    const exactMatch = availableTagOptions.find((tag) => normalize(tag.name) === normalize(term));
+    if (exactMatch) {
+      handleTagSelect(exactMatch._id);
+      setTagInput("");
+      return;
+    }
+
+    if (!isAdmin) {
+      toast.error("Only admins can create new tags.");
+      return;
+    }
+
+    try {
+      setIsCreatingTag(true);
+      const createdTag = (await apiClient.post('/tags', { name: term })) as {
+        _id?: string;
+        name?: string;
+        slug?: string;
+      };
+      const createdTagId = typeof createdTag?._id === "string" ? createdTag._id : "";
+
+      if (!createdTagId) {
+        toast.error("Failed to create tag.");
+        return;
+      }
+
+      const mappedTag: Tag = {
+        _id: createdTagId,
+        name: typeof createdTag.name === "string" ? createdTag.name : term,
+        slug: typeof createdTag.slug === "string" ? createdTag.slug : normalize(term).replace(/\s+/g, "-"),
+        description: undefined,
+        color: "#6366f1",
+        isActive: true,
+      };
+
+      setAvailableTagOptions((prev) =>
+        prev.some((tag) => tag._id === createdTagId) ? prev : [...prev, mappedTag],
+      );
+      handleTagSelect(createdTagId);
+      setTagInput("");
+
+      await queryClient.invalidateQueries({ queryKey: queryKeys.tags });
+      toast.success(`Tag "${term}" created`);
+    } catch (error: unknown) {
+      const message = getApiErrorMessage(error, "Failed to create tag.");
+      toast.error(message);
+    } finally {
+      setIsCreatingTag(false);
+    }
   };
 
   // Display functions for selected items
@@ -1122,6 +1303,8 @@ export default function ArticleForm({
                         <Input
                           value={authorSearch}
                           onChange={(e) => handleAuthorSearch(e.target.value)}
+                          onKeyDown={handleAuthorEnter}
+                          disabled={isCreatingAuthor}
                           placeholder="Search for authors by name, username, or email..."
                           className="pl-10"
                         />
@@ -1130,7 +1313,11 @@ export default function ArticleForm({
                       {/* Search Results */}
                       {showAuthorResults && (
                         <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
-                          {filteredAuthors.length > 0 ? (
+                          {isCreatingAuthor ? (
+                            <div className="p-3 text-muted-foreground text-center">
+                              Creating author...
+                            </div>
+                          ) : filteredAuthors.length > 0 ? (
                             filteredAuthors.map((author) => (
                               <div
                                 key={author._id}
@@ -1147,7 +1334,12 @@ export default function ArticleForm({
                             ))
                           ) : (
                             <div className="p-3 text-muted-foreground text-center">
-                              No authors found
+                              <p>No authors found</p>
+                              {isAdmin && authorSearch.trim().length > 0 && (
+                                <p className="text-xs mt-1">
+                                  Press Enter to create "{authorSearch.trim()}"
+                                </p>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1248,47 +1440,72 @@ export default function ArticleForm({
                 </div>
 
                 {/* Tags Selection */}
-                <Label htmlFor="tags" className='gap-0'>Tags</Label>
-                <div className={cn(
-                  "flex flex-wrap gap-2 p-2 border rounded-md min-h-10",
-                  formErrors.tags && "border-destructive"
-                )}>
-                  {selectedTagNames.map((tagName, index) => (
-                    <Badge
-                      key={selectedTags[index]}
-                      variant="secondary"
-                      className="px-3 py-1 text-sm cursor-pointer"
-                      onClick={() => !isLocked && handleTagRemove(selectedTags[index])}
-                    >
-                      {tagName} {!isLocked && "×"}
-                    </Badge>
-                  ))}
-                  {selectedTags.length === 0 && (
-                    <span className="text-muted-foreground text-sm">No tags selected</span>
-                  )}
-                </div>
-                {formErrors.tags && (
-                  <p className="text-xs text-destructive">{formErrors.tags}</p>
-                )}
-                {!isLocked && (
-                  <div className="flex flex-wrap gap-2">
-                    {availableTags
-                      .filter((tag) => !selectedTags.includes(tag.id))
-                      .map((tag) => (
-                        <Badge
-                          key={tag.id}
-                          variant="outline"
-                          className="cursor-pointer px-3 py-1 text-sm hover:bg-secondary"
-                          onClick={() => handleTagSelect(tag.id)}
-                        >
-                          {tag.name}
-                        </Badge>
-                      ))}
-                    {availableTags.length === 0 && (
-                      <p className="text-muted-foreground">No tags available</p>
+                <div className='space-y-2'>
+                  <Label htmlFor="tags" className='gap-0'>Tags</Label>
+                  <div className={cn(
+                    "flex flex-wrap gap-2 p-2 border rounded-md min-h-10",
+                    formErrors.tags && "border-destructive"
+                  )}>
+                    {selectedTagNames.map((tagName, index) => (
+                      <Badge
+                        key={selectedTags[index]}
+                        variant="secondary"
+                        className="px-3 py-1 text-sm cursor-pointer"
+                        onClick={() => !isLocked && handleTagRemove(selectedTags[index])}
+                      >
+                        {tagName} {!isLocked && "×"}
+                      </Badge>
+                    ))}
+                    {selectedTags.length === 0 && (
+                      <span className="text-muted-foreground text-sm">No tags selected</span>
                     )}
                   </div>
-                )}
+                  {formErrors.tags && (
+                    <p className="text-xs text-destructive">{formErrors.tags}</p>
+                  )}
+                  {!isLocked && (
+                    <div className="space-y-2">
+                      <Input
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={handleTagEnter}
+                        disabled={isCreatingTag}
+                        placeholder={
+                          isAdmin
+                            ? "Search tags or type a new one and press Enter..."
+                            : "Search existing tags..."
+                        }
+                      />
+                      {isAdmin &&
+                        tagInput.trim().length > 0 &&
+                        !availableTagOptions.some((tag) => normalize(tag.name) === normalize(tagInput)) && (
+                          <p className="text-xs text-muted-foreground">
+                            Press Enter to create "{tagInput.trim()}"
+                          </p>
+                        )}
+                      <div className="flex flex-wrap gap-2">
+                        {filteredTagOptions.map((tag) => (
+                          <Badge
+                            key={tag.id}
+                            variant="outline"
+                            className="cursor-pointer px-3 py-1 text-sm hover:bg-secondary"
+                            onClick={() => handleTagSelect(tag.id)}
+                          >
+                            {tag.name}
+                          </Badge>
+                        ))}
+                        {isCreatingTag && (
+                          <p className="text-muted-foreground text-sm">Creating tag...</p>
+                        )}
+                        {!isCreatingTag && filteredTagOptions.length === 0 && (
+                          <p className="text-muted-foreground">
+                            {tagInput.trim() ? "No matching tags" : "No tags available"}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
