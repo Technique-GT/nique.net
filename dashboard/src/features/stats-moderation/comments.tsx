@@ -188,9 +188,9 @@ export default function CommentsManagement() {
               <Table className="min-w-[600px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="max-w-1"/>
+                    <TableHead className="max-w-[5%]"/>
                     <TableHead>User</TableHead>
-                    <TableHead className="max-w-[200px]">Comment</TableHead>
+                    <TableHead className="max-w-150">Comment</TableHead>
                     <TableHead className="hidden sm:table-cell">Article</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="hidden md:table-cell">Date</TableHead>
@@ -203,7 +203,7 @@ export default function CommentsManagement() {
                     return (
                       <Fragment key={comment._id}>
                         <TableRow>
-                          <TableCell className='max-w-1 p-0'>
+                          <TableCell className='max-w-[5%] p-0'>
                             <div className='flex items-center justify-between gap-2 ml-2'>
                               <Button
                                 variant='ghost'
@@ -220,7 +220,7 @@ export default function CommentsManagement() {
                             </div>
                           </TableCell>
                           <TableCell className="font-medium">{comment.username}</TableCell>
-                          <TableCell className="max-w-[200px] font-medium">
+                          <TableCell className="max-w-150 font-medium">
                               <span
                                 className={`block ${
                                   isExpanded ? "whitespace-pre-wrap wrap-break-word" : "truncate"

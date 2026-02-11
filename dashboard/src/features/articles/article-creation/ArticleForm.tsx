@@ -912,12 +912,14 @@ export default function ArticleForm({
                   />
                 </div>
 
+                <div className='space-y-2'>
                 <Button
-                    className="flex bg-white text-nique-blue hover:bg-white/80 shadow-none hover:underline text-xs px-0 my-0"
-                    type="button"
-                    onClick={() => {setHideImage(!hideImage)}}
-                  >
-                  <p>{hideImage ? "Show Preview" : "Hide Preview"}</p>
+                  type="button"
+                  variant='link'
+                  onClick={() => setHideImage((prev) => !prev)}
+                  className="text-xs p-0 m-0 bg-transparent border-0 shadow-none hover:underline"
+                >
+                  {hideImage ? "Show Preview" : "Hide Preview"}
                 </Button>
 
                 {!hideImage &&<AspectRatio ratio={16 / 9} className="bg-muted/50 rounded-md overflow-hidden">
@@ -934,6 +936,7 @@ export default function ArticleForm({
                     </div>
                   )}
                 </AspectRatio>}
+                </div>
 
                 {/* New Featured and Sticky Controls */}
                 {isAdmin && (
@@ -1075,7 +1078,7 @@ export default function ArticleForm({
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-6">
                 {/* Authors - Searchable Input */}
                 <div className="space-y-2">
                   <Label htmlFor="authors" className='gap-0'>Author(s)<span className='text-destructive'>*</span></Label>
