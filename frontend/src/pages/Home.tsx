@@ -243,7 +243,7 @@ function Home() {
                 <div className='w-full'>
                     <div className='grid gap-5 grid-cols-1 lg:grid-cols-[30%_auto] lg:grid-rows-4 w-full h-[80vh]'>
                         <div className='flex flex-col gap-4 order-last lg:order-first lg:row-span-4'>
-                            {recentArticles.slice(2, 6).map((article) => (
+                            {recentArticles.slice(1, 5).map((article) => (
                                 <ArticleBlock key={article._id || article.slug} article={article} height='100%'/>
                             ))}
                         </div>
