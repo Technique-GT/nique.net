@@ -99,6 +99,7 @@ export function ArticleTable({
             <TableHead className="hidden lg:table-cell">Category</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="hidden sm:table-cell">Created</TableHead>
+            <TableHead className="hidden sm:table-cell">Published</TableHead>
             <TableHead className="hidden lg:table-cell">Views</TableHead>
             <TableHead className="text-center hidden sm:table-cell">Quick Actions</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -184,6 +185,7 @@ export function ArticleTable({
                 </div>
               </TableCell>
               <TableCell className="hidden sm:table-cell">{formatDate(article.createdAt)}</TableCell>
+              <TableCell className="hidden sm:table-cell">{article.publishedAt ? formatDate(article.publishedAt) : '—'}</TableCell>
               <TableCell className="hidden lg:table-cell">{article.views}</TableCell>
               
               {/* Quick Actions Column */}

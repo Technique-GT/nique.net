@@ -896,7 +896,7 @@ export const adminPublish = async (req: any, res: Response): Promise<void> => {
 
     article.published = true;
     article.reviewStatus = 'published';
-    article.publishedAt = article.publishedAt || new Date();
+    article.publishedAt = new Date();
     article.reviewedAt = new Date();
     article.reviewedBy = req.user.id;
     await article.save();
