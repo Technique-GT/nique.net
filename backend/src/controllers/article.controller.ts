@@ -349,7 +349,7 @@ export const getArticles = async (req: any, res: Response): Promise<void> => {
     const skip = (pageNum - 1) * limitNum;
 
     const [articles, total] = await Promise.all([
-      populateArticle(Article.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum)),
+      populateArticle(Article.find(filter).sort({ createdAt: -1 }).sort({ publishedAt: -1 }).skip(skip).limit(limitNum)),
       Article.countDocuments(filter),
     ]);
 
