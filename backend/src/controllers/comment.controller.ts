@@ -209,7 +209,7 @@ export const getAllComments = async (req: Request, res: Response): Promise<void>
     const skip = (pageNum - 1) * limitNum;
 
     const [comments, total] = await Promise.all([
-      Comment.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+      Comment.find(filter).populate('articleId', 'title slug').sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
       Comment.countDocuments(filter),
     ]);
 

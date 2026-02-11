@@ -50,12 +50,22 @@ export default function CommentsManagement() {
     }
   };
 
+  const getArticleTitle = (comment: any) => {
+      if (comment.articleId && typeof comment.articleId === "object") {
+      return comment.articleId.title;
+    }
+    return "Unknown article";
+  };
+
   const filteredComments = useMemo(() => {
     return comments.filter(c => {
-      const matchesSearch = 
-        c.content.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      const articleTitle = getArticleTitle(c).toLowerCase();
+
+      const matchesSearch =
+        c.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.articleId.toLowerCase().includes(searchTerm.toLowerCase());
+        articleTitle.includes(searchTerm.toLowerCase());
+
       
       const matchesStatus = 
         statusFilter === "all" || 
@@ -181,7 +191,7 @@ export default function CommentsManagement() {
                     <TableHead className="max-w-1"/>
                     <TableHead>User</TableHead>
                     <TableHead className="max-w-[200px]">Comment</TableHead>
-                    <TableHead className="hidden sm:table-cell">Article ID</TableHead>
+                    <TableHead className="hidden sm:table-cell">Article</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="hidden md:table-cell">Date</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -219,7 +229,7 @@ export default function CommentsManagement() {
                                 {comment.content}
                               </span>
                           </TableCell>
-                          <TableCell className="text-xs font-mono hidden sm:table-cell">{comment.articleId.slice(-6)}</TableCell>
+                          <TableCell className="text-xs font-mono hidden sm:table-cell">{getArticleTitle(comment)}</TableCell>
                           <TableCell>
                             <Badge variant={comment.approved ? "default" : "secondary"}>
                               {comment.approved ? "Approved" : "Pending"}
