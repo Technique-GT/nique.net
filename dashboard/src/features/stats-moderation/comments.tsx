@@ -188,7 +188,7 @@ export default function CommentsManagement() {
               <Table className="min-w-[600px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="max-w-[5%]"/>
+                    <TableHead className="max-w-10"/>
                     <TableHead>User</TableHead>
                     <TableHead className="max-w-150">Comment</TableHead>
                     <TableHead className="hidden sm:table-cell">Article</TableHead>
@@ -203,7 +203,7 @@ export default function CommentsManagement() {
                     return (
                       <Fragment key={comment._id}>
                         <TableRow>
-                          <TableCell className='max-w-[5%] p-0'>
+                          <TableCell className='max-w-10 p-0'>
                             <div className='flex items-center justify-between gap-2 ml-2'>
                               <Button
                                 variant='ghost'
