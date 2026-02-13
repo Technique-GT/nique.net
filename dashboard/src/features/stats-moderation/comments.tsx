@@ -185,16 +185,16 @@ export default function CommentsManagement() {
             </div>
 
             <div className="rounded-md border overflow-x-auto">
-              <Table className="w-full min-w-[760px] table-fixed lg:min-w-0">
+              <Table className="w-full table-fixed min-w-[640px] sm:min-w-[760px] lg:min-w-0">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12 px-2" />
-                    <TableHead className="w-[140px] md:w-[180px]">User</TableHead>
-                    <TableHead className="w-[240px] md:w-[360px]">Comment</TableHead>
-                    <TableHead className="hidden sm:table-cell sm:w-[180px] lg:w-[260px]">Article</TableHead>
-                    <TableHead className="w-[100px]">Status</TableHead>
-                    <TableHead className="hidden md:table-cell md:w-[120px]">Date</TableHead>
-                    <TableHead className="w-[96px] text-right">Actions</TableHead>
+                    <TableHead className="w-10 sm:w-12 px-2" />
+                    <TableHead className="w-[24%] sm:w-[18%]">User</TableHead>
+                    <TableHead className="w-[44%] sm:w-[34%] md:w-[30%]">Comment</TableHead>
+                    <TableHead className="hidden sm:table-cell sm:w-[24%] lg:w-[28%]">Article</TableHead>
+                    <TableHead className="w-[14%] sm:w-[12%]">Status</TableHead>
+                    <TableHead className="hidden md:table-cell md:w-[12%] lg:w-[10%]">Date</TableHead>
+                    <TableHead className="w-[84px] sm:w-[96px] text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -219,12 +219,12 @@ export default function CommentsManagement() {
                               </Button>
                             </div>
                           </TableCell>
-                          <TableCell className="font-medium">
+                          <TableCell className="font-medium max-w-0">
                             <span className={`block ${isExpanded ? "whitespace-pre-wrap break-words" : "truncate"}`}>
                               {comment.username}
                             </span>
                           </TableCell>
-                          <TableCell className="font-medium">
+                          <TableCell className="font-medium max-w-0">
                               <span
                                 className={`block ${
                                   isExpanded ? "whitespace-pre-wrap break-words" : "truncate"
@@ -233,7 +233,7 @@ export default function CommentsManagement() {
                                 {comment.content}
                               </span>
                           </TableCell>
-                          <TableCell className="text-xs font-mono hidden sm:table-cell">
+                          <TableCell className="text-xs font-mono hidden sm:table-cell max-w-0">
                             <span className={`block w-full ${isExpanded ? "whitespace-pre-wrap break-words" : "truncate"}`}>
                               {getArticleTitle(comment)}
                             </span>
