@@ -51,7 +51,7 @@ export default function CommentsManagement() {
   };
 
   const getArticleTitle = (comment: any) => {
-      if (comment.articleId && typeof comment.articleId === "object") {
+    if (comment.articleId && typeof comment.articleId === "object") {
       return comment.articleId.title;
     }
     return "Unknown article";
@@ -185,16 +185,16 @@ export default function CommentsManagement() {
             </div>
 
             <div className="rounded-md border overflow-x-auto">
-              <Table className="min-w-[600px]">
+              <Table className="w-full min-w-[760px] table-fixed lg:min-w-0">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="max-w-10"/>
-                    <TableHead>User</TableHead>
-                    <TableHead className="max-w-150">Comment</TableHead>
-                    <TableHead className="hidden sm:table-cell">Article</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="hidden md:table-cell">Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="w-12 px-2" />
+                    <TableHead className="w-[140px] md:w-[180px]">User</TableHead>
+                    <TableHead className="w-[240px] md:w-[360px]">Comment</TableHead>
+                    <TableHead className="hidden sm:table-cell sm:w-[180px] lg:w-[260px]">Article</TableHead>
+                    <TableHead className="w-[100px]">Status</TableHead>
+                    <TableHead className="hidden md:table-cell md:w-[120px]">Date</TableHead>
+                    <TableHead className="w-[96px] text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -203,7 +203,7 @@ export default function CommentsManagement() {
                     return (
                       <Fragment key={comment._id}>
                         <TableRow>
-                          <TableCell className='max-w-10 p-0'>
+                          <TableCell className='w-12 px-1 py-2'>
                             <div className='flex items-center justify-between gap-2 ml-2'>
                               <Button
                                 variant='ghost'
@@ -219,17 +219,25 @@ export default function CommentsManagement() {
                               </Button>
                             </div>
                           </TableCell>
-                          <TableCell className="font-medium">{comment.username}</TableCell>
-                          <TableCell className="max-w-150 font-medium">
+                          <TableCell className="font-medium">
+                            <span className={`block ${isExpanded ? "whitespace-pre-wrap break-words" : "truncate"}`}>
+                              {comment.username}
+                            </span>
+                          </TableCell>
+                          <TableCell className="font-medium">
                               <span
                                 className={`block ${
-                                  isExpanded ? "whitespace-pre-wrap wrap-break-word" : "truncate"
+                                  isExpanded ? "whitespace-pre-wrap break-words" : "truncate"
                                 }`}
                               >
                                 {comment.content}
                               </span>
                           </TableCell>
-                          <TableCell className="text-xs font-mono hidden sm:table-cell">{getArticleTitle(comment)}</TableCell>
+                          <TableCell className="text-xs font-mono hidden sm:table-cell">
+                            <span className={`block w-full ${isExpanded ? "whitespace-pre-wrap break-words" : "truncate"}`}>
+                              {getArticleTitle(comment)}
+                            </span>
+                          </TableCell>
                           <TableCell>
                             <Badge variant={comment.approved ? "default" : "secondary"}>
                               {comment.approved ? "Approved" : "Pending"}
@@ -264,7 +272,7 @@ export default function CommentsManagement() {
                   })}
                   {filteredComments.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No comments found.
                       </TableCell>
                     </TableRow>
