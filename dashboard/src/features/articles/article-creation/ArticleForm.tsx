@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
-import { $getRoot } from "lexical";
+import {
+  $getRoot,
+  IS_BOLD,
+  IS_CODE,
+  IS_ITALIC,
+  IS_STRIKETHROUGH,
+  IS_SUBSCRIPT,
+  IS_SUPERSCRIPT,
+  IS_UNDERLINE,
+} from "lexical";
 
 import { Editor } from "@/components/blocks/editor-00/editor";
 import { Button } from "@/components/ui/button";
@@ -192,32 +201,138 @@ export default function ArticleForm({
   // Enhanced Lexical to HTML conversion that preserves all formatting
   const convertLexicalToHtml = (editorState: SerializedEditorState): string => {
     try {
+      const numberToRem = (num: number) =>
+        `${num.toFixed(4).replace(/\.?0+$/, "")}rem`;
+
+      const normalizeFontSizeStyle = (value: string): string => {
+        const normalized = value.trim().toLowerCase();
+        if (!normalized) return "";
+
+        const pxMatch = normalized.match(/^(\d+(?:\.\d+)?)px$/);
+        if (pxMatch) {
+          const rem = Number(pxMatch[1]) / 16;
+          if (Math.abs(rem - 1) < 0.001) return "";
+          return numberToRem(rem);
+        }
+
+        const remMatch = normalized.match(/^(\d+(?:\.\d+)?)rem$/);
+        if (remMatch) {
+          const rem = Number(remMatch[1]);
+          if (Math.abs(rem - 1) < 0.001) return "";
+          return numberToRem(rem);
+        }
+
+        return value.trim();
+      };
+
+      const normalizeInlineStyle = (style: string): string => {
+        const declarations = style
+          .split(";")
+          .map((part) => part.trim())
+          .filter(Boolean);
+
+        const normalizedDeclarations = declarations
+          .map((declaration) => {
+            const [rawProp, ...rest] = declaration.split(":");
+            if (!rawProp || rest.length === 0) return "";
+
+            const prop = rawProp.trim().toLowerCase();
+            const value = rest.join(":").trim();
+            if (!value) return "";
+
+            if (prop === "font-size") {
+              const normalizedFontSize = normalizeFontSizeStyle(value);
+              return normalizedFontSize ? `font-size: ${normalizedFontSize}` : "";
+            }
+
+            return `${prop}: ${value}`;
+          })
+          .filter(Boolean);
+
+        return normalizedDeclarations.join("; ");
+      };
+
+      const resolveAlignment = (format: unknown): string | undefined => {
+        const allowed = new Set(["left", "center", "right", "justify", "start", "end"]);
+        if (typeof format === "string") {
+          const normalized = format.trim().toLowerCase();
+          return allowed.has(normalized) ? normalized : undefined;
+        }
+
+        if (typeof format === "number") {
+          const alignMap: Record<number, string> = {
+            1: "left",
+            2: "center",
+            3: "right",
+            4: "justify",
+            5: "start",
+            6: "end",
+          };
+          return alignMap[format];
+        }
+
+        return undefined;
+      };
+
+      const buildBlockStyleAttr = (node: any): string => {
+        const styles: string[] = [];
+        const align = resolveAlignment(node?.format);
+        if (align) {
+          styles.push(`text-align: ${align}`);
+        }
+
+        if (typeof node?.style === "string") {
+          const normalized = normalizeInlineStyle(node.style);
+          if (normalized) {
+            styles.push(normalized);
+          }
+        }
+
+        if (styles.length === 0) {
+          return "";
+        }
+
+        return ` style="${styles.join("; ").replace(/"/g, "&quot;")}"`;
+      };
+
+      const escapeHtml = (value: string) =>
+        value
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+
       const extractFormattedTextFromNode = (node: any): string => {
         // Handle text nodes with formatting
         if (node.type === 'text') {
-          let textContent = node.text || '';
+          let textContent = escapeHtml(node.text || '');
+          const nodeStyle = typeof node.style === "string" ? normalizeInlineStyle(node.style) : "";
           
           // Apply text formatting
-          if (node.format & 1) { // Bold
+          if (node.format & IS_BOLD) { // Bold
             textContent = `<strong>${textContent}</strong>`;
           }
-          if (node.format & 2) { // Italic
+          if (node.format & IS_ITALIC) { // Italic
             textContent = `<em>${textContent}</em>`;
           }
-          if (node.format & 4) { // Underline
+          if (node.format & IS_UNDERLINE) { // Underline
             textContent = `<u>${textContent}</u>`;
           }
-          if (node.format & 8) { // Strikethrough
+          if (node.format & IS_STRIKETHROUGH) { // Strikethrough
             textContent = `<s>${textContent}</s>`;
           }
-          if (node.format & 16) { // Code
+          if (node.format & IS_CODE) { // Code
             textContent = `<code>${textContent}</code>`;
           }
-          if (node.format & 32) { // Subscript
+          if (node.format & IS_SUBSCRIPT) { // Subscript
             textContent = `<sub>${textContent}</sub>`;
           }
-          if (node.format & 64) { // Superscript
+          if (node.format & IS_SUPERSCRIPT) { // Superscript
             textContent = `<sup>${textContent}</sup>`;
+          }
+
+          // Preserve inline styles set from toolbar (font-size/font-family/color).
+          if (nodeStyle) {
+            textContent = `<span style="${nodeStyle.replace(/"/g, "&quot;")}">${textContent}</span>`;
           }
           
           return textContent;
@@ -227,16 +342,8 @@ export default function ArticleForm({
         if (node.type === 'paragraph') {
           if (node.children && Array.isArray(node.children)) {
             const paragraphContent = node.children.map(extractFormattedTextFromNode).join('');
-            
-            // Handle text alignment
-            const format = node.format || 0;
-            let alignClass = '';
-            if (format & 1) alignClass = ' style="text-align: left;"';
-            if (format & 2) alignClass = ' style="text-align: center;"';
-            if (format & 3) alignClass = ' style="text-align: right;"';
-            if (format & 4) alignClass = ' style="text-align: justify;"';
-            
-            return paragraphContent ? `<p${alignClass}>${paragraphContent}</p>` : '<p><br></p>';
+            const styleAttr = buildBlockStyleAttr(node);
+            return paragraphContent ? `<p${styleAttr}>${paragraphContent}</p>` : `<p${styleAttr}><br></p>`;
           }
           return '<p><br></p>';
         }
@@ -246,7 +353,8 @@ export default function ArticleForm({
           if (node.children && Array.isArray(node.children)) {
             const headingContent = node.children.map(extractFormattedTextFromNode).join('');
             const tag = node.tag || 'h1';
-            return `<${tag}>${headingContent}</${tag}>`;
+            const styleAttr = buildBlockStyleAttr(node);
+            return `<${tag}${styleAttr}>${headingContent}</${tag}>`;
           }
           return '';
         }
@@ -256,7 +364,8 @@ export default function ArticleForm({
           if (node.children && Array.isArray(node.children)) {
             const listItems = node.children.map(extractFormattedTextFromNode).join('');
             const listTag = node.listType === 'bullet' ? 'ul' : 'ol';
-            return `<${listTag}>${listItems}</${listTag}>`;
+            const styleAttr = buildBlockStyleAttr(node);
+            return `<${listTag}${styleAttr}>${listItems}</${listTag}>`;
           }
           return '';
         }
@@ -265,7 +374,8 @@ export default function ArticleForm({
         if (node.type === 'listitem') {
           if (node.children && Array.isArray(node.children)) {
             const itemContent = node.children.map(extractFormattedTextFromNode).join('');
-            return `<li>${itemContent}</li>`;
+            const styleAttr = buildBlockStyleAttr(node);
+            return `<li${styleAttr}>${itemContent}</li>`;
           }
           return '<li></li>';
         }
@@ -274,7 +384,8 @@ export default function ArticleForm({
         if (node.type === 'quote') {
           if (node.children && Array.isArray(node.children)) {
             const quoteContent = node.children.map(extractFormattedTextFromNode).join('');
-            return `<blockquote>${quoteContent}</blockquote>`;
+            const styleAttr = buildBlockStyleAttr(node);
+            return `<blockquote${styleAttr}>${quoteContent}</blockquote>`;
           }
           return '<blockquote></blockquote>';
         }
@@ -283,7 +394,8 @@ export default function ArticleForm({
         if (node.type === 'code') {
           if (node.children && Array.isArray(node.children)) {
             const codeContent = node.children.map(extractFormattedTextFromNode).join('');
-            return `<pre><code>${codeContent}</code></pre>`;
+            const styleAttr = buildBlockStyleAttr(node);
+            return `<pre${styleAttr}><code>${codeContent}</code></pre>`;
           }
           return '<pre><code></code></pre>';
         }
@@ -299,7 +411,7 @@ export default function ArticleForm({
             const linkContent = node.children.map(extractFormattedTextFromNode).join('');
             const url = node.url || '#';
             const title = node.title ? ` title="${node.title}"` : '';
-            return `<a href="${url}"${title}>${linkContent}</a>`;
+            return `<a href="${url}"${title} target="_blank">${linkContent}</a>`;
           }
           return '';
         }
