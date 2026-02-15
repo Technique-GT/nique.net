@@ -46,7 +46,7 @@ function ArticleBlock({ article, height }: ArticleBlockProps) {
 
             <div className="relative z-10 w-full pointer-events-none">
                 <h3
-                    className="title text-white font-bold text-2xl/7 mb-2 overflow-hidden"
+                    className="title text-white font-bold text-[clamp(1rem,0.8rem+1vw,1.5rem)]/7 mb-2 overflow-hidden"
                     style={{
                         display: '-webkit-box',
                         WebkitLineClamp: 3,
