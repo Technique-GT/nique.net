@@ -20,6 +20,7 @@ import screenshot from '/nique-net-main-page.svg'
 const navItems = [
   { id: 'roles', label: 'Roles & Permissions' },
   { id: 'content_organization', label: 'Content Organization' },
+  { id: 'caching', label: 'Caching' },
   { id: 'flows', label: 'Flows' },
   { id: 'misc', label: 'Misc' },
   { id: 'schema', label: 'Schema' },
@@ -122,18 +123,28 @@ export default function Documentation() {
                   </p><p>  
                     Below the divider, articles are organized into their categories/subcategories to help organize content (sorted by published date). Keep in mind that <b>all pages prioritize hydrating the <code>main</code> section of the page before the category/subcategory subsections.</b> A set is used to avoid duplicate articles in the <code>main</code> section and the category/subcategory subsections. The <code>InfiniteScrollModule</code> contains all articles in that category, sorting by descending order of published date, <code>PAGE_SIZE=8</code>.
                   </p>
-                  <Separator />
-                  <h1>Caching</h1>
+                </div>
+              </div>
+          </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle id='caching'>Caching</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className='space-y-3 text-sm text-muted-foreground dark:text-foreground/80'>
+                  <h1>Frontend JS Caching</h1>
                   <p>
+                    There are two independent layers of caching, Cloudflare cache and frontend JS caches. This section will focus on the latter. The frontend caches are in-memory and pages still fetch fresh data on mount, so this cache layer only really improves perceived performance more than origin offload.
+                  </p><p> 
                     <code>DataPrefetcher</code> is a background warm-up component. It renders nothing and runs once on app mount to fill the in-memory category cache so section pages can render instantly on navigation.
-                  </p>
-                  <p>
                     On mount, it first checks whether the cache is already populated. If not, it fetches categories, resolves each core category ID, and then pulls sticky, featured, recent, and per-category article lists in parallel. All results are stored in the cache with a short TTL so pages can show cached data immediately while fetching fresh data in the background.
                   </p>
                   <p>
                     Prefetching is best-effort: it starts after a short delay to avoid blocking first paint, silently ignores failures, and cancels in-flight requests on unmount. Because the cache is in-memory only, it resets on refresh, and the stale-while-revalidate behavior keeps content fresh without a loading flash.
                   </p><p>
-                    Each page employs caching for both articles and categories to reduce server requests. (Ensure to check request limits on Render's free tier instance.) The TTL for articles and categories is set to 5 minutes. The caching logic could be further optimized but will require further study. Perhaps the TTL could adjusted based on traffic patterns or content update frequency and invalidate cache selectively when new content is published.
+                    Each page employs caching for both articles and categories to reduce server requests. (Check request limits on Render's free tier instance.) The TTL for articles and categories is set to 5 minutes. The caching logic could be further optimized but will require further study. Perhaps the TTL could adjusted based on traffic patterns or content update frequency and invalidate cache selectively when new content is published.
                   </p><p>
                     On load, an <code>Article</code> tries <code>articleCache.get(slugOrId)</code> to render the article from cache. If not found, it fetches from the database and sets the cache with <code>articleCache.set(slugOrId, article)</code>. On click, <code>ArticleBlock</code> components prefetch the article data and set it in the cache to prevent redundant fetches as well as speed up the fetch request before navigating to the article.
                   </p>
@@ -162,10 +173,12 @@ Article Page ── read cache ──► render instantly
 Legend: in-memory caches, stale-while-revalidate pattern`}
                     </pre>
                   </div>
+                    <p>
+                      Cloudflare cache hit rate at February 2026 averages 21.43k cached requests out of 1.72M total requests per month, putting the system at a 1.25% cache hit rate. Long term goal is to improve Cloudflare cache hit rate.
+                    </p>
                   <Separator />
                   <p><i>Tip: The free tier of Render spins down after 15 mins of no inbound requests and may experience cold starts if idle for some time. A quick workaround would be to ping the <code>/health</code> route frequently although this may balloon requests to the server. MongoDB's free tier also has limitations: 512MB storage and shared cluster resources, 16MB document size limit. The instance will also go stale if idle for 90 days, requiring a manual restart to regain responsiveness.</i></p>
                 </div>
-              </div>
             </CardContent>
           </Card>
 
