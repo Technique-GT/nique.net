@@ -35,7 +35,7 @@ function About() {
                     // Update cache
                     categoryCache.setRecentArticles(recentArticlesData || []);
                     setRecentArticles(recentArticlesData || []);
-                } catch (err) {
+                } catch {
                     if (!isMounted) {
                         return;
                     }
@@ -81,11 +81,11 @@ function About() {
                 <div className='col-span-1 ml-20 mt-8 p-8 bg-nique-blue text-white'>
                     <h4 className='text-2xl font-bold text-right mb-4'>Follow Technique</h4>
                     <p className="flex gap-2 justify-end items-center text-white">
-                        <a className='hover:text-gray-100' href='https://www.facebook.com/thenique' target='_blank'><FaFacebook /></a>
-                        <a className='hover:text-gray-100' href='https://twitter.com/the_nique' target='_blank'><FaXTwitter /></a>
-                        <a className='hover:text-gray-100' href='https://www.instagram.com/gt_nique' target='_blank'><FaInstagram /></a>
-                        <a className='hover:text-gray-100' href='https://www.tiktok.com/@gt_nique' target='_blank'><FaTiktok /></a>
-                        <a className='hover:text-gray-100' href='https://www.linkedin.com/company/technique-newspaper/' target='_blank'><FaLinkedin /></a>
+                        <a className='hover:text-gray-100' href='https://www.facebook.com/thenique' target='_blank' rel='noopener noreferrer' aria-label='Technique Facebook'><FaFacebook /></a>
+                        <a className='hover:text-gray-100' href='https://twitter.com/the_nique' target='_blank' rel='noopener noreferrer' aria-label='Technique X'><FaXTwitter /></a>
+                        <a className='hover:text-gray-100' href='https://www.instagram.com/gt_nique' target='_blank' rel='noopener noreferrer' aria-label='Technique Instagram'><FaInstagram /></a>
+                        <a className='hover:text-gray-100' href='https://www.tiktok.com/@gt_nique' target='_blank' rel='noopener noreferrer' aria-label='Technique TikTok'><FaTiktok /></a>
+                        <a className='hover:text-gray-100' href='https://www.linkedin.com/company/technique-newspaper/' target='_blank' rel='noopener noreferrer' aria-label='Technique LinkedIn'><FaLinkedin /></a>
                     </p>
                 </div>
             </div>

@@ -10,6 +10,8 @@ import articleService from "../services/articleService";
 import { articleCache } from "../services/articleCache";
 import commentService from "../services/commentService";
 import { ArticleDocument, User, Comment as CommentType } from "../types/article";
+import Seo from "../components/Seo";
+import { getArticleDescription, getArticleImage, getArticleLink } from "../utils/articlePresentation";
 
 type DisplayComment = {
   _id: string;
@@ -293,9 +295,46 @@ export default function Article() {
   const featuredMedia = article.featuredMediaUrl && typeof article.featuredMediaUrl === "string"
       ? article.featuredMediaUrl
       : null;
+  const articleDescription = getArticleDescription(article).slice(0, 160);
+  const canonicalPath = getArticleLink(article);
+  const articleImage = getArticleImage(article) || undefined;
+  const toIsoOrUndefined = (value: Date | string | null | undefined) => {
+    if (!value) return undefined;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return undefined;
+    return date.toISOString();
+  };
+  const publishedTimeIso = toIsoOrUndefined(article.publishedAt);
+  const modifiedTimeIso = toIsoOrUndefined(article.updatedAt);
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: article.title,
+    description: articleDescription,
+    image: articleImage ? [articleImage] : undefined,
+    datePublished: publishedTimeIso,
+    dateModified: modifiedTimeIso,
+    mainEntityOfPage: canonicalPath,
+    author: authorNames.length
+      ? authorNames.map((name) => ({ "@type": "Person", name }))
+      : [{ "@type": "Organization", name: "Technique" }],
+    publisher: {
+      "@type": "Organization",
+      name: "Technique",
+      url: "https://nique.net",
+    },
+  };
 
   return (
     <>
+      <Seo
+        title={article.title}
+        description={articleDescription}
+        canonicalPath={canonicalPath}
+        image={articleImage}
+        type="article"
+        structuredData={articleJsonLd}
+      />
       <Navbar />
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Title */}
