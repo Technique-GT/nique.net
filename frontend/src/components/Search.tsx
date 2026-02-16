@@ -46,25 +46,25 @@ function Search({ searchOn = false }: SearchProps) {
     return (
         <div className="flex items-center border border-gray-300 rounded-full p-2 bg-transparent h-8">
             {!isSearchOn ? (
-                <button className="flex-shrink-0" onClick={handleOpenSearch} aria-label="Open search">
+                <button className="shrink-0" onClick={handleOpenSearch} aria-label="Open search">
                     <FaSearch className="text-blue-950 hover:text-blue-900" size='15'/>
                 </button>
             ) : (
                 <div className="flex items-center w-full">
-                    <button className="flex-shrink-0 mr-2" onClick={handleCloseSearch} aria-label="Close search">
+                    <button className="shrink-0 mr-2" onClick={handleCloseSearch} aria-label="Close search">
                         <FaTimes className="text-blue-950 hover:text-blue-900" size='15'/>
                     </button>
                     <input
                         ref={inputRef}
                         type="text"
                         value={text}
-                        className="flex-grow outline-none bg-transparent text-left w-full"
+                        className="grow outline-none bg-transparent text-left w-full"
                         onChange={(e) => setText(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Search articles"
                         aria-label="Search articles"
                     />
-                    <button className="flex-shrink-0 ml-2" onClick={handleSearch} aria-label="Submit search">
+                    <button className="shrink-0 ml-2" onClick={handleSearch} aria-label="Submit search">
                         <FaSearch className="text-blue-950 hover:text-blue-900" size='15'/>
                     </button>
                 </div>
