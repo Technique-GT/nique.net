@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ArticleBlockProps } from '../types/article'
 import {
   getArticleAuthorName,
@@ -9,22 +9,21 @@ import {
 import { articleCache } from '../services/articleCache'
 
 function ArticleBlock({ article, height }: ArticleBlockProps) {
-    const navigate = useNavigate();
     const link = getArticleLink(article);
     const image = getArticleImage(article);
     const category = getArticleCategoryName(article);
     const author = getArticleAuthorName(article);
 
-    const handleClick = () => {
+    const handlePrecache = () => {
       // Pre-cache the article data so the Article page doesn't flash "not found"
       articleCache.set(article);
-      navigate(link);
     };
 
     return (
-        <div 
+        <Link
+            to={link}
             className='relative cursor-pointer rounded-md max-h-[50vh] md:max-h-none w-full flex items-end p-3 overflow-hidden group'
-            onClick={handleClick}
+            onClick={handlePrecache}
             style={{ height: `${height}` }}
         >
             {image && (
@@ -57,7 +56,7 @@ function ArticleBlock({ article, height }: ArticleBlockProps) {
                 </h3>
                 <h6 className="text-[#BAC0FF] text-sm"><span className="uppercase">{category}</span> &#8226; {author}</h6>
             </div>
-        </div>
+        </Link>
     )
 }
 

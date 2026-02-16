@@ -411,7 +411,7 @@ export default function ArticleForm({
             const linkContent = node.children.map(extractFormattedTextFromNode).join('');
             const url = node.url || '#';
             const title = node.title ? ` title="${node.title}"` : '';
-            return `<a href="${url}"${title} target="_blank">${linkContent}</a>`;
+            return `<a href="${url}"${title} target="_blank" rel="noopener noreferrer">${linkContent}</a>`;
           }
           return '';
         }

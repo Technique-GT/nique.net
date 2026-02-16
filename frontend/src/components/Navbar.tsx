@@ -99,11 +99,11 @@ export default function Navbar() {
         <div className="order-first">
           {/* social media icons on large screens */}
           <p className="hidden lg:flex gap-2 justify-start items-center text-nique-blue">
-            <a className='hover:text-nique-blue-hover' href='https://www.facebook.com/thenique' target='_blank'><FaFacebook /></a>
-            <a className='hover:text-nique-blue-hover' href='https://twitter.com/the_nique' target='_blank'><FaXTwitter /></a>
-            <a className='hover:text-nique-blue-hover' href='https://www.instagram.com/gt_nique' target='_blank'><FaInstagram /></a>
-            <a className='hover:text-nique-blue-hover' href='https://www.tiktok.com/@gt_nique' target='_blank'><FaTiktok /></a>
-            <a className='hover:text-nique-blue-hover' href='https://www.linkedin.com/company/technique-newspaper/' target='_blank'><FaLinkedin /></a>
+            <a className='hover:text-nique-blue-hover' href='https://www.facebook.com/thenique' target='_blank' rel='noopener noreferrer' aria-label='Technique Facebook'><FaFacebook /></a>
+            <a className='hover:text-nique-blue-hover' href='https://twitter.com/the_nique' target='_blank' rel='noopener noreferrer' aria-label='Technique X'><FaXTwitter /></a>
+            <a className='hover:text-nique-blue-hover' href='https://www.instagram.com/gt_nique' target='_blank' rel='noopener noreferrer' aria-label='Technique Instagram'><FaInstagram /></a>
+            <a className='hover:text-nique-blue-hover' href='https://www.tiktok.com/@gt_nique' target='_blank' rel='noopener noreferrer' aria-label='Technique TikTok'><FaTiktok /></a>
+            <a className='hover:text-nique-blue-hover' href='https://www.linkedin.com/company/technique-newspaper/' target='_blank' rel='noopener noreferrer' aria-label='Technique LinkedIn'><FaLinkedin /></a>
           </p>
           {/* date on medium screens */}
           <h4 className='text-sm text-nique-blue'><span className="inline lg:hidden">{formattedDate}</span></h4>
@@ -135,7 +135,12 @@ export default function Navbar() {
           {/* mobile navbar with logo and burger */}
           <div className={`flex md:hidden py-1.5 px-4 w-full items-center justify-between `}>
             <Link to='/'><img src={MastheadMobile} alt="Technique Logo" className="w-[80%] max-w-[300px] my-3" /></Link>
-            <button onClick={toggleNavbar}>
+            <button
+              onClick={toggleNavbar}
+              aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={isOpen}
+              aria-controls="mobile-navigation"
+            >
               {isOpen ? <IoCloseSharp size={25} /> : <IoMenuSharp size={25} />}
             </button>
           </div>
@@ -143,7 +148,7 @@ export default function Navbar() {
         <h4 className='block md:hidden border-b border-gray-400 bg-white px-4 py-1'>{formattedDate}</h4>
         {/* mobile navlinks */}
         {isOpen && (
-          <div className='md:hidden h-screen bg-white'>
+          <div id="mobile-navigation" className='md:hidden h-screen bg-white'>
             <div className='items-center px-4 pt-4'>
               <Search searchOn={true}/>
             </div>
