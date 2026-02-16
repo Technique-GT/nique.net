@@ -95,7 +95,8 @@ export function createApp() {
     'https://nique.net',
     'https://technique-4t5.pages.dev',
     'https://technique-dashboard.pages.dev',
-    'https://dashboard.nique.net'
+    'https://dashboard.nique.net',
+    'ethan-loo.technique-dashboard.pages.dev',
   ];
 
   if (!isProduction && env.CLIENT_URL && !allowedOrigins.includes(env.CLIENT_URL)) {
