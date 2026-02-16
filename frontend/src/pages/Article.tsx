@@ -195,13 +195,9 @@ export default function Article() {
 
   const articleContent = typeof article?.content === "string" ? article.content : null;
 
-  const normalizeSpansToParagraphs = (raw: string) =>
-    raw.replace(/<\s*span([^>]*)>/gi, "<p$1>").replace(/<\/\s*span\s*>/gi, "</p>");
-
   const sanitizedContent = useMemo(() => {
     if (!articleContent) return "";
-    const normalized = normalizeSpansToParagraphs(articleContent);
-    return DOMPurify.sanitize(normalized);
+    return DOMPurify.sanitize(articleContent);
   }, [articleContent]);
 
   const handleSubmitComment = async () => {
