@@ -107,6 +107,7 @@ describe('Article cache behavior', () => {
     const nextTag = await Tag.create({ name: 'Cache Tag Updated', slug: 'cache-tag-updated' });
 
     const purgeSpy = vi.spyOn(CloudflareCacheService, 'purgeTags').mockResolvedValue();
+    const purgeUrlsSpy = vi.spyOn(CloudflareCacheService, 'purgeUrls').mockResolvedValue();
 
     const res = await request(app)
       .put(`/api/admin/articles/${article._id.toString()}`)
@@ -119,6 +120,7 @@ describe('Article cache behavior', () => {
 
     expect(res.status).toBe(200);
     expect(purgeSpy).toHaveBeenCalledTimes(1);
+    expect(purgeUrlsSpy).toHaveBeenCalledTimes(1);
 
     const purgedTags = purgeSpy.mock.calls[0][0];
     expect(purgedTags).toContain('articles');
@@ -130,5 +132,9 @@ describe('Article cache behavior', () => {
     expect(purgedTags).toContain(`category:${nextCategory._id.toString()}`);
     expect(purgedTags).toContain('articles:featured');
     expect(purgedTags).toContain('articles:sticky');
+
+    const purgedUrls = purgeUrlsSpy.mock.calls[0][0];
+    expect(purgedUrls).toContain(`https://api.nique.net/api/articles/${article._id.toString()}`);
+    expect(purgedUrls).toContain(`https://api.nique.net/api/articles/slug/${article.slug}`);
   });
 });

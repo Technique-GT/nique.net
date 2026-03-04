@@ -550,6 +550,7 @@ export const getArticleById = async (req: Request, res: Response): Promise<void>
     const article = await populateArticle(Article.findOne({ _id: req.params.id, published: true }));
 
     if (!article) {
+      applyNoStoreHeaders(res);
       res.status(404).json({ success: false, message: 'Article not found' });
       return;
     }
@@ -569,6 +570,7 @@ export const getArticleBySlug = async (req: Request, res: Response): Promise<voi
     const article = await populateArticle(Article.findOne({ slug, published: true }));
 
     if (!article) {
+      applyNoStoreHeaders(res);
       res.status(404).json({ success: false, message: 'Article not found' });
       return;
     }

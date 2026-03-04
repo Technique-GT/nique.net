@@ -1,5 +1,6 @@
 import { CloudflareCacheService } from './cloudflare-cache.service';
 import { ArticleCacheSnapshot } from '../utils/cache-tags';
+import { env } from '../utils/env';
 
 type InvalidateParams = {
   before?: ArticleCacheSnapshot | null;
@@ -18,6 +19,21 @@ const isPublic = (snapshot: ArticleCacheSnapshot | null | undefined) => Boolean(
 
 const addIfPresent = (tags: Set<string>, prefix: string, value: string | null | undefined) => {
   if (value) tags.add(`${prefix}:${value}`);
+};
+
+const stripTrailingSlash = (value: string) => value.replace(/\/+$/, '');
+
+const buildDetailUrls = (snapshot: ArticleCacheSnapshot | null | undefined): string[] => {
+  if (!snapshot || !env.PUBLIC_API_BASE_URL) return [];
+
+  const baseUrl = stripTrailingSlash(env.PUBLIC_API_BASE_URL);
+  const urls = [`${baseUrl}/articles/${snapshot.id}`];
+
+  if (snapshot.slug) {
+    urls.push(`${baseUrl}/articles/slug/${snapshot.slug}`);
+  }
+
+  return urls;
 };
 
 export class ArticleCacheInvalidationService {
@@ -56,6 +72,12 @@ export class ArticleCacheInvalidationService {
       tags.add('articles:sticky');
     }
 
+    const urls = new Set<string>([
+      ...buildDetailUrls(before),
+      ...buildDetailUrls(after),
+    ]);
+
     await CloudflareCacheService.purgeTags(Array.from(tags));
+    await CloudflareCacheService.purgeUrls(Array.from(urls));
   }
 }
