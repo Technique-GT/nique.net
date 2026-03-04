@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import SuccessTick from "../components/SuccessTick";
 import DOMPurify from "dompurify";
@@ -104,6 +104,7 @@ export default function Article() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [showSubmitMessage, setShowSubmitMessage] = useState(false);
   const [commentSubmitError, setCommentSubmitError] = useState<string | null>(null);
+  const lastTrackedArticleId = useRef<string | null>(null);
 
   useEffect(() => {
     if (!normalizedId && !slug) return;
@@ -192,6 +193,32 @@ export default function Article() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [normalizedId, slug]);
+
+  useEffect(() => {
+    const articleId = article?._id;
+    if (!articleId) return;
+    if (lastTrackedArticleId.current === articleId) return;
+
+    const sessionKey = `viewed:${articleId}`;
+    if (typeof window !== "undefined" && window.sessionStorage.getItem(sessionKey)) {
+      lastTrackedArticleId.current = articleId;
+      return;
+    }
+
+    lastTrackedArticleId.current = articleId;
+
+    articleService
+      .recordArticleView(articleId)
+      .then(() => {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem(sessionKey, "1");
+        }
+      })
+      .catch((error) => {
+        console.warn("Failed to record article view", error);
+        lastTrackedArticleId.current = null;
+      });
+  }, [article?._id]);
 
   const articleContent = typeof article?.content === "string" ? article.content : null;
 

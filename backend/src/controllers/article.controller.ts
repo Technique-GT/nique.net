@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { NotificationService } from '../services/notification.service';
+import { ArticleCacheInvalidationService } from '../services/article-cache-invalidation.service';
 import mongoose from 'mongoose';
 import Article, { IArticle } from '../models/Article';
 import User from '../models/User';
@@ -9,6 +10,13 @@ import {
   canDeleteArticle, 
   canPublishArticle 
 } from '../utils/permissions';
+import {
+  articleCacheSnapshotFromDoc,
+  buildDetailCacheTags,
+  buildListCacheTags,
+  setCacheTags,
+} from '../utils/cache-tags';
+import { applyNoStoreHeaders } from '../middleware/public-cache.middleware';
 import { safeRegex, sanitizeHtml, safeErrorResponse } from '../utils/security';
 
 const slugify = (value: string) =>
@@ -43,6 +51,12 @@ const populateArticleForFeed = (query: any) =>
     .populate('categoryId', 'name slug')
     .populate('tagIds', 'name slug')
     .populate('authors.authorId', 'name profilePictureUrl');
+
+const snapshotArticle = (article: Partial<IArticle> | null | undefined) => articleCacheSnapshotFromDoc(article as IArticle | null | undefined);
+
+const invalidatePublicArticleCache = async (params: Parameters<typeof ArticleCacheInvalidationService.invalidatePublicArticleCache>[0]) => {
+  await ArticleCacheInvalidationService.invalidatePublicArticleCache(params);
+};
 
 // parsePublished is removed or commented out as it's no longer used in the new buildArticleUpdate logic (we check typeof directly)
 // const parsePublished = (body: any): boolean => { ... };
@@ -281,6 +295,12 @@ export const createArticle = async (req: Request, res: Response): Promise<void> 
 
     const populatedArticle = await populateArticle(Article.findById(article._id));
 
+    await invalidatePublicArticleCache({
+      before: null,
+      after: snapshotArticle(article),
+      mutationType: 'create',
+    });
+
     res.status(201).json({ success: true, message: 'Article created successfully', data: populatedArticle });
   } catch (error: any) {
     if (error?.code === 11000) {
@@ -366,12 +386,20 @@ export const getArticles = async (req: any, res: Response): Promise<void> => {
 export const getPublishedArticles = async (req: Request, res: Response): Promise<void> => {
   try {
     // This endpoint intentionally stays simple; the richer public feed is `getFeed`.
-    const { page, limit, search } = req.query as unknown as { page: number; limit: number; search?: string };
+    const { page, limit, search, categoryId } = req.query as unknown as {
+      page: number;
+      limit: number;
+      search?: string;
+      categoryId?: string;
+    };
 
     const filter: any = { published: true };
     if (search) {
       const rx = safeRegex(search);
       filter.$or = [{ title: rx }, { excerpt: rx }];
+    }
+    if (categoryId) {
+      filter.categoryId = new mongoose.Types.ObjectId(categoryId);
     }
 
     const skip = (page - 1) * limit;
@@ -385,6 +413,16 @@ export const getPublishedArticles = async (req: Request, res: Response): Promise
       ),
       Article.countDocuments(filter),
     ]);
+
+    if (!search) {
+      setCacheTags(
+        res,
+        buildListCacheTags(articles, {
+          routeTag: 'articles:published',
+          categoryId,
+        }),
+      );
+    }
 
     res.json({
       success: true,
@@ -432,6 +470,18 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
       Article.countDocuments(filter),
     ]);
 
+    if (!search) {
+      setCacheTags(
+        res,
+        buildListCacheTags(articles, {
+          routeTag: 'articles:feed',
+          categoryId,
+          tagId,
+          authorId,
+        }),
+      );
+    }
+
     res.json({
       success: true,
       data: articles,
@@ -448,6 +498,8 @@ export const getFeaturedArticles = async (_req: Request, res: Response): Promise
       Article.find({ published: true, isFeatured: true }).sort({ publishedAt: -1 }).limit(10),
     );
 
+    setCacheTags(res, buildListCacheTags(articles, { routeTag: 'articles:featured' }));
+
     res.json({ success: true, data: articles });
   } catch (error: any) {
     res.status(500).json(safeErrorResponse('Failed to fetch featured articles', error));
@@ -459,6 +511,8 @@ export const getStickyArticles = async (_req: Request, res: Response): Promise<v
     const articles = await populateArticle(
       Article.find({ published: true, isSticky: true }).sort({ publishedAt: -1 }),
     );
+
+    setCacheTags(res, buildListCacheTags(articles, { routeTag: 'articles:sticky' }));
 
     res.json({ success: true, data: articles });
   } catch (error: any) {
@@ -478,6 +532,13 @@ export const getArticlesByCategory = async (req: Request, res: Response): Promis
       Article.find({ categoryId, published: true }).sort({ isSticky: -1, publishedAt: -1 }),
     );
 
+    setCacheTags(
+      res,
+      buildListCacheTags(articles, {
+        categoryId: categoryId.toString(),
+      }),
+    );
+
     res.json({ success: true, data: articles });
   } catch (error: any) {
     res.status(500).json(safeErrorResponse('Failed to fetch articles by category', error));
@@ -486,14 +547,14 @@ export const getArticlesByCategory = async (req: Request, res: Response): Promis
 
 export const getArticleById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const article = await populateArticle(
-      Article.findOneAndUpdate({ _id: req.params.id, published: true }, { $inc: { viewCount: 1 } }, { new: true }),
-    );
+    const article = await populateArticle(Article.findOne({ _id: req.params.id, published: true }));
 
     if (!article) {
       res.status(404).json({ success: false, message: 'Article not found' });
       return;
     }
+
+    setCacheTags(res, buildDetailCacheTags(article));
 
     res.json({ success: true, data: article });
   } catch (error: any) {
@@ -505,18 +566,39 @@ export const getArticleBySlug = async (req: Request, res: Response): Promise<voi
   try {
     const { slug } = req.params;
 
-    const article = await populateArticle(
-      Article.findOneAndUpdate({ slug, published: true }, { $inc: { viewCount: 1 } }, { new: true }),
-    );
+    const article = await populateArticle(Article.findOne({ slug, published: true }));
 
     if (!article) {
       res.status(404).json({ success: false, message: 'Article not found' });
       return;
     }
 
+    setCacheTags(res, buildDetailCacheTags(article));
+
     res.json({ success: true, data: article });
   } catch (error: any) {
     res.status(500).json(safeErrorResponse('Failed to fetch article', error));
+  }
+};
+
+export const incrementArticleView = async (req: Request, res: Response): Promise<void> => {
+  try {
+    applyNoStoreHeaders(res);
+
+    const article = await Article.findOneAndUpdate(
+      { _id: req.params.id, published: true },
+      { $inc: { viewCount: 1 } },
+      { new: true },
+    ).select('_id');
+
+    if (!article) {
+      res.status(404).json({ success: false, message: 'Article not found' });
+      return;
+    }
+
+    res.status(204).send();
+  } catch (error: any) {
+    res.status(500).json(safeErrorResponse('Failed to record article view', error));
   }
 };
 
@@ -547,6 +629,7 @@ export const updateArticle = async (req: any, res: Response): Promise<void> => {
       return;
     }
 
+    const beforeSnapshot = snapshotArticle(existing);
     const update = await buildArticleUpdate({ body: req.body, existing });
 
     // Prevent non-admin from publishing directly via updateArticle
@@ -573,6 +656,12 @@ export const updateArticle = async (req: any, res: Response): Promise<void> => {
 
     const populatedArticle = await populateArticle(Article.findById(article._id));
 
+    await invalidatePublicArticleCache({
+      before: beforeSnapshot,
+      after: snapshotArticle(article),
+      mutationType: 'update',
+    });
+
     res.json({ success: true, message: 'Article updated successfully', data: populatedArticle });
   } catch (error: any) {
     res.status(500).json(safeErrorResponse('Failed to update article', error));
@@ -592,7 +681,14 @@ export const deleteArticle = async (req: any, res: Response): Promise<void> => {
       return;
     }
 
+    const beforeSnapshot = snapshotArticle(article);
     await Article.findByIdAndDelete(req.params.id);
+
+    await invalidatePublicArticleCache({
+      before: beforeSnapshot,
+      after: null,
+      mutationType: 'delete',
+    });
 
     res.json({ success: true, message: 'Article deleted successfully' });
   } catch (error: any) {
@@ -618,10 +714,17 @@ export const toggleFeatured = async (req: any, res: Response): Promise<void> => 
       return;
     }
 
+    const beforeSnapshot = snapshotArticle(article);
     article.isFeatured = !article.isFeatured;
     await article.save();
 
     const populatedArticle = await populateArticle(Article.findById(article._id));
+
+    await invalidatePublicArticleCache({
+      before: beforeSnapshot,
+      after: snapshotArticle(article),
+      mutationType: 'feature',
+    });
 
     res.json({
       success: true,
@@ -651,10 +754,17 @@ export const toggleSticky = async (req: any, res: Response): Promise<void> => {
       return;
     }
 
+    const beforeSnapshot = snapshotArticle(article);
     article.isSticky = !article.isSticky;
     await article.save();
 
     const populatedArticle = await populateArticle(Article.findById(article._id));
+
+    await invalidatePublicArticleCache({
+      before: beforeSnapshot,
+      after: snapshotArticle(article),
+      mutationType: 'sticky',
+    });
 
     res.json({
       success: true,
@@ -683,6 +793,7 @@ export const updateArticleStatus = async (req: any, res: Response): Promise<void
     }
 
     const updateData: Partial<IArticle> = {};
+    const beforeSnapshot = snapshotArticle(article);
 
     let published = article.published;
     if (typeof status === 'string') {
@@ -750,6 +861,12 @@ export const updateArticleStatus = async (req: any, res: Response): Promise<void
     }
 
     const populatedArticle = await populateArticle(Article.findById(updatedArticle._id));
+
+    await invalidatePublicArticleCache({
+      before: beforeSnapshot,
+      after: snapshotArticle(updatedArticle),
+      mutationType: published ? 'publish' : 'unpublish',
+    });
 
     res.json({ success: true, message: 'Article status updated successfully', data: populatedArticle });
   } catch (error: any) {
@@ -894,6 +1011,7 @@ export const adminPublish = async (req: any, res: Response): Promise<void> => {
       return;
     }
 
+    const beforeSnapshot = snapshotArticle(article);
     article.published = true;
     article.reviewStatus = 'published';
     article.publishedAt = new Date();
@@ -912,6 +1030,12 @@ export const adminPublish = async (req: any, res: Response): Promise<void> => {
         { articleId: article._id }
       );
     }
+
+    await invalidatePublicArticleCache({
+      before: beforeSnapshot,
+      after: snapshotArticle(article),
+      mutationType: 'publish',
+    });
 
     res.json({ success: true, message: 'Article published', data: article });
   } catch (error: any) {
@@ -932,11 +1056,18 @@ export const adminUnpublish = async (req: any, res: Response): Promise<void> => 
       return;
     }
 
+    const beforeSnapshot = snapshotArticle(article);
     article.published = false;
     article.reviewStatus = 'draft';
     article.isFeatured = false;
     article.isSticky = false;
     await article.save();
+
+    await invalidatePublicArticleCache({
+      before: beforeSnapshot,
+      after: snapshotArticle(article),
+      mutationType: 'unpublish',
+    });
 
     res.json({ success: true, message: 'Article unpublished', data: article });
   } catch (error: any) {

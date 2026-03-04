@@ -8,7 +8,9 @@ import {
   getFeed,
   getPublishedArticles,
   getStickyArticles,
+  incrementArticleView,
 } from '../controllers/article.controller';
+import { applyPublicReadCacheHeaders } from '../middleware/public-cache.middleware';
 import { validateParams, validateQuery } from '../middleware/validate.middleware';
 import { publishedArticlesQuerySchema } from '../schemas/article.query.schema';
 import { feedQuerySchema } from '../schemas/article.feed.schema';
@@ -19,15 +21,16 @@ const router = Router();
 // Public routes (read-only, published content only)
 
 // Fast public feed (paginated, no content)
-router.get('/feed', validateQuery(feedQuerySchema), getFeed);
+router.get('/feed', applyPublicReadCacheHeaders, validateQuery(feedQuerySchema), getFeed);
 
-router.get('/published', validateQuery(publishedArticlesQuerySchema), getPublishedArticles);
-router.get('/featured', getFeaturedArticles);
-router.get('/sticky', getStickyArticles);
+router.get('/published', applyPublicReadCacheHeaders, validateQuery(publishedArticlesQuerySchema), getPublishedArticles);
+router.get('/featured', applyPublicReadCacheHeaders, getFeaturedArticles);
+router.get('/sticky', applyPublicReadCacheHeaders, getStickyArticles);
 
-router.get('/category/:category', getArticlesByCategory);
+router.get('/category/:category', applyPublicReadCacheHeaders, getArticlesByCategory);
 
-router.get('/slug/:slug', validateParams(slugParamSchema), getArticleBySlug);
-router.get('/:id', validateParams(idParamSchema), getArticleById);
+router.get('/slug/:slug', applyPublicReadCacheHeaders, validateParams(slugParamSchema), getArticleBySlug);
+router.get('/:id', applyPublicReadCacheHeaders, validateParams(idParamSchema), getArticleById);
+router.post('/:id/view', validateParams(idParamSchema), incrementArticleView);
 
 export default router;

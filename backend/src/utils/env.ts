@@ -16,5 +16,9 @@ export const env = z
     CLIENT_URL: z.string().optional(),
     LOG_LEVEL: z.string().optional(),
     NODE_ENV: z.string().optional(),
+    CLOUDFLARE_ZONE_ID: z.string().trim().min(1).optional(),
+    CLOUDFLARE_API_TOKEN: z.string().trim().min(1).optional(),
+    CLOUDFLARE_PURGE_ENABLED: z.coerce.boolean().optional().default(false),
+    PUBLIC_API_BASE_URL: z.string().trim().min(1).optional(),
   })
   .parse(process.env);
