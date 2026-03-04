@@ -10,6 +10,14 @@ type RouteContext = {
   authorId?: string | undefined;
 };
 
+const sanitizeCacheTagPart = (value: string): string =>
+  value
+    .normalize('NFKD')
+    .replace(/[^\x20-\x7E]/g, '') // strip non-ASCII
+    .replace(/[\s,;"]/g, '-')     // replace header-problem chars
+    .replace(/-+/g, '-')
+    .trim();
+
 const toStringId = (value: IdLike): string | null => {
   if (!value) return null;
   if (typeof value === 'string') return value;
@@ -24,7 +32,10 @@ const toStringId = (value: IdLike): string | null => {
 };
 
 const addIfPresent = (tags: Set<string>, prefix: string, value: string | null | undefined) => {
-  if (value) tags.add(`${prefix}:${value}`);
+  if (!value) return;
+  const safeValue = sanitizeCacheTagPart(value);
+  if (!safeValue) return;
+  tags.add(`${prefix}:${safeValue}`);
 };
 
 export const articleCacheSnapshotFromDoc = (article: Partial<IArticle> | null | undefined) => {
