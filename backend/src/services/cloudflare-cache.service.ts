@@ -23,6 +23,8 @@ export class CloudflareCacheService {
     const timeout = setTimeout(() => controller.abort(), 5000);
 
     try {
+      logger.info({ tags: uniqueTags }, 'Cloudflare purge tags');
+
       const response = await fetch(PURGE_ENDPOINT(env.CLOUDFLARE_ZONE_ID), {
         method: 'POST',
         headers: {

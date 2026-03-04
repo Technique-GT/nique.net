@@ -539,7 +539,6 @@ export const getArticlesByCategory = async (req: Request, res: Response): Promis
       }),
     );
 
-    console.log(res.getHeaders());
     res.json({ success: true, data: articles });
   } catch (error: any) {
     res.status(500).json(safeErrorResponse('Failed to fetch articles by category', error));
