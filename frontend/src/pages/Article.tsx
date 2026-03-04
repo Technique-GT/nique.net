@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import SuccessTick from "../components/SuccessTick";
 import DOMPurify from "dompurify";
 import Navbar from "../components/Navbar";
@@ -78,7 +78,8 @@ const sortComments = (
 };
 
 export default function Article() {
-  const { id, slug } = useParams();
+  const { id, slug, category } = useParams();
+  const navigate = useNavigate();
   const normalizedId = useMemo(() => {
     if (slug) return undefined; // prefer slug if available
     if (!id) return undefined;
@@ -122,6 +123,20 @@ export default function Article() {
           fetchedArticle = await articleService.fetchArticleById(normalizedId, controller.signal);
         } else {
           return;
+        }
+
+        // Canonicalize the URL when an article moves categories. The backend
+        // resolves article detail by slug, so the path segment itself is not authoritative.
+        if (slug) {
+          const canonicalLink = getArticleLink(fetchedArticle);
+          const fetchedCategorySlug =
+            fetchedArticle.categoryId && typeof fetchedArticle.categoryId === "object"
+              ? fetchedArticle.categoryId.slug
+              : undefined;
+
+          if (canonicalLink && fetchedCategorySlug && category !== fetchedCategorySlug) {
+            navigate(canonicalLink, { replace: true });
+          }
         }
 
         setArticle(fetchedArticle);
@@ -184,7 +199,7 @@ export default function Article() {
     load();
 
     return () => controller.abort();
-  }, [normalizedId, slug]);
+  }, [category, navigate, normalizedId, slug]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
