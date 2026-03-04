@@ -136,5 +136,13 @@ describe('Article cache behavior', () => {
     const purgedUrls = purgeUrlsSpy.mock.calls[0][0];
     expect(purgedUrls).toContain(`https://api.nique.net/api/articles/${article._id.toString()}`);
     expect(purgedUrls).toContain(`https://api.nique.net/api/articles/slug/${article.slug}`);
+    expect(purgedUrls).toContainEqual({
+      url: `https://api.nique.net/api/articles/${article._id.toString()}`,
+      headers: { Origin: 'https://nique.net' },
+    });
+    expect(purgedUrls).toContainEqual({
+      url: `https://api.nique.net/api/articles/slug/${article.slug}`,
+      headers: { Origin: 'https://nique.net' },
+    });
   });
 });

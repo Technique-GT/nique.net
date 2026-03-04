@@ -5,6 +5,7 @@ const PURGE_ENDPOINT = (zoneId: string) =>
   `https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`;
 
 type PurgeResponsePayload = { success?: boolean; errors?: unknown[] } | null;
+type PurgeFile = string | { url: string; headers?: Record<string, string> };
 
 const purgeCloudflareCache = async (
   body: Record<string, unknown>,
@@ -70,8 +71,26 @@ export class CloudflareCacheService {
     );
   }
 
-  static async purgeUrls(urls: string[]): Promise<void> {
-    const uniqueUrls = Array.from(new Set(urls.filter(Boolean)));
+  static async purgeUrls(urls: PurgeFile[]): Promise<void> {
+    const uniqueUrls = Array.from(
+      new Map(
+        urls
+          .filter((url): url is PurgeFile => {
+            if (typeof url === 'string') return Boolean(url);
+            return Boolean(url.url);
+          })
+          .map((url) => [
+            typeof url === 'string'
+              ? url
+              : JSON.stringify({
+                  url: url.url,
+                  headers: url.headers ?? {},
+                }),
+            url,
+          ]),
+      ).values(),
+    );
+
     if (uniqueUrls.length === 0) return;
 
     if (!env.CLOUDFLARE_PURGE_ENABLED) {

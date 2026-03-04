@@ -2,6 +2,8 @@ import { CloudflareCacheService } from './cloudflare-cache.service';
 import { ArticleCacheSnapshot } from '../utils/cache-tags';
 import { env } from '../utils/env';
 
+type PurgeFile = string | { url: string; headers?: Record<string, string> };
+
 type InvalidateParams = {
   before?: ArticleCacheSnapshot | null;
   after?: ArticleCacheSnapshot | null;
@@ -23,7 +25,20 @@ const addIfPresent = (tags: Set<string>, prefix: string, value: string | null | 
 
 const stripTrailingSlash = (value: string) => value.replace(/\/+$/, '');
 
-const buildDetailUrls = (snapshot: ArticleCacheSnapshot | null | undefined): string[] => {
+const parsePurgeOrigins = (): string[] => {
+  const configuredOrigins = env.PUBLIC_CACHE_PURGE_ORIGINS
+    ?.split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (configuredOrigins && configuredOrigins.length > 0) {
+    return configuredOrigins;
+  }
+
+  return ['https://nique.net', 'https://www.nique.net'];
+};
+
+const buildDetailUrls = (snapshot: ArticleCacheSnapshot | null | undefined): PurgeFile[] => {
   if (!snapshot || !env.PUBLIC_API_BASE_URL) return [];
 
   const baseUrl = stripTrailingSlash(env.PUBLIC_API_BASE_URL);
@@ -33,7 +48,21 @@ const buildDetailUrls = (snapshot: ArticleCacheSnapshot | null | undefined): str
     urls.push(`${baseUrl}/articles/slug/${snapshot.slug}`);
   }
 
-  return urls;
+  const origins = parsePurgeOrigins();
+  const files: PurgeFile[] = [...urls];
+
+  for (const url of urls) {
+    for (const origin of origins) {
+      files.push({
+        url,
+        headers: {
+          Origin: origin,
+        },
+      });
+    }
+  }
+
+  return files;
 };
 
 export class ArticleCacheInvalidationService {
@@ -72,12 +101,12 @@ export class ArticleCacheInvalidationService {
       tags.add('articles:sticky');
     }
 
-    const urls = new Set<string>([
+    const urls = [
       ...buildDetailUrls(before),
       ...buildDetailUrls(after),
-    ]);
+    ];
 
     await CloudflareCacheService.purgeTags(Array.from(tags));
-    await CloudflareCacheService.purgeUrls(Array.from(urls));
+    await CloudflareCacheService.purgeUrls(urls);
   }
 }

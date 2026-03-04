@@ -20,5 +20,6 @@ export const env = z
     CLOUDFLARE_API_TOKEN: z.string().trim().min(1).optional(),
     CLOUDFLARE_PURGE_ENABLED: z.coerce.boolean().optional().default(false),
     PUBLIC_API_BASE_URL: z.string().trim().min(1).optional(),
+    PUBLIC_CACHE_PURGE_ORIGINS: z.string().trim().optional(),
   })
   .parse(process.env);
