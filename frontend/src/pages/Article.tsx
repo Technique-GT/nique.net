@@ -7,7 +7,6 @@ import ArticleBlock from "../components/ArticleBlock";
 import Comment from "../components/Comment";
 import Spinner from "../components/Spinner";
 import articleService from "../services/articleService";
-import { articleCache } from "../services/articleCache";
 import commentService from "../services/commentService";
 import { ArticleDocument, User, Comment as CommentType } from "../types/article";
 import Seo from "../components/Seo";
@@ -86,14 +85,8 @@ export default function Article() {
     return /^[a-f0-9]{24}:\d+$/i.test(id) ? id.split(":")[0] : id;
   }, [id, slug]);
 
-  // Check cache immediately for instant display
-  const initialCachedArticle = useMemo(() => {
-    const cacheKey = slug || normalizedId || '';
-    return cacheKey ? articleCache.get(cacheKey) : null;
-  }, [slug, normalizedId]);
-
-  const [isLoading, setIsLoading] = useState(!initialCachedArticle);
-  const [article, setArticle] = useState<ArticleDocument | null>(initialCachedArticle);
+  const [isLoading, setIsLoading] = useState(true);
+  const [article, setArticle] = useState<ArticleDocument | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<ArticleDocument[]>([]);
   const [comments, setComments] = useState<DisplayComment[]>([]);
   const [numCommentsToView, setNumCommentsToView] = useState(5);
@@ -105,6 +98,11 @@ export default function Article() {
   const [showSubmitMessage, setShowSubmitMessage] = useState(false);
   const [commentSubmitError, setCommentSubmitError] = useState<string | null>(null);
   const lastTrackedArticleId = useRef<string | null>(null);
+  const commentsSortRef = useRef(commentsSortBy);
+
+  useEffect(() => {
+    commentsSortRef.current = commentsSortBy;
+  }, [commentsSortBy]);
 
   useEffect(() => {
     if (!normalizedId && !slug) return;
@@ -112,10 +110,10 @@ export default function Article() {
     const controller = new AbortController();
     const load = async () => {
       try {
-        // Only show loading if we don't have cached data
-        if (!article) {
-          setIsLoading(true);
-        }
+        setIsLoading(true);
+        setArticle(null);
+        setRelatedArticles([]);
+        setComments([]);
         let fetchedArticle: ArticleDocument;
 
         if (slug) {
@@ -127,8 +125,6 @@ export default function Article() {
         }
 
         setArticle(fetchedArticle);
-        // Update cache with fresh data
-        articleCache.set(fetchedArticle);
 
         // backend uses categoryId (populated object), not categories[]
         const categoryId = fetchedArticle.categoryId?._id;
@@ -160,7 +156,7 @@ export default function Article() {
               controller.signal
             );
             const mappedComments = fetchedComments.map(mapApiCommentToDisplay);
-            setComments(sortComments(mappedComments, commentsSortBy));
+            setComments(sortComments(mappedComments, commentsSortRef.current));
           } catch {
             setComments([]);
           }

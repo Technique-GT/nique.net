@@ -1,8 +1,7 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
-import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
-import { ArticleDocument } from '../types/article';
+import { ArticleDocument, Category } from '../types/article';
 import SideArticle from '../components/SideArticle';
 import Carousel from '../components/Carousel';
 import SmallArticle from '../components/SmallArticle';
@@ -56,18 +55,14 @@ const processEntertainmentArticles = (allEntertainment: ArticleDocument[]) => {
 };
 
 function Entertainment() {
-    // Check cache immediately for instant display
-    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.ENTERTAINMENT), []);
-    const initialData = useMemo(() => cachedArticles ? processEntertainmentArticles(cachedArticles) : null, [cachedArticles]);
-
-    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
-    const [recentEntertainment, setRecentEntertainment] = useState<ArticleDocument[]>(initialData?.recentEntertainment || []);
-    const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>(initialData?.entertainmentArticles || []);
-    const [filmtv, setFilmAndTV] = useState<ArticleDocument[]>(initialData?.filmtv || []);
-    const [music, setMusic] = useState<ArticleDocument[]>(initialData?.music || []);
-    const [artsTheater, setArtsTheater] = useState<ArticleDocument[]>(initialData?.artsTheater || []);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentEntertainment, setRecentEntertainment] = useState<ArticleDocument[]>([]);
+    const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>([]);
+    const [filmtv, setFilmAndTV] = useState<ArticleDocument[]>([]);
+    const [music, setMusic] = useState<ArticleDocument[]>([]);
+    const [artsTheater, setArtsTheater] = useState<ArticleDocument[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [entertainmentCategoryId, setEntertainmentCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.ENTERTAINMENT));
+    const [entertainmentCategoryId, setEntertainmentCategoryId] = useState<string | null>(null);
     const [activePlaylistEmbedUrl, setActivePlaylistEmbedUrl] = useState<string | null>(null);
 
     useEffect(() => {
@@ -75,21 +70,13 @@ function Entertainment() {
         const controller = new AbortController();
 
         const loadArticles = async () => {
-            // Only show loading if we don't have cached data
-            if (!cachedArticles) {
-                setIsLoading(true);
-            }
+            setIsLoading(true);
             setError(null);
 
             try {
-                // Use cached categories if available
-                let categories = categoryCache.getCategories();
-                if (!categories) {
-                    categories = await articleService.fetchCategories(50, controller.signal);
-                    categoryCache.setCategories(categories);
-                }
+                const categories = await articleService.fetchCategories(50, controller.signal);
 
-                const entertainmentCategory = categories.find((category: any) =>
+                const entertainmentCategory = categories.find((category: Category) =>
                     category.name?.toLowerCase() === Categories.ENTERTAINMENT.toLowerCase()
                 );
                 setEntertainmentCategoryId(entertainmentCategory?._id || null);
@@ -108,9 +95,6 @@ function Entertainment() {
                 );
 
                 const allEntertainment = entertainmentResponse || [];
-                
-                // Update cache with fresh data
-                categoryCache.setCategoryArticles(Categories.ENTERTAINMENT, allEntertainment);
 
                 if (!isMounted) {
                     return;
@@ -122,14 +106,11 @@ function Entertainment() {
                 setFilmAndTV(processed.filmtv);
                 setMusic(processed.music);
                 setArtsTheater(processed.artsTheater);
-            } catch (err) {
+            } catch {
                 if (!isMounted) {
                     return;
                 }
-                // Only show error if we don't have cached data to display
-                if (!cachedArticles) {
-                    setError('Unable to load articles. Please try again later.');
-                }
+                setError('Unable to load articles. Please try again later.');
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -143,7 +124,7 @@ function Entertainment() {
             isMounted = false;
             controller.abort();
         };
-    }, [cachedArticles]);
+    }, []);
 
     useEffect(() => {
         const controller = new AbortController();

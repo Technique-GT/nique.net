@@ -1,8 +1,7 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
-import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
-import { ArticleDocument } from '../types/article';
+import { ArticleDocument, Category } from '../types/article';
 import { Categories } from '../types/categories';
 import FeaturedStory from '../components/FeaturedStory';
 // import MockAd from '../assets/mock_advertisement.jpg';
@@ -54,39 +53,27 @@ const processNewsArticles = (allNewsArticles: ArticleDocument[]) => {
 };
 
 function News() {
-    // Check cache immediately for instant display
-    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.NEWS), []);
-    const initialData = useMemo(() => cachedArticles ? processNewsArticles(cachedArticles) : null, [cachedArticles]);
-
-    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
-    const [recentNews, setRecentNews] = useState<ArticleDocument[]>(initialData?.recentNews || []);
-    const [sideNewsArticles, setSideNewsArticles] = useState<ArticleDocument[]>(initialData?.sideNewsArticles || []);
-    const [theInstituteNews, setTheInstituteNews] = useState<ArticleDocument[]>(initialData?.theInstituteNews || []);
-    const [cityStateNews, setCityStateNews] = useState<ArticleDocument[]>(initialData?.cityStateNews || []);
-    const [scienceResearchNews, setScienceResearchNews] = useState<ArticleDocument[]>(initialData?.scienceResearchNews || []);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentNews, setRecentNews] = useState<ArticleDocument[]>([]);
+    const [sideNewsArticles, setSideNewsArticles] = useState<ArticleDocument[]>([]);
+    const [theInstituteNews, setTheInstituteNews] = useState<ArticleDocument[]>([]);
+    const [cityStateNews, setCityStateNews] = useState<ArticleDocument[]>([]);
+    const [scienceResearchNews, setScienceResearchNews] = useState<ArticleDocument[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [newsCategoryId, setNewsCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.NEWS));
+    const [newsCategoryId, setNewsCategoryId] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
     
         const loadArticles = async () => {
-            // Only show loading if we don't have cached data
-            if (!cachedArticles) {
-                setIsLoading(true);
-            }
+            setIsLoading(true);
             setError(null);
 
             try {
-                // Use cached categories if available
-                let categories = categoryCache.getCategories();
-                if (!categories) {
-                    categories = await articleService.fetchCategories(50, controller.signal);
-                    categoryCache.setCategories(categories);
-                }
+                const categories = await articleService.fetchCategories(50, controller.signal);
 
-                const newsCategory = categories.find((category: any) =>
+                const newsCategory = categories.find((category: Category) =>
                     category.name?.toLowerCase() === Categories.NEWS.toLowerCase()
                 );
                 const categoryId = typeof newsCategory?._id === 'string' ? newsCategory._id : null;
@@ -106,9 +93,6 @@ function News() {
                 );
 
                 const allNewsArticles = newsResponse || [];
-                
-                // Update cache with fresh data
-                categoryCache.setCategoryArticles(Categories.NEWS, allNewsArticles);
 
                 if (!isMounted) {
                     return;
@@ -120,14 +104,11 @@ function News() {
                 setTheInstituteNews(processed.theInstituteNews);
                 setCityStateNews(processed.cityStateNews);
                 setScienceResearchNews(processed.scienceResearchNews);
-            } catch (err) {
+            } catch {
                 if (!isMounted) {
                     return;
                 }
-                // Only show error if we don't have cached data to display
-                if (!cachedArticles) {
-                    setError('Unable to load articles. Please try again later.');
-                }
+                setError('Unable to load articles. Please try again later.');
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -141,7 +122,7 @@ function News() {
             isMounted = false;
             controller.abort();
         };
-    }, [cachedArticles]);
+    }, []);
     
     if (isLoading) {
         return (

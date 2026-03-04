@@ -5,7 +5,6 @@ import { Suspense, lazy } from "react";
 // import ReactGA from 'react-ga4';
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Spinner from "./components/Spinner";
-import DataPrefetcher from "./components/DataPrefetcher";
 import Footer from "./components/Footer";
 import Seo from "./components/Seo";
 
@@ -105,7 +104,6 @@ function App() {
   return (
     <Router>
       <RouteSeo />
-      <DataPrefetcher />
       <div className="App min-h-screen flex flex-col">
         <div className="flex-1">
           <Suspense fallback={

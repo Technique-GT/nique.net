@@ -6,7 +6,6 @@ import {
   getArticleImage,
   getArticleLink,
 } from '../utils/articlePresentation'
-import { articleCache } from '../services/articleCache'
 
 function ArticleBlock({ article, height }: ArticleBlockProps) {
     const link = getArticleLink(article);
@@ -14,16 +13,10 @@ function ArticleBlock({ article, height }: ArticleBlockProps) {
     const category = getArticleCategoryName(article);
     const author = getArticleAuthorName(article);
 
-    const handlePrecache = () => {
-      // Pre-cache the article data so the Article page doesn't flash "not found"
-      articleCache.set(article);
-    };
-
     return (
         <Link
             to={link}
             className='relative cursor-pointer rounded-md max-h-[50vh] md:max-h-none w-full flex items-end p-3 overflow-hidden group'
-            onClick={handlePrecache}
             style={{ height: `${height}` }}
         >
             {image && (

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import articleService from '../services/articleService';
-import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
 import { ArticleDocument } from '../types/article';
 import FeaturedStory from '../components/FeaturedStory';
@@ -16,17 +15,6 @@ import spotifyService from '../services/spotifyService';
 import { toSpotifyEmbedUrl } from '../utils/spotify';
 
 function Home() {
-    // Check cache for initial state to avoid loading spinner on return visits
-    const cachedSticky = categoryCache.getStickyArticles();
-    const cachedFeatured = categoryCache.getFeaturedArticles();
-    const cachedRecent = categoryCache.getRecentArticles();
-    const cachedLife = categoryCache.getCategoryArticles(Categories.LIFE);
-    const cachedNews = categoryCache.getCategoryArticles(Categories.NEWS);
-    const cachedEntertainment = categoryCache.getCategoryArticles(Categories.ENTERTAINMENT);
-    const cachedOpinion = categoryCache.getCategoryArticles(Categories.OPINION);
-    const cachedSports = categoryCache.getCategoryArticles(Categories.SPORTS);
-    
-    // Helper to compute derived state from raw data
     const computeDerivedState = (
         stickyArticles: ArticleDocument[],
         featuredArticles: ArticleDocument[],
@@ -66,22 +54,14 @@ function Home() {
         };
     };
 
-    // Compute initial state from cache if available
-    const hasCache = cachedSticky && cachedFeatured && cachedRecent && cachedLife && 
-                     cachedNews && cachedEntertainment && cachedOpinion && cachedSports;
-    const initialState = hasCache
-        ? computeDerivedState(cachedSticky, cachedFeatured, cachedRecent, cachedLife, 
-                              cachedNews, cachedEntertainment, cachedOpinion, cachedSports)
-        : null;
-
-    const [isLoading, setIsLoading] = useState<boolean>(!initialState);
-    const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>(initialState?.recentArticles || []);
-    const [featuredArticle, setFeaturedArticle] = useState<ArticleDocument | null>(initialState?.featuredArticle || null);
-    const [lifeArticles, setLifeArticles] = useState<ArticleDocument[]>(initialState?.lifeArticles || []);
-    const [newsArticles, setNewsArticles] = useState<ArticleDocument[]>(initialState?.newsArticles || []);
-    const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>(initialState?.entertainmentArticles || []);
-    const [opinionArticles, setOpinionArticles] = useState<ArticleDocument[]>(initialState?.opinionArticles || []);
-    const [sportsArticles, setSportsArticles] = useState<ArticleDocument[]>(initialState?.sportsArticles || []);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>([]);
+    const [featuredArticle, setFeaturedArticle] = useState<ArticleDocument | null>(null);
+    const [lifeArticles, setLifeArticles] = useState<ArticleDocument[]>([]);
+    const [newsArticles, setNewsArticles] = useState<ArticleDocument[]>([]);
+    const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>([]);
+    const [opinionArticles, setOpinionArticles] = useState<ArticleDocument[]>([]);
+    const [sportsArticles, setSportsArticles] = useState<ArticleDocument[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [activePlaylistEmbedUrl, setActivePlaylistEmbedUrl] = useState<string | null>(null);
 
@@ -90,10 +70,7 @@ function Home() {
         const controller = new AbortController();
 
         const loadArticles = async () => {
-            // Only show loading spinner if we don't have cached data
-            if (!hasCache) {
-                setIsLoading(true);
-            }
+            setIsLoading(true);
             setError(null);
 
             try {
@@ -145,17 +122,6 @@ function Home() {
                     return;
                 }
 
-                // Populate cache for instant navigation to category pages
-                categoryCache.setCategories(categories);
-                categoryCache.setStickyArticles(stickyArticles || []);
-                categoryCache.setFeaturedArticles(featuredArticles || []);
-                categoryCache.setRecentArticles(recentArticlesData || []);
-                categoryCache.setCategoryArticles(Categories.LIFE, lifeArticlesData || []);
-                categoryCache.setCategoryArticles(Categories.NEWS, newsArticlesData || []);
-                categoryCache.setCategoryArticles(Categories.ENTERTAINMENT, entertainmentArticlesData || []);
-                categoryCache.setCategoryArticles(Categories.OPINION, opinionArticlesData || []);
-                categoryCache.setCategoryArticles(Categories.SPORTS, sportsArticlesData || []);
-
                 // Compute derived state
                 const derived = computeDerivedState(
                     stickyArticles || [],
@@ -175,7 +141,7 @@ function Home() {
                 setEntertainmentArticles(derived.entertainmentArticles);
                 setOpinionArticles(derived.opinionArticles);
                 setSportsArticles(derived.sportsArticles); 
-            } catch (err) {
+            } catch {
                 if (!isMounted) {
                     return;
                 }

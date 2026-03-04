@@ -136,41 +136,33 @@ export default function Documentation() {
               <div className='space-y-3 text-sm text-muted-foreground dark:text-foreground/80'>
                   <h1>Frontend JS Caching</h1>
                   <p>
-                    There are two independent layers of caching, Cloudflare cache and frontend JS caches. This section will focus on the latter. The frontend caches are in-memory and pages still fetch fresh data on mount, so this cache layer only really improves perceived performance more than origin offload.
-                  </p><p> 
-                    <code>DataPrefetcher</code> is a background warm-up component. It renders nothing and runs once on app mount to fill the in-memory category cache so section pages can render instantly on navigation.
-                    On mount, it first checks whether the cache is already populated. If not, it fetches categories, resolves each core category ID, and then pulls sticky, featured, recent, and per-category article lists in parallel. All results are stored in the cache with a short TTL so pages can show cached data immediately while fetching fresh data in the background.
+                    The public site now relies on backend responses plus Cloudflare edge caching instead of frontend in-memory article/category caches. Pages fetch directly from the API on mount, and Cloudflare handles shared caching for public article reads.
+                  </p><p>
+                    Browser-facing responses still use <code>Cache-Control: public, max-age=0, must-revalidate</code> so the client does not hold onto long-lived stale copies. Cloudflare applies the longer edge TTL and is invalidated on article mutations, which keeps the frontend correctness model simpler than the old in-memory stale-while-revalidate setup.
                   </p>
                   <p>
-                    Prefetching is best-effort: it starts after a short delay to avoid blocking first paint, silently ignores failures, and cancels in-flight requests on unmount. Because the cache is in-memory only, it resets on refresh, and the stale-while-revalidate behavior keeps content fresh without a loading flash.
+                    The practical tradeoff is that same-tab navigation may briefly show loading states instead of instant cached content. In exchange, deleted, unpublished, or republished articles no longer linger in client memory after a mutation, and the frontend no longer needs separate article/category cache coordination logic.
                   </p><p>
-                    Each page employs caching for both articles and categories to reduce server requests. (Check request limits on Render's free tier instance.) The TTL for articles and categories is set to 5 minutes. The caching logic could be further optimized but will require further study. Perhaps the TTL could adjusted based on traffic patterns or content update frequency and invalidate cache selectively when new content is published.
-                  </p><p>
-                    On load, an <code>Article</code> tries <code>articleCache.get(slugOrId)</code> to render the article from cache. If not found, it fetches from the database and sets the cache with <code>articleCache.set(slugOrId, article)</code>. On click, <code>ArticleBlock</code> components prefetch the article data and set it in the cache to prevent redundant fetches as well as speed up the fetch request before navigating to the article.
+                    For operations and debugging, the meaningful cache layer is now the Cloudflare-backed API. Public article reads should trend toward <code>CF-Cache-Status: HIT</code>, search routes should remain uncached, and publish-state changes depend on backend purge logic rather than clearing local JS caches.
                   </p>
                   <div className='rounded-lg border bg-muted/30 p-3 text-xs leading-5 text-muted-foreground'>
                     <pre className='whitespace-pre-wrap'>
-{`CACHE FLOW (FRONTEND)
+{`CACHE FLOW (PUBLIC SITE)
 
-[App Mount]
+Browser navigation
     |
     v
-DataPrefetcher ── fetch categories + lists ──► categoryCache (TTL 5m)
-    |                                            ^
-    |                                            |
-    v                                            |
-Category Page ── read cache ──► render instantly |
-    |                                            |
-    └─ fetch fresh data ──► update cache ────────┘
-
-ArticleBlock click ── pre-cache article ──► articleCache (TTL 5m)
+Frontend page mount ──► fetch /api/articles/... directly
     |
     v
-Article Page ── read cache ──► render instantly
+Cloudflare edge cache ──► HIT when warm, MISS when cold or purged
     |
-    └─ fetch article ──► update cache
+    v
+Backend origin
 
-Legend: in-memory caches, stale-while-revalidate pattern`}
+Article mutation ──► backend purge by tag + URL fallback ──► next read refetches fresh state
+
+Legend: no frontend in-memory article/category cache`}
                     </pre>
                   </div>
                     <p>

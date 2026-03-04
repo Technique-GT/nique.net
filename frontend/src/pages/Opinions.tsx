@@ -1,8 +1,7 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
-import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
-import { ArticleDocument } from '../types/article';
+import { ArticleDocument, Category } from '../types/article';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import FeaturedStory from '../components/FeaturedStory';
@@ -48,38 +47,26 @@ const processOpinionArticles = (allOpinions: ArticleDocument[]) => {
 };
 
 function Opinions() {
-    // Check cache immediately for instant display
-    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.OPINION), []);
-    const initialData = useMemo(() => cachedArticles ? processOpinionArticles(cachedArticles) : null, [cachedArticles]);
-
-    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
-    const [recentOpinionArticles, setRecentOpinionArticles] = useState<ArticleDocument[]>(initialData?.recentOpinionArticles || []);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentOpinionArticles, setRecentOpinionArticles] = useState<ArticleDocument[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [opinionCategoryId, setOpinionCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.OPINION));
-    const [opEdArticles, setOpEdArticles] = useState<ArticleDocument[]>(initialData?.opEdArticles || []);
-    const [consensusArticles, setConsensusArticles] = useState<ArticleDocument[]>(initialData?.consensusArticles || []);
-    const [lettersArticles, setLettersArticles] = useState<ArticleDocument[]>(initialData?.lettersArticles || []);
+    const [opinionCategoryId, setOpinionCategoryId] = useState<string | null>(null);
+    const [opEdArticles, setOpEdArticles] = useState<ArticleDocument[]>([]);
+    const [consensusArticles, setConsensusArticles] = useState<ArticleDocument[]>([]);
+    const [lettersArticles, setLettersArticles] = useState<ArticleDocument[]>([]);
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
 
         const loadArticles = async () => {
-            // Only show loading if we don't have cached data
-            if (!cachedArticles) {
-                setIsLoading(true);
-            }
+            setIsLoading(true);
             setError(null);
 
             try {
-                // Use cached categories if available
-                let categories = categoryCache.getCategories();
-                if (!categories) {
-                    categories = await articleService.fetchCategories(50, controller.signal);
-                    categoryCache.setCategories(categories);
-                }
+                const categories = await articleService.fetchCategories(50, controller.signal);
 
-                const opinionCategory = categories.find((category: any) =>
+                const opinionCategory = categories.find((category: Category) =>
                     category.name?.toLowerCase() === Categories.OPINION.toLowerCase()
                 );
                 setOpinionCategoryId(typeof opinionCategory?._id === 'string' ? opinionCategory._id : null);
@@ -97,9 +84,6 @@ function Opinions() {
                 );
 
                 const allOpinions = opinionResponse || [];
-                
-                // Update cache with fresh data
-                categoryCache.setCategoryArticles(Categories.OPINION, allOpinions);
 
                 if (!isMounted) {
                     return;
@@ -110,14 +94,11 @@ function Opinions() {
                 setOpEdArticles(processed.opEdArticles);
                 setConsensusArticles(processed.consensusArticles);
                 setLettersArticles(processed.lettersArticles);
-            } catch (err) {
+            } catch {
                 if (!isMounted) {
                     return;
                 }
-                // Only show error if we don't have cached data to display
-                if (!cachedArticles) {
-                    setError('Unable to load articles. Please try again later.');
-                }
+                setError('Unable to load articles. Please try again later.');
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -131,7 +112,7 @@ function Opinions() {
             isMounted = false;
             controller.abort();
         };
-    }, [cachedArticles]);
+    }, []);
 
     if (isLoading) {
         return (

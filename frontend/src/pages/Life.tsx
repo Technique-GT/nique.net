@@ -1,8 +1,7 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
-import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
-import { ArticleDocument } from '../types/article';
+import { ArticleDocument, Category } from '../types/article';
 import { Categories } from '../types/categories';
 import SideArticle from '../components/SideArticle';
 import FeaturedStory from '../components/FeaturedStory';
@@ -50,39 +49,27 @@ const processLifeArticles = (allLifeArticles: ArticleDocument[]) => {
 };
 
 function Life() {
-    // Check cache immediately for instant display
-    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.LIFE), []);
-    const initialData = useMemo(() => cachedArticles ? processLifeArticles(cachedArticles) : null, [cachedArticles]);
-
-    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
-    const [recentLifeArticles, setRecentLifeArticles] = useState<ArticleDocument[]>(initialData?.recentLifeArticles || []);
-    const [sideLifeArticles, setSideLifeArticles] = useState<ArticleDocument[]>(initialData?.sideLifeArticles || []);
-    const [events, setEvents] = useState<ArticleDocument[]>(initialData?.events || []);
-    const [rsos, setRsos] = useState<ArticleDocument[]>(initialData?.rsos || []);
-    const [featuresArticles, setFeaturesArticles] = useState<ArticleDocument[]>(initialData?.featuresArticles || []);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentLifeArticles, setRecentLifeArticles] = useState<ArticleDocument[]>([]);
+    const [sideLifeArticles, setSideLifeArticles] = useState<ArticleDocument[]>([]);
+    const [events, setEvents] = useState<ArticleDocument[]>([]);
+    const [rsos, setRsos] = useState<ArticleDocument[]>([]);
+    const [featuresArticles, setFeaturesArticles] = useState<ArticleDocument[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [lifeCategoryId, setLifeCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.LIFE));
+    const [lifeCategoryId, setLifeCategoryId] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
     
         const loadArticles = async () => {
-            // Only show loading if we don't have cached data
-            if (!cachedArticles) {
-                setIsLoading(true);
-            }
+            setIsLoading(true);
             setError(null);
 
             try {
-                // Services now return unwrapped data directly
-                let categories = categoryCache.getCategories();
-                if (!categories) {
-                    categories = await articleService.fetchCategories(50, controller.signal);
-                    categoryCache.setCategories(categories);
-                }
+                const categories = await articleService.fetchCategories(50, controller.signal);
 
-                const lifeCategory = categories.find((category: any) =>
+                const lifeCategory = categories.find((category: Category) =>
                     category.name?.toLowerCase() === Categories.LIFE.toLowerCase()
                 );
                 const categoryId = typeof lifeCategory?._id === 'string' ? lifeCategory._id : null;
@@ -102,9 +89,6 @@ function Life() {
                 );
 
                 const allLifeArticles = lifeResponse || [];
-                
-                // Update cache with fresh data
-                categoryCache.setCategoryArticles(Categories.LIFE, allLifeArticles);
 
                 if (!isMounted) {
                     return;
@@ -116,14 +100,11 @@ function Life() {
                 setEvents(processed.events);
                 setRsos(processed.rsos);
                 setFeaturesArticles(processed.featuresArticles);
-            } catch (err) {
+            } catch {
                 if (!isMounted) {
                     return;
                 }
-                // Only show error if we don't have cached data to display
-                if (!cachedArticles) {
-                    setError('Unable to load articles. Please try again later.');
-                }
+                setError('Unable to load articles. Please try again later.');
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -137,7 +118,7 @@ function Life() {
             isMounted = false;
             controller.abort();
         };
-    }, [cachedArticles]);
+    }, []);
     
     if (isLoading) {
         return (

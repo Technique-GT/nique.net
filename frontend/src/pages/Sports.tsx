@@ -1,9 +1,8 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import articleService from '../services/articleService';
-import { categoryCache } from '../services/categoryCache';
 import { Categories } from '../types/categories';
 import ArticleBlock from "../components/ArticleBlock"
-import { ArticleDocument } from '../types/article'
+import { ArticleDocument, Category } from '../types/article'
 import FeaturedStory from '../components/FeaturedStory';
 import SideArticle from '../components/SideArticle';
 import InstaEmbed from '../components/InstaEmbed';
@@ -51,38 +50,26 @@ const processSportsArticles = (allSportsArticles: ArticleDocument[]) => {
 };
 
 function Sports() {
-    // Check cache immediately for instant display
-    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.SPORTS), []);
-    const initialData = useMemo(() => cachedArticles ? processSportsArticles(cachedArticles) : null, [cachedArticles]);
-
-    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
-    const [recentSportsArticles, setRecentSportsArticles] = useState<ArticleDocument[]>(initialData?.recentSportsArticles || []);
-    const [techSports, setTechSports] = useState<ArticleDocument[]>(initialData?.techSports || []);
-    const [atlSports, setAtlSports] = useState<ArticleDocument[]>(initialData?.atlSports || []);
-    const [seasonScoreboard, setSeasonScoreboard] = useState<ArticleDocument[]>(initialData?.seasonScoreboard || []);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentSportsArticles, setRecentSportsArticles] = useState<ArticleDocument[]>([]);
+    const [techSports, setTechSports] = useState<ArticleDocument[]>([]);
+    const [atlSports, setAtlSports] = useState<ArticleDocument[]>([]);
+    const [seasonScoreboard, setSeasonScoreboard] = useState<ArticleDocument[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [sportsCategoryId, setSportsCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.SPORTS));
+    const [sportsCategoryId, setSportsCategoryId] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
     
         const loadArticles = async () => {
-            // Only show loading if we don't have cached data
-            if (!cachedArticles) {
-                setIsLoading(true);
-            }
+            setIsLoading(true);
             setError(null);
 
             try {
-                // Use cached categories if available
-                let categories = categoryCache.getCategories();
-                if (!categories) {
-                    categories = await articleService.fetchCategories(50, controller.signal);
-                    categoryCache.setCategories(categories);
-                }
+                const categories = await articleService.fetchCategories(50, controller.signal);
 
-                const sportsCategory = categories.find((category: any) =>
+                const sportsCategory = categories.find((category: Category) =>
                     category.name?.toLowerCase() === Categories.SPORTS.toLowerCase()
                 );
                 setSportsCategoryId(typeof sportsCategory?._id === 'string' ? sportsCategory._id : null);
@@ -100,9 +87,6 @@ function Sports() {
                 );
 
                 const allSportsArticles = sportsResponse || [];
-                
-                // Update cache with fresh data
-                categoryCache.setCategoryArticles(Categories.SPORTS, allSportsArticles);
 
                 if (!isMounted) {
                     return;
@@ -113,14 +97,11 @@ function Sports() {
                 setTechSports(processed.techSports);
                 setAtlSports(processed.atlSports);
                 setSeasonScoreboard(processed.seasonScoreboard);
-            } catch (err) {
+            } catch {
                 if (!isMounted) {
                     return;
                 }
-                // Only show error if we don't have cached data to display
-                if (!cachedArticles) {
-                    setError('Unable to load articles. Please try again later.');
-                }
+                setError('Unable to load articles. Please try again later.');
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -134,7 +115,7 @@ function Sports() {
             isMounted = false;
             controller.abort();
         };
-    }, [cachedArticles]);
+    }, []);
     
     if (isLoading) {
         return (
