@@ -39,6 +39,11 @@ export class CloudflareCacheService {
         | { success?: boolean; errors?: unknown[] }
         | null;
 
+      logger.info(
+        { status: response.status, payload },
+        'Cloudflare purge response',
+      );
+
       if (!response.ok || !payload?.success) {
         logger.error(
           { status: response.status, tags: uniqueTags, response: payload },
