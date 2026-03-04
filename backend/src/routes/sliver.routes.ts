@@ -18,8 +18,10 @@ const activeSliversQuerySchema = listSliversQuerySchema.extend({
 });
 router.get('/active', validateQuery(activeSliversQuerySchema), getAllSlivers);
 
+// Public create route
+router.post('/', validateBody(createSliverBodySchema), createSliver);
+
 // Protected routes (require authentication + admin)
-router.post('/', authMiddleware, adminMiddleware, validateBody(createSliverBodySchema), createSliver);
 router.delete('/:id', authMiddleware, adminMiddleware, validateParams(idParamSchema), deleteSliver);
 
 export default router;

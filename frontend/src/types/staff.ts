@@ -73,12 +73,6 @@ export const staff: Staff[] = [
         contact: null
     },
     {
-        name: "Alejandro González-Betancourt",
-        role: "Business Editor",
-        email: "developer@nique.net",
-        contact: null
-    },
-    {
         name: "Mac Pitts",
         role: "Director of Student Media",
         email: "mac.pitts@vpss.gatech.edu",
