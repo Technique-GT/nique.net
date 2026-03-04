@@ -60,7 +60,7 @@ describe('Article cache behavior', () => {
     const res = await request(app).get(`/api/articles/${article._id.toString()}`);
 
     expect(res.status).toBe(200);
-    expect(res.headers['cache-control']).toBe('public, max-age=0, must-revalidate');
+    expect(res.headers['cache-control']).toBe('no-store');
     expect(res.headers['cloudflare-cdn-cache-control']).toBe(
       'public, max-age=21600, stale-while-revalidate=60, stale-if-error=86400',
     );

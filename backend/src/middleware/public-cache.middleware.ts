@@ -1,6 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
 
-const BROWSER_CACHE_CONTROL = 'public, max-age=0, must-revalidate';
 const EDGE_CACHE_CONTROL =
   'public, max-age=21600, stale-while-revalidate=60, stale-if-error=86400';
 const NO_STORE = 'no-store';
@@ -31,7 +30,7 @@ export const applyPublicReadCacheHeaders = (req: Request, res: Response, next: N
     return;
   }
 
-  setHeaderIfMissing(res, 'Cache-Control', BROWSER_CACHE_CONTROL);
+  setHeaderIfMissing(res, 'Cache-Control', NO_STORE);
   setHeaderIfMissing(res, 'Cloudflare-CDN-Cache-Control', EDGE_CACHE_CONTROL);
   next();
 };
