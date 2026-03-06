@@ -38,16 +38,7 @@ const parsePurgeOrigins = (): string[] => {
   return ['https://nique.net', 'https://www.nique.net'];
 };
 
-const buildDetailUrls = (snapshot: ArticleCacheSnapshot | null | undefined): PurgeFile[] => {
-  if (!snapshot || !env.PUBLIC_API_BASE_URL) return [];
-
-  const baseUrl = stripTrailingSlash(env.PUBLIC_API_BASE_URL);
-  const urls = [`${baseUrl}/articles/${snapshot.id}`];
-
-  if (snapshot.slug) {
-    urls.push(`${baseUrl}/articles/slug/${snapshot.slug}`);
-  }
-
+const withOriginVariants = (urls: string[]): PurgeFile[] => {
   const origins = parsePurgeOrigins();
   const files: PurgeFile[] = [...urls];
 
@@ -63,6 +54,41 @@ const buildDetailUrls = (snapshot: ArticleCacheSnapshot | null | undefined): Pur
   }
 
   return files;
+};
+
+const buildDetailUrls = (snapshot: ArticleCacheSnapshot | null | undefined): PurgeFile[] => {
+  if (!snapshot || !env.PUBLIC_API_BASE_URL) return [];
+
+  const baseUrl = stripTrailingSlash(env.PUBLIC_API_BASE_URL);
+  const urls = [`${baseUrl}/articles/${snapshot.id}`];
+
+  if (snapshot.slug) {
+    urls.push(`${baseUrl}/articles/slug/${snapshot.slug}`);
+  }
+
+  return withOriginVariants(urls);
+};
+
+const buildListUrls = (
+  before: ArticleCacheSnapshot | null | undefined,
+  after: ArticleCacheSnapshot | null | undefined,
+): PurgeFile[] => {
+  if (!env.PUBLIC_API_BASE_URL) return [];
+
+  const baseUrl = stripTrailingSlash(env.PUBLIC_API_BASE_URL);
+  const categoryIds = new Set<string>(
+    [before?.categoryId, after?.categoryId].filter((id): id is string => Boolean(id)),
+  );
+  const urls = [
+    `${baseUrl}/articles/featured`,
+    `${baseUrl}/articles/sticky`,
+    `${baseUrl}/articles/published`,
+    `${baseUrl}/articles/published?limit=5`,
+    `${baseUrl}/articles/feed`,
+    ...Array.from(categoryIds).map((categoryId) => `${baseUrl}/articles/category/${categoryId}`),
+  ];
+
+  return withOriginVariants(urls);
 };
 
 export class ArticleCacheInvalidationService {
@@ -104,6 +130,7 @@ export class ArticleCacheInvalidationService {
     const urls = [
       ...buildDetailUrls(before),
       ...buildDetailUrls(after),
+      ...buildListUrls(before, after),
     ];
 
     await CloudflareCacheService.purgeTags(Array.from(tags));

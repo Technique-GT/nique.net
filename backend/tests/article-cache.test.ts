@@ -136,12 +136,26 @@ describe('Article cache behavior', () => {
     const purgedUrls = purgeUrlsSpy.mock.calls[0][0];
     expect(purgedUrls).toContain(`https://api.nique.net/api/articles/${article._id.toString()}`);
     expect(purgedUrls).toContain(`https://api.nique.net/api/articles/slug/${article.slug}`);
+    expect(purgedUrls).toContain('https://api.nique.net/api/articles/featured');
+    expect(purgedUrls).toContain('https://api.nique.net/api/articles/sticky');
+    expect(purgedUrls).toContain('https://api.nique.net/api/articles/published');
+    expect(purgedUrls).toContain('https://api.nique.net/api/articles/published?limit=5');
+    expect(purgedUrls).toContain(`https://api.nique.net/api/articles/category/${article.categoryId.toString()}`);
+    expect(purgedUrls).toContain(`https://api.nique.net/api/articles/category/${nextCategory._id.toString()}`);
     expect(purgedUrls).toContainEqual({
       url: `https://api.nique.net/api/articles/${article._id.toString()}`,
       headers: { Origin: 'https://nique.net' },
     });
     expect(purgedUrls).toContainEqual({
       url: `https://api.nique.net/api/articles/slug/${article.slug}`,
+      headers: { Origin: 'https://nique.net' },
+    });
+    expect(purgedUrls).toContainEqual({
+      url: 'https://api.nique.net/api/articles/featured',
+      headers: { Origin: 'https://nique.net' },
+    });
+    expect(purgedUrls).toContainEqual({
+      url: 'https://api.nique.net/api/articles/sticky',
       headers: { Origin: 'https://nique.net' },
     });
   });

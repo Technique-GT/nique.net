@@ -141,6 +141,7 @@ function Sports() {
             <Navbar />
             <div className='max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div className='w-full min-h-screen'>
+                    {/* Main */}
                     <div className='grid gap-5 grid-cols-1 lg:grid-cols-[auto_35%] lg:grid-rows-4 w-full h-[80vh]'>
                         <div className='flex flex-col gap-4 lg:row-span-4'>
                             {recentSportsArticles[0] && <FeaturedStory article={recentSportsArticles[0]} height="100%" />}
@@ -155,6 +156,7 @@ function Sports() {
 
                     <hr className='my-3' />
 
+                    {/* Subcategories */}
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Jackets</h4>
                     <div className='grid grid-cols-1 lg:grid-cols-[48%_auto] gap-4'>
                         <div className='w-full'>

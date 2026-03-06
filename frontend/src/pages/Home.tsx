@@ -207,6 +207,7 @@ function Home() {
             <Navbar />
             <div className='max-w-[95%] md:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div className='w-full'>
+                    {/* Main */}
                     <div className='grid gap-5 grid-cols-1 lg:grid-cols-[30%_auto] lg:grid-rows-4 w-full h-[80vh]'>
                         <div className='flex flex-col gap-4 order-last lg:order-first lg:row-span-4'>
                             {recentArticles.slice(1, 5).map((article) => (
@@ -221,6 +222,7 @@ function Home() {
 
                     <hr className='my-3' />
 
+                    {/* Categories */}
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.LIFE}</h4>
                     <div className='grid grid-cols-2 md:grid-cols-[48%_auto] gap-4'>
                         <div className='w-full'>

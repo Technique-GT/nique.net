@@ -1,8 +1,7 @@
 import { env } from '../utils/env';
 import { logger } from '../utils/logger';
 
-const PURGE_ENDPOINT = (zoneId: string) =>
-  `https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`;
+const PURGE_ENDPOINT = (zoneId: string) => `https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`;
 
 type PurgeResponsePayload = { success?: boolean; errors?: unknown[] } | null;
 type PurgeFile = string | { url: string; headers?: Record<string, string> };

@@ -144,12 +144,14 @@ function Life() {
             <Navbar />
             <div className='max-w-[95%] lg:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div>
+                    {/* Main */}
                     <div className='flex flex-col gap-4 h-[80vh]'>
                         {recentLifeArticles[0] && <FeaturedStory article={recentLifeArticles[0]} priority={true} />}
                     </div>
 
                     <hr className='my-3' />
 
+                    {/* Subcategories */}
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Events</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='col-span-2'>
