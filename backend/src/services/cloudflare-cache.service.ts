@@ -52,6 +52,21 @@ const purgeCloudflareCache = async (
 };
 
 export class CloudflareCacheService {
+  static async purgeEverything(): Promise<void> {
+    if (!env.CLOUDFLARE_PURGE_ENABLED) {
+      logger.debug('Cloudflare full purge skipped because it is disabled');
+      return;
+    }
+
+    logger.info('Cloudflare purge everything');
+    await purgeCloudflareCache(
+      { purge_everything: true },
+      { purgeEverything: true },
+      'Cloudflare purge-everything response',
+      'Cloudflare purge-everything failed',
+    );
+  }
+
   static async purgeTags(tags: string[]): Promise<void> {
     const uniqueTags = Array.from(new Set(tags.filter(Boolean)));
     if (uniqueTags.length === 0) return;

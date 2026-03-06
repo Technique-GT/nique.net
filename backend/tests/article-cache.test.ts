@@ -101,13 +101,12 @@ describe('Article cache behavior', () => {
     expect(reloaded?.viewCount).toBe(1);
   });
 
-  it('purges Cloudflare tags after a public article mutation', async () => {
+  it('purges all Cloudflare cache after a public article mutation', async () => {
     const { article } = await createPublishedArticleFixture();
     const nextCategory = await Category.create({ name: 'Cache Category Updated', slug: 'cache-category-updated' });
     const nextTag = await Tag.create({ name: 'Cache Tag Updated', slug: 'cache-tag-updated' });
 
-    const purgeSpy = vi.spyOn(CloudflareCacheService, 'purgeTags').mockResolvedValue();
-    const purgeUrlsSpy = vi.spyOn(CloudflareCacheService, 'purgeUrls').mockResolvedValue();
+    const purgeEverythingSpy = vi.spyOn(CloudflareCacheService, 'purgeEverything').mockResolvedValue();
 
     const res = await request(app)
       .put(`/api/admin/articles/${article._id.toString()}`)
@@ -119,44 +118,6 @@ describe('Article cache behavior', () => {
       });
 
     expect(res.status).toBe(200);
-    expect(purgeSpy).toHaveBeenCalledTimes(1);
-    expect(purgeUrlsSpy).toHaveBeenCalledTimes(1);
-
-    const purgedTags = purgeSpy.mock.calls[0][0];
-    expect(purgedTags).toContain('articles');
-    expect(purgedTags).toContain('articles:published');
-    expect(purgedTags).toContain('articles:feed');
-    expect(purgedTags).toContain(`article:${article._id.toString()}`);
-    expect(purgedTags).toContain(`article-slug:${article.slug}`);
-    expect(purgedTags).toContain(`category:${article.categoryId.toString()}`);
-    expect(purgedTags).toContain(`category:${nextCategory._id.toString()}`);
-    expect(purgedTags).toContain('articles:featured');
-    expect(purgedTags).toContain('articles:sticky');
-
-    const purgedUrls = purgeUrlsSpy.mock.calls[0][0];
-    expect(purgedUrls).toContain(`https://api.nique.net/api/articles/${article._id.toString()}`);
-    expect(purgedUrls).toContain(`https://api.nique.net/api/articles/slug/${article.slug}`);
-    expect(purgedUrls).toContain('https://api.nique.net/api/articles/featured');
-    expect(purgedUrls).toContain('https://api.nique.net/api/articles/sticky');
-    expect(purgedUrls).toContain('https://api.nique.net/api/articles/published');
-    expect(purgedUrls).toContain('https://api.nique.net/api/articles/published?limit=5');
-    expect(purgedUrls).toContain(`https://api.nique.net/api/articles/category/${article.categoryId.toString()}`);
-    expect(purgedUrls).toContain(`https://api.nique.net/api/articles/category/${nextCategory._id.toString()}`);
-    expect(purgedUrls).toContainEqual({
-      url: `https://api.nique.net/api/articles/${article._id.toString()}`,
-      headers: { Origin: 'https://nique.net' },
-    });
-    expect(purgedUrls).toContainEqual({
-      url: `https://api.nique.net/api/articles/slug/${article.slug}`,
-      headers: { Origin: 'https://nique.net' },
-    });
-    expect(purgedUrls).toContainEqual({
-      url: 'https://api.nique.net/api/articles/featured',
-      headers: { Origin: 'https://nique.net' },
-    });
-    expect(purgedUrls).toContainEqual({
-      url: 'https://api.nique.net/api/articles/sticky',
-      headers: { Origin: 'https://nique.net' },
-    });
+    expect(purgeEverythingSpy).toHaveBeenCalledTimes(1);
   });
 });
