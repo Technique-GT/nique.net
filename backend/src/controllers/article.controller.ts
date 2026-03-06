@@ -460,10 +460,12 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
 
     const skip = (page - 1) * limit;
 
+    const sort = isSticky === undefined ? { publishedAt: -1 } : { isSticky: -1, publishedAt: -1 };
+
     const [articles, total] = await Promise.all([
       populateArticleForFeed(
         Article.find(filter)
-          .sort({ isSticky: -1, publishedAt: -1 })
+          .sort(sort)
           .skip(skip)
           .limit(limit),
       ),
