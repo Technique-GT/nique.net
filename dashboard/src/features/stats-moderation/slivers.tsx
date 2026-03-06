@@ -30,7 +30,7 @@ export default function SliversManagement() {
   const [expandedSlivers, setExpandedSlivers] = useState<Set<string>>(new Set())
 
   const query = useMemo(() => {
-    const params: any = { page, limit }
+    const params: { page: number; limit: number; search?: string } = { page, limit }
     if (searchTerm.trim()) params.search = searchTerm.trim()
     return params
   }, [page, limit, searchTerm])
@@ -61,8 +61,7 @@ export default function SliversManagement() {
     try {
       await deleteSliverMutation.mutateAsync(id)
       toast.success('Sliver deleted')
-    } catch (error) {
-      console.error('Error deleting sliver:', error)
+    } catch {
       toast.error('Failed to delete sliver')
     }
   }

@@ -25,15 +25,15 @@ export type PaginatedResponse<T> = {
 export async function getSlivers(
   query: SliversQuery = {}
 ): Promise<PaginatedResponse<Sliver>> {
-  const params: any = { ...query }
+  const params: Record<string, string | number | boolean> = { ...query }
   if (typeof query.active === 'boolean') {
     params.active = query.active.toString()
   }
 
-  const res = await apiClient.get('/slivers', { params })
+  const res = await apiClient.get('/slivers/all', { params })
 
   if (res && typeof res === 'object' && !Array.isArray(res) && 'data' in (res as { data?: unknown })) {
-    const r = res as any
+    const r = res as { data?: unknown; pagination?: PaginatedResponse<Sliver>['pagination'] }
     return {
       data: Array.isArray(r.data) ? (r.data as Sliver[]) : [],
       pagination: r.pagination,
