@@ -23,6 +23,10 @@ export function ProtectedRoute({ children, fallback = '/login' }: ProtectedRoute
   if (!isAuthenticated) {
     const searchParams = new URLSearchParams(location.search);
     const error = searchParams.get('error');
+
+    if (location.pathname.startsWith('/login')) {
+      return <>{children}</>;
+    }
     
     return <Navigate 
       to={fallback} 

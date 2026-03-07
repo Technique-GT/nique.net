@@ -1,4 +1,5 @@
 import apiClient, { unwrap, extractPagination } from './apiClient';
+import { API_BASE_URL } from '../config';
 import type { ArticleDocument, Category, FeedResponse } from '../types/article';
 
 // =============================================================================
@@ -48,8 +49,7 @@ const fetchPublishedArticles = async (
 
   if (params.categoryId) {
     return data.filter((article) => {
-      const category = (article as any).categoryId;
-      // categoryId is typically populated object: { _id, name, slug }
+      const category = article.categoryId;
       const id = typeof category === 'object' && category ? category._id : category;
       return typeof id === 'string' ? id === params.categoryId : String(id) === params.categoryId;
     });
@@ -67,6 +67,7 @@ const fetchRecentArticles = async (
   _status = 'published', // kept for signature compat, ignored
   signal?: AbortSignal
 ): Promise<ArticleDocument[]> => {
+  void _status;
   return fetchPublishedArticles({ limit }, signal);
 };
 
@@ -97,6 +98,7 @@ const fetchStickyArticles = async (
    _limit?: number, // backend sticky endpoint doesn't support limit, returns all
   signal?: AbortSignal
 ): Promise<ArticleDocument[]> => {
+  void _limit;
   const response = await apiClient.get('/articles/sticky', { signal });
   return unwrap(response.data);
 };
@@ -147,6 +149,26 @@ const fetchArticleBySlug = async (
 ): Promise<ArticleDocument> => {
   const response = await apiClient.get(`/articles/slug/${slug}`, { signal });
   return unwrap(response.data);
+};
+
+const recordArticleView = async (id: string): Promise<void> => {
+  const url = `${API_BASE_URL}/articles/${id}/view`;
+
+  if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+    try {
+      const payload = new Blob([], { type: 'application/json' });
+      const queued = navigator.sendBeacon(url, payload);
+      if (queued) return;
+    } catch {
+      // Fall through to fetch when Beacon is unavailable or rejected.
+    }
+  }
+
+  await fetch(url, {
+    method: 'POST',
+    credentials: 'include',
+    keepalive: true,
+  });
 };
 
 /**
@@ -204,6 +226,7 @@ const fetchCategories = async (
   _limit = 50, // kept for signature compat, ignored
   signal?: AbortSignal
 ): Promise<Category[]> => {
+  void _limit;
   const response = await apiClient.get('/categories', { signal });
   return unwrap(response.data);
 };
@@ -222,6 +245,7 @@ export default {
   fetchCategories,
   fetchArticleById,
   fetchArticleBySlug,
+  recordArticleView,
   searchArticles,
   fetchArticleFeed,
 };

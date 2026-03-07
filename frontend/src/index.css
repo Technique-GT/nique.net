@@ -25,6 +25,7 @@ figcaption, h6 {
 
 p, li, blockquote, input, textarea {
     font-family: 'EB Garamond', Times, serif;
+    /* margin-bottom: 1.1704rem; */
 }
 
 a {
@@ -50,8 +51,9 @@ h5, th, td {
 .article-body p {
     font-family: 'EB Garamond', Times, serif;
     font-weight: 400;
-    text-indent: 1.5rem;
-    margin-top: 0.5rem;
+    font-size: 1.3704rem;
+    /* text-indent: 1.5rem; */
+    margin-top: 1.4704rem;
 }
 
 .article-body p:first-child {
@@ -93,8 +95,8 @@ h5, th, td {
 
 .scroll-content {
     display: flex;
+    flex: inline;
     animation: scroll 120s linear infinite;
-    width: calc(400%);
 }
 
 @media (min-width: 768px) {

@@ -5,16 +5,19 @@ import { validateBody, validateParams, validateQuery } from '../middleware/valid
 import { createSliverBodySchema } from '../schemas/sliver.schema';
 import { listSliversQuerySchema } from '../schemas/sliver.query.schema';
 import { idParamSchema } from '../schemas/params.schema';
+import { authMiddleware } from '../middleware/auth.middleware';
+import { adminMiddleware } from '../middleware/admin.middleware';
 
 const router = express.Router();
 
-router.post('/', validateBody(createSliverBodySchema), createSliver);
-router.get('/', validateQuery(listSliversQuerySchema), getAllSlivers);
 const activeSliversQuerySchema = listSliversQuerySchema.extend({
   active: listSliversQuerySchema.shape.active.default(true),
 });
+router.get('/all', authMiddleware, adminMiddleware, validateQuery(activeSliversQuerySchema), getAllSlivers);
 
-router.get('/active', validateQuery(activeSliversQuerySchema), getAllSlivers);
-router.delete('/:id', validateParams(idParamSchema), deleteSliver);
+router.post('/', validateBody(createSliverBodySchema), createSliver);
+
+// Protected routes (require authentication + admin)
+router.delete('/:id', authMiddleware, adminMiddleware, validateParams(idParamSchema), deleteSliver);
 
 export default router;

@@ -44,7 +44,7 @@ export interface Article {
   _id: string;
   title: string;
   content: string;
-  excerpt: string;
+  imageCaption?: string;
   category: Category;
   subcategory?: SubCategory;
   tags: Tag[];
@@ -52,15 +52,10 @@ export interface Article {
   ownerId?: string;
   editorState?: any;
   reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published';
-  hasPendingChanges?: boolean;
   reviewedAt?: string;
   reviewedBy?: string;
   reviewNotes?: string;
-  featuredMedia: {
-    id: string;
-    url: string;
-    alt?: string;
-  };
+  featuredMediaUrl?: string;
   isPublished: boolean;
   isFeatured: boolean;
   isSticky: boolean;
@@ -73,13 +68,6 @@ export interface Article {
   seoDescription?: string;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface MediaItem {
-  id: string;
-  title: string;
-  url: string;
-  description?: string;
 }
 
 // Define SerializedEditorState type based on Lexical's structure
@@ -98,7 +86,6 @@ export type FieldErrorKey =
   | "title"
   | "content"
   | "featuredMedia"
-  | "excerpt"
   | "authors"
   | "category"
   | "subcategory"

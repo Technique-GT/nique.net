@@ -1,8 +1,7 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
-import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
-import { ArticleDocument } from '../types/article';
+import { ArticleDocument, Category } from '../types/article';
 import { Categories } from '../types/categories';
 import FeaturedStory from '../components/FeaturedStory';
 // import MockAd from '../assets/mock_advertisement.jpg';
@@ -29,7 +28,9 @@ const processNewsArticles = (allNewsArticles: ArticleDocument[]) => {
     const featured = featuredPosts.find((article) => getArticleId(article) !== getArticleId(justIn)) ?? null;
     const recentSelection = [justIn, featured].filter(Boolean) as ArticleDocument[];
     const recentIds = new Set(recentSelection.map(getArticleId));
-    const remainingNews = orderedNews.filter((article) => !recentIds.has(getArticleId(article)));
+    const sideNewsArticles = orderedNews.filter((article) => !recentIds.has(getArticleId(article))).slice(0, 5);
+    const sideIds = new Set(sideNewsArticles.map(getArticleId));
+    const excludedIds = new Set([...recentIds, ...sideIds]);
 
     const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
         articles
@@ -39,12 +40,12 @@ const processNewsArticles = (allNewsArticles: ArticleDocument[]) => {
                 }
                 return false;
             })
-            .filter((article) => !recentIds.has(getArticleId(article)))
+            .filter((article) => !excludedIds.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
 
     return {
         recentNews: recentSelection,
-        newsArticles: remainingNews,
+        sideNewsArticles,
         theInstituteNews: filterBySubcategory(allNewsArticles, 'the institute'),
         cityStateNews: filterBySubcategory(allNewsArticles, 'city & state'),
         scienceResearchNews: filterBySubcategory(allNewsArticles, 'science & research'),
@@ -52,39 +53,27 @@ const processNewsArticles = (allNewsArticles: ArticleDocument[]) => {
 };
 
 function News() {
-    // Check cache immediately for instant display
-    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.NEWS), []);
-    const initialData = useMemo(() => cachedArticles ? processNewsArticles(cachedArticles) : null, [cachedArticles]);
-
-    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
-    const [recentNews, setRecentNews] = useState<ArticleDocument[]>(initialData?.recentNews || []);
-    const [newsArticles, setNewsArticles] = useState<ArticleDocument[]>(initialData?.newsArticles || []);
-    const [theInstituteNews, setTheInstituteNews] = useState<ArticleDocument[]>(initialData?.theInstituteNews || []);
-    const [cityStateNews, setCityStateNews] = useState<ArticleDocument[]>(initialData?.cityStateNews || []);
-    const [scienceResearchNews, setScienceResearchNews] = useState<ArticleDocument[]>(initialData?.scienceResearchNews || []);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentNews, setRecentNews] = useState<ArticleDocument[]>([]);
+    const [sideNewsArticles, setSideNewsArticles] = useState<ArticleDocument[]>([]);
+    const [theInstituteNews, setTheInstituteNews] = useState<ArticleDocument[]>([]);
+    const [cityStateNews, setCityStateNews] = useState<ArticleDocument[]>([]);
+    const [scienceResearchNews, setScienceResearchNews] = useState<ArticleDocument[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [newsCategoryId, setNewsCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.NEWS));
+    const [newsCategoryId, setNewsCategoryId] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
     
         const loadArticles = async () => {
-            // Only show loading if we don't have cached data
-            if (!cachedArticles) {
-                setIsLoading(true);
-            }
+            setIsLoading(true);
             setError(null);
 
             try {
-                // Use cached categories if available
-                let categories = categoryCache.getCategories();
-                if (!categories) {
-                    categories = await articleService.fetchCategories(50, controller.signal);
-                    categoryCache.setCategories(categories);
-                }
+                const categories = await articleService.fetchCategories(50, controller.signal);
 
-                const newsCategory = categories.find((category: any) =>
+                const newsCategory = categories.find((category: Category) =>
                     category.name?.toLowerCase() === Categories.NEWS.toLowerCase()
                 );
                 const categoryId = typeof newsCategory?._id === 'string' ? newsCategory._id : null;
@@ -92,7 +81,7 @@ function News() {
 
                 if (!categoryId) {
                     if (!isMounted) return;
-                    setNewsArticles([]);
+                    setSideNewsArticles([]);
                     setError('News category not found.');
                     return;
                 }
@@ -104,9 +93,6 @@ function News() {
                 );
 
                 const allNewsArticles = newsResponse || [];
-                
-                // Update cache with fresh data
-                categoryCache.setCategoryArticles(Categories.NEWS, allNewsArticles);
 
                 if (!isMounted) {
                     return;
@@ -114,18 +100,15 @@ function News() {
 
                 const processed = processNewsArticles(allNewsArticles);
                 setRecentNews(processed.recentNews);
-                setNewsArticles(processed.newsArticles);
+                setSideNewsArticles(processed.sideNewsArticles);
                 setTheInstituteNews(processed.theInstituteNews);
                 setCityStateNews(processed.cityStateNews);
                 setScienceResearchNews(processed.scienceResearchNews);
-            } catch (err) {
+            } catch {
                 if (!isMounted) {
                     return;
                 }
-                // Only show error if we don't have cached data to display
-                if (!cachedArticles) {
-                    setError('Unable to load articles. Please try again later.');
-                }
+                setError('Unable to load articles. Please try again later.');
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -139,7 +122,7 @@ function News() {
             isMounted = false;
             controller.abort();
         };
-    }, [cachedArticles]);
+    }, []);
     
     if (isLoading) {
         return (
@@ -165,13 +148,15 @@ function News() {
             <Navbar />
             <div className='max-w-[95%] lg:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div>
+                    {/* Main */}
                     <div className='flex flex-col gap-4 h-[80vh]'>
-                        {recentNews[0] && <JustInBlock article={recentNews[0]} />}
-                        {recentNews[1] && <FeaturedStory article={recentNews[1]} priority={true} />}
+                        {recentNews[1] && <JustInBlock article={recentNews[1]} />}
+                        {recentNews[0] && <FeaturedStory article={recentNews[0]} priority={true} />}
                     </div>
 
                     <hr className='my-3' />
 
+                    {/* Subcategories */}
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">The Institute</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                         <div className='col-span-2'>
@@ -231,7 +216,7 @@ function News() {
                 <div className='flex flex-col gap-4'>
                     <hr className="lg:mt-15" />
                     {(() => {
-                        const articles = newsArticles.slice(0, 4);
+                        const articles = sideNewsArticles.slice(0, 5);
                         return articles.length ? (
                             <SideArticle articles={articles} width='80px' hasDesc={true}/>
                         ) : null;

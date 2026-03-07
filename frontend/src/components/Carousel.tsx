@@ -14,7 +14,7 @@ export default function Carousel( {articles, width}: ArticleListProps ) {
   const navigate=useNavigate();
   
   return (
-      <div className="relative lg:mx-auto max-w-5xl mx-[1.5rem]">
+      <div className="relative lg:mx-auto max-w-5xl mx-6">
         <Swiper
           modules={[EffectCoverflow, Pagination, Navigation]}
           navigation={{
@@ -47,12 +47,12 @@ export default function Carousel( {articles, width}: ArticleListProps ) {
                 key={index} 
                 onClick={()=>navigate(link)} 
                 className={`cursor-pointer rounded-lg relative flex items-end h-full overflow-hidden group ${
-                  image ? "" : "bg-gradient-to-b from-nique-blue/10 to-white"
+                  image ? "" : "bg-linear-to-b from-nique-blue/10 to-white"
                 }`}
               >
-                {image?.url && (
+                {image && (
                     <img 
-                        src={image.url} 
+                        src={image} 
                         alt={article.title}
                         loading="lazy"
                         decoding="async"

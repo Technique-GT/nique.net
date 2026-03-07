@@ -1,11 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
-import { $getRoot } from "lexical";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import {
+  $getRoot,
+  IS_BOLD,
+  IS_CODE,
+  IS_ITALIC,
+  IS_STRIKETHROUGH,
+  IS_SUBSCRIPT,
+  IS_SUPERSCRIPT,
+  IS_UNDERLINE,
+} from "lexical";
 
 import { Editor } from "@/components/blocks/editor-00/editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Image } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -19,7 +30,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import { Info, Search, X, ChevronDown, Check, AlertCircle } from "lucide-react";
 
-import { MediaPicker } from "@/components/media/media-picker";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -35,7 +45,6 @@ import {
   type Author,
   type Category,
   type FieldErrorKey,
-  type MediaItem,
   type SerializedEditorState,
   type SubCategory,
   type Tag,
@@ -59,7 +68,6 @@ interface ArticleFormProps {
   subcategories: SubCategory[];
   tags: Tag[];
   authors: Author[];
-  mediaLibrary: MediaItem[];
   initialArticle?: Article | null;
   isLoadingData?: boolean;
   onLastSavedChange?: (date: Date) => void;
@@ -73,7 +81,6 @@ export default function ArticleForm({
   subcategories,
   tags,
   authors,
-  mediaLibrary,
   initialArticle,
   isLoadingData,
   onLastSavedChange,
@@ -87,7 +94,7 @@ export default function ArticleForm({
     initialArticle?.editorState,
   );
   const [contentText, setContentText] = useState("");
-  const [excerpt, setExcerpt] = useState(initialArticle?.excerpt || "");
+  const [imageCaption, setImageCaption] = useState(initialArticle?.imageCaption || "");
   const [category, setCategory] = useState(initialArticle?.category?._id || "");
   const [subcategory, setSubcategory] = useState(
     initialArticle?.subcategory?._id || "",
@@ -98,8 +105,8 @@ export default function ArticleForm({
   const [selectedAuthors, setSelectedAuthors] = useState<Author[]>(
     initialArticle?.authors || [],
   );
-  const [featuredMediaId, setFeaturedMediaId] = useState<string>(
-    initialArticle?.featuredMedia?.id || "",
+  const [featuredMediaUrl, setFeaturedMediaUrl] = useState<string>(
+    initialArticle?.featuredMediaUrl || "",
   );
   const [isPublished, setIsPublished] = useState(initialArticle?.isPublished || false);
   const [allowComments, setAllowComments] = useState(initialArticle?.allowComments ?? true);
@@ -108,13 +115,18 @@ export default function ArticleForm({
   const [reviewStatus, setReviewStatus] = useState<
     "draft" | "in_review" | "changes_requested" | "published"
   >(initialArticle?.reviewStatus || "draft");
-  const [hasPendingChanges, setHasPendingChanges] = useState(initialArticle?.hasPendingChanges || false);
   const [reviewConfirmOpen, setReviewConfirmOpen] = useState(false);
+  const [mediaPreviewFailed, setMediaPreviewFailed] = useState(false);
+  const [hideImage, setHideImage] = useState(true);
 
   const isOwner = me?.id === initialArticle?.ownerId;
   const isAdmin = !!me?.isAdmin;
   const isLocked = reviewStatus === "in_review" && !isAdmin;
   const canManageAuthorsPerm = isAdmin || isOwner || !initialArticle?._id;
+
+  useEffect(() => {
+    setMediaPreviewFailed(false);
+  }, [featuredMediaUrl]);
 
   useEffect(() => {
     if (initialArticle?._id) return;
@@ -138,7 +150,7 @@ export default function ArticleForm({
 
   const canRequestReview = !isAdmin
     && !!initialArticle?._id
-    && (reviewStatus === 'draft' || reviewStatus === 'changes_requested' || (reviewStatus === 'published' && hasPendingChanges))
+    && (reviewStatus === 'draft' || reviewStatus === 'changes_requested')
     && isOwner;
   const canCancelReview = reviewStatus === 'in_review' && (isOwner || isAdmin);
   const canRequestChanges = isAdmin && reviewStatus === 'in_review';
@@ -171,18 +183,17 @@ export default function ArticleForm({
       setTitle(initialArticle.title || "");
       setContent(initialArticle.editorState);
       setContentText(extractTextFromEditorState(initialArticle.editorState));
-      setExcerpt(initialArticle.excerpt || "");
+      setImageCaption(initialArticle.imageCaption || "");
       setCategory(initialArticle.category?._id || "");
       setSubcategory(initialArticle.subcategory?._id || "");
       setSelectedTags(initialArticle.tags?.map((t) => t._id) || []);
       setSelectedAuthors(initialArticle.authors || []);
-      setFeaturedMediaId(initialArticle.featuredMedia?.id || "");
+      setFeaturedMediaUrl(initialArticle.featuredMediaUrl || "");
       setIsPublished(initialArticle.isPublished || false);
       setAllowComments(initialArticle.allowComments ?? true);
       setIsFeatured(initialArticle.isFeatured || false);
       setIsSticky(initialArticle.isSticky || false);
       setReviewStatus(initialArticle.reviewStatus || "draft");
-      setHasPendingChanges(initialArticle.hasPendingChanges || false);
       setEditorResetKey((prev) => prev + 1);
     }
   }, [initialArticle]);
@@ -190,32 +201,138 @@ export default function ArticleForm({
   // Enhanced Lexical to HTML conversion that preserves all formatting
   const convertLexicalToHtml = (editorState: SerializedEditorState): string => {
     try {
+      const numberToRem = (num: number) =>
+        `${num.toFixed(4).replace(/\.?0+$/, "")}rem`;
+
+      const normalizeFontSizeStyle = (value: string): string => {
+        const normalized = value.trim().toLowerCase();
+        if (!normalized) return "";
+
+        const pxMatch = normalized.match(/^(\d+(?:\.\d+)?)px$/);
+        if (pxMatch) {
+          const rem = Number(pxMatch[1]) / 16;
+          if (Math.abs(rem - 1) < 0.001) return "";
+          return numberToRem(rem);
+        }
+
+        const remMatch = normalized.match(/^(\d+(?:\.\d+)?)rem$/);
+        if (remMatch) {
+          const rem = Number(remMatch[1]);
+          if (Math.abs(rem - 1) < 0.001) return "";
+          return numberToRem(rem);
+        }
+
+        return value.trim();
+      };
+
+      const normalizeInlineStyle = (style: string): string => {
+        const declarations = style
+          .split(";")
+          .map((part) => part.trim())
+          .filter(Boolean);
+
+        const normalizedDeclarations = declarations
+          .map((declaration) => {
+            const [rawProp, ...rest] = declaration.split(":");
+            if (!rawProp || rest.length === 0) return "";
+
+            const prop = rawProp.trim().toLowerCase();
+            const value = rest.join(":").trim();
+            if (!value) return "";
+
+            if (prop === "font-size") {
+              const normalizedFontSize = normalizeFontSizeStyle(value);
+              return normalizedFontSize ? `font-size: ${normalizedFontSize}` : "";
+            }
+
+            return `${prop}: ${value}`;
+          })
+          .filter(Boolean);
+
+        return normalizedDeclarations.join("; ");
+      };
+
+      const resolveAlignment = (format: unknown): string | undefined => {
+        const allowed = new Set(["left", "center", "right", "justify", "start", "end"]);
+        if (typeof format === "string") {
+          const normalized = format.trim().toLowerCase();
+          return allowed.has(normalized) ? normalized : undefined;
+        }
+
+        if (typeof format === "number") {
+          const alignMap: Record<number, string> = {
+            1: "left",
+            2: "center",
+            3: "right",
+            4: "justify",
+            5: "start",
+            6: "end",
+          };
+          return alignMap[format];
+        }
+
+        return undefined;
+      };
+
+      const buildBlockStyleAttr = (node: any): string => {
+        const styles: string[] = [];
+        const align = resolveAlignment(node?.format);
+        if (align) {
+          styles.push(`text-align: ${align}`);
+        }
+
+        if (typeof node?.style === "string") {
+          const normalized = normalizeInlineStyle(node.style);
+          if (normalized) {
+            styles.push(normalized);
+          }
+        }
+
+        if (styles.length === 0) {
+          return "";
+        }
+
+        return ` style="${styles.join("; ").replace(/"/g, "&quot;")}"`;
+      };
+
+      const escapeHtml = (value: string) =>
+        value
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+
       const extractFormattedTextFromNode = (node: any): string => {
         // Handle text nodes with formatting
         if (node.type === 'text') {
-          let textContent = node.text || '';
+          let textContent = escapeHtml(node.text || '');
+          const nodeStyle = typeof node.style === "string" ? normalizeInlineStyle(node.style) : "";
           
           // Apply text formatting
-          if (node.format & 1) { // Bold
+          if (node.format & IS_BOLD) { // Bold
             textContent = `<strong>${textContent}</strong>`;
           }
-          if (node.format & 2) { // Italic
+          if (node.format & IS_ITALIC) { // Italic
             textContent = `<em>${textContent}</em>`;
           }
-          if (node.format & 4) { // Underline
+          if (node.format & IS_UNDERLINE) { // Underline
             textContent = `<u>${textContent}</u>`;
           }
-          if (node.format & 8) { // Strikethrough
+          if (node.format & IS_STRIKETHROUGH) { // Strikethrough
             textContent = `<s>${textContent}</s>`;
           }
-          if (node.format & 16) { // Code
+          if (node.format & IS_CODE) { // Code
             textContent = `<code>${textContent}</code>`;
           }
-          if (node.format & 32) { // Subscript
+          if (node.format & IS_SUBSCRIPT) { // Subscript
             textContent = `<sub>${textContent}</sub>`;
           }
-          if (node.format & 64) { // Superscript
+          if (node.format & IS_SUPERSCRIPT) { // Superscript
             textContent = `<sup>${textContent}</sup>`;
+          }
+
+          // Preserve inline styles set from toolbar (font-size/font-family/color).
+          if (nodeStyle) {
+            textContent = `<span style="${nodeStyle.replace(/"/g, "&quot;")}">${textContent}</span>`;
           }
           
           return textContent;
@@ -225,16 +342,8 @@ export default function ArticleForm({
         if (node.type === 'paragraph') {
           if (node.children && Array.isArray(node.children)) {
             const paragraphContent = node.children.map(extractFormattedTextFromNode).join('');
-            
-            // Handle text alignment
-            const format = node.format || 0;
-            let alignClass = '';
-            if (format & 1) alignClass = ' style="text-align: left;"';
-            if (format & 2) alignClass = ' style="text-align: center;"';
-            if (format & 3) alignClass = ' style="text-align: right;"';
-            if (format & 4) alignClass = ' style="text-align: justify;"';
-            
-            return paragraphContent ? `<p${alignClass}>${paragraphContent}</p>` : '<p><br></p>';
+            const styleAttr = buildBlockStyleAttr(node);
+            return paragraphContent ? `<p${styleAttr}>${paragraphContent}</p>` : `<p${styleAttr}><br></p>`;
           }
           return '<p><br></p>';
         }
@@ -244,7 +353,8 @@ export default function ArticleForm({
           if (node.children && Array.isArray(node.children)) {
             const headingContent = node.children.map(extractFormattedTextFromNode).join('');
             const tag = node.tag || 'h1';
-            return `<${tag}>${headingContent}</${tag}>`;
+            const styleAttr = buildBlockStyleAttr(node);
+            return `<${tag}${styleAttr}>${headingContent}</${tag}>`;
           }
           return '';
         }
@@ -254,7 +364,8 @@ export default function ArticleForm({
           if (node.children && Array.isArray(node.children)) {
             const listItems = node.children.map(extractFormattedTextFromNode).join('');
             const listTag = node.listType === 'bullet' ? 'ul' : 'ol';
-            return `<${listTag}>${listItems}</${listTag}>`;
+            const styleAttr = buildBlockStyleAttr(node);
+            return `<${listTag}${styleAttr}>${listItems}</${listTag}>`;
           }
           return '';
         }
@@ -263,7 +374,8 @@ export default function ArticleForm({
         if (node.type === 'listitem') {
           if (node.children && Array.isArray(node.children)) {
             const itemContent = node.children.map(extractFormattedTextFromNode).join('');
-            return `<li>${itemContent}</li>`;
+            const styleAttr = buildBlockStyleAttr(node);
+            return `<li${styleAttr}>${itemContent}</li>`;
           }
           return '<li></li>';
         }
@@ -272,7 +384,8 @@ export default function ArticleForm({
         if (node.type === 'quote') {
           if (node.children && Array.isArray(node.children)) {
             const quoteContent = node.children.map(extractFormattedTextFromNode).join('');
-            return `<blockquote>${quoteContent}</blockquote>`;
+            const styleAttr = buildBlockStyleAttr(node);
+            return `<blockquote${styleAttr}>${quoteContent}</blockquote>`;
           }
           return '<blockquote></blockquote>';
         }
@@ -281,7 +394,8 @@ export default function ArticleForm({
         if (node.type === 'code') {
           if (node.children && Array.isArray(node.children)) {
             const codeContent = node.children.map(extractFormattedTextFromNode).join('');
-            return `<pre><code>${codeContent}</code></pre>`;
+            const styleAttr = buildBlockStyleAttr(node);
+            return `<pre${styleAttr}><code>${codeContent}</code></pre>`;
           }
           return '<pre><code></code></pre>';
         }
@@ -297,7 +411,7 @@ export default function ArticleForm({
             const linkContent = node.children.map(extractFormattedTextFromNode).join('');
             const url = node.url || '#';
             const title = node.title ? ` title="${node.title}"` : '';
-            return `<a href="${url}"${title}>${linkContent}</a>`;
+            return `<a href="${url}"${title} target="_blank" rel="noopener noreferrer">${linkContent}</a>`;
           }
           return '';
         }
@@ -342,14 +456,80 @@ export default function ArticleForm({
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   
   // Search functionality
+  const [availableAuthors, setAvailableAuthors] = useState<Author[]>(
+    Array.isArray(authors) ? authors : [],
+  );
+  const [availableTagOptions, setAvailableTagOptions] = useState<Tag[]>(
+    Array.isArray(tags) ? tags : [],
+  );
   const [authorSearch, setAuthorSearch] = useState("");
   const [showAuthorResults, setShowAuthorResults] = useState(false);
+  const [tagInput, setTagInput] = useState("");
+  const [isCreatingAuthor, setIsCreatingAuthor] = useState(false);
+  const [isCreatingTag, setIsCreatingTag] = useState(false);
+
+  useEffect(() => {
+    setAvailableAuthors(Array.isArray(authors) ? authors : []);
+  }, [authors]);
+
+  useEffect(() => {
+    setAvailableTagOptions(Array.isArray(tags) ? tags : []);
+  }, [tags]);
+
+  const normalize = (value: string) => value.trim().toLowerCase();
+  const getAuthorFullName = (author: Author) => `${author.firstName || ''} ${author.lastName || ''}`.trim();
+  const hasExactAuthorMatch = (author: Author, searchTerm: string) => {
+    const term = normalize(searchTerm);
+    if (!term) return false;
+
+    return [
+      getAuthorFullName(author),
+      author.username || '',
+      author.email || '',
+    ].some((field) => normalize(field) === term);
+  };
+
+  const getApiErrorMessage = (error: unknown, fallback: string) => {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "response" in error &&
+      typeof (error as { response?: unknown }).response === "object" &&
+      (error as { response?: { data?: unknown } }).response?.data &&
+      typeof (error as { response?: { data?: { message?: unknown } } }).response?.data?.message === "string"
+    ) {
+      return (error as { response?: { data?: { message?: string } } }).response?.data?.message || fallback;
+    }
+
+    return fallback;
+  };
+
+  const mapUserToAuthor = (user: unknown): Author => {
+    const mappedUser = (typeof user === "object" && user !== null ? user : {}) as {
+      _id?: string;
+      name?: string;
+      email?: string;
+      isAdmin?: boolean;
+    };
+    const fullName = typeof mappedUser.name === "string" ? mappedUser.name.trim() : "";
+    const parts = fullName.split(/\s+/).filter(Boolean);
+
+    return {
+      _id: mappedUser._id || "",
+      firstName: parts[0] || "Unknown",
+      lastName: parts.slice(1).join(" "),
+      username: fullName || "Unknown",
+      email: typeof mappedUser.email === "string" ? mappedUser.email : "",
+      role: mappedUser.isAdmin ? "admin" : "writer",
+      status: "active",
+    };
+  };
 
   // Filter authors based on search
   const filteredAuthors = useMemo(() => {
     if (!authorSearch.trim()) return [];
 
-    const list = Array.isArray(authors) ? authors : [];
+    const list = Array.isArray(availableAuthors) ? availableAuthors : [];
     const searchTerm = authorSearch.toLowerCase();
 
     return list.filter((author) => {
@@ -365,7 +545,7 @@ export default function ArticleForm({
         email.toLowerCase().includes(searchTerm)
       );
     });
-  }, [authorSearch, authors]);
+  }, [authorSearch, availableAuthors]);
 
   const handleRequestReview = async () => {
     if (!initialArticle?._id) return;
@@ -432,7 +612,6 @@ export default function ArticleForm({
       await apiClient.post(`/admin/articles/${initialArticle._id}/publish`);
       setReviewStatus('published');
       setIsPublished(true);
-      setHasPendingChanges(false);
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Article published");
     } catch (error) {
@@ -490,17 +669,26 @@ export default function ArticleForm({
 
   const selectedTagNames = useMemo(() => {
     return selectedTags.map(tagId => {
-      const found = tags.find(tag => tag._id === tagId);
+      const found = availableTagOptions.find(tag => tag._id === tagId);
       return found ? found.name : tagId;
     });
-  }, [selectedTags, tags]);
+  }, [selectedTags, availableTagOptions]);
 
   // Transform data for frontend use
   const availableTags = useMemo(() => 
-    tags.map(tag => ({
+    availableTagOptions.map(tag => ({
       id: tag._id,
       name: tag.name
-    })), [tags]);
+    })), [availableTagOptions]);
+
+  const filteredTagOptions = useMemo(() => {
+    const term = normalize(tagInput);
+    return availableTags.filter((tag) => {
+      if (selectedTags.includes(tag.id)) return false;
+      if (!term) return true;
+      return normalize(tag.name).includes(term);
+    });
+  }, [availableTags, selectedTags, tagInput]);
 
   const categoriesData = useMemo(() => 
     categories.map(cat => ({
@@ -572,22 +760,128 @@ export default function ArticleForm({
     }
   };
 
+  const handleAuthorEnter = async (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const term = authorSearch.trim();
+    if (!term || isLocked || !canManageAuthorsPerm || isCreatingAuthor) return;
+
+    const exactMatch = availableAuthors.find((author) => hasExactAuthorMatch(author, term));
+    if (exactMatch) {
+      handleAuthorSelect(exactMatch);
+      return;
+    }
+
+    if (filteredAuthors.length > 0) return;
+
+    if (!isAdmin) {
+      toast.error("Only admins can create new authors.");
+      return;
+    }
+
+    try {
+      setIsCreatingAuthor(true);
+      const createdUser = await apiClient.post('/users', {
+        name: term,
+        isAdmin: false,
+      });
+      const createdAuthor = mapUserToAuthor(createdUser);
+      if (!createdAuthor._id) {
+        toast.error("Failed to create author.");
+        return;
+      }
+
+      setAvailableAuthors((prev) =>
+        prev.some((author) => author._id === createdAuthor._id) ? prev : [...prev, createdAuthor],
+      );
+      handleAuthorSelect(createdAuthor);
+
+      await queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success(`Author "${term}" created`);
+    } catch (error: unknown) {
+      const message = getApiErrorMessage(error, "Failed to create author.");
+      toast.error(message);
+    } finally {
+      setIsCreatingAuthor(false);
+    }
+  };
+
   const handleAuthorRemove = (authorId: string) => {
     setSelectedAuthors(prev => prev.filter(a => a._id !== authorId));
   };
 
   // Tag selection functions
   const handleTagSelect = (tagId: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tagId) ? prev : [...prev, tagId]
-    );
-    if (formErrors.tags && selectedTags.length > 0) {
-      clearFieldError("tags");
-    }
+    setSelectedTags((prev) => {
+      const next = prev.includes(tagId) ? prev : [...prev, tagId];
+      if (formErrors.tags && next.length > 0) {
+        clearFieldError("tags");
+      }
+      return next;
+    });
   };
 
   const handleTagRemove = (tagId: string) => {
     setSelectedTags((prev) => prev.filter(id => id !== tagId));
+  };
+
+  const handleTagEnter = async (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const term = tagInput.trim();
+    if (!term || isLocked || isCreatingTag) return;
+
+    const exactMatch = availableTagOptions.find((tag) => normalize(tag.name) === normalize(term));
+    if (exactMatch) {
+      handleTagSelect(exactMatch._id);
+      setTagInput("");
+      return;
+    }
+
+    if (!isAdmin) {
+      toast.error("Only admins can create new tags.");
+      return;
+    }
+
+    try {
+      setIsCreatingTag(true);
+      const createdTag = (await apiClient.post('/tags', { name: term })) as {
+        _id?: string;
+        name?: string;
+        slug?: string;
+      };
+      const createdTagId = typeof createdTag?._id === "string" ? createdTag._id : "";
+
+      if (!createdTagId) {
+        toast.error("Failed to create tag.");
+        return;
+      }
+
+      const mappedTag: Tag = {
+        _id: createdTagId,
+        name: typeof createdTag.name === "string" ? createdTag.name : term,
+        slug: typeof createdTag.slug === "string" ? createdTag.slug : normalize(term).replace(/\s+/g, "-"),
+        description: undefined,
+        color: "#6366f1",
+        isActive: true,
+      };
+
+      setAvailableTagOptions((prev) =>
+        prev.some((tag) => tag._id === createdTagId) ? prev : [...prev, mappedTag],
+      );
+      handleTagSelect(createdTagId);
+      setTagInput("");
+
+      await queryClient.invalidateQueries({ queryKey: queryKeys.tags });
+      toast.success(`Tag "${term}" created`);
+    } catch (error: unknown) {
+      const message = getApiErrorMessage(error, "Failed to create tag.");
+      toast.error(message);
+    } finally {
+      setIsCreatingTag(false);
+    }
   };
 
   // Display functions for selected items
@@ -641,7 +935,7 @@ export default function ArticleForm({
         title: title.trim(),
         content: htmlContent,
         editorState: content,
-        ...(excerpt.trim() ? { excerpt: excerpt.trim() } : {}),
+        ...(imageCaption.trim() ? { imageCaption: imageCaption.trim() } : {}),
         ...(category ? { categoryId: category } : {}),
         ...(subcategory ? { subcategoryId: subcategory } : {}),
         ...(selectedTags.length ? { tagIds: selectedTags } : {}),
@@ -649,7 +943,7 @@ export default function ArticleForm({
         ...(canManageAuthorsPerm ? { 
           authors: selectedAuthors.filter((a) => !!a?._id).map((a) => a._id) 
         } : {}),
-        ...(featuredMediaId ? { featuredMediaId } : {}),
+        ...(featuredMediaUrl.trim() ? { featuredMediaUrl: featuredMediaUrl.trim() } : {}),
         published: isPublished,
         allowComments,
         isFeatured: isPublished ? isFeatured : false,
@@ -702,14 +996,14 @@ export default function ArticleForm({
         title: title.trim(),
         content: htmlContent,
         editorState: content,
-        ...(excerpt.trim() ? { excerpt: excerpt.trim() } : {}),
+        ...(imageCaption.trim() ? { imageCaption: imageCaption.trim() } : {}),
         categoryId: category,
         ...(subcategory ? { subcategoryId: subcategory } : {}),
         ...(selectedTags.length ? { tagIds: selectedTags } : {}),
         ...(canManageAuthorsPerm
           ? { authors: selectedAuthors.filter((a) => !!a?._id).map((a) => a._id) }
           : {}),
-        ...(featuredMediaId ? { featuredMediaId } : {}),
+        ...(featuredMediaUrl.trim() ? { featuredMediaUrl: featuredMediaUrl.trim() } : {}),
         published: isPublished,
         allowComments,
         isFeatured: isPublished ? isFeatured : false,
@@ -749,14 +1043,14 @@ export default function ArticleForm({
         title: title.trim(),
         content: htmlContent,
         editorState: content,
-        ...(excerpt.trim() ? { excerpt: excerpt.trim() } : {}),
+        ...(imageCaption.trim() ? { imageCaption: imageCaption.trim() } : {}),
         categoryId: category,
         ...(subcategory ? { subcategoryId: subcategory } : {}),
         ...(selectedTags.length ? { tagIds: selectedTags } : {}),
         ...(canManageAuthorsPerm
           ? { authors: selectedAuthors.filter((a) => !!a?._id).map((a) => a._id) }
           : {}),
-        ...(featuredMediaId ? { featuredMediaId } : {}),
+        ...(featuredMediaUrl.trim() ? { featuredMediaUrl: featuredMediaUrl.trim() } : {}),
         published: true,
         allowComments,
         reviewStatus: "published" as const,
@@ -815,12 +1109,6 @@ export default function ArticleForm({
                 <span className="text-sm">Changes requested by admin. {initialArticle?.reviewNotes ? `Note: ${initialArticle.reviewNotes}` : ''}</span>
               </div>
             )}
-            {hasPendingChanges && reviewStatus === 'published' && (
-              <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-md flex items-center gap-2">
-                <Info className="w-4 h-4" />
-                <span className="text-sm">This article has pending changes that are not yet live. Request review to publish updates.</span>
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="title" className='gap-0'>Title<span className='text-destructive'>*</span></Label>
               <Input
@@ -873,223 +1161,74 @@ export default function ArticleForm({
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
-              {/* Featured Media */}
-              <div className="space-y-2">
-                <Label htmlFor="featured-media" className='gap-0'>Featured Media</Label>
-                <MediaPicker
-                  value={featuredMediaId || undefined}
-                  items={mediaLibrary}
-                  disabled={isLocked}
-                  onChange={(id) => {
-                    setFeaturedMediaId(id || "");
-                    if (formErrors.featuredMedia && id) {
-                      clearFieldError("featuredMedia");
-                    }
-                  }}
-                  placeholder="Choose featured media"
-                  error={Boolean(formErrors.featuredMedia)}
-                />
-                {formErrors.featuredMedia && (
-                  <p className="text-xs text-destructive">{formErrors.featuredMedia}</p>
-                )}
-              </div>
-              
-              {/* Caption */}
-              <div className="space-y-2">
-                <Label htmlFor="excerpt" className='gap-0'>Caption</Label>
-                <Input
-                  id="excerpt"
-                  value={excerpt}
-                  disabled={isLocked}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setExcerpt(value);
-                    if (formErrors.excerpt && value.trim()) {
-                      clearFieldError("excerpt");
-                    }
-                  }}
-                  placeholder="Enter caption"
-                  className={cn(
-                    "italic",
-                    formErrors.excerpt && "border-destructive focus-visible:ring-destructive"
-                  )}
-                  aria-invalid={Boolean(formErrors.excerpt)}
-                />
-                {formErrors.excerpt && (
-                  <p className="text-xs text-destructive">{formErrors.excerpt}</p>
-                )}
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
               <div className="space-y-6">
-                {/* Authors - Searchable Input */}
+                {/* Featured Media */}
                 <div className="space-y-2">
-                  <Label htmlFor="authors" className='gap-0'>Author(s)<span className='text-destructive'>*</span></Label>
-                  
-                  {/* Selected Authors */}
-                  <div className={cn(
-                    "flex flex-wrap gap-2 p-2 border rounded-md min-h-10",
-                    formErrors.authors && "border-destructive"
-                  )}>
-                     {selectedAuthors.map((author, idx) => (
-                       <Badge
-                         key={author._id || `${idx}`}
-                         variant="secondary"
-                         className="px-3 py-1 text-sm flex items-center gap-1"
-                       >
-                        {getAuthorDisplayName(author)}
-                        {!isLocked && canManageAuthorsPerm && (
-                          <button
-                            type="button"
-                            onClick={() => handleAuthorRemove(author._id)}
-                            className="ml-1 hover:text-destructive"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
-                      </Badge>
-                    ))}
-                    {selectedAuthors.length === 0 && (
-                      <span className="text-muted-foreground text-sm">No authors selected</span>
+                  <Label htmlFor="featured-media" className='gap-0'>Featured Media</Label>
+                  <Input
+                    id="featured-media"
+                    value={featuredMediaUrl}
+                    disabled={isLocked}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFeaturedMediaUrl(value);
+                      if (formErrors.featuredMedia && value.trim()) {
+                        clearFieldError("featuredMedia");
+                      }
+                    }}
+                    placeholder="Paste featured media URL"
+                    className={cn(
+                      formErrors.featuredMedia && "border-destructive focus-visible:ring-destructive"
                     )}
-                  </div>
-                  {formErrors.authors && (
-                    <p className="text-xs text-destructive">{formErrors.authors}</p>
-                  )}
-
-                  {/* Author Search */}
-                  {!isLocked && canManageAuthorsPerm && (
-                    <div className="relative">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          value={authorSearch}
-                          onChange={(e) => handleAuthorSearch(e.target.value)}
-                          placeholder="Search for authors by name, username, or email..."
-                          className="pl-10"
-                        />
-                      </div>
-                      
-                      {/* Search Results */}
-                      {showAuthorResults && (
-                        <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
-                          {filteredAuthors.length > 0 ? (
-                            filteredAuthors.map((author) => (
-                              <div
-                                key={author._id}
-                                className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
-                                onClick={() => handleAuthorSelect(author)}
-                              >
-                                <div className="font-medium">
-                                  {getAuthorDisplayName(author)}
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                  {author.username} • {author.email}
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="p-3 text-muted-foreground text-center">
-                              No authors found
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    aria-invalid={Boolean(formErrors.featuredMedia)}
+                  />
+                  
+                  {formErrors.featuredMedia && (
+                    <p className="text-xs text-destructive">{formErrors.featuredMedia}</p>
                   )}
                 </div>
+                
+                {/* Image Caption */}
+                <div className="space-y-2">
+                  <Label htmlFor="image-caption" className='gap-0'>Image Caption</Label>
+                  <Input
+                    id="image-caption"
+                    value={imageCaption}
+                    disabled={isLocked}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setImageCaption(value);
+                    }}
+                    placeholder="Enter caption"
+                    className="italic"
+                  />
+                </div>
 
-                {/* Category & sub-category */}
-                <div className="space-y-4 sm:space-y-0 sm:flex sm:flex-row sm:gap-4">
-                  <div className="space-y-2 flex-1">
-                    <Label htmlFor="category" className='gap-0'>Category<span className='text-destructive'>*</span></Label>
-                    <Select
-                      value={category}
-                      disabled={isLocked}
-                      onValueChange={(value) => {
-                        setCategory(value);
-                        setSubcategory(""); // Reset subcategory when category changes
-                        if (formErrors.category && value) {
-                          clearFieldError("category");
-                        }
-                        if (formErrors.subcategory) {
-                          clearFieldError("subcategory");
-                        }
-                      }}
-                    >
-                      <SelectTrigger
-                        className={cn(
-                          formErrors.category && "border-destructive focus:ring-destructive"
-                        )}
-                        aria-invalid={Boolean(formErrors.category)}
-                      >
-                        <SelectValue placeholder={category ? selectedCategoryName : "Select category"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categoriesData.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {formErrors.category && (
-                      <p className="text-xs text-destructive">{formErrors.category}</p>
-                    )}
-                  </div>
+                <div className='space-y-2'>
+                <Button
+                  type="button"
+                  variant='link'
+                  onClick={() => setHideImage((prev) => !prev)}
+                  className="text-xs p-0 m-0 bg-transparent border-0 shadow-none hover:underline"
+                >
+                  {hideImage ? "Show Preview" : "Hide Preview"}
+                </Button>
 
-                  <div className="space-y-2 flex-1">
-                    <Label htmlFor="subcategory">
-                      Sub-category
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full border border-muted-foreground/50 text-[10px] text-muted-foreground cursor-help">
-                            ?
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent className='max-w-64 flex-wrap'>
-                          {availableSubcategories.length > 0 
-                            ? "Select a sub-category to further classify this article"
-                            : "No sub-categories available for the selected category"
-                          }
-                        </TooltipContent>
-                      </Tooltip>
-                    </Label>
-                    <Select
-                      value={subcategory}
-                      onValueChange={(value) => {
-                        setSubcategory(value);
-                        if (formErrors.subcategory && value) {
-                          clearFieldError("subcategory");
-                        }
-                      }}
-                      disabled={!isSubcategoryRequired || isLocked}
-                    >
-                      <SelectTrigger
-                        className={cn(
-                          formErrors.subcategory &&
-                            "border-destructive focus:ring-destructive",
-                          !isSubcategoryRequired && "text-muted-foreground"
-                        )}
-                        aria-invalid={Boolean(formErrors.subcategory)}
-                        disabled={!isSubcategoryRequired || isLocked}
-                      >
-                        <SelectValue placeholder={subcategory ? selectedSubcategoryName : subcategoryPlaceholder} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableSubcategories.map((item) => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {formErrors.subcategory && (
-                      <p className="text-xs text-destructive">{formErrors.subcategory}</p>
-                    )}
-                  </div>
+                {!hideImage &&<AspectRatio ratio={16 / 9} className="bg-muted/50 rounded-md overflow-hidden">
+                  {featuredMediaUrl && !mediaPreviewFailed ? (
+                    <img
+                      src={featuredMediaUrl}
+                      className="object-cover h-full w-full"
+                      onError={() => setMediaPreviewFailed(true)}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      <Image className="w-6 h-6" />
+                      <span className="ml-2">Featured media preview</span>
+                    </div>
+                  )}
+                </AspectRatio>}
                 </div>
 
                 {/* New Featured and Sticky Controls */}
@@ -1232,48 +1371,253 @@ export default function ArticleForm({
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="tags" className='gap-0'>Tags</Label>
-                <div className={cn(
-                  "flex flex-wrap gap-2 p-2 border rounded-md min-h-10",
-                  formErrors.tags && "border-destructive"
-                )}>
-                  {selectedTagNames.map((tagName, index) => (
-                    <Badge
-                      key={selectedTags[index]}
-                      variant="secondary"
-                      className="px-3 py-1 text-sm cursor-pointer"
-                      onClick={() => !isLocked && handleTagRemove(selectedTags[index])}
-                    >
-                      {tagName} {!isLocked && "×"}
-                    </Badge>
-                  ))}
-                  {selectedTags.length === 0 && (
-                    <span className="text-muted-foreground text-sm">No tags selected</span>
-                  )}
-                </div>
-                {formErrors.tags && (
-                  <p className="text-xs text-destructive">{formErrors.tags}</p>
-                )}
-                {!isLocked && (
-                  <div className="flex flex-wrap gap-2">
-                    {availableTags
-                      .filter((tag) => !selectedTags.includes(tag.id))
-                      .map((tag) => (
-                        <Badge
-                          key={tag.id}
-                          variant="outline"
-                          className="cursor-pointer px-3 py-1 text-sm hover:bg-secondary"
-                          onClick={() => handleTagSelect(tag.id)}
-                        >
-                          {tag.name}
-                        </Badge>
-                      ))}
-                    {availableTags.length === 0 && (
-                      <p className="text-muted-foreground">No tags available</p>
+              <div className="space-y-6">
+                {/* Authors - Searchable Input */}
+                <div className="space-y-2">
+                  <Label htmlFor="authors" className='gap-0'>Author(s)<span className='text-destructive'>*</span></Label>
+                  
+                  {/* Selected Authors */}
+                  <div className={cn(
+                    "flex flex-wrap gap-2 p-2 border rounded-md min-h-10",
+                    formErrors.authors && "border-destructive"
+                  )}>
+                     {selectedAuthors.map((author, idx) => (
+                       <Badge
+                         key={author._id || `${idx}`}
+                         variant="secondary"
+                         className="px-3 py-1 text-sm flex items-center gap-1"
+                       >
+                        {getAuthorDisplayName(author)}
+                        {!isLocked && canManageAuthorsPerm && (
+                          <button
+                            type="button"
+                            onClick={() => handleAuthorRemove(author._id)}
+                            className="ml-1 hover:text-destructive"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </Badge>
+                    ))}
+                    {selectedAuthors.length === 0 && (
+                      <span className="text-muted-foreground text-sm">No authors selected</span>
                     )}
                   </div>
-                )}
+                  {formErrors.authors && (
+                    <p className="text-xs text-destructive">{formErrors.authors}</p>
+                  )}
+
+                  {/* Author Search */}
+                  {!isLocked && canManageAuthorsPerm && (
+                    <div className="relative">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          value={authorSearch}
+                          onChange={(e) => handleAuthorSearch(e.target.value)}
+                          onKeyDown={handleAuthorEnter}
+                          disabled={isCreatingAuthor}
+                          placeholder="Search for authors by name, username, or email..."
+                          className="pl-10"
+                        />
+                      </div>
+                      
+                      {/* Search Results */}
+                      {showAuthorResults && (
+                        <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+                          {isCreatingAuthor ? (
+                            <div className="p-3 text-muted-foreground text-center">
+                              Creating author...
+                            </div>
+                          ) : filteredAuthors.length > 0 ? (
+                            filteredAuthors.map((author) => (
+                              <div
+                                key={author._id}
+                                className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
+                                onClick={() => handleAuthorSelect(author)}
+                              >
+                                <div className="font-medium">
+                                  {getAuthorDisplayName(author)}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {author.username} • {author.email}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-3 text-muted-foreground text-center">
+                              <p>No authors found</p>
+                              {isAdmin && authorSearch.trim().length > 0 && (
+                                <p className="text-xs mt-1">
+                                  Press Enter to create "{authorSearch.trim()}"
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Category & sub-category */}
+                <div className="space-y-4 sm:space-y-0 sm:flex sm:flex-row sm:gap-4">
+                  <div className="space-y-2 flex-1">
+                    <Label htmlFor="category" className='gap-0'>Category<span className='text-destructive'>*</span></Label>
+                    <Select
+                      value={category}
+                      disabled={isLocked}
+                      onValueChange={(value) => {
+                        setCategory(value);
+                        setSubcategory(""); // Reset subcategory when category changes
+                        if (formErrors.category && value) {
+                          clearFieldError("category");
+                        }
+                        if (formErrors.subcategory) {
+                          clearFieldError("subcategory");
+                        }
+                      }}
+                    >
+                      <SelectTrigger
+                        className={cn(
+                          formErrors.category && "border-destructive focus:ring-destructive"
+                        )}
+                        aria-invalid={Boolean(formErrors.category)}
+                      >
+                        <SelectValue placeholder={category ? selectedCategoryName : "Select category"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categoriesData.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {formErrors.category && (
+                      <p className="text-xs text-destructive">{formErrors.category}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2 flex-1">
+                    <Label htmlFor="subcategory">
+                      Sub-category
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full border border-muted-foreground/50 text-[10px] text-muted-foreground cursor-help">
+                            ?
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className='max-w-64 flex-wrap'>
+                          {availableSubcategories.length > 0 
+                            ? "Select a sub-category to further classify this article"
+                            : "No sub-categories available for the selected category"
+                          }
+                        </TooltipContent>
+                      </Tooltip>
+                    </Label>
+                    <Select
+                      value={subcategory}
+                      onValueChange={(value) => {
+                        setSubcategory(value);
+                        if (formErrors.subcategory && value) {
+                          clearFieldError("subcategory");
+                        }
+                      }}
+                      disabled={!isSubcategoryRequired || isLocked}
+                    >
+                      <SelectTrigger
+                        className={cn(
+                          formErrors.subcategory &&
+                            "border-destructive focus:ring-destructive",
+                          !isSubcategoryRequired && "text-muted-foreground"
+                        )}
+                        aria-invalid={Boolean(formErrors.subcategory)}
+                        disabled={!isSubcategoryRequired || isLocked}
+                      >
+                        <SelectValue placeholder={subcategory ? selectedSubcategoryName : subcategoryPlaceholder} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableSubcategories.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {formErrors.subcategory && (
+                      <p className="text-xs text-destructive">{formErrors.subcategory}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tags Selection */}
+                <div className='space-y-2'>
+                  <Label htmlFor="tags" className='gap-0'>Tags</Label>
+                  <div className={cn(
+                    "flex flex-wrap gap-2 p-2 border rounded-md min-h-10",
+                    formErrors.tags && "border-destructive"
+                  )}>
+                    {selectedTagNames.map((tagName, index) => (
+                      <Badge
+                        key={selectedTags[index]}
+                        variant="secondary"
+                        className="px-3 py-1 text-sm cursor-pointer"
+                        onClick={() => !isLocked && handleTagRemove(selectedTags[index])}
+                      >
+                        {tagName} {!isLocked && "×"}
+                      </Badge>
+                    ))}
+                    {selectedTags.length === 0 && (
+                      <span className="text-muted-foreground text-sm">No tags selected</span>
+                    )}
+                  </div>
+                  {formErrors.tags && (
+                    <p className="text-xs text-destructive">{formErrors.tags}</p>
+                  )}
+                  {!isLocked && (
+                    <div className="space-y-2">
+                      <Input
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={handleTagEnter}
+                        disabled={isCreatingTag}
+                        placeholder={
+                          isAdmin
+                            ? "Search tags or type a new one and press Enter..."
+                            : "Search existing tags..."
+                        }
+                      />
+                      {isAdmin &&
+                        tagInput.trim().length > 0 &&
+                        !availableTagOptions.some((tag) => normalize(tag.name) === normalize(tagInput)) && (
+                          <p className="text-xs text-muted-foreground">
+                            Press Enter to create "{tagInput.trim()}"
+                          </p>
+                        )}
+                      <div className="flex flex-wrap gap-2">
+                        {filteredTagOptions.map((tag) => (
+                          <Badge
+                            key={tag.id}
+                            variant="outline"
+                            className="cursor-pointer px-3 py-1 text-sm hover:bg-secondary"
+                            onClick={() => handleTagSelect(tag.id)}
+                          >
+                            {tag.name}
+                          </Badge>
+                        ))}
+                        {isCreatingTag && (
+                          <p className="text-muted-foreground text-sm">Creating tag...</p>
+                        )}
+                        {!isCreatingTag && filteredTagOptions.length === 0 && (
+                          <p className="text-muted-foreground">
+                            {tagInput.trim() ? "No matching tags" : "No tags available"}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

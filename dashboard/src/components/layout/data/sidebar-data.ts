@@ -7,7 +7,6 @@ import {
   IconLibrary,
   IconMessage,
   IconMusic,
-  IconPhoto,
   IconSparkles,
   IconTag,
   IconUsers,
@@ -28,6 +27,11 @@ export const sidebarData: SidebarData = {
           title: 'Dashboard',
           url: '/dash',
           icon: IconLayoutDashboard,
+        },
+        {
+          title: 'Documentation',
+          url: '/documentation',
+          icon: IconLibrary,
         },
         {
           title: 'Staff Members',
@@ -57,11 +61,6 @@ export const sidebarData: SidebarData = {
               title: 'Tags',
               url: '/articles/tags',
               icon: IconTag,
-            },
-            {
-              title: 'Media Library',
-              url: '/articles/media',
-              icon: IconPhoto,
             },
           ],
         },

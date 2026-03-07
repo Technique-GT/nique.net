@@ -5,7 +5,6 @@ import { getAdminArticlesPage } from "@/services/articles";
 import {
   useTaxonomy,
   useUsers,
-  useMedia,
 } from "@/hooks/use-queries";
 
 // Query key for articles
@@ -50,7 +49,6 @@ export const useArticles = () => {
       _id: article._id?.$oid || article._id,
       title: article.title || '',
       content: article.content || '',
-      excerpt: article.excerpt || '',
       category: article.categoryId ? {
         _id: article.categoryId._id || article.categoryId,
         name: article.categoryId.name || 'Unknown',
@@ -72,11 +70,7 @@ export const useArticles = () => {
       })) : [],
       authors: Array.isArray(article.authors) ? article.authors.map((a: any) => transformAuthor(a.authorId)) : [],
       ownerId: typeof article.ownerId === 'string' ? article.ownerId : (article.ownerId?._id || article.ownerId?.$oid),
-      featuredMedia: {
-        id: article.featuredMediaId?._id || article.featuredMediaId || '',
-        url: article.featuredMediaId?.url || '',
-        alt: article.featuredMediaId?.altText || ''
-      },
+      featuredMediaUrl: typeof article.featuredMediaUrl === 'string' ? article.featuredMediaUrl : '',
       isPublished: article.published,
       isFeatured: article.isFeatured || false,
       isSticky: article.isSticky || false,
@@ -84,7 +78,6 @@ export const useArticles = () => {
       allowComments: article.allowComments ?? true,
       // Map new review fields
       reviewStatus: article.reviewStatus,
-      hasPendingChanges: article.hasPendingChanges,
       reviewedAt: article.reviewedAt,
       reviewedBy: article.reviewedBy,
       reviewNotes: article.reviewNotes,
@@ -142,8 +135,6 @@ export const useArticles = () => {
   const { data: usersData } = useUsers();
   const rawUsers = usersData ?? [];
   
-  // Use centralized media hook (NOT persisted - large)
-  const { data: mediaData } = useMedia({ limit: 100 });
 
   // Map taxonomy to expected format
   const categories: PopulatedCategory[] = useMemo(() => {
@@ -189,9 +180,6 @@ export const useArticles = () => {
     return rawUsers.map(transformAuthor);
   }, [rawUsers]);
 
-  const mediaLibrary = useMemo(() => {
-    return mediaData?.data || [];
-  }, [mediaData]);
 
   // Fetch articles function (invalidates query)
   const fetchArticles = useCallback(async (page = currentPage) => {
@@ -263,6 +251,5 @@ export const useArticles = () => {
     handlePageChange,
     pageSize,
     handlePageSizeChange,
-    mediaLibrary
   };
 };

@@ -99,6 +99,7 @@ export function ArticleTable({
             <TableHead className="hidden lg:table-cell">Category</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="hidden sm:table-cell">Created</TableHead>
+            <TableHead className="hidden sm:table-cell">Published</TableHead>
             <TableHead className="hidden lg:table-cell">Views</TableHead>
             <TableHead className="text-center hidden sm:table-cell">Quick Actions</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -181,14 +182,10 @@ export function ArticleTable({
                   <Badge variant={getStatusVariant(article.reviewStatus || article.status)}>
                     {prettifyStatus(article.reviewStatus || article.status)}
                   </Badge>
-                  {article.hasPendingChanges && article.reviewStatus === 'published' && (
-                    <Badge variant="outline" className="text-[10px] border-orange-200 bg-orange-50 text-orange-700 w-fit">
-                      Pending Changes
-                    </Badge>
-                  )}
                 </div>
               </TableCell>
               <TableCell className="hidden sm:table-cell">{formatDate(article.createdAt)}</TableCell>
+              <TableCell className="hidden sm:table-cell">{article.publishedAt ? formatDate(article.publishedAt) : '—'}</TableCell>
               <TableCell className="hidden lg:table-cell">{article.views}</TableCell>
               
               {/* Quick Actions Column */}

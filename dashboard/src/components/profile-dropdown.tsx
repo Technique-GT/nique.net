@@ -1,4 +1,4 @@
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,11 +15,8 @@ import { useAuthStore } from '@/stores/authStore'
 
 export function ProfileDropdown() {
   const { user, logout } = useAuthStore((state) => state.auth)
-  const navigate = useNavigate()
-
   const handleLogout = async () => {
     await logout()
-    navigate({ to: '/' })
   }
 
   // Fallback for visual testing if needed, though usually gated by auth

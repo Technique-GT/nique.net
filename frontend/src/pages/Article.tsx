@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import SuccessTick from "../components/SuccessTick";
 import DOMPurify from "dompurify";
 import Navbar from "../components/Navbar";
@@ -7,9 +7,10 @@ import ArticleBlock from "../components/ArticleBlock";
 import Comment from "../components/Comment";
 import Spinner from "../components/Spinner";
 import articleService from "../services/articleService";
-import { articleCache } from "../services/articleCache";
 import commentService from "../services/commentService";
 import { ArticleDocument, User, Comment as CommentType } from "../types/article";
+import Seo from "../components/Seo";
+import { getArticleDescription, getArticleImage, getArticleLink } from "../utils/articlePresentation";
 
 type DisplayComment = {
   _id: string;
@@ -77,21 +78,16 @@ const sortComments = (
 };
 
 export default function Article() {
-  const { id, slug } = useParams();
+  const { id, slug, category } = useParams();
+  const navigate = useNavigate();
   const normalizedId = useMemo(() => {
     if (slug) return undefined; // prefer slug if available
     if (!id) return undefined;
     return /^[a-f0-9]{24}:\d+$/i.test(id) ? id.split(":")[0] : id;
   }, [id, slug]);
 
-  // Check cache immediately for instant display
-  const initialCachedArticle = useMemo(() => {
-    const cacheKey = slug || normalizedId || '';
-    return cacheKey ? articleCache.get(cacheKey) : null;
-  }, [slug, normalizedId]);
-
-  const [isLoading, setIsLoading] = useState(!initialCachedArticle);
-  const [article, setArticle] = useState<ArticleDocument | null>(initialCachedArticle);
+  const [isLoading, setIsLoading] = useState(true);
+  const [article, setArticle] = useState<ArticleDocument | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<ArticleDocument[]>([]);
   const [comments, setComments] = useState<DisplayComment[]>([]);
   const [numCommentsToView, setNumCommentsToView] = useState(5);
@@ -102,6 +98,12 @@ export default function Article() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [showSubmitMessage, setShowSubmitMessage] = useState(false);
   const [commentSubmitError, setCommentSubmitError] = useState<string | null>(null);
+  const lastTrackedArticleId = useRef<string | null>(null);
+  const commentsSortRef = useRef(commentsSortBy);
+
+  useEffect(() => {
+    commentsSortRef.current = commentsSortBy;
+  }, [commentsSortBy]);
 
   useEffect(() => {
     if (!normalizedId && !slug) return;
@@ -109,10 +111,10 @@ export default function Article() {
     const controller = new AbortController();
     const load = async () => {
       try {
-        // Only show loading if we don't have cached data
-        if (!article) {
-          setIsLoading(true);
-        }
+        setIsLoading(true);
+        setArticle(null);
+        setRelatedArticles([]);
+        setComments([]);
         let fetchedArticle: ArticleDocument;
 
         if (slug) {
@@ -123,9 +125,21 @@ export default function Article() {
           return;
         }
 
+        // Canonicalize the URL when an article moves categories. The backend
+        // resolves article detail by slug, so the path segment itself is not authoritative.
+        if (slug) {
+          const canonicalLink = getArticleLink(fetchedArticle);
+          const fetchedCategorySlug =
+            fetchedArticle.categoryId && typeof fetchedArticle.categoryId === "object"
+              ? fetchedArticle.categoryId.slug
+              : undefined;
+
+          if (canonicalLink && fetchedCategorySlug && category !== fetchedCategorySlug) {
+            navigate(canonicalLink, { replace: true });
+          }
+        }
+
         setArticle(fetchedArticle);
-        // Update cache with fresh data
-        articleCache.set(fetchedArticle);
 
         // backend uses categoryId (populated object), not categories[]
         const categoryId = fetchedArticle.categoryId?._id;
@@ -157,7 +171,7 @@ export default function Article() {
               controller.signal
             );
             const mappedComments = fetchedComments.map(mapApiCommentToDisplay);
-            setComments(sortComments(mappedComments, commentsSortBy));
+            setComments(sortComments(mappedComments, commentsSortRef.current));
           } catch {
             setComments([]);
           }
@@ -185,21 +199,43 @@ export default function Article() {
     load();
 
     return () => controller.abort();
-  }, [normalizedId, slug]);
+  }, [category, navigate, normalizedId, slug]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [normalizedId, slug]);
 
-  const articleContent = typeof article?.content === "string" ? article.content : null;
+  useEffect(() => {
+    const articleId = article?._id;
+    if (!articleId) return;
+    if (lastTrackedArticleId.current === articleId) return;
 
-  const normalizeSpansToParagraphs = (raw: string) =>
-    raw.replace(/<\s*span([^>]*)>/gi, "<p$1>").replace(/<\/\s*span\s*>/gi, "</p>");
+    const sessionKey = `viewed:${articleId}`;
+    if (typeof window !== "undefined" && window.sessionStorage.getItem(sessionKey)) {
+      lastTrackedArticleId.current = articleId;
+      return;
+    }
+
+    lastTrackedArticleId.current = articleId;
+
+    articleService
+      .recordArticleView(articleId)
+      .then(() => {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem(sessionKey, "1");
+        }
+      })
+      .catch((error) => {
+        console.warn("Failed to record article view", error);
+        lastTrackedArticleId.current = null;
+      });
+  }, [article?._id]);
+
+  const articleContent = typeof article?.content === "string" ? article.content : null;
 
   const sanitizedContent = useMemo(() => {
     if (!articleContent) return "";
-    const normalized = normalizeSpansToParagraphs(articleContent);
-    return DOMPurify.sanitize(normalized);
+    return DOMPurify.sanitize(articleContent);
   }, [articleContent]);
 
   const handleSubmitComment = async () => {
@@ -290,13 +326,49 @@ export default function Article() {
 
   // backend uses tagIds, not tags
   const tagsDisplay = article.tagIds?.map((tag) => tag.name).filter(Boolean).join(" • ");
-  const featuredMedia =
-    article.featuredMediaId && typeof article.featuredMediaId === "object"
-      ? article.featuredMediaId
+  const featuredMedia = article.featuredMediaUrl && typeof article.featuredMediaUrl === "string"
+      ? article.featuredMediaUrl
       : null;
+  const articleDescription = getArticleDescription(article).slice(0, 160);
+  const canonicalPath = getArticleLink(article);
+  const articleImage = getArticleImage(article) || undefined;
+  const toIsoOrUndefined = (value: Date | string | null | undefined) => {
+    if (!value) return undefined;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return undefined;
+    return date.toISOString();
+  };
+  const publishedTimeIso = toIsoOrUndefined(article.publishedAt);
+  const modifiedTimeIso = toIsoOrUndefined(article.updatedAt);
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: article.title,
+    description: articleDescription,
+    image: articleImage ? [articleImage] : undefined,
+    datePublished: publishedTimeIso,
+    dateModified: modifiedTimeIso,
+    mainEntityOfPage: canonicalPath,
+    author: authorNames.length
+      ? authorNames.map((name) => ({ "@type": "Person", name }))
+      : [{ "@type": "Organization", name: "Technique" }],
+    publisher: {
+      "@type": "Organization",
+      name: "Technique",
+      url: "https://nique.net",
+    },
+  };
 
   return (
     <>
+      <Seo
+        title={article.title}
+        description={articleDescription}
+        canonicalPath={canonicalPath}
+        image={articleImage}
+        type="article"
+        structuredData={articleJsonLd}
+      />
       <Navbar />
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Title */}
@@ -316,14 +388,14 @@ export default function Article() {
           <hr className="opacity-50" />
         </header>
 
-        {/* Featured Image - backend uses featuredMediaId, not featuredImage */}
+        {/* Featured Image - backend uses featuredMediaUrl, not featuredImage */}
         {featuredMedia && (
           <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
             <img
               className="w-full aspect-3/2 object-cover rounded-md"
-              src={featuredMedia.url}
+              src={featuredMedia}
               loading="lazy"
-              alt={featuredMedia.altText || article.title}
+              alt={article.title}
             />
             {article.imageCaption && (
               <figcaption className="w-full text-xs text-nique-blue mt-2">
@@ -334,29 +406,11 @@ export default function Article() {
         )}
 
         {/* Article Content */}
-        <section className="prose prose-lg max-w-4xl mx-auto text-nique-blue article-body">
+        <section className="prose prose-lg max-w-3xl mx-auto text-nique-blue article-body">
           {sanitizedContent ? (
             <article dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
-          ) : (
-            <p>{article.excerpt}</p>
-          )}
+          ) : null}
         </section>
-
-        <section>
-          <p className='text-right text-nique-blue'>Views: {article.viewCount || 0}</p>
-        </section>
-
-        {/* Related Articles - fetches 4 published articles from the same category */}
-        {relatedArticles.length > 0 && (
-          <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-nique-blue">Related Articles</h2>
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-              {relatedArticles.map((related) => (
-                <ArticleBlock key={related._id || related.slug} article={related} height="230px" />
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Comments */}
         <section className="space-y-4">
@@ -443,6 +497,19 @@ export default function Article() {
             <p className="text-sm text-nique-blue">Comments are disabled for this article.</p>
           )}
         </section>
+
+        {/* Related Articles - fetches 4 published articles from the same category */}
+        {relatedArticles.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold text-nique-blue">Related Articles</h2>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+              {relatedArticles.map((related) => (
+                <ArticleBlock key={related._id || related.slug} article={related} height="230px" />
+              ))}
+            </div>
+          </section>
+        )}
+
       </div>
     </>
   );

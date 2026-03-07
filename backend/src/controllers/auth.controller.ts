@@ -3,7 +3,9 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import User from '../models/User';
-import { AuthRequest } from '../middleware/auth.middleware';
+import { AuthRequest, getTokenFromRequest } from '../middleware/auth.middleware';
+import { hashToken, safeErrorResponse } from '../utils/security';
+import RevokedToken from '../models/RevokedToken';
 
 type GoogleProfile = { name?: string; sub?: string; email?: string; email_verified?: boolean };
 
@@ -13,12 +15,15 @@ const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 const OAUTH_STATE_COOKIE = 'oauth_state';
 const OAUTH_REDIRECT_COOKIE = 'oauth_redirect';
 
-const getCookieOptions = () => ({
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
-  maxAge: COOKIE_MAX_AGE,
-});
+const getCookieOptions = () => {
+  const isProd = process.env.NODE_ENV === 'production';
+  return {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
+    maxAge: COOKIE_MAX_AGE,
+  };
+};
 
 const generateToken = (user: any) => {
   return jwt.sign({ id: user._id, name: user.name, isAdmin: user.isAdmin }, process.env.JWT_TOKEN as string, {
@@ -73,13 +78,46 @@ export const register = async (req: AuthRequest, res: Response): Promise<void> =
       },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json(safeErrorResponse('Registration failed', error));
   }
 };
 
-export const logout = (_req: Request, res: Response): void => {
-  res.clearCookie('jwt');
-  res.json({ success: true, message: 'Logged out successfully' });
+export const logout = async (req: Request, res: Response): Promise<void> => {
+  const token = getTokenFromRequest(req);
+
+  res.clearCookie('jwt', getCookieOptions());
+
+  if (!token) {
+    res.json({ success: true, message: 'Logged out successfully' });
+    return;
+  }
+
+  try {
+    const decoded = jwt.decode(token) as { exp?: number; id?: string } | null;
+    const expiresAt = decoded?.exp ? new Date(decoded.exp * 1000) : null;
+
+    if (!expiresAt) {
+      res.json({ success: true, message: 'Logged out successfully' });
+      return;
+    }
+
+    const tokenHash = hashToken(token);
+    await RevokedToken.updateOne(
+      { tokenHash },
+      {
+        $setOnInsert: {
+          tokenHash,
+          userId: decoded?.id ? new mongoose.Types.ObjectId(decoded.id) : undefined,
+          expiresAt,
+        },
+      },
+      { upsert: true },
+    );
+
+    res.json({ success: true, message: 'Logged out successfully' });
+  } catch (error: any) {
+    res.status(500).json(safeErrorResponse('Logout failed', error));
+  }
 };
 
 export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -89,15 +127,15 @@ export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const user = await AuthUser.findById(req.user.id).select('-password').populate('profilePictureMediaId');
+    const user = await AuthUser.findById(req.user.id).select('-password');
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      res.status(401).json({ success: false, message: 'User not found' });
       return;
     }
 
     res.json({ success: true, data: user });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json(safeErrorResponse('Error fetching user', error));
   }
 };
 
@@ -165,7 +203,7 @@ export const googleAuth = (req: Request, res: Response): void => {
 
     res.redirect(url);
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(safeErrorResponse('Authentication failed', error));
   }
 };
 
@@ -177,8 +215,8 @@ export const googleAuthCallback = async (req: Request, res: Response): Promise<v
     const storedState = req.cookies?.[OAUTH_STATE_COOKIE] as string | undefined;
     const redirect = req.cookies?.[OAUTH_REDIRECT_COOKIE] as string | undefined;
 
-    res.clearCookie(OAUTH_STATE_COOKIE);
-    res.clearCookie(OAUTH_REDIRECT_COOKIE);
+    res.clearCookie(OAUTH_STATE_COOKIE, getCookieOptions());
+    res.clearCookie(OAUTH_REDIRECT_COOKIE, getCookieOptions());
 
     if (error) {
       // User likely canceled the login or access was denied.
@@ -214,12 +252,15 @@ export const googleAuthCallback = async (req: Request, res: Response): Promise<v
     }
 
     let user = await AuthUser.findOne({ googleSub });
-    if (!user && isAllowlistedAdmin && email) {
-      user = await AuthUser.findOne({ email });
+    const emailUser = !user && email ? await AuthUser.findOne({ email }) : null;
+
+    if (!user && !emailUser && !isAllowlistedAdmin) {
+      res.status(403).json({ message: 'Email not authorized' });
+      return;
     }
 
     if (!user) {
-      user = await AuthUser.create({
+      user = emailUser ?? await AuthUser.create({
         name: fullName,
         socialLinks: [],
         isAdmin: isAllowlistedAdmin,
@@ -252,6 +293,6 @@ export const googleAuthCallback = async (req: Request, res: Response): Promise<v
     const appRedirect = redirect || process.env.APP_BASE_URL || '/';
     res.redirect(appRedirect);
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(safeErrorResponse('Authentication callback failed', error));
   }
 };

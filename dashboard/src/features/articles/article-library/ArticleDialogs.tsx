@@ -12,7 +12,6 @@ interface ArticleDialogsProps {
   subcategories: PopulatedSubCategory[];
   tags: PopulatedTag[];
   authors: PopulatedAuthor[];
-  mediaLibrary: any[];
   
   // Functions
   getAuthorName: (author: PopulatedAuthor) => string;

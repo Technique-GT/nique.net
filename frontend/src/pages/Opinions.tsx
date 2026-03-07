@@ -1,10 +1,7 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
-import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
-import { ArticleDocument } from '../types/article';
-// SideArticle not currently used
-// import SideArticle from '../components/SideArticle';
+import { ArticleDocument, Category } from '../types/article';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import FeaturedStory from '../components/FeaturedStory';
@@ -45,43 +42,31 @@ const processOpinionArticles = (allOpinions: ArticleDocument[]) => {
         recentOpinionArticles: recentSelection,
         opEdArticles: filterBySubcategory(allOpinions, 'op ed'),
         consensusArticles: filterBySubcategory(allOpinions, 'consensus'),
-        lettersArticles: filterBySubcategory(allOpinions, 'letter to the editor'),
+        lettersArticles: filterBySubcategory(allOpinions, 'letters to the editor'),
     };
 };
 
 function Opinions() {
-    // Check cache immediately for instant display
-    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.OPINION), []);
-    const initialData = useMemo(() => cachedArticles ? processOpinionArticles(cachedArticles) : null, [cachedArticles]);
-
-    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
-    const [recentOpinionArticles, setRecentOpinionArticles] = useState<ArticleDocument[]>(initialData?.recentOpinionArticles || []);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentOpinionArticles, setRecentOpinionArticles] = useState<ArticleDocument[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [opinionCategoryId, setOpinionCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.OPINION));
-    const [opEdArticles, setOpEdArticles] = useState<ArticleDocument[]>(initialData?.opEdArticles || []);
-    const [consensusArticles, setConsensusArticles] = useState<ArticleDocument[]>(initialData?.consensusArticles || []);
-    const [lettersArticles, setLettersArticles] = useState<ArticleDocument[]>(initialData?.lettersArticles || []);
+    const [opinionCategoryId, setOpinionCategoryId] = useState<string | null>(null);
+    const [opEdArticles, setOpEdArticles] = useState<ArticleDocument[]>([]);
+    const [consensusArticles, setConsensusArticles] = useState<ArticleDocument[]>([]);
+    const [lettersArticles, setLettersArticles] = useState<ArticleDocument[]>([]);
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
 
         const loadArticles = async () => {
-            // Only show loading if we don't have cached data
-            if (!cachedArticles) {
-                setIsLoading(true);
-            }
+            setIsLoading(true);
             setError(null);
 
             try {
-                // Use cached categories if available
-                let categories = categoryCache.getCategories();
-                if (!categories) {
-                    categories = await articleService.fetchCategories(50, controller.signal);
-                    categoryCache.setCategories(categories);
-                }
+                const categories = await articleService.fetchCategories(50, controller.signal);
 
-                const opinionCategory = categories.find((category: any) =>
+                const opinionCategory = categories.find((category: Category) =>
                     category.name?.toLowerCase() === Categories.OPINION.toLowerCase()
                 );
                 setOpinionCategoryId(typeof opinionCategory?._id === 'string' ? opinionCategory._id : null);
@@ -99,9 +84,6 @@ function Opinions() {
                 );
 
                 const allOpinions = opinionResponse || [];
-                
-                // Update cache with fresh data
-                categoryCache.setCategoryArticles(Categories.OPINION, allOpinions);
 
                 if (!isMounted) {
                     return;
@@ -112,14 +94,11 @@ function Opinions() {
                 setOpEdArticles(processed.opEdArticles);
                 setConsensusArticles(processed.consensusArticles);
                 setLettersArticles(processed.lettersArticles);
-            } catch (err) {
+            } catch {
                 if (!isMounted) {
                     return;
                 }
-                // Only show error if we don't have cached data to display
-                if (!cachedArticles) {
-                    setError('Unable to load articles. Please try again later.');
-                }
+                setError('Unable to load articles. Please try again later.');
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -133,7 +112,7 @@ function Opinions() {
             isMounted = false;
             controller.abort();
         };
-    }, [cachedArticles]);
+    }, []);
 
     if (isLoading) {
         return (
@@ -159,7 +138,8 @@ function Opinions() {
         <Navbar />
 
         <div className='max-w-[95%] md:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
-            <div className='w-full h-screen'>
+            <div className='w-full min-h-screen'>
+                {/* Main */}
                 <div className='grid gap-5 grid-cols-1 lg:grid-cols-[70%_auto] lg:grid-rows-4 w-full h-[80vh]'>
                     <div className='flex flex-col gap-4 order-first row-span-4'>
                         {recentOpinionArticles[0] && <FeaturedStory article={recentOpinionArticles[0]} priority={true} />}
@@ -173,9 +153,10 @@ function Opinions() {
 
                 <hr className='my-3'/>
 
+                {/* Subcategories */}
                 <h4 className="font-bold mb-2 text-2xl text-nique-blue">Op Ed</h4>
                 <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
-                    {opEdArticles.map((article) => (
+                    {opEdArticles.slice(0,8).map((article) => (
                         <ArticleBlock key={article._id || article.slug} article={article} height='230px' />
                     ))}
                 </div>

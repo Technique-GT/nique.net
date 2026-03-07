@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { NotificationService } from '../services/notification.service';
+import { ArticleCacheInvalidationService } from '../services/article-cache-invalidation.service';
 import mongoose from 'mongoose';
 import Article, { IArticle } from '../models/Article';
 import User from '../models/User';
@@ -9,6 +10,14 @@ import {
   canDeleteArticle, 
   canPublishArticle 
 } from '../utils/permissions';
+import {
+  articleCacheSnapshotFromDoc,
+  buildDetailCacheTags,
+  buildListCacheTags,
+  setCacheTags,
+} from '../utils/cache-tags';
+import { applyNoStoreHeaders } from '../middleware/public-cache.middleware';
+import { safeRegex, sanitizeHtml, safeErrorResponse } from '../utils/security';
 
 const slugify = (value: string) =>
   value
@@ -35,15 +44,19 @@ const populateArticle = (query: any) =>
     .populate('categoryId', 'name slug')
     .populate('subcategoryId', 'name slug categoryId')
     .populate('tagIds', 'name slug')
-    .populate('authors.authorId', 'name isAdmin profilePictureMediaId')
-    .populate('featuredMediaId', 'url altText');
+    .populate('authors.authorId', 'name isAdmin profilePictureUrl');
 
 const populateArticleForFeed = (query: any) =>
   query
     .populate('categoryId', 'name slug')
     .populate('tagIds', 'name slug')
-    .populate('authors.authorId', 'name profilePictureMediaId')
-    .populate('featuredMediaId', 'url altText');
+    .populate('authors.authorId', 'name profilePictureUrl');
+
+const snapshotArticle = (article: Partial<IArticle> | null | undefined) => articleCacheSnapshotFromDoc(article as IArticle | null | undefined);
+
+const invalidatePublicArticleCache = async (params: Parameters<typeof ArticleCacheInvalidationService.invalidatePublicArticleCache>[0]) => {
+  await ArticleCacheInvalidationService.invalidatePublicArticleCache(params);
+};
 
 // parsePublished is removed or commented out as it's no longer used in the new buildArticleUpdate logic (we check typeof directly)
 // const parsePublished = (body: any): boolean => { ... };
@@ -66,8 +79,8 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
   const { body, existing } = params;
 
   const title = typeof body?.title === 'string' ? body.title : undefined;
-  const content = typeof body?.content === 'string' ? body.content : undefined;
-  const excerpt = body?.excerpt === null ? undefined : typeof body?.excerpt === 'string' ? body.excerpt : undefined;
+  // Sanitize HTML content to prevent XSS
+  const content = typeof body?.content === 'string' ? sanitizeHtml(body.content) : undefined;
 
   const categoryId = toObjectId(body?.categoryId ?? body?.category) ?? undefined;
   const subcategoryId = toObjectId(body?.subcategoryId ?? body?.subcategory) ?? undefined;
@@ -101,7 +114,8 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
     }
   }
 
-  const featuredMediaId = toObjectId(body?.featuredMediaId) ?? undefined;
+  const featuredMediaUrlRaw = typeof body?.featuredMediaUrl === 'string' ? body.featuredMediaUrl.trim() : '';
+  const featuredMediaUrl = featuredMediaUrlRaw.length > 0 ? featuredMediaUrlRaw : undefined;
   const imageCaption = typeof body?.imageCaption === 'string' ? body.imageCaption : undefined;
 
   const published = typeof body?.published === 'boolean' ? body.published : undefined;
@@ -122,15 +136,13 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
 
   if (title !== undefined) update.title = title;
   if (content !== undefined) update.content = content;
-  if (excerpt !== undefined) update.excerpt = excerpt;
-
   if (categoryId) update.categoryId = categoryId;
   if (subcategoryId !== undefined) update.subcategoryId = subcategoryId;
 
   if (authors !== undefined) update.authors = authors as any;
   if (tagIds !== undefined) update.tagIds = tagIds as any;
 
-  if (featuredMediaId !== undefined) update.featuredMediaId = featuredMediaId;
+  if (featuredMediaUrl !== undefined) update.featuredMediaUrl = featuredMediaUrl;
   if (imageCaption !== undefined) update.imageCaption = imageCaption;
 
   if (editorState !== undefined) update.editorState = editorState;
@@ -194,11 +206,9 @@ const hasArticleChanged = (existing: IArticle, update: Partial<IArticle>): boole
   if (update.title !== undefined && update.title !== existing.title) return true;
   // Content can be large, but string comparison is efficient enough
   if (update.content !== undefined && update.content !== existing.content) return true;
-  if (update.excerpt !== undefined && update.excerpt !== existing.excerpt) return true;
-
   if ('categoryId' in update && !idsAreEqual(update.categoryId, existing.categoryId)) return true;
   if ('subcategoryId' in update && !idsAreEqual(update.subcategoryId, existing.subcategoryId)) return true;
-  if ('featuredMediaId' in update && !idsAreEqual(update.featuredMediaId, existing.featuredMediaId)) return true;
+  if ('featuredMediaUrl' in update && update.featuredMediaUrl !== existing.featuredMediaUrl) return true;
 
   if (update.tagIds && !arraysAreEqual(update.tagIds, existing.tagIds, idsAreEqual)) return true;
 
@@ -285,13 +295,19 @@ export const createArticle = async (req: Request, res: Response): Promise<void> 
 
     const populatedArticle = await populateArticle(Article.findById(article._id));
 
+    await invalidatePublicArticleCache({
+      before: null,
+      after: snapshotArticle(article),
+      mutationType: 'create',
+    });
+
     res.status(201).json({ success: true, message: 'Article created successfully', data: populatedArticle });
   } catch (error: any) {
     if (error?.code === 11000) {
       res.status(409).json({ success: false, message: 'Duplicate key error' });
       return;
     }
-    res.status(500).json({ success: false, message: 'Failed to create article', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to create article', error));
   }
 };
 
@@ -303,7 +319,7 @@ export const getArticles = async (req: any, res: Response): Promise<void> => {
     const orFilters: any[] = [];
 
     if (typeof search === 'string' && search.trim().length > 0) {
-      const rx = new RegExp(search.trim(), 'i');
+      const rx = safeRegex(search.trim());
       orFilters.push({ title: rx }, { excerpt: rx });
 
       const matchedUsers = await User.find({ name: rx }).select('_id');
@@ -353,7 +369,7 @@ export const getArticles = async (req: any, res: Response): Promise<void> => {
     const skip = (pageNum - 1) * limitNum;
 
     const [articles, total] = await Promise.all([
-      populateArticle(Article.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum)),
+      populateArticle(Article.find(filter).sort({ createdAt: -1 }).sort({ publishedAt: -1 }).skip(skip).limit(limitNum)),
       Article.countDocuments(filter),
     ]);
 
@@ -363,19 +379,34 @@ export const getArticles = async (req: any, res: Response): Promise<void> => {
       pagination: { total, page: pageNum, pages: Math.ceil(total / limitNum), limit: limitNum },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch articles', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch articles', error));
   }
 };
 
 export const getPublishedArticles = async (req: Request, res: Response): Promise<void> => {
   try {
     // This endpoint intentionally stays simple; the richer public feed is `getFeed`.
-    const { page, limit, search } = req.query as unknown as { page: number; limit: number; search?: string };
+    const { page, limit, search, categoryId } = req.query as unknown as {
+      page: number;
+      limit: number;
+      search?: string;
+      categoryId?: string;
+    };
 
     const filter: any = { published: true };
-    if (search) {
-      const rx = new RegExp(search, 'i');
-      filter.$or = [{ title: rx }, { excerpt: rx }];
+    if (search?.trim()) {
+      const rx = safeRegex(search.trim());
+      const orFilters: any[] = [{ title: rx }, { excerpt: rx }];
+
+      const matchedUsers = await User.find({ name: rx }).select('_id');
+      if (matchedUsers.length > 0) {
+        orFilters.push({ 'authors.authorId': { $in: matchedUsers.map((u) => u._id) } });
+      }
+
+      filter.$or = orFilters;
+    }
+    if (categoryId) {
+      filter.categoryId = new mongoose.Types.ObjectId(categoryId);
     }
 
     const skip = (page - 1) * limit;
@@ -390,13 +421,23 @@ export const getPublishedArticles = async (req: Request, res: Response): Promise
       Article.countDocuments(filter),
     ]);
 
+    if (!search) {
+      setCacheTags(
+        res,
+        buildListCacheTags(articles, {
+          routeTag: 'articles:published',
+          categoryId,
+        }),
+      );
+    }
+
     res.json({
       success: true,
       data: articles,
       pagination: { total, page, pages: Math.ceil(total / limit), limit },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch published articles', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch published articles', error));
   }
 };
 
@@ -415,7 +456,7 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
     const filter: any = { published: true };
 
     if (search) {
-      const rx = new RegExp(search, 'i');
+      const rx = safeRegex(search);
       filter.$or = [{ title: rx }, { excerpt: rx }];
     }
 
@@ -426,15 +467,32 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
 
     const skip = (page - 1) * limit;
 
+    const sort =
+      isSticky === undefined
+        ? ({ publishedAt: -1 } as const)
+        : ({ isSticky: -1, publishedAt: -1 } as const);
+
     const [articles, total] = await Promise.all([
       populateArticleForFeed(
         Article.find(filter)
-          .sort({ isSticky: -1, publishedAt: -1 })
+          .sort(sort)
           .skip(skip)
           .limit(limit),
       ),
       Article.countDocuments(filter),
     ]);
+
+    if (!search) {
+      setCacheTags(
+        res,
+        buildListCacheTags(articles, {
+          routeTag: 'articles:feed',
+          categoryId,
+          tagId,
+          authorId,
+        }),
+      );
+    }
 
     res.json({
       success: true,
@@ -442,7 +500,7 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
       pagination: { total, page, pages: Math.ceil(total / limit), limit },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch feed', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch feed', error));
   }
 };
 
@@ -452,9 +510,11 @@ export const getFeaturedArticles = async (_req: Request, res: Response): Promise
       Article.find({ published: true, isFeatured: true }).sort({ publishedAt: -1 }).limit(10),
     );
 
+    setCacheTags(res, buildListCacheTags(articles, { routeTag: 'articles:featured' }));
+
     res.json({ success: true, data: articles });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch featured articles', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch featured articles', error));
   }
 };
 
@@ -464,9 +524,11 @@ export const getStickyArticles = async (_req: Request, res: Response): Promise<v
       Article.find({ published: true, isSticky: true }).sort({ publishedAt: -1 }),
     );
 
+    setCacheTags(res, buildListCacheTags(articles, { routeTag: 'articles:sticky' }));
+
     res.json({ success: true, data: articles });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch sticky articles', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch sticky articles', error));
   }
 };
 
@@ -482,26 +544,34 @@ export const getArticlesByCategory = async (req: Request, res: Response): Promis
       Article.find({ categoryId, published: true }).sort({ isSticky: -1, publishedAt: -1 }),
     );
 
+    setCacheTags(
+      res,
+      buildListCacheTags(articles, {
+        categoryId: categoryId.toString(),
+      }),
+    );
+
     res.json({ success: true, data: articles });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch articles by category', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch articles by category', error));
   }
 };
 
 export const getArticleById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const article = await populateArticle(
-      Article.findOneAndUpdate({ _id: req.params.id, published: true }, { $inc: { viewCount: 1 } }, { new: true }),
-    );
+    const article = await populateArticle(Article.findOne({ _id: req.params.id, published: true }));
 
     if (!article) {
+      applyNoStoreHeaders(res);
       res.status(404).json({ success: false, message: 'Article not found' });
       return;
     }
 
+    setCacheTags(res, buildDetailCacheTags(article));
+
     res.json({ success: true, data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch article', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch article', error));
   }
 };
 
@@ -509,18 +579,40 @@ export const getArticleBySlug = async (req: Request, res: Response): Promise<voi
   try {
     const { slug } = req.params;
 
-    const article = await populateArticle(
-      Article.findOneAndUpdate({ slug, published: true }, { $inc: { viewCount: 1 } }, { new: true }),
-    );
+    const article = await populateArticle(Article.findOne({ slug, published: true }));
+
+    if (!article) {
+      applyNoStoreHeaders(res);
+      res.status(404).json({ success: false, message: 'Article not found' });
+      return;
+    }
+
+    setCacheTags(res, buildDetailCacheTags(article));
+
+    res.json({ success: true, data: article });
+  } catch (error: any) {
+    res.status(500).json(safeErrorResponse('Failed to fetch article', error));
+  }
+};
+
+export const incrementArticleView = async (req: Request, res: Response): Promise<void> => {
+  try {
+    applyNoStoreHeaders(res);
+
+    const article = await Article.findOneAndUpdate(
+      { _id: req.params.id, published: true },
+      { $inc: { viewCount: 1 } },
+      { new: true },
+    ).select('_id');
 
     if (!article) {
       res.status(404).json({ success: false, message: 'Article not found' });
       return;
     }
 
-    res.json({ success: true, data: article });
+    res.status(204).send();
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch article', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to record article view', error));
   }
 };
 
@@ -551,6 +643,7 @@ export const updateArticle = async (req: any, res: Response): Promise<void> => {
       return;
     }
 
+    const beforeSnapshot = snapshotArticle(existing);
     const update = await buildArticleUpdate({ body: req.body, existing });
 
     // Prevent non-admin from publishing directly via updateArticle
@@ -561,18 +654,12 @@ export const updateArticle = async (req: any, res: Response): Promise<void> => {
       delete update.reviewStatus; // Ensure non-admins use transitions
     }
 
-    // Logic for pending changes on published articles
-    if (existing.published) {
-       // Check for actual changes before flagging as pending
-       const hasChanges = hasArticleChanged(existing, update);
-
-       if (hasChanges) {
-           update.hasPendingChanges = true;
-           // If not admin, force status change to ensure re-review
-           if (!req.user.isAdmin) {
-             update.reviewStatus = 'changes_requested';
-           }
-       }
+    // If a non-admin updates a published article with actual changes, require re-review.
+    if (existing.published && !req.user.isAdmin) {
+      const hasChanges = hasArticleChanged(existing, update);
+      if (hasChanges) {
+        update.reviewStatus = 'changes_requested';
+      }
     }
 
     const article = await Article.findByIdAndUpdate(id, update, { new: true, runValidators: true });
@@ -583,9 +670,15 @@ export const updateArticle = async (req: any, res: Response): Promise<void> => {
 
     const populatedArticle = await populateArticle(Article.findById(article._id));
 
+    await invalidatePublicArticleCache({
+      before: beforeSnapshot,
+      after: snapshotArticle(article),
+      mutationType: 'update',
+    });
+
     res.json({ success: true, message: 'Article updated successfully', data: populatedArticle });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to update article', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to update article', error));
   }
 };
 
@@ -602,11 +695,18 @@ export const deleteArticle = async (req: any, res: Response): Promise<void> => {
       return;
     }
 
+    const beforeSnapshot = snapshotArticle(article);
     await Article.findByIdAndDelete(req.params.id);
+
+    await invalidatePublicArticleCache({
+      before: beforeSnapshot,
+      after: null,
+      mutationType: 'delete',
+    });
 
     res.json({ success: true, message: 'Article deleted successfully' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to delete article', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to delete article', error));
   }
 };
 
@@ -628,10 +728,17 @@ export const toggleFeatured = async (req: any, res: Response): Promise<void> => 
       return;
     }
 
+    const beforeSnapshot = snapshotArticle(article);
     article.isFeatured = !article.isFeatured;
     await article.save();
 
     const populatedArticle = await populateArticle(Article.findById(article._id));
+
+    await invalidatePublicArticleCache({
+      before: beforeSnapshot,
+      after: snapshotArticle(article),
+      mutationType: 'feature',
+    });
 
     res.json({
       success: true,
@@ -639,7 +746,7 @@ export const toggleFeatured = async (req: any, res: Response): Promise<void> => 
       data: populatedArticle,
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to toggle featured status', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to toggle featured status', error));
   }
 };
 
@@ -661,10 +768,17 @@ export const toggleSticky = async (req: any, res: Response): Promise<void> => {
       return;
     }
 
+    const beforeSnapshot = snapshotArticle(article);
     article.isSticky = !article.isSticky;
     await article.save();
 
     const populatedArticle = await populateArticle(Article.findById(article._id));
+
+    await invalidatePublicArticleCache({
+      before: beforeSnapshot,
+      after: snapshotArticle(article),
+      mutationType: 'sticky',
+    });
 
     res.json({
       success: true,
@@ -672,7 +786,7 @@ export const toggleSticky = async (req: any, res: Response): Promise<void> => {
       data: populatedArticle,
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to toggle sticky status', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to toggle sticky status', error));
   }
 };
 
@@ -693,6 +807,7 @@ export const updateArticleStatus = async (req: any, res: Response): Promise<void
     }
 
     const updateData: Partial<IArticle> = {};
+    const beforeSnapshot = snapshotArticle(article);
 
     let published = article.published;
     if (typeof status === 'string') {
@@ -702,7 +817,6 @@ export const updateArticleStatus = async (req: any, res: Response): Promise<void
 
       if (published) {
         updateData.reviewStatus = 'published';
-        updateData.hasPendingChanges = false;
         updateData.reviewedAt = new Date();
         updateData.reviewedBy = req.user.id;
       } else {
@@ -762,9 +876,15 @@ export const updateArticleStatus = async (req: any, res: Response): Promise<void
 
     const populatedArticle = await populateArticle(Article.findById(updatedArticle._id));
 
+    await invalidatePublicArticleCache({
+      before: beforeSnapshot,
+      after: snapshotArticle(updatedArticle),
+      mutationType: published ? 'publish' : 'unpublish',
+    });
+
     res.json({ success: true, message: 'Article status updated successfully', data: populatedArticle });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to update article status', error: error?.message });
+    res.status(500).json(safeErrorResponse('Failed to update article status', error));
   }
 };
 
@@ -788,7 +908,7 @@ export const createDraft = async (req: any, res: Response): Promise<void> => {
 
     res.status(201).json({ success: true, data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to create draft', error: error.message });
+    res.status(500).json(safeErrorResponse('Failed to create draft', error));
   }
 };
 
@@ -808,7 +928,7 @@ export const getAdminArticleById = async (req: any, res: Response): Promise<void
 
     res.json({ success: true, data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch article', error: error.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch article', error));
   }
 };
 
@@ -821,11 +941,8 @@ export const requestReview = async (req: any, res: Response): Promise<void> => {
     }
 
     if (article.reviewStatus !== 'draft' && article.reviewStatus !== 'changes_requested') {
-      // Allow re-requesting if published but has pending changes
-      if (!(article.reviewStatus === 'published' && article.hasPendingChanges)) {
-         res.status(400).json({ success: false, message: 'Article is already in review or published' });
-         return;
-      }
+      res.status(400).json({ success: false, message: 'Article is already in review or published' });
+      return;
     }
 
     if (article.ownerId.toString() !== req.user.id && !req.user.isAdmin) {
@@ -847,7 +964,7 @@ export const requestReview = async (req: any, res: Response): Promise<void> => {
 
     res.json({ success: true, message: 'Review requested', data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error requesting review', error: error.message });
+    res.status(500).json(safeErrorResponse('Error requesting review', error));
   }
 };
 
@@ -891,7 +1008,7 @@ export const unrequestReview = async (req: any, res: Response): Promise<void> =>
 
     res.json({ success: true, message: 'Review cancelled', data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error cancelling review', error: error.message });
+    res.status(500).json(safeErrorResponse('Error cancelling review', error));
   }
 };
 
@@ -908,10 +1025,10 @@ export const adminPublish = async (req: any, res: Response): Promise<void> => {
       return;
     }
 
+    const beforeSnapshot = snapshotArticle(article);
     article.published = true;
     article.reviewStatus = 'published';
-    article.hasPendingChanges = false;
-    article.publishedAt = article.publishedAt || new Date();
+    article.publishedAt = new Date();
     article.reviewedAt = new Date();
     article.reviewedBy = req.user.id;
     await article.save();
@@ -928,9 +1045,15 @@ export const adminPublish = async (req: any, res: Response): Promise<void> => {
       );
     }
 
+    await invalidatePublicArticleCache({
+      before: beforeSnapshot,
+      after: snapshotArticle(article),
+      mutationType: 'publish',
+    });
+
     res.json({ success: true, message: 'Article published', data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error publishing article', error: error.message });
+    res.status(500).json(safeErrorResponse('Error publishing article', error));
   }
 };
 
@@ -947,15 +1070,22 @@ export const adminUnpublish = async (req: any, res: Response): Promise<void> => 
       return;
     }
 
+    const beforeSnapshot = snapshotArticle(article);
     article.published = false;
     article.reviewStatus = 'draft';
     article.isFeatured = false;
     article.isSticky = false;
     await article.save();
 
+    await invalidatePublicArticleCache({
+      before: beforeSnapshot,
+      after: snapshotArticle(article),
+      mutationType: 'unpublish',
+    });
+
     res.json({ success: true, message: 'Article unpublished', data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error unpublishing article', error: error.message });
+    res.status(500).json(safeErrorResponse('Error unpublishing article', error));
   }
 };
 
@@ -995,7 +1125,7 @@ export const requestChanges = async (req: any, res: Response): Promise<void> => 
 
     res.json({ success: true, message: 'Changes requested', data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error requesting changes', error: error.message });
+    res.status(500).json(safeErrorResponse('Error requesting changes', error));
   }
 };
 
@@ -1023,6 +1153,6 @@ export const transferOwnership = async (req: any, res: Response): Promise<void> 
 
     res.json({ success: true, message: 'Ownership transferred', data: article });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error transferring ownership', error: error.message });
+    res.status(500).json(safeErrorResponse('Error transferring ownership', error));
   }
 };

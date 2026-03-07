@@ -13,7 +13,8 @@ export type BackendArticle = {
   _id: string
   title: string
   slug: string
-  excerpt?: string
+  imageCaption?: string
+  featuredMediaUrl?: string
   published: boolean
   publishedAt: string | null
   createdAt: string
@@ -21,7 +22,6 @@ export type BackendArticle = {
   viewCount?: number
   categoryId?: { _id: string; name: string; slug: string } | string | null
   reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published'
-  hasPendingChanges?: boolean
   reviewedAt?: string
   reviewedBy?: string
   reviewNotes?: string
@@ -113,12 +113,12 @@ export async function createAdminArticleDraft(): Promise<BackendArticle> {
 export type CreateAdminArticlePayload = {
   title: string
   content: string
-  excerpt?: string
+  imageCaption?: string
   categoryId: string
   subcategoryId?: string
   tagIds?: string[]
   authors?: string[]
-  featuredMediaId?: string
+  featuredMediaUrl?: string
   editorState?: any
   published?: boolean
   reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published'

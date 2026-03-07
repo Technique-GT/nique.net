@@ -104,12 +104,12 @@ const FONT_FAMILIES = [
 ]
 
 const FONT_SIZES = [
-  "12px",
-  "14px",
-  "16px",
-  "18px",
-  "24px",
-  "32px",
+  { label: "Default", value: "default" },
+  { label: "0.75rem", value: "0.75rem" },
+  { label: "0.875rem", value: "0.875rem" },
+  { label: "1.125rem", value: "1.125rem" },
+  { label: "1.5rem", value: "1.5rem" },
+  { label: "2rem", value: "2rem" },
 ]
 
 const BLOCK_OPTIONS: Array<{ label: string; value: BlockType; icon?: ReactNode }> = [
@@ -149,6 +149,27 @@ function normalizeColor(color: string): string {
   }
 
   return "#000000"
+}
+
+function normalizeFontSize(size: string): string {
+  const normalized = size.trim().toLowerCase()
+  if (normalized === "" || normalized === "16px" || normalized === "1rem") {
+    return "default"
+  }
+
+  const pxToRem: Record<string, string> = {
+    "12px": "0.75rem",
+    "14px": "0.875rem",
+    "18px": "1.125rem",
+    "24px": "1.5rem",
+    "32px": "2rem",
+  }
+
+  if (pxToRem[normalized]) {
+    return pxToRem[normalized]
+  }
+
+  return FONT_SIZES.some((option) => option.value === normalized) ? normalized : "default"
 }
 
 function ToolbarButton({
@@ -214,7 +235,7 @@ export function ToolbarPlugin() {
   const [blockType, setBlockType] = useState<BlockType>("paragraph")
   const [elementFormat, setElementFormat] = useState<ElementFormat>("left")
   const [fontFamily, setFontFamily] = useState<string>("default")
-  const [fontSize, setFontSize] = useState<string>("16px")
+  const [fontSize, setFontSize] = useState<string>("default")
   const [fontColor, setFontColor] = useState<string>("#000000")
   const [isLinkSelected, setIsLinkSelected] = useState(false)
   const [canUndo, setCanUndo] = useState(false)
@@ -273,9 +294,8 @@ export function ToolbarPlugin() {
       : "default"
     setFontFamily(normalizedFamily)
 
-    const currentFontSize = $getSelectionStyleValueForProperty(selection, "font-size", "16px")
-    const normalizedSize = FONT_SIZES.includes(currentFontSize) ? currentFontSize : "16px"
-    setFontSize(normalizedSize)
+    const currentFontSize = $getSelectionStyleValueForProperty(selection, "font-size", "")
+    setFontSize(normalizeFontSize(currentFontSize))
 
     let node: TextNode | ElementNode | null = anchorNode
     let isLink = false
@@ -551,16 +571,16 @@ export function ToolbarPlugin() {
         value={fontSize}
         onValueChange={(value) => {
           setFontSize(value)
-          applyStyleText({ "font-size": value })
+          applyStyleText({ "font-size": value === "default" ? "" : value })
         }}
       >
         <SelectTrigger className="w-24">
           <SelectValue placeholder="Font size" />
         </SelectTrigger>
         <SelectContent>
-          {FONT_SIZES.map((size) => (
-            <SelectItem key={size} value={size}>
-              {size}
+          {FONT_SIZES.map(({ label, value }) => (
+            <SelectItem key={value} value={value}>
+              {label}
             </SelectItem>
           ))}
         </SelectContent>

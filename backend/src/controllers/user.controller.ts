@@ -1,11 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import User from '../models/User';
-
-const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId | null => {
-  if (!id || Array.isArray(id) || !mongoose.Types.ObjectId.isValid(id)) return null;
-  return new mongoose.Types.ObjectId(id);
-};
+import { safeRegex, safeErrorResponse } from '../utils/security';
 
 const readSocialLinks = (value: any): Array<{ platform: string; url: string }> => {
   if (!Array.isArray(value)) return [];
@@ -25,7 +21,7 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
     }
 
     if (typeof search === 'string' && search.trim().length > 0) {
-      const rx = new RegExp(search.trim(), 'i');
+      const rx = safeRegex(search.trim());
       filter.$or = [{ name: rx }, { bio: rx }, { email: rx }];
     }
 
@@ -63,7 +59,7 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching users', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching users', error));
   }
 };
 
@@ -78,7 +74,7 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
 
     res.status(200).json({ success: true, data: user });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching user', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching user', error));
   }
 };
 
@@ -112,8 +108,8 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       }
     }
 
-    const profilePictureMediaIdRaw = typeof req.body?.profilePictureMediaId === 'string' ? req.body.profilePictureMediaId : undefined;
-    const profilePictureMediaId = toObjectId(profilePictureMediaIdRaw) ?? undefined;
+    const profilePictureUrlRaw = typeof req.body?.profilePictureUrl === 'string' ? req.body.profilePictureUrl.trim() : '';
+    const profilePictureUrl = profilePictureUrlRaw.length > 0 ? profilePictureUrlRaw : undefined;
 
     const socialLinks = readSocialLinks(req.body?.socialLinks);
 
@@ -123,13 +119,13 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       isAdmin,
       ...(email ? { email } : {}),
       ...(googleSub ? { googleSub } : {}),
-      ...(profilePictureMediaId ? { profilePictureMediaId } : {}),
+      ...(profilePictureUrl ? { profilePictureUrl } : {}),
       socialLinks,
     });
 
     res.status(201).json({ success: true, message: 'User created successfully', data: user });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error creating user', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error creating user', error));
   }
 };
 
@@ -188,13 +184,9 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
       }
     }
 
-    if (typeof req.body?.profilePictureMediaId === 'string' || req.body?.profilePictureMediaId === null) {
-      const pid = toObjectId(req.body.profilePictureMediaId);
-      if (req.body.profilePictureMediaId !== null && !pid) {
-        res.status(400).json({ success: false, message: 'Invalid profilePictureMediaId' });
-        return;
-      }
-      update.profilePictureMediaId = pid ?? undefined;
+    if (typeof req.body?.profilePictureUrl === 'string' || req.body?.profilePictureUrl === null) {
+      const url = typeof req.body.profilePictureUrl === 'string' ? req.body.profilePictureUrl.trim() : '';
+      update.profilePictureUrl = url ? url : undefined;
     }
 
     if (req.body?.socialLinks !== undefined) {
@@ -209,7 +201,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
 
     res.status(200).json({ success: true, message: 'User updated successfully', data: user });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error updating user', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error updating user', error));
   }
 };
 
@@ -223,7 +215,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
 
     res.status(200).json({ success: true, message: 'User deleted successfully' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error deleting user', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error deleting user', error));
   }
 };
 
@@ -244,6 +236,6 @@ export const bulkDeleteUsers = async (req: Request, res: Response): Promise<void
     const result = await User.deleteMany({ _id: { $in: objectIds } });
     res.status(200).json({ success: true, message: 'Users deleted successfully', data: { deletedCount: result.deletedCount } });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error deleting users', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error deleting users', error));
   }
 };

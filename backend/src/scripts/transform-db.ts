@@ -31,14 +31,13 @@ export type CanonicalArticle = {
   title: string;
   slug: string;
   content: string;
-  excerpt?: string;
 
   authors: CanonicalAuthorRef[];
   categoryId: string;
   subcategoryId?: string;
   tagIds: string[];
 
-  featuredMediaId?: string;
+  featuredMediaUrl?: string;
   imageCaption?: string;
 
   published: boolean;
@@ -68,14 +67,13 @@ export type MongoArticle = {
   title: string;
   slug: string;
   content: string;
-  excerpt?: string;
 
   authors: MongoAuthorRef[];
   categoryId: MongoId;
   subcategoryId?: MongoId;
   tagIds: MongoId[];
 
-  featuredMediaId?: MongoId;
+  featuredMediaUrl?: string;
   imageCaption?: string;
 
   published: boolean;
@@ -113,12 +111,6 @@ export type CanonicalSubcategory = {
   slug: string;
 };
 
-export type CanonicalMedia = {
-  _id: string;
-  __v: number;
-  url: string;
-  altText: string;
-};
 
 export type CanonicalSliver = {
   _id: string;
@@ -133,7 +125,7 @@ export type CanonicalUser = {
   name: string;
   bio?: string;
   isAdmin: boolean;
-  profilePictureMediaId?: string;
+  profilePictureUrl?: string;
   socialLinks: Array<{ platform: string; url: string }>;
 };
 
@@ -154,7 +146,6 @@ export type CanonicalComment = {
 export type MongoCategory = { _id: MongoId; __v: number; name: string; slug: string };
 export type MongoTag = { _id: MongoId; __v: number; name: string; slug: string };
 export type MongoSubcategory = { _id: MongoId; __v: number; categoryId: MongoId; name: string; slug: string };
-export type MongoMedia = { _id: MongoId; __v: number; url: string; altText: string };
 export type MongoSliver = { _id: MongoId; __v: number; text: string; expiresAt: Date | null };
 export type MongoUser = {
   _id: MongoId;
@@ -162,7 +153,7 @@ export type MongoUser = {
   name: string;
   bio?: string;
   isAdmin: boolean;
-  profilePictureMediaId?: MongoId;
+  profilePictureUrl?: string;
   socialLinks: Array<{ platform: string; url: string }>;
 };
 export type MongoComment = {
@@ -348,37 +339,6 @@ const toMongoSubcategory = (input: any): TransformResult<MongoSubcategory> => {
   };
 };
 
-const toMongoMedia = (input: any): TransformResult<MongoMedia> => {
-  const warnings: string[] = [];
-
-  const _id = toObjectIdOrNull(input?._id);
-  if (!_id) warnings.push('missing _id or not an ObjectId');
-
-  const url = readNonEmptyString(input?.url) ?? '';
-  if (!url) warnings.push('missing url');
-
-  const altText =
-    readString(input?.altText) ??
-    readString(input?.title) ??
-    readString(input?.originalName) ??
-    readString(input?.filename) ??
-    '';
-
-  if (!altText) warnings.push('missing altText (no altText/title/originalName/filename fallback)');
-
-  const __v = typeof input?.__v === 'number' ? input.__v : 0;
-
-  return {
-    value: {
-      _id: _id ?? new mongoose.Types.ObjectId('000000000000000000000000'),
-      __v,
-      url,
-      altText,
-    },
-    warnings,
-  };
-};
-
 const toMongoSliver = (input: any): TransformResult<MongoSliver> => {
   const warnings: string[] = [];
 
@@ -435,7 +395,7 @@ const toMongoUser = (input: any): TransformResult<MongoUser> => {
     warnings.push('isAdmin missing; defaulting to false');
   }
 
-  const profilePictureMediaId = toObjectIdOrUndefined(input?.profilePictureMediaId) ?? toObjectIdOrUndefined(input?.profilePicture);
+  const profilePictureUrl = readNonEmptyString(input?.profilePictureUrl);
 
   const socialLinksRaw = input?.socialLinks;
   const socialLinks: Array<{ platform: string; url: string }> = [];
@@ -464,7 +424,7 @@ const toMongoUser = (input: any): TransformResult<MongoUser> => {
       name,
       ...(bio ? { bio } : {}),
       isAdmin,
-      ...(profilePictureMediaId ? { profilePictureMediaId } : {}),
+      ...(profilePictureUrl ? { profilePictureUrl } : {}),
       socialLinks,
     },
     warnings,
@@ -537,13 +497,6 @@ const toMongoArticle = (input: any): TransformResult<MongoArticle> => {
   const content = typeof input?.content === 'string' ? input.content : '';
   if (!content) warnings.push('missing content');
 
-  const excerpt =
-    input?.excerpt === undefined || input?.excerpt === null
-      ? undefined
-      : typeof input.excerpt === 'string'
-        ? input.excerpt
-        : (warnings.push('excerpt present but not a string'), undefined);
-
   const authorsRaw = Array.isArray(input?.authors) ? input.authors : [];
   if (!Array.isArray(input?.authors)) warnings.push('authors missing or not an array');
 
@@ -598,7 +551,7 @@ const toMongoArticle = (input: any): TransformResult<MongoArticle> => {
     })
     .filter((x: mongoose.Types.ObjectId | null): x is mongoose.Types.ObjectId => x !== null);
 
-  const featuredMediaId = toObjectIdOrUndefined(input?.featuredMediaId) ?? toObjectIdOrUndefined(input?.featuredImage);
+  const featuredMediaUrl = readNonEmptyString(input?.featuredMediaUrl);
 
   const imageCaption =
     input?.imageCaption === undefined || input?.imageCaption === null
@@ -661,12 +614,11 @@ const toMongoArticle = (input: any): TransformResult<MongoArticle> => {
       title,
       slug,
       content,
-      ...(excerpt ? { excerpt } : {}),
       authors,
       categoryId: categoryId ?? new mongoose.Types.ObjectId('000000000000000000000000'),
       ...(subcategoryId ? { subcategoryId } : {}),
       tagIds,
-      ...(featuredMediaId ? { featuredMediaId } : {}),
+      ...(featuredMediaUrl ? { featuredMediaUrl } : {}),
       ...(imageCaption ? { imageCaption } : {}),
       published,
       publishedAt,
@@ -755,13 +707,6 @@ export function toCanonicalArticle(input: any): TransformResult<CanonicalArticle
   const content = typeof input?.content === 'string' ? input.content : '';
   if (!content) warnings.push('missing content');
 
-  const excerpt =
-    input?.excerpt === undefined || input?.excerpt === null
-      ? undefined
-      : typeof input.excerpt === 'string'
-        ? input.excerpt
-        : (warnings.push('excerpt present but not a string'), undefined);
-
   const authorsRaw = Array.isArray(input?.authors) ? input.authors : [];
   if (!Array.isArray(input?.authors)) warnings.push('authors missing or not an array');
 
@@ -816,7 +761,7 @@ export function toCanonicalArticle(input: any): TransformResult<CanonicalArticle
     })
     .filter((x: string | null): x is string => x !== null);
 
-  const featuredMediaId = objectIdToHex(input?.featuredMediaId) ?? objectIdToHex(input?.featuredImage);
+  const featuredMediaUrl = readNonEmptyString(input?.featuredMediaUrl);
 
   const imageCaption =
     input?.imageCaption === undefined || input?.imageCaption === null
@@ -883,12 +828,11 @@ export function toCanonicalArticle(input: any): TransformResult<CanonicalArticle
     title,
     slug,
     content,
-    ...(excerpt ? { excerpt } : {}),
     authors,
     categoryId: categoryId ?? '000000000000000000000000',
     ...(subcategoryId ? { subcategoryId } : {}),
     tagIds,
-    ...(featuredMediaId ? { featuredMediaId } : {}),
+    ...(featuredMediaUrl ? { featuredMediaUrl } : {}),
     ...(imageCaption ? { imageCaption } : {}),
     published,
     publishedAt,
@@ -1003,43 +947,6 @@ export function toCanonicalSubcategory(input: any): TransformResult<CanonicalSub
   };
 }
 
-export function toCanonicalMedia(input: any): TransformResult<CanonicalMedia> {
-  const outputMode = process.env.OUTPUT_MODE === 'mongo' ? 'mongo' : 'json';
-  if (outputMode === 'mongo') {
-    const res = toMongoMedia(input);
-    return res as unknown as TransformResult<CanonicalMedia>;
-  }
-
-  const warnings: string[] = [];
-
-  const _id = objectIdToHex(input?._id);
-  if (!_id) warnings.push('missing _id or not an ObjectId');
-
-  const url = readNonEmptyString(input?.url) ?? '';
-  if (!url) warnings.push('missing url');
-
-  const altText =
-    readString(input?.altText) ??
-    readString(input?.title) ??
-    readString(input?.originalName) ??
-    readString(input?.filename) ??
-    '';
-
-  if (!altText) warnings.push('missing altText (no altText/title/originalName/filename fallback)');
-
-  const __v = typeof input?.__v === 'number' ? input.__v : 0;
-
-  return {
-    value: {
-      _id: _id ?? '000000000000000000000000',
-      __v,
-      url,
-      altText,
-    },
-    warnings,
-  };
-}
-
 export function toCanonicalSliver(input: any): TransformResult<CanonicalSliver> {
   const outputMode = process.env.OUTPUT_MODE === 'mongo' ? 'mongo' : 'json';
   if (outputMode === 'mongo') {
@@ -1109,7 +1016,7 @@ export function toCanonicalUser(input: any): TransformResult<CanonicalUser> {
     warnings.push('isAdmin missing; defaulting to false');
   }
 
-  const profilePictureMediaId = objectIdToHex(input?.profilePictureMediaId) ?? objectIdToHex(input?.profilePicture);
+  const profilePictureUrl = readNonEmptyString(input?.profilePictureUrl);
 
   const socialLinksRaw = input?.socialLinks;
   const socialLinks: Array<{ platform: string; url: string }> = [];
@@ -1138,7 +1045,7 @@ export function toCanonicalUser(input: any): TransformResult<CanonicalUser> {
       name,
       ...(bio ? { bio } : {}),
       isAdmin,
-      ...(profilePictureMediaId ? { profilePictureMediaId } : {}),
+      ...(profilePictureUrl ? { profilePictureUrl } : {}),
       socialLinks,
     },
     warnings,
@@ -1239,8 +1146,6 @@ const transformByCollection = (collectionName: string, doc: any): TransformResul
       return toCanonicalTag(doc);
     case 'subcategories':
       return toCanonicalSubcategory(doc);
-    case 'media':
-      return toCanonicalMedia(doc);
     case 'slivers':
       return toCanonicalSliver(doc);
     case 'users':
@@ -1252,7 +1157,7 @@ const transformByCollection = (collectionName: string, doc: any): TransformResul
   }
 };
 
-const DEFAULT_COLLECTIONS = ['users', 'comments', 'slivers', 'subcategories', 'media', 'categories', 'tags', 'articles'] as const;
+const DEFAULT_COLLECTIONS = ['users', 'comments', 'slivers', 'subcategories', 'categories', 'tags', 'articles'] as const;
 
 async function main() {
   const [maybeCollectionName, maybeId] = process.argv.slice(2);

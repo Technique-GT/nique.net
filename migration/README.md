@@ -1,4 +1,12 @@
-To upload any 
+mongodump --uri="mongodb+srv://techniquewebdev:0JXingeOrXxBSWNK@technique.ifvpegt.mongodb.net/?retryWrites=true&w=majority&appName=technique" --out /tmp/mongodump
+mongorestore --uri="mongodb+srv://techniquewebdev:0JXingeOrXxBSWNK@technique.ifvpegt.mongodb.net/?retryWrites=true&w=majority&appName=technique" --drop --nsFrom="test.*" --nsTo="technique.*" /tmp/mongodump/test
+
+# dump
+mongodump --uri="mongodb+srv://techniquewebdev:0JXingeOrXxBSWNK@technique.ifvpegt.mongodb.net/?retryWrites=true&w=majority&appName=technique" --out /tmp/mongodump
+
+# restore into NEW_DB
+mongorestore --uri="mongodb+srv://techniquewebdev:0JXingeOrXxBSWNK@technique.ifvpegt.mongodb.net/?retryWrites=true&w=majority&appName=technique" \
+  --nsFrom="test.*" --nsTo="technique.*" /tmp/mongodump/test
 
 ```sh
 // Upload to db:

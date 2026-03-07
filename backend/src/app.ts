@@ -2,11 +2,12 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import pinoHttp from 'pino-http';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 import articleRoutes from './routes/article.routes';
 import categoryRoutes from './routes/category.routes';
 import commentRoutes from './routes/comment.routes';
-import mediaRoutes from './routes/media.routes';
 import playlistRoutes from './routes/playlist.routes';
 import sliverRoutes from './routes/sliver.routes';
 import subCategoryRoutes from './routes/subCategory.routes';
@@ -22,6 +23,58 @@ import { logger } from './utils/logger';
 
 export function createApp() {
   const app = express();
+  const isProduction = env.NODE_ENV === 'production';
+
+  // Security: HTTP headers
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false, // Disable for API compatibility
+  }));
+
+  // Security: Rate limiting
+  const isTest = process.env.NODE_ENV === 'test';
+  
+  // Global API rate limiter
+  const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: isTest ? 100000 : 2000, // Higher limit in tests
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many requests, please try again later.' },
+    skip: () => isTest, // Skip rate limiting in tests
+  });
+
+  // Stricter rate limiter for auth endpoints
+  const authLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: isTest ? 100000 : 10, // 10 requests per minute
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many authentication attempts, please try again later.' },
+    skip: () => isTest, // Skip rate limiting in tests
+  });
+
+  // Stricter rate limiter for write operations (comments, uploads)
+  const writeLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: isTest ? 10000 : 20, // 20 writes per minute
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many requests, please slow down.' },
+    skip: () => isTest, // Skip rate limiting in tests
+  });
 
   // Basic middleware
   app.use(
@@ -39,15 +92,28 @@ export function createApp() {
     'http://localhost:4173',
     'http://localhost:3000',
     'https://technique-dash-5men.vercel.app',
+    'https://nique.net',
+    'https://technique-4t5.pages.dev',
+    'https://technique-dashboard.pages.dev',
+    'https://dashboard.nique.net'
   ];
 
-  if (env.CLIENT_URL) {
+  if (!isProduction && env.CLIENT_URL && !allowedOrigins.includes(env.CLIENT_URL)) {
     allowedOrigins.push(env.CLIENT_URL);
   }
 
   app.use(
     cors({
-      origin: allowedOrigins,
+      origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1 || !isProduction) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'x-device-id'],
@@ -56,6 +122,23 @@ export function createApp() {
 
   app.use(express.json({ limit: '10mb' }));
   app.use(cookieParser());
+
+  const sendHealthResponse = (_req: express.Request, res: express.Response) => {
+    res.json({
+      success: true,
+      message: 'Server is running',
+      timestamp: new Date().toISOString(),
+    });
+  };
+
+  // Apply global rate limiting to all API routes
+  app.use('/api/', apiLimiter);
+
+  // Apply stricter rate limiting to auth routes
+  app.use('/api/auth', authLimiter);
+
+  // Apply write rate limiting to comment creation
+  app.use('/api/comments', writeLimiter);
 
   // Serve uploaded files statically
   app.use('/uploads', express.static('uploads'));
@@ -68,20 +151,14 @@ export function createApp() {
   app.use('/api/sub-categories', subCategoryRoutes);
   app.use('/api/tags', tagRoutes);
   app.use('/api/users', userRoutes);
-  app.use('/api/media', mediaRoutes);
   app.use('/api/playlists', playlistRoutes);
   app.use('/api/slivers', sliverRoutes);
   app.use('/api/comments', commentRoutes);
   app.use('/api/notifications', notificationRoutes);
 
-  // Simple health check
-  app.get('/api/health', (_req, res) => {
-    res.json({
-      success: true,
-      message: 'Server is running',
-      timestamp: new Date().toISOString(),
-    });
-  });
+  // API health check
+  app.get('/health', sendHealthResponse);
+  app.get('/api/health', sendHealthResponse);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

@@ -24,9 +24,9 @@ function FeaturedStory({ article, priority = false }: FeaturedStoryProps) {
             <div className="relative cursor-pointer rounded-md w-full flex p-4 flex-1 min-h-0 overflow-hidden group"
                 onClick={() => navigate(link)}
             >
-                {image?.url && (
+                {image && (
                     <img 
-                        src={image.url} 
+                        src={image} 
                         alt={article.title}
                         loading={priority ? "eager" : "lazy"}
                         decoding={priority ? "auto" : "async"}

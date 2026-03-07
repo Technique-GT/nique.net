@@ -1,8 +1,7 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
-import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
-import { ArticleDocument } from '../types/article';
+import { ArticleDocument, Category } from '../types/article';
 import SideArticle from '../components/SideArticle';
 import Carousel from '../components/Carousel';
 import SmallArticle from '../components/SmallArticle';
@@ -11,6 +10,8 @@ import Spinner from '../components/Spinner';
 import { Categories } from '../types/categories';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
 import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
+import spotifyService from '../services/spotifyService';
+import { toSpotifyEmbedUrl } from '../utils/spotify';
 
 // Helper to process raw articles into page sections
 const processEntertainmentArticles = (allEntertainment: ArticleDocument[]) => {
@@ -20,10 +21,6 @@ const processEntertainmentArticles = (allEntertainment: ArticleDocument[]) => {
     const stickyPosts = allEntertainment.filter((article) => article.isSticky).sort(sortByPublishedDesc);
     const nonStickyPosts = allEntertainment.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
     const orderedEntertainment = [...stickyPosts, ...nonStickyPosts];
-    const recentSelection = orderedEntertainment.slice(0, 3);
-    const recentIds = new Set(recentSelection.map(getArticleId));
-    const remainingEntertainment = orderedEntertainment.filter((article) => !recentIds.has(getArticleId(article)));
-
     const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
         articles
             .filter((article) => {
@@ -35,49 +32,51 @@ const processEntertainmentArticles = (allEntertainment: ArticleDocument[]) => {
             .filter((article) => !recentIds.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
 
+    const recentSelection = orderedEntertainment.slice(0, 3);
+    const recentIds = new Set(recentSelection.map(getArticleId));
+    const filmtv = filterBySubcategory(allEntertainment, 'film & tv');
+    const music = filterBySubcategory(allEntertainment, 'music');
+    const artsTheater = filterBySubcategory(allEntertainment, 'arts & theater');
+    const subcategoryIds = new Set(
+        [...filmtv, ...music, ...artsTheater].map(getArticleId)
+    );
+    const remainingEntertainment = orderedEntertainment.filter((article) => {
+        const id = getArticleId(article);
+        return !recentIds.has(id) && !subcategoryIds.has(id);
+    });
+
     return {
         recentEntertainment: recentSelection,
         entertainmentArticles: remainingEntertainment,
-        filmtv: filterBySubcategory(allEntertainment, 'film & tv'),
-        music: filterBySubcategory(allEntertainment, 'music'),
-        artsTheater: filterBySubcategory(allEntertainment, 'arts & theater'),
+        filmtv,
+        music,
+        artsTheater,
     };
 };
 
 function Entertainment() {
-    // Check cache immediately for instant display
-    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.ENTERTAINMENT), []);
-    const initialData = useMemo(() => cachedArticles ? processEntertainmentArticles(cachedArticles) : null, [cachedArticles]);
-
-    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
-    const [recentEntertainment, setRecentEntertainment] = useState<ArticleDocument[]>(initialData?.recentEntertainment || []);
-    const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>(initialData?.entertainmentArticles || []);
-    const [filmtv, setFilmAndTV] = useState<ArticleDocument[]>(initialData?.filmtv || []);
-    const [music, setMusic] = useState<ArticleDocument[]>(initialData?.music || []);
-    const [artsTheater, setArtsTheater] = useState<ArticleDocument[]>(initialData?.artsTheater || []);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentEntertainment, setRecentEntertainment] = useState<ArticleDocument[]>([]);
+    const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>([]);
+    const [filmtv, setFilmAndTV] = useState<ArticleDocument[]>([]);
+    const [music, setMusic] = useState<ArticleDocument[]>([]);
+    const [artsTheater, setArtsTheater] = useState<ArticleDocument[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [entertainmentCategoryId, setEntertainmentCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.ENTERTAINMENT));
+    const [entertainmentCategoryId, setEntertainmentCategoryId] = useState<string | null>(null);
+    const [activePlaylistEmbedUrl, setActivePlaylistEmbedUrl] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
 
         const loadArticles = async () => {
-            // Only show loading if we don't have cached data
-            if (!cachedArticles) {
-                setIsLoading(true);
-            }
+            setIsLoading(true);
             setError(null);
 
             try {
-                // Use cached categories if available
-                let categories = categoryCache.getCategories();
-                if (!categories) {
-                    categories = await articleService.fetchCategories(50, controller.signal);
-                    categoryCache.setCategories(categories);
-                }
+                const categories = await articleService.fetchCategories(50, controller.signal);
 
-                const entertainmentCategory = categories.find((category: any) =>
+                const entertainmentCategory = categories.find((category: Category) =>
                     category.name?.toLowerCase() === Categories.ENTERTAINMENT.toLowerCase()
                 );
                 setEntertainmentCategoryId(entertainmentCategory?._id || null);
@@ -96,9 +95,6 @@ function Entertainment() {
                 );
 
                 const allEntertainment = entertainmentResponse || [];
-                
-                // Update cache with fresh data
-                categoryCache.setCategoryArticles(Categories.ENTERTAINMENT, allEntertainment);
 
                 if (!isMounted) {
                     return;
@@ -110,14 +106,11 @@ function Entertainment() {
                 setFilmAndTV(processed.filmtv);
                 setMusic(processed.music);
                 setArtsTheater(processed.artsTheater);
-            } catch (err) {
+            } catch {
                 if (!isMounted) {
                     return;
                 }
-                // Only show error if we don't have cached data to display
-                if (!cachedArticles) {
-                    setError('Unable to load articles. Please try again later.');
-                }
+                setError('Unable to load articles. Please try again later.');
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -131,7 +124,25 @@ function Entertainment() {
             isMounted = false;
             controller.abort();
         };
-    }, [cachedArticles]);
+    }, []);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        const loadActivePlaylist = async () => {
+            try {
+                const playlist = await spotifyService.fetchActivePlaylist(controller.signal);
+                setActivePlaylistEmbedUrl(playlist ? toSpotifyEmbedUrl(playlist.spotifyUrl) : null);
+            } catch {
+                setActivePlaylistEmbedUrl(null);
+            }
+        };
+
+        loadActivePlaylist();
+
+        return () => {
+            controller.abort();
+        };
+    }, []);
 
     if (isLoading) {
         return (
@@ -156,6 +167,7 @@ function Entertainment() {
         <>
         <Navbar />
         <div className='max-w-[95%] md:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
+            {/* Main */}
             <div className='w-full'>
             <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                 <div className='lg:col-span-4 m-0'>
@@ -166,6 +178,7 @@ function Entertainment() {
             </div>
             <hr className='my-3' />
 
+            {/* Subcategories */}
             <h4 className="font-bold mb-2 text-2xl text-nique-blue">Music</h4>
             <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
                 <div className='lg:col-span-2 sm:col-span-2'>
@@ -206,12 +219,15 @@ function Entertainment() {
             </div>
 
             <div className='flex flex-col gap-4'>
-                <iframe
-                    className="rounded-md w-full h-137.5"
-                    src="https://open.spotify.com/embed/playlist/6hWrY7npl9UIbUzlRgpwoo?utm_source=generator"
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                    loading="lazy"
-                />
+                {activePlaylistEmbedUrl && (
+                    <iframe
+                        className="rounded-md w-full h-137.5"
+                        src={activePlaylistEmbedUrl}
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                        loading="lazy"
+                        title="Active Spotify playlist"
+                    />
+                )}
                 {(() => {
                     const articles = entertainmentArticles.slice(0, 5)
                     .filter(Boolean) as ArticleDocument[];

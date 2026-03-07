@@ -5,7 +5,6 @@ export const createArticleBodySchema = z.object({
   title: z.string().trim().min(1),
   slug: z.string().trim().min(1).optional(),
   content: z.string().min(1),
-  excerpt: z.string().trim().min(1).optional(),
 
   categoryId: objectIdString,
   subcategoryId: objectIdString.optional(),
@@ -24,7 +23,7 @@ export const createArticleBodySchema = z.object({
     )
     .optional(),
 
-  featuredMediaId: objectIdString.optional(),
+  featuredMediaUrl: z.string().trim().min(1).optional(),
   imageCaption: z.string().optional(),
 
   editorState: z.any().optional(),

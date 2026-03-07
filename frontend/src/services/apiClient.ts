@@ -1,11 +1,12 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 /**
  * Shared axios instance for calling backend.
  * All services should import this instead of creating their own axios.create().
  */
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api',
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 

@@ -1,11 +1,9 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import articleService from '../services/articleService';
-import { categoryCache } from '../services/categoryCache';
 import { Categories } from '../types/categories';
 import ArticleBlock from "../components/ArticleBlock"
-import { ArticleDocument } from '../types/article'
-// import VerticalAd from "../components/VerticalAd";
-// import MockAd from '../assets/mock_advertisement.jpg';
+import { ArticleDocument, Category } from '../types/article'
+import FeaturedStory from '../components/FeaturedStory';
 import SideArticle from '../components/SideArticle';
 import InstaEmbed from '../components/InstaEmbed';
 import SmallArticle from '../components/SmallArticle';
@@ -20,10 +18,17 @@ const processSportsArticles = (allSportsArticles: ArticleDocument[]) => {
         getArticleTimestamp(b) - getArticleTimestamp(a);
 
     const stickyPosts = allSportsArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
+    const featuredPosts = allSportsArticles.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
     const nonStickyPosts = allSportsArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
     const orderedSports = [...stickyPosts, ...nonStickyPosts];
-    const recentSelection = orderedSports.slice(0, 5);
-    const recentIds = new Set(recentSelection.map(getArticleId));
+
+    const featured = featuredPosts[0] ?? null;
+    const orderedWithoutFeatured = featured
+        ? orderedSports.filter((article) => getArticleId(article) !== getArticleId(featured))
+        : orderedSports;
+    const recentSelection = [featured, ...orderedWithoutFeatured].filter(Boolean) as ArticleDocument[];
+    const visibleRecent = recentSelection.slice(0, 5);
+    const recentIds = new Set(visibleRecent.map(getArticleId));
 
     const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
         articles
@@ -37,7 +42,7 @@ const processSportsArticles = (allSportsArticles: ArticleDocument[]) => {
             .sort(sortByPublishedDesc);
 
     return {
-        recentSportsArticles: recentSelection,
+        recentSportsArticles: visibleRecent,
         techSports: filterBySubcategory(allSportsArticles, 'jackets'),
         atlSports: filterBySubcategory(allSportsArticles, 'atlanta'),
         seasonScoreboard: [] as ArticleDocument[], // No corresponding backend subcategory
@@ -45,38 +50,26 @@ const processSportsArticles = (allSportsArticles: ArticleDocument[]) => {
 };
 
 function Sports() {
-    // Check cache immediately for instant display
-    const cachedArticles = useMemo(() => categoryCache.getCategoryArticles(Categories.SPORTS), []);
-    const initialData = useMemo(() => cachedArticles ? processSportsArticles(cachedArticles) : null, [cachedArticles]);
-
-    const [isLoading, setIsLoading] = useState<boolean>(!initialData);
-    const [recentSportsArticles, setRecentSportsArticles] = useState<ArticleDocument[]>(initialData?.recentSportsArticles || []);
-    const [techSports, setTechSports] = useState<ArticleDocument[]>(initialData?.techSports || []);
-    const [atlSports, setAtlSports] = useState<ArticleDocument[]>(initialData?.atlSports || []);
-    const [seasonScoreboard, setSeasonScoreboard] = useState<ArticleDocument[]>(initialData?.seasonScoreboard || []);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentSportsArticles, setRecentSportsArticles] = useState<ArticleDocument[]>([]);
+    const [techSports, setTechSports] = useState<ArticleDocument[]>([]);
+    const [atlSports, setAtlSports] = useState<ArticleDocument[]>([]);
+    const [seasonScoreboard, setSeasonScoreboard] = useState<ArticleDocument[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [sportsCategoryId, setSportsCategoryId] = useState<string | null>(categoryCache.getCategoryId(Categories.SPORTS));
+    const [sportsCategoryId, setSportsCategoryId] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
     
         const loadArticles = async () => {
-            // Only show loading if we don't have cached data
-            if (!cachedArticles) {
-                setIsLoading(true);
-            }
+            setIsLoading(true);
             setError(null);
 
             try {
-                // Use cached categories if available
-                let categories = categoryCache.getCategories();
-                if (!categories) {
-                    categories = await articleService.fetchCategories(50, controller.signal);
-                    categoryCache.setCategories(categories);
-                }
+                const categories = await articleService.fetchCategories(50, controller.signal);
 
-                const sportsCategory = categories.find((category: any) =>
+                const sportsCategory = categories.find((category: Category) =>
                     category.name?.toLowerCase() === Categories.SPORTS.toLowerCase()
                 );
                 setSportsCategoryId(typeof sportsCategory?._id === 'string' ? sportsCategory._id : null);
@@ -94,9 +87,6 @@ function Sports() {
                 );
 
                 const allSportsArticles = sportsResponse || [];
-                
-                // Update cache with fresh data
-                categoryCache.setCategoryArticles(Categories.SPORTS, allSportsArticles);
 
                 if (!isMounted) {
                     return;
@@ -107,14 +97,11 @@ function Sports() {
                 setTechSports(processed.techSports);
                 setAtlSports(processed.atlSports);
                 setSeasonScoreboard(processed.seasonScoreboard);
-            } catch (err) {
+            } catch {
                 if (!isMounted) {
                     return;
                 }
-                // Only show error if we don't have cached data to display
-                if (!cachedArticles) {
-                    setError('Unable to load articles. Please try again later.');
-                }
+                setError('Unable to load articles. Please try again later.');
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -128,7 +115,7 @@ function Sports() {
             isMounted = false;
             controller.abort();
         };
-    }, [cachedArticles]);
+    }, []);
     
     if (isLoading) {
         return (
@@ -153,10 +140,11 @@ function Sports() {
         <>
             <Navbar />
             <div className='max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
-                <div className='w-full h-screen'>
+                <div className='w-full min-h-screen'>
+                    {/* Main */}
                     <div className='grid gap-5 grid-cols-1 lg:grid-cols-[auto_35%] lg:grid-rows-4 w-full h-[80vh]'>
                         <div className='flex flex-col gap-4 lg:row-span-4'>
-                            {recentSportsArticles[0] && <ArticleBlock article={recentSportsArticles[0]} height="100%" />}
+                            {recentSportsArticles[0] && <FeaturedStory article={recentSportsArticles[0]} height="100%" />}
                         </div>
                         <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:grid-rows-4 lg:row-span-4 h-full'>
                             {recentSportsArticles[1] && <ArticleBlock article={recentSportsArticles[1]} height="100%" />}
@@ -168,6 +156,7 @@ function Sports() {
 
                     <hr className='my-3' />
 
+                    {/* Subcategories */}
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Jackets</h4>
                     <div className='grid grid-cols-1 lg:grid-cols-[48%_auto] gap-4'>
                         <div className='w-full'>

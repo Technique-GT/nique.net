@@ -4,8 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Search, Check, X, Trash2, RefreshCw } from "lucide-react";
-import { useState, useMemo } from "react";
+import { MessageSquare, Search, Check, X, Trash2, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useMemo, Fragment } from "react";
 import { toast } from "sonner";
 import { Main } from "@/components/layout/main";
 import { PageHeader } from "@/components/layout/page-header";
@@ -19,6 +19,7 @@ import {
 export default function CommentsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
 
   // TanStack Query hooks
   const { data: commentsData, isLoading, refetch } = useComments({ limit: 100 });
@@ -49,12 +50,22 @@ export default function CommentsManagement() {
     }
   };
 
+  const getArticleTitle = (comment: any) => {
+    if (comment.articleId && typeof comment.articleId === "object") {
+      return comment.articleId.title;
+    }
+    return "Unknown article";
+  };
+
   const filteredComments = useMemo(() => {
     return comments.filter(c => {
-      const matchesSearch = 
-        c.content.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      const articleTitle = getArticleTitle(c).toLowerCase();
+
+      const matchesSearch =
+        c.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.articleId.toLowerCase().includes(searchTerm.toLowerCase());
+        articleTitle.includes(searchTerm.toLowerCase());
+
       
       const matchesStatus = 
         statusFilter === "all" || 
@@ -64,6 +75,18 @@ export default function CommentsManagement() {
       return matchesSearch && matchesStatus;
     });
   }, [comments, searchTerm, statusFilter]);
+
+  const toggleExpandedComment = (id: string) => {
+    setExpandedComments((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -162,56 +185,94 @@ export default function CommentsManagement() {
             </div>
 
             <div className="rounded-md border overflow-x-auto">
-              <Table className="min-w-[600px]">
+              <Table className="w-full table-fixed min-w-[640px] sm:min-w-[760px] lg:min-w-0">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead className="min-w-[200px]">Comment</TableHead>
-                    <TableHead className="hidden sm:table-cell">Article ID</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="hidden md:table-cell">Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="w-10 sm:w-12 px-2" />
+                    <TableHead className="w-[24%] sm:w-[18%]">User</TableHead>
+                    <TableHead className="w-[44%] sm:w-[34%] md:w-[30%]">Comment</TableHead>
+                    <TableHead className="hidden sm:table-cell sm:w-[24%] lg:w-[28%]">Article</TableHead>
+                    <TableHead className="w-[14%] sm:w-[12%]">Status</TableHead>
+                    <TableHead className="hidden md:table-cell md:w-[12%] lg:w-[10%]">Date</TableHead>
+                    <TableHead className="w-[84px] sm:w-[96px] text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredComments.map((comment) => (
-                    <TableRow key={comment._id}>
-                      <TableCell className="font-medium">{comment.username}</TableCell>
-                      <TableCell className="min-w-[200px] max-w-[300px] truncate">{comment.content}</TableCell>
-                      <TableCell className="text-xs font-mono hidden sm:table-cell">{comment.articleId.slice(-6)}</TableCell>
-                      <TableCell>
-                        <Badge variant={comment.approved ? "default" : "secondary"}>
-                          {comment.approved ? "Approved" : "Pending"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">{formatDate(comment.createdAt)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleApprove(comment._id, !comment.approved)}
-                            title={comment.approved ? "Unapprove" : "Approve"}
-                            disabled={updateCommentStatusMutation.isPending}
-                          >
-                            {comment.approved ? <X className="w-4 h-4 text-orange-500" /> : <Check className="w-4 h-4 text-green-500" />}
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleDelete(comment._id)}
-                            className="text-destructive"
-                            disabled={deleteCommentMutation.isPending}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredComments.map((comment) => {
+                    const isExpanded = expandedComments.has(comment._id);
+                    return (
+                      <Fragment key={comment._id}>
+                        <TableRow>
+                          <TableCell className='w-12 px-1 py-2'>
+                            <div className='flex items-center justify-between gap-2 ml-2'>
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                onClick={() => toggleExpandedComment(comment._id)}
+                                aria-expanded={isExpanded}
+                              >
+                                {isExpanded ? (
+                                  <ChevronUp className='h-4 w-4' />
+                                ) : (
+                                  <ChevronDown className='h-4 w-4' />
+                                )}
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium max-w-0">
+                            <span className={`block ${isExpanded ? "whitespace-pre-wrap break-words" : "truncate"}`}>
+                              {comment.username}
+                            </span>
+                          </TableCell>
+                          <TableCell className="font-medium max-w-0">
+                              <span
+                                className={`block ${
+                                  isExpanded ? "whitespace-pre-wrap break-words" : "truncate"
+                                }`}
+                              >
+                                {comment.content}
+                              </span>
+                          </TableCell>
+                          <TableCell className="text-xs font-mono hidden sm:table-cell max-w-0">
+                            <span className={`block w-full ${isExpanded ? "whitespace-pre-wrap break-words" : "truncate"}`}>
+                              {getArticleTitle(comment)}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={comment.approved ? "default" : "secondary"}>
+                              {comment.approved ? "Approved" : "Pending"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">{formatDate(comment.createdAt)}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleApprove(comment._id, !comment.approved)}
+                                title={comment.approved ? "Unapprove" : "Approve"}
+                                disabled={updateCommentStatusMutation.isPending}
+                              >
+                                {comment.approved ? <X className="w-4 h-4 text-orange-500" /> : <Check className="w-4 h-4 text-green-500" />}
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleDelete(comment._id)}
+                                className="text-destructive"
+                                disabled={deleteCommentMutation.isPending}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      </Fragment>
+                    );
+                  })}
                   {filteredComments.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No comments found.
                       </TableCell>
                     </TableRow>

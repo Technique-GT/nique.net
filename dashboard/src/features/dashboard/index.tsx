@@ -6,6 +6,7 @@ import { Overview } from './components/overview'
 import { RecentSales } from './components/recent-sales'
 import { useDashboardMetrics } from './components/useDashboardMetrics'
 import { useRouter } from '@tanstack/react-router'
+import { TriangleAlert } from 'lucide-react';
 
 export default function Dashboard() {
   const router = useRouter()
@@ -104,7 +105,7 @@ export default function Dashboard() {
 
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>Pending Comments</CardTitle>
+              <CardTitle className='text-sm font-medium flex flex-row items-center'>Pending Comments {kpis?.pendingComments !== 0 && <TriangleAlert size={18} className='ml-2 text-destructive'/>}</CardTitle>
               <svg
                 xmlns='http://www.w3.org/2000/svg'
                 viewBox='0 0 24 24'

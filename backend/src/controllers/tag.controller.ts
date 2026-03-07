@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Tag from '../models/Tag';
+import { escapeRegex, safeRegex, safeErrorResponse } from '../utils/security';
 
 const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId | null => {
   if (!id || Array.isArray(id) || !mongoose.Types.ObjectId.isValid(id)) return null;
@@ -26,7 +27,7 @@ export const createTag = async (req: Request, res: Response): Promise<void> => {
 
     const slug = typeof req.body?.slug === 'string' && req.body.slug.trim().length > 0 ? req.body.slug.trim() : slugify(name);
 
-    const existing = await Tag.findOne({ $or: [{ slug }, { name: { $regex: new RegExp(`^${name}$`, 'i') } }] });
+    const existing = await Tag.findOne({ $or: [{ slug }, { name: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } }] });
     if (existing) {
       res.status(409).json({ success: false, message: 'Tag with this name or slug already exists' });
       return;
@@ -39,7 +40,7 @@ export const createTag = async (req: Request, res: Response): Promise<void> => {
       res.status(409).json({ success: false, message: 'Tag with this slug already exists' });
       return;
     }
-    res.status(500).json({ success: false, message: 'Server error', error: error?.message });
+    res.status(500).json(safeErrorResponse('Server error', error));
   }
 };
 
@@ -48,14 +49,14 @@ export const getTags = async (req: Request, res: Response): Promise<void> => {
     const { search } = req.query;
     const query: any = {};
     if (typeof search === 'string' && search.trim().length > 0) {
-      const rx = new RegExp(search.trim(), 'i');
+      const rx = safeRegex(search.trim());
       query.$or = [{ name: rx }, { slug: rx }];
     }
 
     const tags = await Tag.find(query).sort({ name: 1 }).lean();
     res.status(200).json({ success: true, data: tags, count: tags.length });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching tags', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching tags', error));
   }
 };
 
@@ -75,7 +76,7 @@ export const getTagById = async (req: Request, res: Response): Promise<void> => 
 
     res.status(200).json({ success: true, data: tag });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching tag', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching tag', error));
   }
 };
 
@@ -90,7 +91,7 @@ export const getTagBySlug = async (req: Request, res: Response): Promise<void> =
 
     res.status(200).json({ success: true, data: tag });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching tag', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching tag', error));
   }
 };
 
@@ -129,7 +130,7 @@ export const updateTag = async (req: Request, res: Response): Promise<void> => {
       res.status(409).json({ success: false, message: 'Tag with this slug already exists' });
       return;
     }
-    res.status(500).json({ success: false, message: 'Error updating tag', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error updating tag', error));
   }
 };
 
@@ -149,7 +150,7 @@ export const deleteTag = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({ success: true, message: 'Tag deleted successfully' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error deleting tag', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error deleting tag', error));
   }
 };
 
@@ -160,6 +161,6 @@ export const getTagStats = async (_req: Request, res: Response): Promise<void> =
     const totalTags = await Tag.countDocuments({});
     res.status(200).json({ success: true, data: { totalTags } });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching tag stats', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching tag stats', error));
   }
 };

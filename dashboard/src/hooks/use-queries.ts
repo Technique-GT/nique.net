@@ -7,7 +7,7 @@
  * - Do NOT persist: auth, large/fast-changing lists (articles, comments, users).
  */
 
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getCategories,
   getSubCategories,
@@ -20,13 +20,6 @@ import {
   getUsers,
   type User,
 } from '@/services/users'
-import {
-  getMedia,
-  uploadMedia,
-  deleteMedia,
-  type MediaItem,
-  type MediaQuery,
-} from '@/services/media'
 import {
   getComments,
   getCommentStats,
@@ -68,12 +61,11 @@ export const queryKeys = {
     search?: string
     sortBy?: string
     sortDir?: 'asc' | 'desc'
+    isAdmin?: boolean
   }) =>
     ['users', params] as const,
   usersList: (page: number, limit: number) => ['users-list', page, limit] as const,
 
-  // Media - NOT persisted (can be large)
-  media: (query?: MediaQuery) => ['media', query] as const,
 
   // Comments - NOT persisted (fast-changing)
   comments: (query?: CommentsQuery) => ['comments', query] as const,
@@ -164,55 +156,6 @@ export function useUsers(params?: {
 }
 
 // ============================================================================
-// Media Hooks (NOT persisted - can be large)
-// ============================================================================
-
-export function useMedia(query?: MediaQuery) {
-  return useQuery({
-    queryKey: queryKeys.media(query),
-    queryFn: () => getMedia(query),
-    staleTime: 30 * 1000,
-    // No meta.persist
-  })
-}
-
-export function useInfiniteMedia(query?: Omit<MediaQuery, 'page'>) {
-  return useInfiniteQuery({
-    queryKey: ['media-infinite', query],
-    queryFn: ({ pageParam = 1 }) => getMedia({ ...query, page: pageParam }),
-    getNextPageParam: (lastPage) => {
-      if (!lastPage.pagination) return undefined
-      if (lastPage.pagination.page < lastPage.pagination.pages) {
-        return lastPage.pagination.page + 1
-      }
-      return undefined
-    },
-    initialPageParam: 1,
-    staleTime: 30 * 1000,
-  })
-}
-
-export function useUploadMedia() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: uploadMedia,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['media'] })
-    },
-  })
-}
-
-export function useDeleteMedia() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: deleteMedia,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['media'] })
-    },
-  })
-}
-
-// ============================================================================
 // Comments Hooks (NOT persisted - fast-changing)
 // ============================================================================
 
@@ -288,7 +231,6 @@ export type Playlist = {
   name: string
   description: string
   spotifyUrl: string
-  image: string
   isActive: boolean
   createdAt: string
   updatedAt: string
@@ -553,4 +495,4 @@ export function useCreateArticleDraft() {
 }
 
 // Re-export types for convenience
-export type { Category, SubCategory, Tag, User, MediaItem, Comment, CommentStats, Sliver }
+export type { Category, SubCategory, Tag, User, Comment, CommentStats, Sliver }

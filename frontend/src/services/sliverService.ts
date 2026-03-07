@@ -22,26 +22,6 @@ export const createSliver = async (content: string): Promise<Sliver> => {
   return unwrap(response.data);
 };
 
-/**
- * Fetch all active slivers.
- * backend: GET /slivers/active
- */
-export const fetchActiveSlivers = async (signal?: AbortSignal): Promise<Sliver[]> => {
-  const response = await apiClient.get('/slivers/active', { signal });
-  return unwrap(response.data);
-};
-
-/**
- * Fetch all slivers.
- * backend: GET /slivers
- */
-export const fetchAllSlivers = async (signal?: AbortSignal): Promise<Sliver[]> => {
-  const response = await apiClient.get('/slivers', { signal });
-  return unwrap(response.data);
-};
-
 export default {
   createSliver,
-  fetchActiveSlivers,
-  fetchAllSlivers,
 };

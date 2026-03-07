@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import articleService from '../services/articleService';
-import { categoryCache } from '../services/categoryCache';
 import ArticleBlock from "../components/ArticleBlock";
 import { ArticleDocument } from '../types/article';
 import FeaturedStory from '../components/FeaturedStory';
@@ -12,19 +11,10 @@ import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
 import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
+import spotifyService from '../services/spotifyService';
+import { toSpotifyEmbedUrl } from '../utils/spotify';
 
 function Home() {
-    // Check cache for initial state to avoid loading spinner on return visits
-    const cachedSticky = categoryCache.getStickyArticles();
-    const cachedFeatured = categoryCache.getFeaturedArticles();
-    const cachedRecent = categoryCache.getRecentArticles();
-    const cachedLife = categoryCache.getCategoryArticles(Categories.LIFE);
-    const cachedNews = categoryCache.getCategoryArticles(Categories.NEWS);
-    const cachedEntertainment = categoryCache.getCategoryArticles(Categories.ENTERTAINMENT);
-    const cachedOpinion = categoryCache.getCategoryArticles(Categories.OPINION);
-    const cachedSports = categoryCache.getCategoryArticles(Categories.SPORTS);
-    
-    // Helper to compute derived state from raw data
     const computeDerivedState = (
         stickyArticles: ArticleDocument[],
         featuredArticles: ArticleDocument[],
@@ -41,11 +31,14 @@ function Home() {
         const stickySorted = stickyArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
         const featuredSorted = featuredArticles.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
         const latestFeatured = featuredSorted[0] ?? null;
+        const featuredId = latestFeatured ? getArticleId(latestFeatured) : null;
         const stickyIds = new Set(stickySorted.map(getArticleId));
         const nonStickyRecent = recentArticlesData
             .filter((article) => !stickyIds.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
-        const sortedRecent = [...stickySorted, ...nonStickyRecent];
+        const sortedRecent = [...stickySorted, ...nonStickyRecent].filter(
+            (article) => getArticleId(article) !== featuredId
+        );
         const recentIds = new Set(sortedRecent.map(getArticleId));
         const filterAndSort = (articles: ArticleDocument[]) =>
             articles.filter((article) => !recentIds.has(getArticleId(article))).sort(sortByPublishedDesc);
@@ -61,33 +54,23 @@ function Home() {
         };
     };
 
-    // Compute initial state from cache if available
-    const hasCache = cachedSticky && cachedFeatured && cachedRecent && cachedLife && 
-                     cachedNews && cachedEntertainment && cachedOpinion && cachedSports;
-    const initialState = hasCache
-        ? computeDerivedState(cachedSticky, cachedFeatured, cachedRecent, cachedLife, 
-                              cachedNews, cachedEntertainment, cachedOpinion, cachedSports)
-        : null;
-
-    const [isLoading, setIsLoading] = useState<boolean>(!initialState);
-    const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>(initialState?.recentArticles || []);
-    const [featuredArticle, setFeaturedArticle] = useState<ArticleDocument | null>(initialState?.featuredArticle || null);
-    const [lifeArticles, setLifeArticles] = useState<ArticleDocument[]>(initialState?.lifeArticles || []);
-    const [newsArticles, setNewsArticles] = useState<ArticleDocument[]>(initialState?.newsArticles || []);
-    const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>(initialState?.entertainmentArticles || []);
-    const [opinionArticles, setOpinionArticles] = useState<ArticleDocument[]>(initialState?.opinionArticles || []);
-    const [sportsArticles, setSportsArticles] = useState<ArticleDocument[]>(initialState?.sportsArticles || []);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>([]);
+    const [featuredArticle, setFeaturedArticle] = useState<ArticleDocument | null>(null);
+    const [lifeArticles, setLifeArticles] = useState<ArticleDocument[]>([]);
+    const [newsArticles, setNewsArticles] = useState<ArticleDocument[]>([]);
+    const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>([]);
+    const [opinionArticles, setOpinionArticles] = useState<ArticleDocument[]>([]);
+    const [sportsArticles, setSportsArticles] = useState<ArticleDocument[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [activePlaylistEmbedUrl, setActivePlaylistEmbedUrl] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
 
         const loadArticles = async () => {
-            // Only show loading spinner if we don't have cached data
-            if (!hasCache) {
-                setIsLoading(true);
-            }
+            setIsLoading(true);
             setError(null);
 
             try {
@@ -139,17 +122,6 @@ function Home() {
                     return;
                 }
 
-                // Populate cache for instant navigation to category pages
-                categoryCache.setCategories(categories);
-                categoryCache.setStickyArticles(stickyArticles || []);
-                categoryCache.setFeaturedArticles(featuredArticles || []);
-                categoryCache.setRecentArticles(recentArticlesData || []);
-                categoryCache.setCategoryArticles(Categories.LIFE, lifeArticlesData || []);
-                categoryCache.setCategoryArticles(Categories.NEWS, newsArticlesData || []);
-                categoryCache.setCategoryArticles(Categories.ENTERTAINMENT, entertainmentArticlesData || []);
-                categoryCache.setCategoryArticles(Categories.OPINION, opinionArticlesData || []);
-                categoryCache.setCategoryArticles(Categories.SPORTS, sportsArticlesData || []);
-
                 // Compute derived state
                 const derived = computeDerivedState(
                     stickyArticles || [],
@@ -169,7 +141,7 @@ function Home() {
                 setEntertainmentArticles(derived.entertainmentArticles);
                 setOpinionArticles(derived.opinionArticles);
                 setSportsArticles(derived.sportsArticles); 
-            } catch (err) {
+            } catch {
                 if (!isMounted) {
                     return;
                 }
@@ -185,6 +157,24 @@ function Home() {
 
         return () => {
             isMounted = false;
+            controller.abort();
+        };
+    }, []);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        const loadActivePlaylist = async () => {
+            try {
+                const playlist = await spotifyService.fetchActivePlaylist(controller.signal);
+                setActivePlaylistEmbedUrl(playlist ? toSpotifyEmbedUrl(playlist.spotifyUrl) : null);
+            } catch {
+                setActivePlaylistEmbedUrl(null);
+            }
+        };
+
+        loadActivePlaylist();
+
+        return () => {
             controller.abort();
         };
     }, []);
@@ -217,9 +207,10 @@ function Home() {
             <Navbar />
             <div className='max-w-[95%] md:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
                 <div className='w-full'>
+                    {/* Main */}
                     <div className='grid gap-5 grid-cols-1 lg:grid-cols-[30%_auto] lg:grid-rows-4 w-full h-[80vh]'>
                         <div className='flex flex-col gap-4 order-last lg:order-first lg:row-span-4'>
-                            {recentArticles.slice(2, 6).map((article) => (
+                            {recentArticles.slice(1, 5).map((article) => (
                                 <ArticleBlock key={article._id || article.slug} article={article} height='100%'/>
                             ))}
                         </div>
@@ -231,6 +222,7 @@ function Home() {
 
                     <hr className='my-3' />
 
+                    {/* Categories */}
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">{Categories.LIFE}</h4>
                     <div className='grid grid-cols-2 md:grid-cols-[48%_auto] gap-4'>
                         <div className='w-full'>
@@ -281,7 +273,15 @@ function Home() {
                 <div className='flex flex-col gap-4'>
                     <SideWidget />
                     <SideArticle articles={sideArticles}/>
-                    <iframe className="rounded-md w-full h-137.5" src="https://open.spotify.com/embed/playlist/6hWrY7npl9UIbUzlRgpwoo?utm_source=generator" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                    {activePlaylistEmbedUrl && (
+                        <iframe
+                            className="rounded-md w-full h-137.5"
+                            src={activePlaylistEmbedUrl}
+                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                            loading="lazy"
+                            title="Active Spotify playlist"
+                        />
+                    )}
                 </div>
             </div>
         </>

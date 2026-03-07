@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import SubCategory from '../models/Subcategory';
 import Category from '../models/Category';
+import { escapeRegex, safeRegex, safeErrorResponse } from '../utils/security';
 
 const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId | null => {
   if (!id || Array.isArray(id) || !mongoose.Types.ObjectId.isValid(id)) return null;
@@ -40,7 +41,7 @@ export const createSubCategory = async (req: Request, res: Response): Promise<vo
 
     const slug = typeof req.body?.slug === 'string' && req.body.slug.trim().length > 0 ? req.body.slug.trim() : slugify(name);
 
-    const existing = await SubCategory.findOne({ $or: [{ slug }, { name: { $regex: new RegExp(`^${name}$`, 'i') } }] });
+    const existing = await SubCategory.findOne({ $or: [{ slug }, { name: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } }] });
     if (existing) {
       res.status(409).json({ success: false, message: 'Sub-category with this name or slug already exists' });
       return;
@@ -54,7 +55,7 @@ export const createSubCategory = async (req: Request, res: Response): Promise<vo
       res.status(409).json({ success: false, message: 'Sub-category with this slug already exists' });
       return;
     }
-    res.status(500).json({ success: false, message: 'Server error', error: error?.message });
+    res.status(500).json(safeErrorResponse('Server error', error));
   }
 };
 
@@ -65,7 +66,7 @@ export const getSubCategories = async (req: Request, res: Response): Promise<voi
     const query: any = {};
 
     if (typeof search === 'string' && search.trim().length > 0) {
-      const rx = new RegExp(search.trim(), 'i');
+      const rx = safeRegex(search.trim());
       query.$or = [{ name: rx }, { slug: rx }];
     }
 
@@ -83,7 +84,7 @@ export const getSubCategories = async (req: Request, res: Response): Promise<voi
 
     res.status(200).json({ success: true, data: subCategories, count: subCategories.length });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching sub-categories', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching sub-categories', error));
   }
 };
 
@@ -103,7 +104,7 @@ export const getSubCategoryById = async (req: Request, res: Response): Promise<v
 
     res.status(200).json({ success: true, data: subCategory });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching sub-category', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching sub-category', error));
   }
 };
 
@@ -118,7 +119,7 @@ export const getSubCategoryBySlug = async (req: Request, res: Response): Promise
 
     res.status(200).json({ success: true, data: subCategory });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching sub-category', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching sub-category', error));
   }
 };
 
@@ -175,7 +176,7 @@ export const updateSubCategory = async (req: Request, res: Response): Promise<vo
       res.status(409).json({ success: false, message: 'Sub-category with this slug already exists' });
       return;
     }
-    res.status(500).json({ success: false, message: 'Error updating sub-category', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error updating sub-category', error));
   }
 };
 
@@ -195,7 +196,7 @@ export const deleteSubCategory = async (req: Request, res: Response): Promise<vo
 
     res.status(200).json({ success: true, message: 'Sub-category deleted successfully' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error deleting sub-category', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error deleting sub-category', error));
   }
 };
 
@@ -213,7 +214,7 @@ export const getSubCategoriesByCategory = async (req: Request, res: Response): P
 
     res.status(200).json({ success: true, data: subCategories, count: subCategories.length });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching sub-categories', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching sub-categories', error));
   }
 };
 
@@ -222,6 +223,6 @@ export const getSubCategoryStats = async (_req: Request, res: Response): Promise
     const totalSubCategories = await SubCategory.countDocuments({});
     res.status(200).json({ success: true, data: { totalSubCategories } });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Error fetching sub-category stats', error: error?.message });
+    res.status(500).json(safeErrorResponse('Error fetching sub-category stats', error));
   }
 };

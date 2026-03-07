@@ -55,8 +55,7 @@ export default function ArticleList() {
     currentPage,
     handlePageChange,
     pageSize,
-    handlePageSizeChange,
-    mediaLibrary
+    handlePageSizeChange
   } = useArticles();
 
   // Dialog states
@@ -375,7 +374,6 @@ export default function ArticleList() {
         subcategories={subcategories}
         tags={tags}
         authors={authors}
-        mediaLibrary={mediaLibrary}
         
         // Functions
         getAuthorName={getAuthorName}

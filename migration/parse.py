@@ -66,7 +66,6 @@ with open('rawdata.json', 'r') as input:
                 "title": child["title"],
                 "slug": child["wp:post_name"],
                 "content": child["content:encoded"],
-                # "excerpt": child["excerpt:encoded"],
                 "status": "published",
                 "authors": list(authors),
                 "categories": categories,
@@ -98,7 +97,6 @@ with open('rawdata.json', 'r') as input:
                 "id": int(child["wp:post_id"]),
                 "url": f"https://media.nique.net/{child["wp:attachment_url"].split("/")[-1]}",
                 "title": child["title"],
-                "caption": child["excerpt:encoded"],
                 "createdAt": child["wp:post_date_gmt"],
                 "updatedAt": child["wp:post_modified_gmt"]
             }

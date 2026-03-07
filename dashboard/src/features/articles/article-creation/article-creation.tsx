@@ -6,10 +6,9 @@ import { formatDistanceToNow } from "date-fns";
 import {
   useTaxonomy,
   useUsers,
-  useMedia,
   useAdminArticle,
 } from "@/hooks/use-queries";
-import type { Category, SubCategory, Tag, Author, MediaItem } from "./types";
+import type { Category, SubCategory, Tag, Author } from "./types";
 import { useParams } from "@tanstack/react-router";
 
 export default function ArticleCreation() {
@@ -55,8 +54,7 @@ export default function ArticleCreation() {
         isPublished: backendArticle.published,
         allowComments: backendArticle.allowComments,
 
-        // Dashboard caption field maps to backend imageCaption (fallback to excerpt)
-        excerpt: backendArticle.imageCaption ?? backendArticle.excerpt ?? "",
+        imageCaption: backendArticle.imageCaption ?? "",
 
       
       // Map authors array structure
@@ -66,14 +64,7 @@ export default function ArticleCreation() {
             .filter((a: any) => a !== null)
         : [],
 
-      // Map featured media
-      featuredMedia: backendArticle.featuredMediaId
-        ? {
-            id: backendArticle.featuredMediaId._id,
-            url: backendArticle.featuredMediaId.url,
-            alt: backendArticle.featuredMediaId.altText,
-          }
-        : undefined,
+      featuredMediaUrl: typeof backendArticle.featuredMediaUrl === 'string' ? backendArticle.featuredMediaUrl : undefined,
     };
   }, [initialArticle]);
 
@@ -81,12 +72,9 @@ export default function ArticleCreation() {
   const { categories: rawCategories, subCategories: rawSubCategories, tags: rawTags, isLoading: taxonomyLoading, isError: taxonomyError } = useTaxonomy();
   const { data: usersData, isLoading: usersLoading } = useUsers({ limit: 1000 });
   const rawUsers = usersData ?? [];
-  const { data: mediaData, isLoading: mediaLoading } = useMedia({ limit: 100 });
-
   const isLoading =
     taxonomyLoading ||
     usersLoading ||
-    mediaLoading ||
     articleLoading;
 
   const subtitle = useMemo(() => {
@@ -167,17 +155,6 @@ export default function ArticleCreation() {
     });
   }, [rawUsers]);
 
-  // Map backend media to UI media picker shape
-  const mediaItems: MediaItem[] = useMemo(() => {
-    return (mediaData?.data || []).map((m: any) => ({
-      id: m._id,
-      title: m.altText || 'Untitled',
-      url: m.url,
-      description: m.altText
-    }));
-  }, [mediaData]);
-
-
   if (isLoading) {
     return (
       <Main>
@@ -229,7 +206,6 @@ export default function ArticleCreation() {
         subcategories={subcategories}
         tags={tags}
         authors={authors}
-        mediaLibrary={mediaItems}
         initialArticle={transformedArticle as any}
         isLoadingData={isLoading}
         onLastSavedChange={setLastSavedAt}

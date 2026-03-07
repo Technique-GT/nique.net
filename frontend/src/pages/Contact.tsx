@@ -3,7 +3,7 @@ import { staff } from "../types/staff";
 
 function Contact() {
   return (
-    <div className='max-h-screen'>
+    <div className='min-h-screen'>
         <Navbar />
         <div className='max-w-[95%] md:max-w-[80%] h-full m-auto py-5 px-30 gap-4'>
             <div className='flex flex-col'>
@@ -31,10 +31,9 @@ function Contact() {
             <p>{staff[8].role}: <a href={`mailto:${staff[8].email}`} className="hover:text-nique-light-blue"><u>{staff[8].name}</u></a></p>
             <p>{staff[9].role}: <a href={`mailto:${staff[9].email}`} className="hover:text-nique-light-blue"><u>{staff[9].name}</u></a></p>
             <p>{staff[10].role}: <a href={`mailto:${staff[10].email}`} className="hover:text-nique-light-blue"><u>{staff[10].name}</u></a></p>
-            <p>{staff[11].role}: <a href={`mailto:${staff[11].email}`} className="hover:text-nique-light-blue"><u>{staff[11].name}</u></a></p>
 
             <h4 className="font-bold my-2 text-2xl text-nique-blue">Georgia Tech Student Media Administrative Staff</h4>
-            <p>{staff[12].role}: <a href={`mailto:${staff[12].email}`} className="hover:text-nique-light-blue"><u>{staff[12].name}</u></a> ({staff[12].contact})</p>
+            <p>{staff[11].role}: <a href={`mailto:${staff[11].email}`} className="hover:text-nique-light-blue"><u>{staff[11].name}</u></a> ({staff[11].contact})</p>
             <p>Student Media Marketing and Advertising Coordinator: <a href={`mailto:${staff[0].email}`} className="hover:text-nique-light-blue"><u>{staff[0].name}</u></a> & <a href={`mailto:${staff[1].email}`} className="hover:text-nique-light-blue"><u>{staff[1].name}</u></a></p>
             </div>
         </div>

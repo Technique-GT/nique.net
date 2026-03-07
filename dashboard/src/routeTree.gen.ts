@@ -30,6 +30,7 @@ import { Route as AuthenticatedSpotifyIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedSliversIndexRouteImport } from './routes/_authenticated/slivers/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
+import { Route as AuthenticatedDocumentationIndexRouteImport } from './routes/_authenticated/documentation/index'
 import { Route as AuthenticatedDashIndexRouteImport } from './routes/_authenticated/dash/index'
 import { Route as AuthenticatedCommentsIndexRouteImport } from './routes/_authenticated/comments/index'
 import { Route as AuthenticatedArticlesIndexRouteImport } from './routes/_authenticated/articles/index'
@@ -37,7 +38,6 @@ import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_auth
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedArticlesTagsRouteImport } from './routes/_authenticated/articles/tags'
 import { Route as AuthenticatedArticlesNewRouteImport } from './routes/_authenticated/articles/new'
-import { Route as AuthenticatedArticlesMediaRouteImport } from './routes/_authenticated/articles/media'
 import { Route as AuthenticatedArticlesListRouteImport } from './routes/_authenticated/articles/list'
 import { Route as AuthenticatedArticlesCategoriesRouteImport } from './routes/_authenticated/articles/categories'
 import { Route as AuthenticatedArticlesArticleIdEditRouteImport } from './routes/_authenticated/articles/$articleId/edit'
@@ -150,6 +150,12 @@ const AuthenticatedHelpCenterIndexRoute =
     path: '/help-center/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDocumentationIndexRoute =
+  AuthenticatedDocumentationIndexRouteImport.update({
+    id: '/documentation/',
+    path: '/documentation/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashIndexRoute = AuthenticatedDashIndexRouteImport.update({
   id: '/dash/',
   path: '/dash/',
@@ -191,12 +197,6 @@ const AuthenticatedArticlesNewRoute =
     path: '/articles/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedArticlesMediaRoute =
-  AuthenticatedArticlesMediaRouteImport.update({
-    id: '/articles/media',
-    path: '/articles/media',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedArticlesListRoute =
   AuthenticatedArticlesListRouteImport.update({
     id: '/articles/list',
@@ -217,6 +217,7 @@ const AuthenticatedArticlesArticleIdEditRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof UnauthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
@@ -229,26 +230,26 @@ export interface FileRoutesByFullPath {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
-  '/': typeof UnauthenticatedIndexRoute
   '/articles/categories': typeof AuthenticatedArticlesCategoriesRoute
   '/articles/list': typeof AuthenticatedArticlesListRoute
-  '/articles/media': typeof AuthenticatedArticlesMediaRoute
   '/articles/new': typeof AuthenticatedArticlesNewRoute
   '/articles/tags': typeof AuthenticatedArticlesTagsRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
-  '/articles': typeof AuthenticatedArticlesIndexRoute
-  '/comments': typeof AuthenticatedCommentsIndexRoute
-  '/dash': typeof AuthenticatedDashIndexRoute
-  '/help-center': typeof AuthenticatedHelpCenterIndexRoute
+  '/articles/': typeof AuthenticatedArticlesIndexRoute
+  '/comments/': typeof AuthenticatedCommentsIndexRoute
+  '/dash/': typeof AuthenticatedDashIndexRoute
+  '/documentation/': typeof AuthenticatedDocumentationIndexRoute
+  '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
-  '/slivers': typeof AuthenticatedSliversIndexRoute
-  '/spotify': typeof AuthenticatedSpotifyIndexRoute
-  '/stats': typeof AuthenticatedStatsIndexRoute
-  '/users': typeof AuthenticatedUsersIndexRoute
+  '/slivers/': typeof AuthenticatedSliversIndexRoute
+  '/spotify/': typeof AuthenticatedSpotifyIndexRoute
+  '/stats/': typeof AuthenticatedStatsIndexRoute
+  '/users/': typeof AuthenticatedUsersIndexRoute
   '/articles/$articleId/edit': typeof AuthenticatedArticlesArticleIdEditRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof UnauthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
@@ -260,10 +261,8 @@ export interface FileRoutesByTo {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
-  '/': typeof UnauthenticatedIndexRoute
   '/articles/categories': typeof AuthenticatedArticlesCategoriesRoute
   '/articles/list': typeof AuthenticatedArticlesListRoute
-  '/articles/media': typeof AuthenticatedArticlesMediaRoute
   '/articles/new': typeof AuthenticatedArticlesNewRoute
   '/articles/tags': typeof AuthenticatedArticlesTagsRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -271,6 +270,7 @@ export interface FileRoutesByTo {
   '/articles': typeof AuthenticatedArticlesIndexRoute
   '/comments': typeof AuthenticatedCommentsIndexRoute
   '/dash': typeof AuthenticatedDashIndexRoute
+  '/documentation': typeof AuthenticatedDocumentationIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/slivers': typeof AuthenticatedSliversIndexRoute
@@ -298,7 +298,6 @@ export interface FileRoutesById {
   '/_unauthenticated/': typeof UnauthenticatedIndexRoute
   '/_authenticated/articles/categories': typeof AuthenticatedArticlesCategoriesRoute
   '/_authenticated/articles/list': typeof AuthenticatedArticlesListRoute
-  '/_authenticated/articles/media': typeof AuthenticatedArticlesMediaRoute
   '/_authenticated/articles/new': typeof AuthenticatedArticlesNewRoute
   '/_authenticated/articles/tags': typeof AuthenticatedArticlesTagsRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -306,6 +305,7 @@ export interface FileRoutesById {
   '/_authenticated/articles/': typeof AuthenticatedArticlesIndexRoute
   '/_authenticated/comments/': typeof AuthenticatedCommentsIndexRoute
   '/_authenticated/dash/': typeof AuthenticatedDashIndexRoute
+  '/_authenticated/documentation/': typeof AuthenticatedDocumentationIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/slivers/': typeof AuthenticatedSliversIndexRoute
@@ -317,6 +317,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/login'
     | '/settings'
     | '/forgot-password'
@@ -329,26 +330,26 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
-    | '/'
     | '/articles/categories'
     | '/articles/list'
-    | '/articles/media'
     | '/articles/new'
     | '/articles/tags'
     | '/settings/appearance'
     | '/settings/profile'
-    | '/articles'
-    | '/comments'
-    | '/dash'
-    | '/help-center'
+    | '/articles/'
+    | '/comments/'
+    | '/dash/'
+    | '/documentation/'
+    | '/help-center/'
     | '/settings/'
-    | '/slivers'
-    | '/spotify'
-    | '/stats'
-    | '/users'
+    | '/slivers/'
+    | '/spotify/'
+    | '/stats/'
+    | '/users/'
     | '/articles/$articleId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/login'
     | '/forgot-password'
     | '/otp'
@@ -360,10 +361,8 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
-    | '/'
     | '/articles/categories'
     | '/articles/list'
-    | '/articles/media'
     | '/articles/new'
     | '/articles/tags'
     | '/settings/appearance'
@@ -371,6 +370,7 @@ export interface FileRouteTypes {
     | '/articles'
     | '/comments'
     | '/dash'
+    | '/documentation'
     | '/help-center'
     | '/settings'
     | '/slivers'
@@ -397,7 +397,6 @@ export interface FileRouteTypes {
     | '/_unauthenticated/'
     | '/_authenticated/articles/categories'
     | '/_authenticated/articles/list'
-    | '/_authenticated/articles/media'
     | '/_authenticated/articles/new'
     | '/_authenticated/articles/tags'
     | '/_authenticated/settings/appearance'
@@ -405,6 +404,7 @@ export interface FileRouteTypes {
     | '/_authenticated/articles/'
     | '/_authenticated/comments/'
     | '/_authenticated/dash/'
+    | '/_authenticated/documentation/'
     | '/_authenticated/help-center/'
     | '/_authenticated/settings/'
     | '/_authenticated/slivers/'
@@ -442,14 +442,14 @@ declare module '@tanstack/react-router' {
     '/_unauthenticated': {
       id: '/_unauthenticated'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof UnauthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -540,28 +540,28 @@ declare module '@tanstack/react-router' {
     '/_authenticated/users/': {
       id: '/_authenticated/users/'
       path: '/users'
-      fullPath: '/users'
+      fullPath: '/users/'
       preLoaderRoute: typeof AuthenticatedUsersIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/stats/': {
       id: '/_authenticated/stats/'
       path: '/stats'
-      fullPath: '/stats'
+      fullPath: '/stats/'
       preLoaderRoute: typeof AuthenticatedStatsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/spotify/': {
       id: '/_authenticated/spotify/'
       path: '/spotify'
-      fullPath: '/spotify'
+      fullPath: '/spotify/'
       preLoaderRoute: typeof AuthenticatedSpotifyIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/slivers/': {
       id: '/_authenticated/slivers/'
       path: '/slivers'
-      fullPath: '/slivers'
+      fullPath: '/slivers/'
       preLoaderRoute: typeof AuthenticatedSliversIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
@@ -575,28 +575,35 @@ declare module '@tanstack/react-router' {
     '/_authenticated/help-center/': {
       id: '/_authenticated/help-center/'
       path: '/help-center'
-      fullPath: '/help-center'
+      fullPath: '/help-center/'
       preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/documentation/': {
+      id: '/_authenticated/documentation/'
+      path: '/documentation'
+      fullPath: '/documentation/'
+      preLoaderRoute: typeof AuthenticatedDocumentationIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dash/': {
       id: '/_authenticated/dash/'
       path: '/dash'
-      fullPath: '/dash'
+      fullPath: '/dash/'
       preLoaderRoute: typeof AuthenticatedDashIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/comments/': {
       id: '/_authenticated/comments/'
       path: '/comments'
-      fullPath: '/comments'
+      fullPath: '/comments/'
       preLoaderRoute: typeof AuthenticatedCommentsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/articles/': {
       id: '/_authenticated/articles/'
       path: '/articles'
-      fullPath: '/articles'
+      fullPath: '/articles/'
       preLoaderRoute: typeof AuthenticatedArticlesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
@@ -626,13 +633,6 @@ declare module '@tanstack/react-router' {
       path: '/articles/new'
       fullPath: '/articles/new'
       preLoaderRoute: typeof AuthenticatedArticlesNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/articles/media': {
-      id: '/_authenticated/articles/media'
-      path: '/articles/media'
-      fullPath: '/articles/media'
-      preLoaderRoute: typeof AuthenticatedArticlesMediaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/articles/list': {
@@ -681,12 +681,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedArticlesCategoriesRoute: typeof AuthenticatedArticlesCategoriesRoute
   AuthenticatedArticlesListRoute: typeof AuthenticatedArticlesListRoute
-  AuthenticatedArticlesMediaRoute: typeof AuthenticatedArticlesMediaRoute
   AuthenticatedArticlesNewRoute: typeof AuthenticatedArticlesNewRoute
   AuthenticatedArticlesTagsRoute: typeof AuthenticatedArticlesTagsRoute
   AuthenticatedArticlesIndexRoute: typeof AuthenticatedArticlesIndexRoute
   AuthenticatedCommentsIndexRoute: typeof AuthenticatedCommentsIndexRoute
   AuthenticatedDashIndexRoute: typeof AuthenticatedDashIndexRoute
+  AuthenticatedDocumentationIndexRoute: typeof AuthenticatedDocumentationIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
   AuthenticatedSliversIndexRoute: typeof AuthenticatedSliversIndexRoute
   AuthenticatedSpotifyIndexRoute: typeof AuthenticatedSpotifyIndexRoute
@@ -699,12 +699,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedArticlesCategoriesRoute: AuthenticatedArticlesCategoriesRoute,
   AuthenticatedArticlesListRoute: AuthenticatedArticlesListRoute,
-  AuthenticatedArticlesMediaRoute: AuthenticatedArticlesMediaRoute,
   AuthenticatedArticlesNewRoute: AuthenticatedArticlesNewRoute,
   AuthenticatedArticlesTagsRoute: AuthenticatedArticlesTagsRoute,
   AuthenticatedArticlesIndexRoute: AuthenticatedArticlesIndexRoute,
   AuthenticatedCommentsIndexRoute: AuthenticatedCommentsIndexRoute,
   AuthenticatedDashIndexRoute: AuthenticatedDashIndexRoute,
+  AuthenticatedDocumentationIndexRoute: AuthenticatedDocumentationIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
   AuthenticatedSliversIndexRoute: AuthenticatedSliversIndexRoute,
   AuthenticatedSpotifyIndexRoute: AuthenticatedSpotifyIndexRoute,

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
-import { categoryCache } from '../services/categoryCache';
 import { ArticleDocument } from '../types/article';
 import { FaFacebook, FaXTwitter, FaInstagram, FaTiktok, FaLinkedin } from "react-icons/fa6";
 import Navbar from "../components/Navbar";
@@ -8,34 +7,26 @@ import Collage from "../components/Collage";
 import Spinner from '../components/Spinner';
 
 function About() {
-    // Check cache first to avoid loading spinner
-    const cachedRecent = categoryCache.getRecentArticles();
-    
-    const [isLoading, setIsLoading] = useState<boolean>(!cachedRecent);
-    const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>(cachedRecent || []);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>([]);
 
     useEffect(() => {
             let isMounted = true;
             const controller = new AbortController();
     
             const loadArticles = async () => {
-                // Only show loading if we don't have cached data
-                if (!cachedRecent) {
-                    setIsLoading(true);
-                }
+                setIsLoading(true);
     
                 try {
                     // Services now return unwrapped data directly
-                    const recentArticlesData = await articleService.fetchRecentArticles(5, 'published', controller.signal);
+                    const recentArticlesData = await articleService.fetchRecentArticles(7, 'published', controller.signal);
     
                     if (!isMounted) {
                         return;
                     }
     
-                    // Update cache
-                    categoryCache.setRecentArticles(recentArticlesData || []);
                     setRecentArticles(recentArticlesData || []);
-                } catch (err) {
+                } catch {
                     if (!isMounted) {
                         return;
                     }
@@ -70,7 +61,7 @@ function About() {
                 <h4 className="font-bold mb-2 text-2xl text-nique-blue">About Us</h4>
             </div>
 
-            <Collage articles={[recentArticles[0], recentArticles[1], recentArticles[2], recentArticles[3], recentArticles[4], recentArticles[5]].filter(Boolean) as ArticleDocument[]} /> {/* collection of best pictures you may want to feature */}
+            <Collage articles={[recentArticles[0], recentArticles[1], recentArticles[2], recentArticles[3], recentArticles[4], recentArticles[5], recentArticles[6]].filter(Boolean) as ArticleDocument[]} /> {/* collection of best pictures you may want to feature */}
 
             {/* Mission */}
             <div className='grid grid-cols-1 sm:grid-cols-3 max-w-[95%] md:max-w-[80%] m-auto p-5 gap-x-16'>
@@ -81,11 +72,11 @@ function About() {
                 <div className='col-span-1 ml-20 mt-8 p-8 bg-nique-blue text-white'>
                     <h4 className='text-2xl font-bold text-right mb-4'>Follow Technique</h4>
                     <p className="flex gap-2 justify-end items-center text-white">
-                        <a className='hover:text-gray-100' href='https://www.facebook.com/thenique' target='_blank'><FaFacebook /></a>
-                        <a className='hover:text-gray-100' href='https://twitter.com/the_nique' target='_blank'><FaXTwitter /></a>
-                        <a className='hover:text-gray-100' href='https://www.instagram.com/gt_nique' target='_blank'><FaInstagram /></a>
-                        <a className='hover:text-gray-100' href='https://www.tiktok.com/@gt_nique' target='_blank'><FaTiktok /></a>
-                        <a className='hover:text-gray-100' href='https://www.linkedin.com/company/technique-newspaper/' target='_blank'><FaLinkedin /></a>
+                        <a className='hover:text-gray-100' href='https://www.facebook.com/thenique' target='_blank' rel='noopener noreferrer' aria-label='Technique Facebook'><FaFacebook /></a>
+                        <a className='hover:text-gray-100' href='https://twitter.com/the_nique' target='_blank' rel='noopener noreferrer' aria-label='Technique X'><FaXTwitter /></a>
+                        <a className='hover:text-gray-100' href='https://www.instagram.com/gt_nique' target='_blank' rel='noopener noreferrer' aria-label='Technique Instagram'><FaInstagram /></a>
+                        <a className='hover:text-gray-100' href='https://www.tiktok.com/@gt_nique' target='_blank' rel='noopener noreferrer' aria-label='Technique TikTok'><FaTiktok /></a>
+                        <a className='hover:text-gray-100' href='https://www.linkedin.com/company/technique-newspaper/' target='_blank' rel='noopener noreferrer' aria-label='Technique LinkedIn'><FaLinkedin /></a>
                     </p>
                 </div>
             </div>

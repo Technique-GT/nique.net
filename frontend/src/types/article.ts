@@ -55,12 +55,11 @@ export interface ArticleDocument {
   title: string;
   slug: string;
   content: string;
-  excerpt?: string;
   categoryId: Category | null;
   subcategoryId?: Subcategory | null;
   tagIds: Tag[];
   authors: ArticleAuthor[];
-  featuredMediaId?: Media | null;
+  featuredMediaUrl?: string | null;
   imageCaption?: string;
   published: boolean;
   publishedAt: Date | string | null;

@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import mongoose from 'mongoose';
 import { NotificationService } from '../services/notification.service';
+import { safeErrorResponse } from '../utils/security';
 
 export const getNotifications = async (req: any, res: Response): Promise<void> => {
   try {
@@ -23,7 +24,7 @@ export const getNotifications = async (req: any, res: Response): Promise<void> =
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch notifications', error: error.message });
+    res.status(500).json(safeErrorResponse('Failed to fetch notifications', error));
   }
 };
 
@@ -41,7 +42,7 @@ export const markAsRead = async (req: any, res: Response): Promise<void> => {
     }
     res.json({ success: true, data: notification });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to mark notification as read', error: error.message });
+    res.status(500).json(safeErrorResponse('Failed to mark notification as read', error));
   }
 };
 
@@ -50,6 +51,6 @@ export const markAllAsRead = async (req: any, res: Response): Promise<void> => {
     await NotificationService.markAllAsRead(req.user.id);
     res.json({ success: true, message: 'All notifications marked as read' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to mark all as read', error: error.message });
+    res.status(500).json(safeErrorResponse('Failed to mark all as read', error));
   }
 };

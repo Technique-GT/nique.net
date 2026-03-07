@@ -10,7 +10,7 @@ function SmallArticle({ articles, direction }: SmallArticleProps) {
     const navigate = useNavigate();
     return (
         <div>
-            {articles.map((article, index) => {
+            {articles.slice(0, 10).map((article, index) => {
                 const link = getArticleLink(article);
                 const image = getArticleImage(article);
                 const author = getArticleAuthorName(article);
@@ -26,7 +26,7 @@ function SmallArticle({ articles, direction }: SmallArticleProps) {
                         {
                             image && 
                             <img 
-                                src={image.url} 
+                                src={image} 
                                 loading="lazy"
                                 decoding="async"
                                 alt={article.title}
