@@ -394,9 +394,16 @@ export const getPublishedArticles = async (req: Request, res: Response): Promise
     };
 
     const filter: any = { published: true };
-    if (search) {
-      const rx = safeRegex(search);
-      filter.$or = [{ title: rx }, { excerpt: rx }];
+    if (search?.trim()) {
+      const rx = safeRegex(search.trim());
+      const orFilters: any[] = [{ title: rx }, { excerpt: rx }];
+
+      const matchedUsers = await User.find({ name: rx }).select('_id');
+      if (matchedUsers.length > 0) {
+        orFilters.push({ 'authors.authorId': { $in: matchedUsers.map((u) => u._id) } });
+      }
+
+      filter.$or = orFilters;
     }
     if (categoryId) {
       filter.categoryId = new mongoose.Types.ObjectId(categoryId);
