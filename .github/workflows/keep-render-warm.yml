@@ -19,4 +19,18 @@ jobs:
           fi
 
           echo "Pinging $HEALTHCHECK_URL"
-          curl --fail --show-error --silent --max-time 20 --retry 2 "$HEALTHCHECK_URL"
+          RESPONSE_FILE="$(mktemp)"
+          STATUS_CODE="$(curl --silent --show-error --location --max-time 20 --retry 2 \
+            --output "$RESPONSE_FILE" --write-out "%{http_code}" "$HEALTHCHECK_URL")"
+
+          echo "Triggered $HEALTHCHECK_URL with status $STATUS_CODE"
+          echo "Response preview:"
+          head -c 500 "$RESPONSE_FILE" || true
+          echo
+
+          if [ "$STATUS_CODE" -ge 200 ] && [ "$STATUS_CODE" -lt 300 ]; then
+            echo "Health check succeeded with 2xx status."
+          else
+            echo "Health check failed with non-2xx status."
+            exit 1
+          fi
