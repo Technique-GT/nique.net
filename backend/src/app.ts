@@ -123,6 +123,14 @@ export function createApp() {
   app.use(express.json({ limit: '10mb' }));
   app.use(cookieParser());
 
+  const sendHealthResponse = (_req: express.Request, res: express.Response) => {
+    res.json({
+      success: true,
+      message: 'Server is running',
+      timestamp: new Date().toISOString(),
+    });
+  };
+
   // Apply global rate limiting to all API routes
   app.use('/api/', apiLimiter);
 
@@ -148,14 +156,9 @@ export function createApp() {
   app.use('/api/comments', commentRoutes);
   app.use('/api/notifications', notificationRoutes);
 
-  // Simple health check
-  app.get('/api/health', (_req, res) => {
-    res.json({
-      success: true,
-      message: 'Server is running',
-      timestamp: new Date().toISOString(),
-    });
-  });
+  // API health check
+  app.get('/health', sendHealthResponse);
+  app.get('/api/health', sendHealthResponse);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
