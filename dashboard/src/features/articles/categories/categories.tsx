@@ -428,7 +428,7 @@ export default function Categories() {
         </CardHeader>
         <CardContent>
           <div className="rounded-md border overflow-x-auto">
-            <Table className="min-w-[600px]">
+            <Table className="min-w-150">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12"></TableHead>

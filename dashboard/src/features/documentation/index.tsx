@@ -45,7 +45,7 @@ export default function Documentation() {
               <CardDescription>Jump to a section</CardDescription>
             </CardHeader>
             <CardContent className='pt-0'>
-              <ScrollArea className='h-[260px] pr-4'>
+              <ScrollArea className='h-65 pr-4'>
                 <nav className='flex flex-col gap-2 text-sm'>
                   {navItems.map((item) => (
                     <a

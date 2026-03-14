@@ -205,7 +205,7 @@ const Comment = (data: CommentProps) => {
             <p className="text-xs text-nique-blue mt-auto">{dateText}</p>
           </div>
         </div>
-        <p className="whitespace-pre-wrap break-words">{data.content}</p>
+        <p className="whitespace-pre-wrap wrap-break-word">{data.content}</p>
         <div className="flex gap-4 text-sm justify-end text-nique-blue">
           <button
             className="flex items-center gap-1 hover:bg-gray-100 rounded-md px-2 py-1"

@@ -68,7 +68,7 @@ function SideWidget() {
             <hr className='my-3' /> */}
 
             <h4 className="font-bold mb-1 text-xl">Sliver : Your Thoughts</h4>
-            <textarea maxLength={500} className={`h-[60px] w-full border-solid border-1 border-nique-blue rounded-md px-2 py-1 ${sliverSubmitted === 'error' ? 'border-red-600' : ''}`} value={text} onChange={handleChange}></textarea>
+            <textarea maxLength={500} className={`h-15 w-full border-solid border border-nique-blue rounded-md px-2 py-1 ${sliverSubmitted === 'error' ? 'border-red-600' : ''}`} value={text} onChange={handleChange}></textarea>
             {sliverSubmitted === 'error' && <h4 className='text-sm text-red-600'>Something went wrong 🤔</h4>}
             <div className='flex justify-between'>
                 <h6>{500 - wordCount}</h6>

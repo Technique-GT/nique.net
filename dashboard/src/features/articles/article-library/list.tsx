@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -40,11 +40,18 @@ export default function ArticleList() {
     setStatusFilter,
     categoryFilter,
     setCategoryFilter,
+    subcategoryFilter,
+    setSubcategoryFilter,
+    showFeatured,
+    setShowFeatured,
+    showSticky,
+    setShowSticky,
     hideDrafts,
     setHideDrafts,
     message,
     setMessage,
     availableCategories,
+    availableSubcategories,
     categories,
     subcategories,
     tags,
@@ -242,19 +249,20 @@ export default function ArticleList() {
     });
   };
 
+  useEffect(() => {
+    if (!message) return;
+
+    if (message.type === 'success') {
+      toast.success(message.text);
+    } else {
+      toast.error(message.text);
+    }
+
+    setMessage(null);
+  }, [message, setMessage]);
+
   return (
     <Main>
-      {/* Message Display */}
-      {message && (
-          <div className={`mb-4 p-4 rounded-md ${
-            message.type === 'success' 
-              ? 'bg-green-50 border border-green-200 text-green-800' 
-              : 'bg-red-50 border border-red-200 text-red-800'
-          }`}>
-            {message.text}
-          </div>
-        )}
-
         <PageHeader
           title="Article Library"
           description="Browse, search, and manage your content collection"
@@ -291,10 +299,12 @@ export default function ArticleList() {
                 />
               </div>
               <div className="flex flex-wrap gap-2 sm:gap-4">
+                {/* Status Filter */}
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-full sm:w-40">
                     <SelectValue placeholder="Filter by status" />
                   </SelectTrigger>
+                  
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="published">Published</SelectItem>
@@ -303,6 +313,8 @@ export default function ArticleList() {
                     <SelectItem value="changes_requested">Changes Requested</SelectItem>
                   </SelectContent>
                 </Select>
+
+                {/* Category Filter */}
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                   <SelectTrigger className="w-full sm:w-40">
                     <SelectValue placeholder="Filter by category" />
@@ -316,6 +328,43 @@ export default function ArticleList() {
                     ))}
                   </SelectContent>
                 </Select>
+
+                {/* TODO -- Subcategory Filter */}
+                <Select value={subcategoryFilter} onValueChange={setSubcategoryFilter}>
+                  <SelectTrigger className="w-full sm:w-40">
+                    <SelectValue placeholder="Filter by subcategory" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Subcategories</SelectItem>
+                    {availableSubcategories.map(subcategory => (
+                      <SelectItem key={subcategory._id} value={subcategory._id}>
+                        {subcategory.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* TODO -- Featured Filter */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="show-featured" 
+                    checked={showFeatured} 
+                    onCheckedChange={(checked) => setShowFeatured(Boolean(checked))}
+                  />
+                  <Label htmlFor="show-featured">Featured</Label>
+                </div>
+
+                {/* TODO -- Sticky Filter */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="show-sticky" 
+                    checked={showSticky} 
+                    onCheckedChange={(checked) => setShowSticky(Boolean(checked))}
+                  />
+                  <Label htmlFor="show-sticky">Sticky</Label>
+                </div>
+
+                {/* Draft Filter */}
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="hide-drafts" 

@@ -314,7 +314,7 @@ export const createArticle = async (req: Request, res: Response): Promise<void> 
 export const getArticles = async (req: any, res: Response): Promise<void> => {
   try {
     // In case validateQuery mutation fails or behaves unexpectedly, allow safe parsing
-    const { page, limit, search, status, categoryId, hideDrafts } = req.query;
+    const { page, limit, search, status, categoryId, subcategoryId, isFeatured, isSticky, hideDrafts } = req.query;
     const andFilters: any[] = [];
     const orFilters: any[] = [];
 
@@ -335,6 +335,13 @@ export const getArticles = async (req: any, res: Response): Promise<void> => {
       }
     }
 
+    if (typeof subcategoryId === 'string') {
+      const subcategoryObjectId = toObjectId(subcategoryId);
+      if (subcategoryObjectId) {
+        andFilters.push({ subcategoryId: subcategoryObjectId });
+      }
+    }
+
     if (typeof status === 'string') {
       if (status === 'published' || status === 'draft') {
         andFilters.push({
@@ -350,6 +357,18 @@ export const getArticles = async (req: any, res: Response): Promise<void> => {
 
     if (hideDrafts === true || hideDrafts === 'true') {
       andFilters.push({ reviewStatus: { $ne: 'draft' } });
+    }
+
+    if (typeof isFeatured === 'boolean') {
+      andFilters.push({ isFeatured });
+    } else if (isFeatured === 'true' || isFeatured === 'false') {
+      andFilters.push({ isFeatured: isFeatured === 'true' });
+    }
+
+    if (typeof isSticky === 'boolean') {
+      andFilters.push({ isSticky });
+    } else if (isSticky === 'true' || isSticky === 'false') {
+      andFilters.push({ isSticky: isSticky === 'true' });
     }
 
     // Filter for non-admins: only show owned or authored articles

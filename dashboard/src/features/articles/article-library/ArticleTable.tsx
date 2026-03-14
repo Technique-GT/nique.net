@@ -133,9 +133,9 @@ export function ArticleTable({
                 className={cn(canEdit && "cursor-pointer hover:bg-muted/50")}
               >
 
-                <TableCell className="font-medium min-w-[200px]">
+                <TableCell className="font-medium min-w-50">
                 <div className="flex items-center gap-2">
-                  <span className="truncate max-w-[180px] sm:max-w-[250px]">{article.title}</span>
+                  <span className="truncate max-w-45 sm:max-w-[250px]">{article.title}</span>
                   {article.isFeatured && (
                     <Tooltip>
                       <TooltipTrigger>
