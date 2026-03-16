@@ -28,6 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { MediaDropZone } from "@/components/media-drop-zone";
 import { Info, Search, X, ChevronDown, Check, AlertCircle } from "lucide-react";
 
 import { toast } from "sonner";
@@ -1165,7 +1166,24 @@ export default function ArticleForm({
               <div className="space-y-6">
                 {/* Featured Media */}
                 <div className="space-y-2">
-                  <Label htmlFor="featured-media" className='gap-0'>Featured Media</Label>
+                  <Label className='gap-0'>Featured Media</Label>
+
+                  <MediaDropZone
+                    onUpload={(url) => {
+                      setFeaturedMediaUrl(url);
+                      setMediaPreviewFailed(false);
+                      if (formErrors.featuredMedia) clearFieldError("featuredMedia");
+                    }}
+                    disabled={isLocked}
+                  />
+
+                  <div className="relative flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-muted" />
+                    </div>
+                    <span className="relative bg-background px-2 text-xs text-muted-foreground">or</span>
+                  </div>
+
                   <Input
                     id="featured-media"
                     value={featuredMediaUrl}
@@ -1173,6 +1191,7 @@ export default function ArticleForm({
                     onChange={(e) => {
                       const value = e.target.value;
                       setFeaturedMediaUrl(value);
+                      setMediaPreviewFailed(false);
                       if (formErrors.featuredMedia && value.trim()) {
                         clearFieldError("featuredMedia");
                       }

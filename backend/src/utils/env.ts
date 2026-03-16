@@ -21,5 +21,10 @@ export const env = z
     CLOUDFLARE_PURGE_ENABLED: z.coerce.boolean().optional().default(false),
     PUBLIC_API_BASE_URL: z.string().trim().min(1).optional(),
     PUBLIC_CACHE_PURGE_ORIGINS: z.string().trim().optional(),
+    R2_ACCOUNT_ID: z.string().trim().min(1).optional(),
+    R2_ACCESS_KEY_ID: z.string().trim().min(1).optional(),
+    R2_SECRET_ACCESS_KEY: z.string().trim().min(1).optional(),
+    R2_BUCKET_NAME: z.string().trim().min(1).optional(),
+    R2_PUBLIC_URL: z.string().trim().min(1).optional(),
   })
   .parse(process.env);
