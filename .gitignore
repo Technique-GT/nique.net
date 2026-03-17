@@ -4,6 +4,7 @@ node_modules/
 # Env files
 .env
 .env.*
+.nvmrc
 
 # Logs
 logs/
