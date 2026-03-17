@@ -15,6 +15,7 @@ import tagRoutes from './routes/tag.routes';
 import userRoutes from './routes/user.routes';
 import adminArticleRoutes from './routes/admin.articles.routes';
 import authRoutes from './routes/auth.routes';
+import mediaRoutes from './routes/media.routes';
 import notificationRoutes from './routes/notification.routes';
 
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
@@ -137,8 +138,9 @@ export function createApp() {
   // Apply stricter rate limiting to auth routes
   app.use('/api/auth', authLimiter);
 
-  // Apply write rate limiting to comment creation
+  // Apply write rate limiting to comment creation and media uploads
   app.use('/api/comments', writeLimiter);
+  app.use('/api/admin/media', writeLimiter);
 
   // Serve uploaded files statically
   app.use('/uploads', express.static('uploads'));
@@ -154,6 +156,7 @@ export function createApp() {
   app.use('/api/playlists', playlistRoutes);
   app.use('/api/slivers', sliverRoutes);
   app.use('/api/comments', commentRoutes);
+  app.use('/api/admin/media', mediaRoutes);
   app.use('/api/notifications', notificationRoutes);
 
   // API health check
