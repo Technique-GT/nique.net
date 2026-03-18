@@ -1,7 +1,7 @@
 import { Copy, ExternalLink, ImageIcon, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import type { MediaImage } from '@/services/media'
 
 type MediaCardProps = {
@@ -25,34 +25,35 @@ export function MediaCard({
   formatBytes,
   formatDate,
 }: MediaCardProps) {
+  const fileName = image.key.split('/').pop() || image.key
+
   return (
-    <Card className={selected ? 'ring-2 ring-primary' : ''}>
-      <CardHeader className='pb-2'>
-        <CardTitle className='flex items-center gap-2 text-base'>
-          <ImageIcon className='h-4 w-4' />
-          <span className='truncate text-ellipsis'>{image.key.split('/').pop() || image.key}</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className='space-y-2'>
-        <button
-          type='button'
-          className='w-full'
-          onClick={() => onSelect(image.key)}
-        >
-          <img
-            src={image.url}
-            alt={image.key}
-            className='h-44 w-full rounded-md border object-cover transition-opacity hover:opacity-90'
-            loading='lazy'
-          />
-        </button>
+    <Card className={`overflow-hidden gap-0 py-0 ${selected ? 'ring-2 ring-primary' : ''}`}>
+      <button
+        type='button'
+        className='group/media relative block w-full overflow-hidden text-left'
+        onClick={() => onSelect(image.key)}
+      >
+        <img
+          src={image.url}
+          alt={image.key}
+          className='h-64 w-full object-cover transition-transform duration-300 group-hover/media:scale-[1.03]'
+          loading='lazy'
+        />
+        <div className='pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/80 via-black/45 to-transparent opacity-0 transition-opacity duration-200 group-hover/media:opacity-100 group-focus/media:opacity-100' />
+        <div className='pointer-events-none absolute inset-x-0 bottom-0 flex items-center gap-2 p-3 text-white opacity-0 transition-opacity duration-200 group-hover/media:opacity-100 group-focus/media:opacity-100'>
+          <ImageIcon className='h-4 w-4 shrink-0' />
+          <span className='truncate text-sm font-semibold'>{fileName}</span>
+        </div>
+      </button>
+      <CardContent className='space-y-2 px-4 pt-4'>
         <p className='line-clamp-2 break-all text-xs text-muted-foreground'>{image.key}</p>
         <div className='flex flex-wrap gap-2 text-xs'>
           <Badge variant='secondary'>{formatBytes(image.size)}</Badge>
           <Badge variant='secondary'>{formatDate(image.lastModified || image.uploadedAt)}</Badge>
         </div>
       </CardContent>
-      <CardFooter className='flex gap-2'>
+      <CardFooter className='flex gap-2 px-4 pb-4 pt-3'>
         <Button type='button' size='sm' onClick={() => void onCopy(image.url)}>
           <Copy className='mr-2 h-4 w-4' />
           Copy URL
