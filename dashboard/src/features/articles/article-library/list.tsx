@@ -329,7 +329,7 @@ export default function ArticleList() {
                   </SelectContent>
                 </Select>
 
-                {/* TODO -- Subcategory Filter */}
+                {/* Subcategory Filter */}
                 <Select value={subcategoryFilter} onValueChange={setSubcategoryFilter}>
                   <SelectTrigger className="w-full sm:w-40">
                     <SelectValue placeholder="Filter by subcategory" />
@@ -344,7 +344,7 @@ export default function ArticleList() {
                   </SelectContent>
                 </Select>
 
-                {/* TODO -- Featured Filter */}
+                {/* Featured Filter */}
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="show-featured" 
@@ -354,7 +354,7 @@ export default function ArticleList() {
                   <Label htmlFor="show-featured">Featured</Label>
                 </div>
 
-                {/* TODO -- Sticky Filter */}
+                {/* Sticky Filter */}
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="show-sticky" 

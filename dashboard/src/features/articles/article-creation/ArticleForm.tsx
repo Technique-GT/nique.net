@@ -76,6 +76,7 @@ interface ArticleFormProps {
 
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/hooks/use-queries";
+import { withMediaSessionRevalidation } from "@/lib/media-url";
 
 export default function ArticleForm({
   categories,
@@ -119,6 +120,15 @@ export default function ArticleForm({
   const [reviewConfirmOpen, setReviewConfirmOpen] = useState(false);
   const [mediaPreviewFailed, setMediaPreviewFailed] = useState(false);
   const [hideImage, setHideImage] = useState(true);
+  const mediaPreviewNonce = useMemo(
+    () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+    [],
+  );
+
+  const featuredMediaPreviewUrl = useMemo(() => {
+    const trimmed = featuredMediaUrl.trim();
+    return trimmed ? withMediaSessionRevalidation(trimmed, mediaPreviewNonce) : '';
+  }, [featuredMediaUrl, mediaPreviewNonce]);
 
   const isOwner = me?.id === initialArticle?.ownerId;
   const isAdmin = !!me?.isAdmin;
@@ -1235,9 +1245,9 @@ export default function ArticleForm({
                 </Button>
 
                 {!hideImage &&<AspectRatio ratio={16 / 9} className="bg-muted/50 rounded-md overflow-hidden">
-                  {featuredMediaUrl && !mediaPreviewFailed ? (
+                  {featuredMediaPreviewUrl && !mediaPreviewFailed ? (
                     <img
-                      src={featuredMediaUrl}
+                      src={featuredMediaPreviewUrl}
                       className="object-cover h-full w-full"
                       onError={() => setMediaPreviewFailed(true)}
                     />

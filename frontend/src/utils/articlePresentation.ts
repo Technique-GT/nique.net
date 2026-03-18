@@ -1,4 +1,5 @@
 import type { ArticleDocument, User } from '../types/article';
+import { withMediaSessionRevalidation } from './mediaUrl';
 
 const stripHtml = (value: string) =>
   value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -44,8 +45,7 @@ export const getArticleDescription = (article: ArticleDocument) => {
 export const getArticleImage = (article: ArticleDocument) => {
   const media = article.featuredMediaUrl;
   if (media && typeof media === 'string') {
-    // console.log('Article featured media:', media);
-    return media;
+    return withMediaSessionRevalidation(media);
   }
   return null;
 };

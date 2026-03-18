@@ -5,9 +5,11 @@ import mongoose from 'mongoose';
 import { createApp } from '../src/app';
 import Article from '../src/models/Article';
 import Category from '../src/models/Category';
+import MediaAsset from '../src/models/MediaAsset';
 import Tag from '../src/models/Tag';
 import User from '../src/models/User';
 import { CloudflareCacheService } from '../src/services/cloudflare-cache.service';
+import * as r2Utils from '../src/utils/r2';
 
 const app = createApp();
 
@@ -48,9 +50,11 @@ const createPublishedArticleFixture = async () => {
 afterEach(async () => {
   vi.restoreAllMocks();
   await Article.deleteMany({ slug: /^cache-test-/ });
+  await Article.deleteMany({ slug: /^media-delete-test-/ });
   await Category.deleteMany({ slug: /^cache-category-/ });
   await Tag.deleteMany({ slug: /^cache-tag-/ });
   await User.deleteMany({ name: /^Cache Author / });
+  await MediaAsset.deleteMany({ key: /^tests\/media-delete-test-/ });
 });
 
 describe('Article cache behavior', () => {
@@ -119,5 +123,106 @@ describe('Article cache behavior', () => {
 
     expect(res.status).toBe(200);
     expect(purgeEverythingSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('purges the deleted media URL from Cloudflare after successful media deletion', async () => {
+    const suffix = new mongoose.Types.ObjectId().toString().slice(-6);
+    const media = await MediaAsset.create({
+      key: `tests/media-delete-test-${suffix}/My Image.png`,
+      fileName: 'My Image.png',
+      fileNameLower: 'my image.png',
+      url: `https://media.nique.net/tests/media-delete-test-${suffix}/My Image.png`,
+      size: 1024,
+      uploadedAt: new Date(),
+    });
+
+    const deleteFromR2Spy = vi.spyOn(r2Utils, 'deleteFromR2').mockResolvedValue();
+    const purgeUrlsSpy = vi.spyOn(CloudflareCacheService, 'purgeUrls').mockResolvedValue();
+
+    const res = await request(app)
+      .delete(`/api/admin/media/${media._id.toString()}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(deleteFromR2Spy).toHaveBeenCalledTimes(1);
+    expect(deleteFromR2Spy).toHaveBeenCalledWith(media.key);
+    expect(purgeUrlsSpy).toHaveBeenCalledTimes(1);
+    expect(purgeUrlsSpy).toHaveBeenCalledWith([
+      `https://media.nique.net/tests/media-delete-test-${suffix}/My%20Image.png`,
+    ]);
+
+    const deleted = await MediaAsset.findById(media._id).lean();
+    expect(deleted).toBeNull();
+  });
+
+  it('does not purge media URL when delete request has an invalid media id', async () => {
+    const purgeUrlsSpy = vi.spyOn(CloudflareCacheService, 'purgeUrls').mockResolvedValue();
+    const deleteFromR2Spy = vi.spyOn(r2Utils, 'deleteFromR2').mockResolvedValue();
+
+    const res = await request(app)
+      .delete('/api/admin/media/not-a-valid-id')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(400);
+    expect(purgeUrlsSpy).not.toHaveBeenCalled();
+    expect(deleteFromR2Spy).not.toHaveBeenCalled();
+  });
+
+  it('does not purge media URL when image is in use and delete is not confirmed', async () => {
+    const suffix = new mongoose.Types.ObjectId().toString().slice(-6);
+    const ownerId = new mongoose.Types.ObjectId(adminId);
+    const mediaUrl = `https://media.nique.net/tests/media-delete-test-${suffix}/in-use.png`;
+    const media = await MediaAsset.create({
+      key: `tests/media-delete-test-${suffix}/in-use.png`,
+      fileName: 'in-use.png',
+      fileNameLower: 'in-use.png',
+      url: mediaUrl,
+      size: 1024,
+      uploadedAt: new Date(),
+    });
+
+    await Article.create({
+      title: `Media delete usage test ${suffix}`,
+      slug: `media-delete-test-${suffix}`,
+      content: '<p>In use</p>',
+      ownerId,
+      authors: [{ authorId: ownerId, order: 0 }],
+      tagIds: [],
+      featuredMediaUrl: mediaUrl,
+      reviewStatus: 'draft',
+      published: false,
+      allowComments: true,
+      isFeatured: false,
+      isSticky: false,
+      viewCount: 0,
+    });
+
+    const purgeUrlsSpy = vi.spyOn(CloudflareCacheService, 'purgeUrls').mockResolvedValue();
+    const deleteFromR2Spy = vi.spyOn(r2Utils, 'deleteFromR2').mockResolvedValue();
+
+    const res = await request(app)
+      .delete(`/api/admin/media/${media._id.toString()}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(409);
+    expect(purgeUrlsSpy).not.toHaveBeenCalled();
+    expect(deleteFromR2Spy).not.toHaveBeenCalled();
+
+    const stillExists = await MediaAsset.findById(media._id).lean();
+    expect(stillExists).not.toBeNull();
+  });
+
+  it('does not purge media URL when image id does not exist', async () => {
+    const missingId = new mongoose.Types.ObjectId();
+    const purgeUrlsSpy = vi.spyOn(CloudflareCacheService, 'purgeUrls').mockResolvedValue();
+    const deleteFromR2Spy = vi.spyOn(r2Utils, 'deleteFromR2').mockResolvedValue();
+
+    const res = await request(app)
+      .delete(`/api/admin/media/${missingId.toString()}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(404);
+    expect(purgeUrlsSpy).not.toHaveBeenCalled();
+    expect(deleteFromR2Spy).not.toHaveBeenCalled();
   });
 });

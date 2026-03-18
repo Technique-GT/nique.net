@@ -10,7 +10,8 @@ import articleService from "../services/articleService";
 import commentService from "../services/commentService";
 import { ArticleDocument, User, Comment as CommentType } from "../types/article";
 import Seo from "../components/Seo";
-import { getArticleDescription, getArticleImage, getArticleLink } from "../utils/articlePresentation";
+import { getArticleDescription, getArticleLink } from "../utils/articlePresentation";
+import { withMediaSessionRevalidation } from "../utils/mediaUrl";
 
 type DisplayComment = {
   _id: string;
@@ -280,6 +281,14 @@ export default function Article() {
     });
   };
 
+  const featuredMediaNonce = useMemo(
+    () =>
+      `${article?._id ?? "no-article"}-${Date.now().toString(36)}${Math.random()
+        .toString(36)
+        .slice(2, 8)}`,
+    [article?._id]
+  );
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -326,12 +335,16 @@ export default function Article() {
 
   // backend uses tagIds, not tags
   const tagsDisplay = article.tagIds?.map((tag) => tag.name).filter(Boolean).join(" • ");
-  const featuredMedia = article.featuredMediaUrl && typeof article.featuredMediaUrl === "string"
-      ? article.featuredMediaUrl
+  const featuredMedia =
+    article.featuredMediaUrl && typeof article.featuredMediaUrl === "string"
+      ? withMediaSessionRevalidation(article.featuredMediaUrl, featuredMediaNonce)
       : null;
   const articleDescription = getArticleDescription(article).slice(0, 160);
   const canonicalPath = getArticleLink(article);
-  const articleImage = getArticleImage(article) || undefined;
+  const articleImage =
+    article.featuredMediaUrl && typeof article.featuredMediaUrl === "string"
+      ? article.featuredMediaUrl
+      : undefined;
   const toIsoOrUndefined = (value: Date | string | null | undefined) => {
     if (!value) return undefined;
     const date = new Date(value);
