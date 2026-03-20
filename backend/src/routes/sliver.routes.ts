@@ -10,10 +10,7 @@ import { adminMiddleware } from '../middleware/admin.middleware';
 
 const router = express.Router();
 
-const activeSliversQuerySchema = listSliversQuerySchema.extend({
-  active: listSliversQuerySchema.shape.active.default(true),
-});
-router.get('/all', authMiddleware, adminMiddleware, validateQuery(activeSliversQuerySchema), getAllSlivers);
+router.get('/all', authMiddleware, adminMiddleware, validateQuery(listSliversQuerySchema), getAllSlivers);
 
 router.post('/', validateBody(createSliverBodySchema), createSliver);
 

@@ -11,7 +11,6 @@ export type Sliver = {
 export type SliversQuery = {
   page?: number
   limit?: number
-  active?: boolean
   search?: string
   sortBy?: 'createdAt' | 'expiresAt' | 'text'
   sortDir?: 'asc' | 'desc'
@@ -26,9 +25,6 @@ export async function getSlivers(
   query: SliversQuery = {}
 ): Promise<PaginatedResponse<Sliver>> {
   const params: Record<string, string | number | boolean> = { ...query }
-  if (typeof query.active === 'boolean') {
-    params.active = query.active.toString()
-  }
 
   const res = await apiClient.get('/slivers/all', { params })
 

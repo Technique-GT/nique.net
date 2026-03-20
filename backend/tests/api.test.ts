@@ -134,6 +134,27 @@ describe('Users Endpoints', () => {
 
     expect(res.status).toBe(401);
   });
+
+  it('PUT /api/users/:id clears profilePictureUrl when null is provided', async () => {
+    const created = await User.create({
+      name: `Headshot Clear Test ${Date.now()}`,
+      isAdmin: false,
+      profilePictureUrl: 'https://example.com/headshot.png',
+      socialLinks: [],
+    });
+
+    const res = await request(app)
+      .put(`/api/users/${created._id.toString()}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ profilePictureUrl: null });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.profilePictureUrl).toBeUndefined();
+
+    const reloaded = await User.findById(created._id).lean();
+    expect(reloaded?.profilePictureUrl).toBeUndefined();
+  });
 });
 
 describe('Authors Endpoints', () => {
@@ -146,7 +167,7 @@ describe('Authors Endpoints', () => {
       email: `author-api-${Date.now()}@example.com`,
       googleSub: `author-api-sub-${Date.now()}`,
       profilePictureUrl: 'https://example.com/avatar.png',
-      socialLinks: [{ platform: 'x', url: 'https://x.com/author' }],
+      socialLinks: [{ platform: 'instagram', url: 'https://instagram.com/author' }],
     });
 
     const res = await request(app).get(`/api/authors/${encodeURIComponent(uniqueAuthorName)}`);
@@ -174,21 +195,22 @@ describe('Authors Endpoints', () => {
 });
 
 describe('Slivers Endpoints', () => {
-  it('GET /api/slivers returns all slivers (public)', async () => {
-    const res = await request(app).get('/api/slivers');
+  it('GET /api/slivers/all requires authentication', async () => {
+    const res = await request(app).get('/api/slivers/all');
+
+    expect(res.status).toBe(401);
+  });
+
+  it('GET /api/slivers/all returns all slivers for admin', async () => {
+    const res = await request(app)
+      .get('/api/slivers/all')
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toBeInstanceOf(Array);
     expect(res.body.count).toBeDefined();
-  });
-
-  it('GET /api/slivers/active returns only active slivers (public)', async () => {
-    const res = await request(app).get('/api/slivers/active');
-
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data).toBeInstanceOf(Array);
+    expect(res.body.pagination).toBeDefined();
   });
 });
 

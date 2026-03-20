@@ -157,6 +157,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
   try {
     const { id } = req.params;
     const update: any = {};
+    const unset: Record<string, 1> = {};
 
     if (typeof req.body?.name === 'string') {
       update.name = req.body.name.trim();
@@ -167,7 +168,11 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     }
 
     if (typeof req.body?.bio === 'string' || req.body?.bio === null) {
-      update.bio = req.body.bio ?? undefined;
+      if (req.body.bio === null) {
+        unset.bio = 1;
+      } else {
+        update.bio = req.body.bio;
+      }
     }
 
     if (typeof req.body?.isAdmin === 'boolean') {
@@ -177,7 +182,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     if (typeof req.body?.email === 'string' || req.body?.email === null) {
       const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
       if (req.body.email === null) {
-        update.email = undefined;
+        unset.email = 1;
       } else if (!email) {
         res.status(400).json({ success: false, message: 'email cannot be empty' });
         return;
@@ -194,7 +199,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     if (typeof req.body?.googleSub === 'string' || req.body?.googleSub === null) {
       const googleSub = typeof req.body?.googleSub === 'string' ? req.body.googleSub.trim() : '';
       if (req.body.googleSub === null) {
-        update.googleSub = undefined;
+        unset.googleSub = 1;
       } else if (!googleSub) {
         res.status(400).json({ success: false, message: 'googleSub cannot be empty' });
         return;
@@ -209,15 +214,27 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     }
 
     if (typeof req.body?.profilePictureUrl === 'string' || req.body?.profilePictureUrl === null) {
-      const url = typeof req.body.profilePictureUrl === 'string' ? req.body.profilePictureUrl.trim() : '';
-      update.profilePictureUrl = url ? url : undefined;
+      if (req.body.profilePictureUrl === null) {
+        unset.profilePictureUrl = 1;
+      } else {
+        const url = req.body.profilePictureUrl.trim();
+        update.profilePictureUrl = url;
+      }
     }
 
     if (req.body?.socialLinks !== undefined) {
       update.socialLinks = readSocialLinks(req.body.socialLinks);
     }
 
-    const user = await User.findByIdAndUpdate(id, update, { new: true, runValidators: true });
+    const updateOps: Record<string, any> = {};
+    if (Object.keys(update).length > 0) {
+      updateOps.$set = update;
+    }
+    if (Object.keys(unset).length > 0) {
+      updateOps.$unset = unset;
+    }
+
+    const user = await User.findByIdAndUpdate(id, updateOps, { new: true, runValidators: true });
     if (!user) {
       res.status(404).json({ success: false, message: 'User not found' });
       return;
