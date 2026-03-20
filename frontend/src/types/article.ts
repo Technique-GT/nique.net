@@ -37,8 +37,17 @@ export interface User {
   name: string;
   isAdmin?: boolean;
   profilePictureMediaId?: string | Media | null;
+  profilePictureUrl?: string | null;
   bio?: string;
   socialLinks?: Array<{ platform: string; url: string }>;
+}
+
+export interface AuthorProfile {
+  _id: string;
+  name: string;
+  bio?: string;
+  profilePictureUrl?: string;
+  socialLinks: Array<{ platform: string; url: string }>;
 }
 
 // =============================================================================

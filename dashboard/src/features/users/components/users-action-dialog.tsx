@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import { User } from '../data/schema'
 import { useUsers } from '../context/users-context'
 
@@ -32,6 +33,7 @@ const formSchema = z.object({
   isAdmin: z.boolean(),
   email: z.string().trim().email('Please enter a valid email.').optional().or(z.literal('')),
   profilePictureUrl: z.string().optional(),
+  bio: z.string().optional(),
 })
 type UserForm = z.infer<typeof formSchema>
 
@@ -54,12 +56,14 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           isAdmin: currentRow.isAdmin,
           email: currentRow.email || '',
           profilePictureUrl: currentRow.profilePictureUrl || '',
+          bio: currentRow.bio || '',
         }
       : {
           name: '',
           isAdmin: false,
           email: '',
           profilePictureUrl: '',
+          bio: '',
         },
   })
 
@@ -67,6 +71,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
     setSubmitting(true)
     try {
       if (isEdit && currentRow) {
+        const bio = values.bio?.trim()
         const userData = {
           name: values.name.trim(),
           isAdmin: values.isAdmin,
@@ -74,11 +79,13 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           ...(values.profilePictureUrl?.trim()
             ? { profilePictureUrl: values.profilePictureUrl.trim() }
             : {}),
+          bio: bio && bio.length > 0 ? bio : null,
         }
         
         await apiClient.put(`/users/${currentRow._id}`, userData)
       } else {
         // Create user
+        const bio = values.bio?.trim()
         const userData = {
           name: values.name.trim(),
           isAdmin: values.isAdmin,
@@ -86,6 +93,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           ...(values.profilePictureUrl?.trim()
             ? { profilePictureUrl: values.profilePictureUrl.trim() }
             : {}),
+          ...(bio && bio.length > 0 ? { bio } : {}),
         }
 
         await apiClient.post('/users', userData)
@@ -94,8 +102,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
       await refetchUsers()
       form.reset()
       onOpenChange(false)
-    } catch (error) {
-      console.error('Failed to save user:', error)
+    } catch (_error) {
       // You might want to show an error toast here
     } finally {
       setSubmitting(false)
@@ -176,6 +183,25 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                       <Input
                         placeholder='https://cdn.example.com/avatar.jpg'
                         className='col-span-4'
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className='col-span-4 col-start-3' />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='bio'
+                render={({ field }) => (
+                  <FormItem className='grid grid-cols-6 items-start space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='col-span-2 text-right pt-2'>
+                      Bio
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder='Short author bio'
+                        className='col-span-4 min-h-20'
                         {...field}
                       />
                     </FormControl>

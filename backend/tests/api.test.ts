@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import { createApp } from '../src/app';
+import User from '../src/models/User';
 
 const app = createApp();
 
@@ -132,6 +133,43 @@ describe('Users Endpoints', () => {
     const res = await request(app).get('/api/users/000000000000000000000001');
 
     expect(res.status).toBe(401);
+  });
+});
+
+describe('Authors Endpoints', () => {
+  it('GET /api/authors/:authorName returns public author fields', async () => {
+    const uniqueAuthorName = `Author API Test ${Date.now()}`;
+    await User.create({
+      name: uniqueAuthorName,
+      bio: 'A short test bio',
+      isAdmin: false,
+      email: `author-api-${Date.now()}@example.com`,
+      googleSub: `author-api-sub-${Date.now()}`,
+      profilePictureUrl: 'https://example.com/avatar.png',
+      socialLinks: [{ platform: 'x', url: 'https://x.com/author' }],
+    });
+
+    const res = await request(app).get(`/api/authors/${encodeURIComponent(uniqueAuthorName)}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toBeDefined();
+    expect(res.body.data.name).toBe(uniqueAuthorName);
+    expect(res.body.data.bio).toBe('A short test bio');
+    expect(res.body.data.profilePictureUrl).toBe('https://example.com/avatar.png');
+    expect(Array.isArray(res.body.data.socialLinks)).toBe(true);
+
+    // Sensitive fields should not be exposed
+    expect(res.body.data.email).toBeUndefined();
+    expect(res.body.data.googleSub).toBeUndefined();
+    expect(res.body.data.isAdmin).toBeUndefined();
+  });
+
+  it('GET /api/authors/:authorName returns 404 for unknown author', async () => {
+    const res = await request(app).get(`/api/authors/${encodeURIComponent(`missing-author-${Date.now()}`)}`);
+
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
   });
 });
 

@@ -340,6 +340,11 @@ describe('Security: Public Endpoints Remain Accessible', () => {
     expect(res.status).toBe(200);
   });
 
+  it('GET /api/authors/:authorName is public', async () => {
+    const res = await request(app).get('/api/authors/non-existent-author');
+    expect([200, 404]).toContain(res.status);
+  });
+
   it('GET /api/articles/featured is public', async () => {
     const res = await request(app).get('/api/articles/featured');
     expect(res.status).toBe(200);

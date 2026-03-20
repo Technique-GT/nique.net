@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import SuccessTick from "../components/SuccessTick";
 import DOMPurify from "dompurify";
 import Navbar from "../components/Navbar";
@@ -308,22 +308,33 @@ export default function Article() {
     );
   }
 
-  // Extract author names from backend's authors[].authorId shape
-  const authorNames =
-    article.authors?.map((authorEntry) => {
-      const authorId = authorEntry.authorId;
-      if (!authorId) return null;
-      // If populated (User object with name)
-      if (typeof authorId === "object") {
-        const user = authorId as User;
-        return user.name || null;
-      }
-      // If string (shouldn't happen when populated)
-      if (typeof authorId === "string") return authorId;
-      return null;
-    }).filter((name): name is string => Boolean(name)) || [];
+  // Extract authors from backend's authors[].authorId shape.
+  const authorEntries =
+    article.authors
+      ?.map((authorEntry) => {
+        const authorId = authorEntry.authorId;
+        if (!authorId) return null;
 
-  const authorsDisplay = authorNames.length ? authorNames.join(" • ") : "Technique Staff";
+        if (typeof authorId === "object") {
+          const user = authorId as User;
+          if (!user.name) return null;
+          return {
+            name: user.name,
+            href: `/author/${encodeURIComponent(user.name)}`,
+          };
+        }
+
+        if (typeof authorId === "string" && authorId.trim().length > 0) {
+          return {
+            name: authorId,
+            href: `/author/${encodeURIComponent(authorId)}`,
+          };
+        }
+
+        return null;
+      })
+      .filter((entry): entry is { name: string; href: string } => Boolean(entry)) || [];
+  const authorNames = authorEntries.map((author) => author.name);
 
   const publishedDate =
     article.publishedAt &&
@@ -389,7 +400,18 @@ export default function Article() {
           <h3 className="text-4xl font-bold mt-2 mb-1">{article.title}</h3>
           <h4 className="flex flex-wrap mb-2 gap-x-4 text-nique-blue text-lg justify-between">
             <div>
-              <span>{authorsDisplay}</span>
+              {authorEntries.length > 0 ? (
+                authorEntries.map((author, index) => (
+                  <span key={`${author.name}-${index}`} className="inline">
+                    {index > 0 && <span> • </span>}
+                    <Link to={author.href} className="hover:underline">
+                      {author.name}
+                    </Link>
+                  </span>
+                ))
+              ) : (
+                <span>Technique Staff</span>
+              )}
               {publishedDate && <span> • {publishedDate}</span>}
             </div>
             {/* backend uses categoryId (single object), not categories[] */}

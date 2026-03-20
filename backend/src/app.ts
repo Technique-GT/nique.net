@@ -13,6 +13,7 @@ import sliverRoutes from './routes/sliver.routes';
 import subCategoryRoutes from './routes/subCategory.routes';
 import tagRoutes from './routes/tag.routes';
 import userRoutes from './routes/user.routes';
+import authorRoutes from './routes/author.routes';
 import adminArticleRoutes from './routes/admin.articles.routes';
 import authRoutes from './routes/auth.routes';
 import mediaRoutes from './routes/media.routes';
@@ -153,6 +154,7 @@ export function createApp() {
   app.use('/api/sub-categories', subCategoryRoutes);
   app.use('/api/tags', tagRoutes);
   app.use('/api/users', userRoutes);
+  app.use('/api/authors', authorRoutes);
   app.use('/api/playlists', playlistRoutes);
   app.use('/api/slivers', sliverRoutes);
   app.use('/api/comments', commentRoutes);
