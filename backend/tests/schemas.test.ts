@@ -4,6 +4,7 @@ import { listArticlesQuerySchema, publishedArticlesQuerySchema } from '../src/sc
 import { createArticleBodySchema, updateArticleBodySchema } from '../src/schemas/article.mutate.schema';
 import { listCommentsQuerySchema } from '../src/schemas/comment.admin.query.schema';
 import { createCommentBodySchema } from '../src/schemas/comment.schema';
+import { createUserBodySchema, updateUserBodySchema } from '../src/schemas/user.schema';
 
 describe('Zod Schemas', () => {
   describe('feedQuerySchema', () => {
@@ -202,6 +203,48 @@ describe('Zod Schemas', () => {
       });
 
       expect(result.success).toBe(false);
+    });
+  });
+
+  describe('createUserBodySchema', () => {
+    it('accepts instagram and linkedin social links', () => {
+      const result = createUserBodySchema.safeParse({
+        name: 'Test User',
+        socialLinks: [
+          { platform: 'instagram', url: 'https://instagram.com/testuser' },
+          { platform: 'linkedin', url: 'https://linkedin.com/in/testuser' },
+        ],
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects unsupported social platform', () => {
+      const result = createUserBodySchema.safeParse({
+        name: 'Test User',
+        socialLinks: [{ platform: 'twitter', url: 'https://twitter.com/testuser' }],
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects social URL with wrong domain for platform', () => {
+      const result = createUserBodySchema.safeParse({
+        name: 'Test User',
+        socialLinks: [{ platform: 'instagram', url: 'https://linkedin.com/in/testuser' }],
+      });
+
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('updateUserBodySchema', () => {
+    it('accepts profilePictureUrl null for clearing headshot', () => {
+      const result = updateUserBodySchema.safeParse({
+        profilePictureUrl: null,
+      });
+
+      expect(result.success).toBe(true);
     });
   });
 });

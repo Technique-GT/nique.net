@@ -3,11 +3,35 @@ import mongoose from 'mongoose';
 import User from '../models/User';
 import { safeRegex, safeErrorResponse } from '../utils/security';
 
+const SOCIAL_PLATFORM_HOSTS: Record<'instagram' | 'linkedin', string> = {
+  instagram: 'instagram.com',
+  linkedin: 'linkedin.com',
+};
+
+const isAllowedSocialUrl = (rawUrl: string, platform: keyof typeof SOCIAL_PLATFORM_HOSTS): boolean => {
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+    const hostname = parsed.hostname.toLowerCase();
+    const expected = SOCIAL_PLATFORM_HOSTS[platform];
+    return hostname === expected || hostname.endsWith(`.${expected}`);
+  } catch {
+    return false;
+  }
+};
+
 const readSocialLinks = (value: any): Array<{ platform: string; url: string }> => {
   if (!Array.isArray(value)) return [];
   return value
-    .map((v) => ({ platform: typeof v?.platform === 'string' ? v.platform.trim() : '', url: typeof v?.url === 'string' ? v.url.trim() : '' }))
-    .filter((v) => v.platform.length > 0 && v.url.length > 0);
+    .map((v) => ({
+      platform: typeof v?.platform === 'string' ? v.platform.trim().toLowerCase() : '',
+      url: typeof v?.url === 'string' ? v.url.trim() : '',
+    }))
+    .filter((v): v is { platform: 'instagram' | 'linkedin'; url: string } =>
+      (v.platform === 'instagram' || v.platform === 'linkedin') &&
+      v.url.length > 0 &&
+      isAllowedSocialUrl(v.url, v.platform)
+    );
 };
 
 export const getUsers = async (req: Request, res: Response): Promise<void> => {
