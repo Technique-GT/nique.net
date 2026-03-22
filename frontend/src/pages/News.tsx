@@ -14,18 +14,21 @@ import Spinner from '../components/Spinner';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
 import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
 
-// Helper to process raw articles into page sections
 const processNewsArticles = (allNewsArticles: ArticleDocument[]) => {
-    const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
-        getArticleTimestamp(b) - getArticleTimestamp(a);
+    const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) => getArticleTimestamp(b) - getArticleTimestamp(a);
 
     const stickyPosts = allNewsArticles.filter((article) => article.isSticky).sort(sortByPublishedDesc);
     const featuredPosts = allNewsArticles.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
     const nonStickyPosts = allNewsArticles.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
     const orderedNews = [...stickyPosts, ...nonStickyPosts];
 
-    const justIn = stickyPosts[0] ?? orderedNews[0] ?? null;
-    const featured = featuredPosts.find((article) => getArticleId(article) !== getArticleId(justIn)) ?? null;
+    // Set Featured article first before JustIn
+    const featured = featuredPosts[0] ?? stickyPosts[0] ?? orderedNews[0] ?? null;
+    const featuredId = featured ? getArticleId(featured) : null;
+    const justIn = stickyPosts.find((a) => getArticleId(a) !== featuredId) ??
+        featuredPosts.find((a) => getArticleId(a) !== featuredId) ??
+        orderedNews.find((a) => getArticleId(a) !== featuredId) ??
+        null;
     const recentSelection = [justIn, featured].filter(Boolean) as ArticleDocument[];
     const recentIds = new Set(recentSelection.map(getArticleId));
     const sideNewsArticles = orderedNews.filter((article) => !recentIds.has(getArticleId(article))).slice(0, 5);
@@ -150,8 +153,8 @@ function News() {
                 <div>
                     {/* Main */}
                     <div className='flex flex-col gap-4 h-[80vh]'>
-                        {recentNews[1] && <JustInBlock article={recentNews[1]} />}
-                        {recentNews[0] && <FeaturedStory article={recentNews[0]} priority={true} />}
+                        {recentNews[0] && <JustInBlock article={recentNews[0]} />}
+                        {recentNews[1] && <FeaturedStory article={recentNews[1]} priority={true} />}
                     </div>
 
                     <hr className='my-3' />
