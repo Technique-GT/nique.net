@@ -5,9 +5,10 @@ import { getArticleAuthorName, getArticleDescription, getArticleImage, getArticl
 interface SideArticleProps extends ArticleListProps {
     hasBreak?: boolean;
     hasDesc?: boolean;
+    aspectRatio?: String;
 }
 
-function SideArticle({ articles, hasBreak = true, hasDesc = false }: SideArticleProps ) {
+function SideArticle({ articles, hasBreak = true, hasDesc = false, aspectRatio = "" }: SideArticleProps ) {
     const navigate = useNavigate();
     return (
         <div className='w-full'>
@@ -29,7 +30,7 @@ function SideArticle({ articles, hasBreak = true, hasDesc = false }: SideArticle
                                 src={image}
                                 loading="lazy"
                                 alt={article.title}
-                                className='aspect-square w-full rounded-md object-cover col-span-1'
+                                className={`${aspectRatio ? aspectRatio : "aspect-square"} w-full rounded-md object-cover col-span-1`}
                             />
                         )}
                     </div>

@@ -197,9 +197,10 @@ function News() {
                             ))}
                         </div>
                         <div className='grid col-span-2 gap-4'>
+                            <hr />
                             {(() => {
                                 const articles = cityStateNews.slice(4, 8);
-                                return articles.length ? <SideArticle articles={articles} width='18%'/> : null;
+                                return articles.length ? <SideArticle articles={articles} aspectRatio={"aspect-3/2"}/> : null;
                             })()}
                         </div>
                     </div>
