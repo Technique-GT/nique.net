@@ -189,6 +189,7 @@ function Life() {
                             ))}
                         </div>
                         <div className='grid col-span-2 gap-4'>
+                            <hr />
                             {(() => {
                                 const articles = rsos.slice(4, 8);
                                 return articles.length ? <SideArticle articles={articles} aspectRatio={"aspect-3/2"}/> : null;
