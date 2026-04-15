@@ -1,6 +1,4 @@
-import { SetStateAction, useEffect, useRef, useState } from "react";
-// import VerticalAd from "./VerticalAd";
-// import MockAd from '../assets/mock_advertisement.jpg';
+import { SetStateAction, useRef, useState } from "react";
 import PrintIssues from '../assets/print_issues.png';
 import { Categories } from "../types/categories";
 import { createSliver } from "../services/sliverService";
@@ -13,15 +11,6 @@ function SideWidget() {
     const [sliverSubmitted, setSliverSubmitted] = useState<'idle' | 'success' | 'error'>('idle');
     const wordCount = text.length;
     const sliverResetTimeout = useRef<number | null>(null);
-    const storyResetTimeout = useRef<number | null>(null);
-
-    useEffect(() => {
-        return () => {
-            if (storyResetTimeout.current) {
-                clearTimeout(storyResetTimeout.current);
-            }
-        };
-    }, []);
 
     const handleChange = (event: { target: { value: SetStateAction<string>; }; }) => {
         setText(event.target.value);
@@ -49,11 +38,10 @@ function SideWidget() {
             setSliverSubmitted('success');
             setText('');
             sliverResetTimeout.current = window.setTimeout(() => {
-                // setStoryModalActive(false);
                 setSliverSubmitted('idle');
             }, 1200);
         } catch (error) {
-            // console.error('Failed to submit sliver', error);
+            console.error('Failed to submit sliver', error);
             setSliverSubmitted('error');
         } finally {
             setIsSliverSubmitting(false);

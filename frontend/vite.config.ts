@@ -12,7 +12,7 @@ export default defineConfig({
     strictPort: true,
   },
   plugins: [
-    tailwindcss() as any,
+    tailwindcss(),
     react()
   ],
   build: {

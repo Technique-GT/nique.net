@@ -63,8 +63,14 @@ const SearchPage = () => {
 
         // Services now return unwrapped data directly
         setResults(response || []);
-      } catch (err: any) {
-        if (!isMounted || controller.signal.aborted || err?.code === "ERR_CANCELED") {
+      } catch (err: unknown) {
+        const isCanceledError =
+          typeof err === "object" &&
+          err !== null &&
+          "code" in err &&
+          (err as { code?: string }).code === "ERR_CANCELED";
+
+        if (!isMounted || controller.signal.aborted || isCanceledError) {
           return;
         }
         setError("Unable to fetch search results. Please try again.");

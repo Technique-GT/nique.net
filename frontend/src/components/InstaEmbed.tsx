@@ -11,7 +11,7 @@ function InstagramEmbed({ username }: { username: string }) {
 
   return (
     <blockquote 
-      className="instagram-media !min-w-0 !rounded-md"
+      className="instagram-media min-w-0! rounded-md!"
       data-instgrm-permalink={"https://www.instagram.com/"+username+"/?utm_source=ig_embed&utm_campaign=loading"}
       data-instgrm-version="14"
     >
