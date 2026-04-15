@@ -119,9 +119,12 @@ export function createApp() {
     }
   };
 
-  if (env.CLIENT_URL) {
-    allowedOrigins.add(env.CLIENT_URL);
-  }
+  const configuredClientOrigins = (env.CLIENT_URLS ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  configuredClientOrigins.forEach((origin) => allowedOrigins.add(origin));
 
   app.use(
     cors({

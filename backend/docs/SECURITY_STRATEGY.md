@@ -24,7 +24,7 @@ Until the full architecture is implemented:
 
 ## CORS Policy
 *   **Development**: Allows localhost and preview deployments.
-*   **Production**: Strictly enforces `CLIENT_URL` and `APP_BASE_URL` matches. Block requests from unknown origins.
+*   **Production**: Strictly enforces `CLIENT_URLS` and `APP_BASE_URL` matches. Block requests from unknown origins.
 
 ## Error Handling
 *   **Production**: All 500-level errors are masked with generic messages ("Server error", "Error fetching data") to prevent leaking stack traces or database schemas.
