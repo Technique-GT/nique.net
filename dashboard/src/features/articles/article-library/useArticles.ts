@@ -14,9 +14,11 @@ const articlesQueryKey = (params: {
   search?: string; 
   status?: string;
   categoryId?: string;
+  subcategoryId?: string;
+  isFeatured?: boolean;
+  isSticky?: boolean;
   hideDrafts?: boolean;
-}) => 
-  ['admin-articles', params] as const;
+}) => ['admin-articles', params] as const;
 
 export const useArticles = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,6 +26,9 @@ export const useArticles = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [subcategoryFilter, setSubcategoryFilter] = useState("all");
+  const [showFeatured, setShowFeatured] = useState(false);
+  const [showSticky, setShowSticky] = useState(false);
   const [hideDrafts, setHideDrafts] = useState(false);
   const [message, setMessage] = useState<MessageType | null>(null);
   
@@ -99,6 +104,9 @@ export const useArticles = () => {
       search: searchTerm || undefined,
       status: statusFilter !== "all" ? statusFilter : undefined,
       categoryId: categoryFilter !== "all" ? categoryFilter : undefined,
+      subcategoryId: subcategoryFilter !== "all" ? subcategoryFilter : undefined,
+      isFeatured: showFeatured || undefined,
+      isSticky: showSticky || undefined,
       hideDrafts: hideDrafts || undefined,
     }),
     queryFn: async () => {
@@ -108,6 +116,9 @@ export const useArticles = () => {
         search: searchTerm || undefined,
         status: statusFilter !== "all" ? (statusFilter as any) : undefined,
         categoryId: categoryFilter !== "all" ? categoryFilter : undefined,
+        subcategoryId: subcategoryFilter !== "all" ? subcategoryFilter : undefined,
+        isFeatured: showFeatured || undefined,
+        isSticky: showSticky || undefined,
         hideDrafts: hideDrafts || undefined,
       });
       return {
@@ -126,7 +137,7 @@ export const useArticles = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, categoryFilter, hideDrafts]);
+  }, [searchTerm, statusFilter, categoryFilter, subcategoryFilter, showFeatured, showSticky, hideDrafts]);
 
   // Use centralized taxonomy hooks (PERSISTED)
   const { categories: rawCategories, subCategories: rawSubCategories, tags: rawTags } = useTaxonomy();
@@ -208,6 +219,21 @@ export const useArticles = () => {
     [categories],
   );
 
+  const availableSubcategories = useMemo(
+    () =>
+      subcategories.filter((subcategory) => {
+        if (!(typeof subcategory._id === 'string' && subcategory._id.length > 0)) return false;
+        if (categoryFilter === "all") return true;
+        return subcategory.category?._id === categoryFilter;
+      }),
+    [subcategories, categoryFilter],
+  );
+
+  // Reset Subcategory filter to all subcategories on category change
+  useEffect(() => {
+    setSubcategoryFilter("all");
+  }, [categoryFilter]);
+
   // Helper function to get author display name
   const getAuthorName = (author: PopulatedAuthor) => {
     return `${author.firstName} ${author.lastName}`;
@@ -235,11 +261,18 @@ export const useArticles = () => {
     setStatusFilter,
     categoryFilter,
     setCategoryFilter,
+    subcategoryFilter,
+    setSubcategoryFilter,
+    showFeatured,
+    setShowFeatured,
+    showSticky,
+    setShowSticky,
     hideDrafts,
     setHideDrafts,
     message,
     setMessage,
     availableCategories,
+    availableSubcategories,
     categories,
     subcategories,
     tags,

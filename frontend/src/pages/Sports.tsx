@@ -176,7 +176,7 @@ function Sports() {
 
                     <h4 className="font-bold mb-2 text-2xl text-nique-blue">Atlanta</h4>
                     <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
-                        {atlSports.slice(0, 4).map((article) => (
+                        {atlSports.slice(0, 6).map((article) => (
                             <ArticleBlock key={article._id || article.slug} article={article} height='180px' />
                         ))}
                     </div>

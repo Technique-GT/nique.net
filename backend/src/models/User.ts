@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export type SocialLink = {
-  platform: string;
+  platform: 'instagram' | 'linkedin';
   url: string;
 };
 
@@ -17,7 +17,13 @@ export interface IUser extends Document {
 
 const SocialLinkSchema = new Schema<SocialLink>(
   {
-    platform: { type: String, required: true, trim: true },
+    platform: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      enum: ['instagram', 'linkedin'],
+    },
     url: { type: String, required: true, trim: true },
   },
   { _id: false },

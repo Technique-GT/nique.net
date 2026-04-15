@@ -1,12 +1,14 @@
 import {
   IconArticle,
   IconBarrierBlock,
+  IconBooks,
   IconCategory,
   IconChartBar,
   IconLayoutDashboard,
   IconLibrary,
   IconMessage,
   IconMusic,
+  IconPhoto,
   IconSparkles,
   IconTag,
   IconUsers,
@@ -31,7 +33,7 @@ export const sidebarData: SidebarData = {
         {
           title: 'Documentation',
           url: '/documentation',
-          icon: IconLibrary,
+          icon: IconBooks,
         },
         {
           title: 'Staff Members',
@@ -62,6 +64,11 @@ export const sidebarData: SidebarData = {
               url: '/articles/tags',
               icon: IconTag,
             },
+            {
+              title: 'Media Library',
+              url: '/articles/media',
+              icon: IconPhoto,
+            }
           ],
         },
         {

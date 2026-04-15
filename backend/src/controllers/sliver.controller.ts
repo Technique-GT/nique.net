@@ -32,8 +32,7 @@ export const createSliver = async (req: Request, res: Response): Promise<void> =
 
 export const getAllSlivers = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { active, page = 1, limit = 20, search, sortBy, sortDir } = req.query as unknown as {
-      active?: boolean;
+    const { page = 1, limit = 20, search, sortBy, sortDir } = req.query as unknown as {
       page?: number;
       limit?: number;
       search?: string;
@@ -42,11 +41,6 @@ export const getAllSlivers = async (req: Request, res: Response): Promise<void> 
     };
 
     const query: any = {};
-    if (active === true) {
-      query.expiresAt = { $gt: new Date() };
-    } else if (active === false) {
-      query.expiresAt = { $lte: new Date() };
-    }
 
     if (typeof search === 'string' && search.trim().length > 0) {
       const rx = safeRegex(search.trim());

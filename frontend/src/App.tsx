@@ -12,6 +12,7 @@ const Home = lazy(() => import("./pages/Home"));
 const Life = lazy(() => import("./pages/Life"));
 const Article = lazy(() => import("./pages/Article"));
 const Sports = lazy(() => import("./pages/Sports"));
+const AuthorPage = lazy(() => import("./pages/Authors"));
 
 const Opinions = lazy(() => import("./pages/Opinions"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
@@ -84,22 +85,6 @@ function RouteSeo() {
   );
 }
 
-
-// const PROD_TRACKING_ID = "G-Q3NL210D85"; // replace with Technique staff tracking ID. probably want to put in .env file
-// const DEV_TRACKING_ID = "G-Q3NL210D85"; // replace with personal tracking ID to not mess with real user data
-
-// function PageTracker() {
-//   const location = useLocation();
-
-//   useEffect(() => {
-//     ReactGA.send({ hitType: "pageview", page: location.pathname + location.search });
-//   }, [location]);
-
-//   return null;
-// }
-
-
-
 function App() {
   return (
     <Router>
@@ -115,6 +100,7 @@ function App() {
             {/* Public routes */}
             <Route path="/" element={<Home />} />
             <Route path="/life" element={<Life />} />
+            <Route path="/author/:authorName" element={<AuthorPage />} />
             <Route path="/:category/:slug" element={<Article />} />
             <Route path="/:id" element={<Article />} />
             <Route path="/sports" element={<Sports />} />

@@ -90,7 +90,9 @@ const ArticleSchema = new Schema<IArticle>(
 // Canonical indexes (kept in sync with audit script expectations)
 ArticleSchema.index({ slug: 1 }, { unique: true });
 ArticleSchema.index({ published: 1, publishedAt: -1 });
+ArticleSchema.index({ 'authors.authorId': 1, published: 1, publishedAt: -1 });
 ArticleSchema.index({ categoryId: 1, published: 1, publishedAt: -1 });
 ArticleSchema.index({ isFeatured: 1, published: 1, publishedAt: -1 });
+ArticleSchema.index({ featuredMediaUrl: 1 }, { sparse: true });
 
 export default mongoose.model<IArticle>('Article', ArticleSchema);

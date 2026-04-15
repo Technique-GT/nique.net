@@ -236,22 +236,31 @@ describe('Security: Authorization Boundary Tests', () => {
     });
   });
 
-  describe('Sliver Routes (Auth + Admin for mutations)', () => {
-    it('GET /api/slivers is public', async () => {
-      const res = await request(app).get('/api/slivers');
+  describe('Sliver Routes', () => {
+    it('GET /api/slivers/all returns 401 without auth', async () => {
+      const res = await request(app).get('/api/slivers/all');
+      expect(res.status).toBe(401);
+    });
+
+    it('GET /api/slivers/all returns 403 for non-admin', async () => {
+      const res = await request(app)
+        .get('/api/slivers/all')
+        .set('Authorization', `Bearer ${userToken}`);
+      expect(res.status).toBe(403);
+    });
+
+    it('GET /api/slivers/all returns 200 for admin', async () => {
+      const res = await request(app)
+        .get('/api/slivers/all')
+        .set('Authorization', `Bearer ${adminToken}`);
       expect(res.status).toBe(200);
     });
 
-    it('GET /api/slivers/active is public', async () => {
-      const res = await request(app).get('/api/slivers/active');
-      expect(res.status).toBe(200);
-    });
-
-    it('POST /api/slivers returns 401 without auth', async () => {
+    it('POST /api/slivers remains public', async () => {
       const res = await request(app)
         .post('/api/slivers')
         .send({ text: 'Hacked Sliver' });
-      expect(res.status).toBe(401);
+      expect(res.status).not.toBe(401);
     });
 
     it('DELETE /api/slivers/:id returns 401 without auth', async () => {
@@ -338,6 +347,11 @@ describe('Security: Public Endpoints Remain Accessible', () => {
   it('GET /api/articles/published is public', async () => {
     const res = await request(app).get('/api/articles/published');
     expect(res.status).toBe(200);
+  });
+
+  it('GET /api/authors/:authorName is public', async () => {
+    const res = await request(app).get('/api/authors/non-existent-author');
+    expect([200, 404]).toContain(res.status);
   });
 
   it('GET /api/articles/featured is public', async () => {

@@ -7,6 +7,9 @@ export const listArticlesQuerySchema = z.object({
   search: z.string().trim().min(1).optional(),
   status: z.enum(['published', 'draft', 'in_review', 'changes_requested']).optional(),
   categoryId: objectIdString.optional(),
+  subcategoryId: objectIdString.optional(),
+  isFeatured: z.coerce.boolean().optional(),
+  isSticky: z.coerce.boolean().optional(),
   hideDrafts: z.coerce.boolean().optional(),
 });
 

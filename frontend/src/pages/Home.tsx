@@ -32,14 +32,17 @@ function Home() {
         const featuredSorted = featuredArticles.filter((article) => article.isFeatured).sort(sortByPublishedDesc);
         const latestFeatured = featuredSorted[0] ?? null;
         const featuredId = latestFeatured ? getArticleId(latestFeatured) : null;
-        const stickyIds = new Set(stickySorted.map(getArticleId));
+        const mainSet = new Set(stickySorted.map(getArticleId));
+        if (featuredId) {
+            mainSet.add(featuredId);
+        }
         const nonStickyRecent = recentArticlesData
-            .filter((article) => !stickyIds.has(getArticleId(article)))
+            .filter((article) => !mainSet.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
         const sortedRecent = [...stickySorted, ...nonStickyRecent].filter(
             (article) => getArticleId(article) !== featuredId
         );
-        const recentIds = new Set(sortedRecent.map(getArticleId));
+        const recentIds = new Set([...mainSet, ...sortedRecent.map(getArticleId)]);
         const filterAndSort = (articles: ArticleDocument[]) =>
             articles.filter((article) => !recentIds.has(getArticleId(article))).sort(sortByPublishedDesc);
 
@@ -74,7 +77,6 @@ function Home() {
             setError(null);
 
             try {
-                // Services now return unwrapped data directly
                 const categories = await articleService.fetchCategories(50, controller.signal);
 
                 const findCategoryId = (name: string) => {

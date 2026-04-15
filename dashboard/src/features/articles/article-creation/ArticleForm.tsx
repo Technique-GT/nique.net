@@ -29,7 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { MediaDropZone } from "@/components/media-drop-zone";
-import { Info, Search, X, ChevronDown, Check, AlertCircle } from "lucide-react";
+import { Info, Search, X, ChevronDown, Check, AlertCircle, ImagePlus } from "lucide-react";
 
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/authStore";
@@ -76,6 +76,13 @@ interface ArticleFormProps {
 
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/hooks/use-queries";
+import { withMediaSessionRevalidation } from "@/lib/media-url";
+import { MediaPickerSheet } from "./MediaPickerSheet";
+import { getMediaImages, type MediaImagesResponse } from "@/services/media";
+
+const MEDIA_PICKER_PAGE_SIZE = 12;
+const MEDIA_PICKER_STALE_TIME_MS = 5 * 60 * 1000;
+const MEDIA_PICKER_GC_TIME_MS = 15 * 60 * 1000;
 
 export default function ArticleForm({
   categories,
@@ -119,6 +126,16 @@ export default function ArticleForm({
   const [reviewConfirmOpen, setReviewConfirmOpen] = useState(false);
   const [mediaPreviewFailed, setMediaPreviewFailed] = useState(false);
   const [hideImage, setHideImage] = useState(true);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const mediaPreviewNonce = useMemo(
+    () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+    [],
+  );
+
+  const featuredMediaPreviewUrl = useMemo(() => {
+    const trimmed = featuredMediaUrl.trim();
+    return trimmed ? withMediaSessionRevalidation(trimmed, mediaPreviewNonce) : '';
+  }, [featuredMediaUrl, mediaPreviewNonce]);
 
   const isOwner = me?.id === initialArticle?.ownerId;
   const isAdmin = !!me?.isAdmin;
@@ -744,6 +761,42 @@ export default function ArticleForm({
     });
   };
 
+  const handleMediaPickerOpenChange = (open: boolean) => {
+    setMediaPickerOpen(open);
+  };
+
+  const handleOpenMediaPickerFromIcon = () => {
+    if (isLocked) return;
+    setMediaPickerOpen(true);
+  };
+
+  const handlePrefetchMediaPicker = () => {
+    if (isLocked) return;
+    void queryClient.prefetchInfiniteQuery({
+      queryKey: ["media-picker-images", MEDIA_PICKER_PAGE_SIZE, ""],
+      queryFn: ({ pageParam }) =>
+        getMediaImages({
+          cursor: pageParam as string | undefined,
+          limit: MEDIA_PICKER_PAGE_SIZE,
+          q: "",
+        }),
+      initialPageParam: undefined as string | undefined,
+      getNextPageParam: (lastPage: MediaImagesResponse) =>
+        lastPage.pagination.hasMore ? (lastPage.pagination.nextCursor ?? undefined) : undefined,
+      staleTime: MEDIA_PICKER_STALE_TIME_MS,
+      gcTime: MEDIA_PICKER_GC_TIME_MS,
+    });
+  };
+
+  const handleMediaPickerSelect = (url: string) => {
+    setFeaturedMediaUrl(url);
+    setMediaPreviewFailed(false);
+    if (formErrors.featuredMedia) {
+      clearFieldError("featuredMedia");
+    }
+    setMediaPickerOpen(false);
+  };
+
   // Author selection functions
   const handleAuthorSearch = (searchTerm: string) => {
     setAuthorSearch(searchTerm);
@@ -1184,28 +1237,52 @@ export default function ArticleForm({
                     <span className="relative bg-background px-2 text-xs text-muted-foreground">or</span>
                   </div>
 
-                  <Input
-                    id="featured-media"
-                    value={featuredMediaUrl}
-                    disabled={isLocked}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setFeaturedMediaUrl(value);
-                      setMediaPreviewFailed(false);
-                      if (formErrors.featuredMedia && value.trim()) {
-                        clearFieldError("featuredMedia");
-                      }
-                    }}
-                    placeholder="Paste featured media URL"
-                    className={cn(
-                      formErrors.featuredMedia && "border-destructive focus-visible:ring-destructive"
-                    )}
-                    aria-invalid={Boolean(formErrors.featuredMedia)}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="featured-media"
+                      value={featuredMediaUrl}
+                      disabled={isLocked}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFeaturedMediaUrl(value);
+                        setMediaPreviewFailed(false);
+                        if (formErrors.featuredMedia && value.trim()) {
+                          clearFieldError("featuredMedia");
+                        }
+                      }}
+                      placeholder="Paste featured media URL"
+                      className={cn(
+                        "pr-11",
+                        formErrors.featuredMedia && "border-destructive focus-visible:ring-destructive"
+                      )}
+                      aria-invalid={Boolean(formErrors.featuredMedia)}
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onMouseEnter={handlePrefetchMediaPicker}
+                      onFocus={handlePrefetchMediaPicker}
+                      onClick={handleOpenMediaPickerFromIcon}
+                      disabled={isLocked}
+                      className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                      aria-label="Open media picker"
+                    >
+                      <ImagePlus className="h-4 w-4" />
+                    </Button>
+                  </div>
                   
                   {formErrors.featuredMedia && (
                     <p className="text-xs text-destructive">{formErrors.featuredMedia}</p>
                   )}
+
+                  <MediaPickerSheet
+                    open={mediaPickerOpen}
+                    onOpenChange={handleMediaPickerOpenChange}
+                    onSelect={handleMediaPickerSelect}
+                    disabled={isLocked}
+                  />
                 </div>
                 
                 {/* Image Caption */}
@@ -1224,30 +1301,31 @@ export default function ArticleForm({
                   />
                 </div>
 
+                {/* Image preview */}
                 <div className='space-y-2'>
-                <Button
-                  type="button"
-                  variant='link'
-                  onClick={() => setHideImage((prev) => !prev)}
-                  className="text-xs p-0 m-0 bg-transparent border-0 shadow-none hover:underline"
-                >
-                  {hideImage ? "Show Preview" : "Hide Preview"}
-                </Button>
+                  <Button
+                    type="button"
+                    variant='link'
+                    onClick={() => setHideImage((prev) => !prev)}
+                    className="text-xs p-0 m-0 bg-transparent border-0 shadow-none hover:underline"
+                  >
+                    {hideImage ? "Show Preview" : "Hide Preview"}
+                  </Button>
 
-                {!hideImage &&<AspectRatio ratio={16 / 9} className="bg-muted/50 rounded-md overflow-hidden">
-                  {featuredMediaUrl && !mediaPreviewFailed ? (
-                    <img
-                      src={featuredMediaUrl}
-                      className="object-cover h-full w-full"
-                      onError={() => setMediaPreviewFailed(true)}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
-                      <Image className="w-6 h-6" />
-                      <span className="ml-2">Featured media preview</span>
-                    </div>
-                  )}
-                </AspectRatio>}
+                  {!hideImage && <AspectRatio ratio={16 / 9} className="bg-muted/50 rounded-md overflow-hidden">
+                    {featuredMediaPreviewUrl && !mediaPreviewFailed ? (
+                      <img
+                        src={featuredMediaPreviewUrl}
+                        className="object-cover h-full w-full"
+                        onError={() => setMediaPreviewFailed(true)}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-muted-foreground">
+                        <Image className="w-6 h-6" />
+                        <span className="ml-2">Featured media preview</span>
+                      </div>
+                    )}
+                  </AspectRatio>}
                 </div>
 
                 {/* New Featured and Sticky Controls */}

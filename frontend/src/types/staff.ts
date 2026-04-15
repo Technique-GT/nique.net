@@ -45,13 +45,13 @@ export const staff: Staff[] = [
     {
         name: "Jack Elliott",
         role: "Sports Editor",
-        email: "", // no email address provided
+        email: "sports@nique.net", // no email address provided
         contact: null
     },
     {
         name: "Parker Avery",
         role: "Life Editor",
-        email: "", // no email address provided
+        email: "life@nique.net", // no email address provided
         contact: null
     },
     {

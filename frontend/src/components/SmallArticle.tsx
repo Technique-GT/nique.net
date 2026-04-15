@@ -10,7 +10,7 @@ function SmallArticle({ articles, direction }: SmallArticleProps) {
     const navigate = useNavigate();
     return (
         <div>
-            {articles.slice(0, 10).map((article, index) => {
+            {articles.map((article, index) => {
                 const link = getArticleLink(article);
                 const image = getArticleImage(article);
                 const author = getArticleAuthorName(article);
@@ -30,7 +30,7 @@ function SmallArticle({ articles, direction }: SmallArticleProps) {
                                 loading="lazy"
                                 decoding="async"
                                 alt={article.title}
-                                className={`${direction === "right" ? "" : "order-first"} w-[128px] border-0 aspect-3/2 rounded-md object-cover`} 
+                                className={`${direction === "right" ? "" : "order-first"} w-32 border-0 aspect-3/2 rounded-md object-cover`} 
                             />
                         }
                     </div>

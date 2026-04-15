@@ -25,7 +25,7 @@ const processOpinionArticles = (allOpinions: ArticleDocument[]) => {
         ? orderedOpinion.filter((article) => getArticleId(article) !== getArticleId(featured))
         : orderedOpinion;
     const recentSelection = [featured, ...orderedWithoutFeatured].filter(Boolean) as ArticleDocument[];
-    const recentIds = new Set(recentSelection.slice(0, 6).map(getArticleId));
+    const recentIds = new Set(recentSelection.slice(0,1).map(getArticleId));
 
     const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
         articles
@@ -140,14 +140,9 @@ function Opinions() {
         <div className='max-w-[95%] md:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
             <div className='w-full min-h-screen'>
                 {/* Main */}
-                <div className='grid gap-5 grid-cols-1 lg:grid-cols-[70%_auto] lg:grid-rows-4 w-full h-[80vh]'>
+                <div className='grid gap-5 grid-cols-1 w-full h-[80vh]'>
                     <div className='flex flex-col gap-4 order-first row-span-4'>
                         {recentOpinionArticles[0] && <FeaturedStory article={recentOpinionArticles[0]} priority={true} />}
-                    </div>
-                    <div className='flex flex-col gap-4 row-span-4'>
-                        {recentOpinionArticles.slice(1, 6).map((article) => (
-                            <ArticleBlock key={article._id || article.slug} article={article} height='100%' />
-                        ))}
                     </div>
                 </div>
 
@@ -186,7 +181,7 @@ function Opinions() {
             <div className='flex flex-col gap-4'>
                 <h4 className="font-bold text-2xl text-nique-blue">Letters to the Editor</h4>
                 <hr />
-                <SmallArticle articles={lettersArticles} direction="right" />
+                <SmallArticle articles={lettersArticles.slice(0,10)} direction="right" />
                 
             </div>
         </div>

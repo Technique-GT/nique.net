@@ -6,6 +6,9 @@ export type AdminArticlesQuery = {
   search?: string
   status?: 'published' | 'draft' | 'in_review' | 'changes_requested'
   categoryId?: string
+  subcategoryId?: string
+  isFeatured?: boolean
+  isSticky?: boolean
   hideDrafts?: boolean
 }
 
@@ -45,6 +48,9 @@ export async function getAdminArticlesPage(query: AdminArticlesQuery = {}): Prom
   const search = query.search
   const status = query.status
   const categoryId = query.categoryId
+  const subcategoryId = query.subcategoryId
+  const isFeatured = query.isFeatured
+  const isSticky = query.isSticky
   const hideDrafts = query.hideDrafts
 
   const res = await apiClient.get('/admin/articles', {
@@ -54,6 +60,9 @@ export async function getAdminArticlesPage(query: AdminArticlesQuery = {}): Prom
       ...(search ? { search } : {}),
       ...(status ? { status } : {}),
       ...(categoryId ? { categoryId } : {}),
+      ...(subcategoryId ? { subcategoryId } : {}),
+      ...(typeof isFeatured === 'boolean' ? { isFeatured } : {}),
+      ...(typeof isSticky === 'boolean' ? { isSticky } : {}),
       ...(hideDrafts ? { hideDrafts } : {}),
     },
   })

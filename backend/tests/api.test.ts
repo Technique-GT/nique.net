@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import { createApp } from '../src/app';
+import User from '../src/models/User';
 
 const app = createApp();
 
@@ -133,24 +134,83 @@ describe('Users Endpoints', () => {
 
     expect(res.status).toBe(401);
   });
+
+  it('PUT /api/users/:id clears profilePictureUrl when null is provided', async () => {
+    const created = await User.create({
+      name: `Headshot Clear Test ${Date.now()}`,
+      isAdmin: false,
+      profilePictureUrl: 'https://example.com/headshot.png',
+      socialLinks: [],
+    });
+
+    const res = await request(app)
+      .put(`/api/users/${created._id.toString()}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ profilePictureUrl: null });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.profilePictureUrl).toBeUndefined();
+
+    const reloaded = await User.findById(created._id).lean();
+    expect(reloaded?.profilePictureUrl).toBeUndefined();
+  });
+});
+
+describe('Authors Endpoints', () => {
+  it('GET /api/authors/:authorName returns public author fields', async () => {
+    const uniqueAuthorName = `Author API Test ${Date.now()}`;
+    await User.create({
+      name: uniqueAuthorName,
+      bio: 'A short test bio',
+      isAdmin: false,
+      email: `author-api-${Date.now()}@example.com`,
+      googleSub: `author-api-sub-${Date.now()}`,
+      profilePictureUrl: 'https://example.com/avatar.png',
+      socialLinks: [{ platform: 'instagram', url: 'https://instagram.com/author' }],
+    });
+
+    const res = await request(app).get(`/api/authors/${encodeURIComponent(uniqueAuthorName)}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toBeDefined();
+    expect(res.body.data.name).toBe(uniqueAuthorName);
+    expect(res.body.data.bio).toBe('A short test bio');
+    expect(res.body.data.profilePictureUrl).toBe('https://example.com/avatar.png');
+    expect(Array.isArray(res.body.data.socialLinks)).toBe(true);
+
+    // Sensitive fields should not be exposed
+    expect(res.body.data.email).toBeUndefined();
+    expect(res.body.data.googleSub).toBeUndefined();
+    expect(res.body.data.isAdmin).toBeUndefined();
+  });
+
+  it('GET /api/authors/:authorName returns 404 for unknown author', async () => {
+    const res = await request(app).get(`/api/authors/${encodeURIComponent(`missing-author-${Date.now()}`)}`);
+
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
 });
 
 describe('Slivers Endpoints', () => {
-  it('GET /api/slivers returns all slivers (public)', async () => {
-    const res = await request(app).get('/api/slivers');
+  it('GET /api/slivers/all requires authentication', async () => {
+    const res = await request(app).get('/api/slivers/all');
+
+    expect(res.status).toBe(401);
+  });
+
+  it('GET /api/slivers/all returns all slivers for admin', async () => {
+    const res = await request(app)
+      .get('/api/slivers/all')
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toBeInstanceOf(Array);
     expect(res.body.count).toBeDefined();
-  });
-
-  it('GET /api/slivers/active returns only active slivers (public)', async () => {
-    const res = await request(app).get('/api/slivers/active');
-
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data).toBeInstanceOf(Array);
+    expect(res.body.pagination).toBeDefined();
   });
 });
 
