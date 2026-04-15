@@ -22,10 +22,12 @@ export function Notifications() {
   const fetchNotifications = async () => {
     try {
       const res = await getNotifications(1, 10)
-      setNotifications(res.data)
-      setUnreadCount(res.metadata.unreadCount)
+      setNotifications(Array.isArray(res?.data) ? res.data : [])
+      setUnreadCount(typeof res?.metadata?.unreadCount === 'number' ? res.metadata.unreadCount : 0)
     } catch (error) {
       console.error("Failed to fetch notifications", error)
+      setNotifications([])
+      setUnreadCount(0)
     }
   }
 
