@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 
 function InstagramEmbed({ username }: { username: string }) {
   useEffect(() => {
-    // test push
     // Load Instagram embed script dynamically
     const script = document.createElement('script');
     script.src = "//www.instagram.com/embed.js";
