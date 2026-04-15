@@ -34,8 +34,15 @@ const statusMap: Record<string, string> = {
   changes_requested: 'Changes Requested',
 }
 
-function prettifyStatus(status: string) {
-  return statusMap[status] || status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+function prettifyStatus(status?: string) {
+  const safeStatus = typeof status === 'string' && status.trim().length > 0 ? status : 'unknown'
+  return (
+    statusMap[safeStatus] ||
+    safeStatus
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  )
 }
 
 export function ArticleTable({
