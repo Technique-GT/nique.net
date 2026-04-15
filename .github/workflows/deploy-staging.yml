@@ -78,7 +78,7 @@ jobs:
             fi
 
             echo "Triggering $name staging deploy hook..."
-            code="$(curl --silent --show-error --location --max-time 20 --retry 2 \
+            code="$(curl --silent --show-error --location --request POST --max-time 20 --retry 2 \
               --output /dev/null --write-out "%{http_code}" "$url")"
 
             if [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
