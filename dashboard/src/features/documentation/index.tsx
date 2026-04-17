@@ -170,7 +170,7 @@ Legend: no frontend in-memory article/category cache`}
                       Cloudflare cache hit rate at February 2026 averages 21.43k cached requests out of 1.72M total requests per month, putting the system at a 1.25% cache hit rate. Long term goal is to improve Cloudflare cache hit rate.
                     </p>
                   <Separator />
-                  <p><i>Tip: The free tier of Render spins down after 15 mins of no inbound requests and may experience cold starts if idle for some time. A cron job is setup to ping the <code>api/health</code> route every 15 minutes, which gives up to 744 hours of uptime per month (31 days). MongoDB's free tier also has limitations: 512MB storage and shared cluster resources, 16MB document size limit. The instance will also go stale if idle for 90 days, requiring a manual restart to regain responsiveness.</i></p>
+                  <p><i>Tip: The free tier of Render spins down after 15 mins of no inbound requests and may experience cold starts if idle for some time. A cron job is setup to ping the <code>/api/health</code> route every 15 minutes, which gives up to 744 hours of uptime per month (31 days). MongoDB's free tier also has limitations: 512MB storage and shared cluster resources, 16MB document size limit. The instance will also go stale if idle for 90 days, requiring a manual restart to regain responsiveness.</i></p>
                 </div>
             </CardContent>
           </Card>
