@@ -112,7 +112,7 @@ export function createApp() {
 
     try {
       const { protocol, hostname } = new URL(origin);
-      if (protocol !== 'https:' && protocol !== 'http:') return false;
+      if (protocol !== 'https:') return false;
       return allowedPreviewHostPatterns.some((pattern) => pattern.test(hostname));
     } catch {
       return false;
