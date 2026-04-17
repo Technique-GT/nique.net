@@ -216,22 +216,26 @@ api-staging.nique.net        -> Render staging backend service`}
               <h1>Branch And Merge Rules</h1>
               <ul className='list-disc space-y-2 pl-4'>
                 <li><code>deploy</code> is the production source branch. No direct pushes.</li>
-                <li>Branch rules: </li>
-                <ul className='list-decimal space-y-2 pl-8'>
-                  <li>Branch is read-only.</li>
-                  <li>Requires PR and 1 approval before merging into <code>deploy</code>.</li>
-                  <li>Staging environments must deploy successfully before merging.</li>
-                  <li>Status checks must pass before merging. See <code>.github/workflows/pr-checks.yml</code></li>
-                  <ul className='list-none space-y-2 pl-8'>
-                    <li><code>npm --prefix backend run lint</code></li>
-                    <li><code>npm --prefix backend run test</code></li>
-                    <li><code>npm --prefix backend run build</code></li>
-                    <li><code>npm --prefix frontend run lint</code></li>
-                    <li><code>npm --prefix frontend run build</code></li>
-                    <li><code>npm --prefix dashboard run lint</code></li>
-                    <li><code>npm --prefix dashboard run build</code></li>
+                <li>
+                  Branch rules:
+                  <ul className='list-decimal space-y-2 pl-8'>
+                    <li>Branch is read-only.</li>
+                    <li>Requires PR and 1 approval before merging into <code>deploy</code>.</li>
+                    <li>Staging environments must deploy successfully before merging.</li>
+                    <li>
+                      Status checks must pass before merging. See <code>.github/workflows/pr-checks.yml</code>
+                      <ul className='list-none space-y-2 pl-8'>
+                        <li><code>npm --prefix backend run lint</code></li>
+                        <li><code>npm --prefix backend run test</code></li>
+                        <li><code>npm --prefix backend run build</code></li>
+                        <li><code>npm --prefix frontend run lint</code></li>
+                        <li><code>npm --prefix frontend run build</code></li>
+                        <li><code>npm --prefix dashboard run lint</code></li>
+                        <li><code>npm --prefix dashboard run build</code></li>
+                      </ul>
+                    </li>
                   </ul>
-                </ul>
+                </li>
                 <li>Use <code>staging</code> as the integration and QA branch for preview builds/staging environments build/deploy from <code>staging</code> branch.</li>
                 <li>Promotion path: <code>{'feature/* -> staging -> deploy'}</code>.</li>
                 <li>Changes merged only to <code>staging</code> do not affect production services until promoted to <code>deploy</code>.</li>
