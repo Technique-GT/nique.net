@@ -45,6 +45,12 @@ export function createApp() {
     crossOriginEmbedderPolicy: false, // Disable for API compatibility
   }));
 
+  // Search engines should not index API responses.
+  app.use((_req, res, next) => {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
+    next();
+  });
+
   // Security: Rate limiting
   const isTest = process.env.NODE_ENV === 'test';
   

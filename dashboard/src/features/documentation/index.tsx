@@ -22,11 +22,11 @@ const navItems = [
   { id: 'content_organization', label: 'Content Organization' },
   { id: 'caching', label: 'Caching' },
   { id: 'staging_branch_protection', label: 'Staging and Branch Protection' },
+  { id: 'crawling_and_indexing', label: 'Crawling and Indexing' },
   { id: 'flows', label: 'Flows' },
   { id: 'misc', label: 'Misc' },
   { id: 'schema', label: 'Schema' },
   { id: 'statuses', label: 'Status Definitions' },
-  { id: 'common-tasks', label: 'Common Tasks' },
   { id: 'faq', label: 'FAQ' },
 ]
 
@@ -188,19 +188,11 @@ Legend: no frontend in-memory article/category cache`}
                 <li><code><a href='https://dashboard-staging.nique.net' target='_blank' rel='noopener noreferrer' className='hover:underline'>dashboard-staging.nique.net</a></code> for dashboard preview.</li>
                 <li><code><a href='https://api-staging.nique.net' target='_blank' rel='noopener noreferrer' className='hover:underline'>api-staging.nique.net</a></code> for the staging backend API.</li>
               </ul>
-              <div className='rounded-lg border bg-muted/30 p-3 text-xs leading-5 text-muted-foreground'>
-                <pre className='whitespace-pre-wrap'>
-{`Recommended mapping
-staging.nique.net            -> Cloudflare Pages frontend staging alias
-dashboard-staging.nique.net  -> Cloudflare Pages dashboard staging alias
-api-staging.nique.net        -> Render staging backend service`}
-                </pre>
-              </div>
 
               <h1>How To Deploy Preview</h1>
               <ol className='list-decimal space-y-2 pl-4'>
                 <li>Merge feature work into <code>staging</code>.</li>
-                <li><code>.github/workflows/staging-smoke-test.yml</code> will wait 5 mins for staging environments to deploy and run smoke test against staging API health and staging site URLs.</li>
+                <li><code>.github/workflows/staging-smoke-test.yml</code> will wait 5 mins for staging environments to deploy and verify staging health/status checks.</li>
                 <li>Ensure deploy hooks auto-trigger backend/frontend/dashboard staging deploys (hooks are POST-triggered).</li>
                 <li>Validate auth, article creation, moderation, and publishing flow in staging dashboard before promotion.</li>
               </ol>
@@ -244,6 +236,106 @@ api-staging.nique.net        -> Render staging backend service`}
               <p><i>
                 Tip: Staging API uses a second free service on Render, avoid keeping it warm continuously; use it during QA windows to reduce instance-hour usage. Each account has 750 free instance hours, depending on the month, you will have either 6 or 30 hours QA/testing windows. Watch instance hours in Render closely and plan usage accordingly.
               </i></p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle id='crawling_and_indexing'>Crawling and Indexing</CardTitle>
+              <CardDescription>
+                This project intentionally keeps only the public news site discoverable in search engines. Dashboard and staging hosts are reachable by URL, but should not be crawled or indexed.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className='space-y-3 text-sm text-muted-foreground dark:text-foreground/80'>
+
+              <h1>Crawl Vs Index</h1>
+              <ul className='list-disc space-y-2 pl-4'>
+                <li><b>Crawling</b> means a bot discovers and fetches a URL.</li>
+                <li><b>Indexing</b> means a search engine stores that URL/page in its search index.</li>
+                <li><code>robots.txt</code> primarily influences crawling behavior for compliant bots.</li>
+                <li><code>noindex</code> (meta tag or <code>X-Robots-Tag</code> header) is the directive that prevents indexing.</li>
+                <li><code>robots.txt</code> is not a security boundary. Private content still requires authentication/authorization.</li>
+              </ul>
+
+              <h1>Host Policy</h1>
+              <div className='rounded-lg border bg-muted/30 p-3 text-xs leading-5 text-muted-foreground'>
+                <pre className='whitespace-pre-wrap'>
+{`INDEXABLE (public news site only)
+nique.net
+www.nique.net
+
+NON-INDEXABLE / NON-CRAWLABLE
+dashboard.nique.net
+dashboard-staging.nique.net
+staging.nique.net
+api-staging.nique.net
+*.pages.dev preview hosts
+*.vercel.app preview hosts`}
+                </pre>
+              </div>
+
+              <h1>Required Controls</h1>
+              <ul className='list-disc space-y-2 pl-4'>
+                <li>Frontend uses <code>VITE_ALLOW_INDEXING=true</code> only for <code>nique.net</code> and <code>www.nique.net</code> production builds.</li>
+                <li>Dashboard should always emit <code>&lt;meta name='robots' content='noindex, nofollow' /&gt;</code>.</li>
+                <li>Non-public hosts should serve <code>robots.txt</code> with <code>Disallow: /</code>.</li>
+                <li>Non-public hosts should return <code>X-Robots-Tag: noindex, nofollow, noarchive, nosnippet</code>.</li>
+              </ul>
+
+              <h1>Cloudflare Rule Setup</h1>
+              <ol className='list-decimal space-y-2 pl-4'>
+                <li>Go to Cloudflare Dashboard → Rules → Overview → Create rule → Response Header Transform Rule.</li>
+                <li>Name the rule clearly (for example: <code>noindex-non-public-hosts</code>).</li>
+                <li>Match only non-public hostnames. Example expression:</li>
+              </ol>
+              <div className='rounded-lg border bg-muted/30 p-3 text-xs leading-5 text-muted-foreground'>
+                <pre className='whitespace-pre-wrap'>
+{`(
+  http.host eq "dashboard.nique.net" or
+  http.host eq "dashboard-staging.nique.net" or
+  http.host eq "staging.nique.net" or
+  http.host eq "api-staging.nique.net" or
+  ends_with(lower(http.host), ".pages.dev") or
+  ends_with(lower(http.host), ".vercel.app")
+)`}
+                </pre>
+              </div>
+              <ol className='list-decimal space-y-2 pl-4'>
+                <li>Set response header:
+                  <code> X-Robots-Tag = noindex, nofollow, noarchive, nosnippet</code>.
+                </li>
+                <li>Keep <code>nique.net</code> and <code>www.nique.net</code> excluded from this rule.</li>
+              </ol>
+
+              <h1>Verification Checklist</h1>
+              <ul className='list-disc space-y-2 pl-4'>
+                <li>For non-public hosts, confirm <code>X-Robots-Tag</code> includes <code>noindex</code>.</li>
+                <li>For non-public hosts, confirm <code>robots.txt</code> contains <code>Disallow: /</code>.</li>
+                <li>For <code>nique.net</code> and <code>www.nique.net</code>, confirm no Cloudflare <code>X-Robots-Tag: noindex</code> header is present.</li>
+              </ul>
+              <div className='rounded-lg border bg-muted/30 p-3 text-xs leading-5 text-muted-foreground'>
+                <pre className='whitespace-pre-wrap'>
+{`# Expected: noindex present
+curl -sI https://dashboard.nique.net | grep -i x-robots-tag
+curl -sI https://dashboard-staging.nique.net | grep -i x-robots-tag
+curl -sI https://staging.nique.net | grep -i x-robots-tag
+
+# Expected: Disallow: /
+curl -s https://dashboard.nique.net/robots.txt
+curl -s https://staging.nique.net/robots.txt
+
+# Expected: no noindex header
+curl -sI https://nique.net | grep -i x-robots-tag
+curl -sI https://www.nique.net | grep -i x-robots-tag`}
+                </pre>
+              </div>
+
+              <h1>If URLs Were Already Indexed</h1>
+              <ol className='list-decimal space-y-2 pl-4'>
+                <li>Use Google Search Console → Indexing → Removals to submit temporary removals for affected prefixes (for example <code>https://dashboard.nique.net/</code>).</li>
+                <li>Keep noindex headers/tags and disallow rules in place so removal becomes durable after recrawl.</li>
+                <li>Use URL Inspection to verify non-public URLs are blocked from indexing and public URLs remain indexable.</li>
+              </ol>
             </CardContent>
           </Card>
 
@@ -370,41 +462,7 @@ api-staging.nique.net        -> Render staging backend service`}
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle id='common-tasks'>Common Tasks</CardTitle>
-              <CardDescription>Shortcuts to frequently used areas.</CardDescription>
-            </CardHeader>
-            <CardContent className='space-y-2 text-sm text-muted-foreground dark:text-foreground/80'>
-              <ul className='list-disc space-y-2 pl-4'>
-                <li>
-                  Review the{' '}
-                  <Link to='/articles' className='text-primary hover:underline'>
-                    Article Library
-                  </Link>{' '}
-                  for recent submissions.
-                </li>
-                <li>
-                  Update{' '}
-                  <Link to='/articles/categories' className='text-primary hover:underline'>
-                    Categories
-                  </Link>{' '}
-                  and{' '}
-                  <Link to='/articles/tags' className='text-primary hover:underline'>
-                    Tags
-                  </Link>{' '}
-                  before publishing.
-                </li>
-                <li>
-                  Check{' '}
-                  <Link to='/comments' className='text-primary hover:underline'>
-                    Comments
-                  </Link>{' '}
-                  for moderation.
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
+          
 
           <Card>
             <CardHeader>

@@ -65,3 +65,60 @@ jobs:
             --output /dev/null --write-out "%{http_code}" "$STAGING_DASHBOARD_URL")"
           echo "Dashboard status: $code"
           test "$code" -ge 200 -a "$code" -lt 400
+
+      - name: Check noindex X-Robots-Tag headers
+        env:
+          STAGING_API_HEALTHCHECK_URL: ${{ secrets.STAGING_API_HEALTHCHECK_URL }}
+          STAGING_FRONTEND_URL: ${{ secrets.STAGING_FRONTEND_URL }}
+          STAGING_DASHBOARD_URL: ${{ secrets.STAGING_DASHBOARD_URL }}
+        run: |
+          check_noindex_header() {
+            local label="$1"
+            local url="$2"
+
+            if [ -z "$url" ]; then
+              echo "Missing URL for $label"
+              exit 1
+            fi
+
+            headers="$(curl --silent --show-error --location --max-time 20 --retry 2 --head "$url" | tr -d '\r')"
+            echo "$label headers:"
+            echo "$headers"
+
+            echo "$headers" | grep -i '^x-robots-tag:' | grep -qi 'noindex' || {
+              echo "Missing noindex X-Robots-Tag for $label ($url)"
+              exit 1
+            }
+          }
+
+          check_noindex_header "API" "$STAGING_API_HEALTHCHECK_URL"
+          check_noindex_header "Frontend" "$STAGING_FRONTEND_URL"
+          check_noindex_header "Dashboard" "$STAGING_DASHBOARD_URL"
+
+      - name: Check staging robots.txt disallow rules
+        env:
+          STAGING_FRONTEND_URL: ${{ secrets.STAGING_FRONTEND_URL }}
+          STAGING_DASHBOARD_URL: ${{ secrets.STAGING_DASHBOARD_URL }}
+        run: |
+          check_robots_disallow_all() {
+            local label="$1"
+            local base_url="$2"
+
+            if [ -z "$base_url" ]; then
+              echo "Missing URL for $label"
+              exit 1
+            fi
+
+            robots_url="${base_url%/}/robots.txt"
+            body="$(curl --silent --show-error --location --max-time 20 --retry 2 "$robots_url")"
+            echo "$label robots.txt from $robots_url:"
+            echo "$body"
+
+            echo "$body" | grep -Eqi '^Disallow:[[:space:]]*/[[:space:]]*$' || {
+              echo "Expected 'Disallow: /' in $label robots.txt ($robots_url)"
+              exit 1
+            }
+          }
+
+          check_robots_disallow_all "Frontend" "$STAGING_FRONTEND_URL"
+          check_robots_disallow_all "Dashboard" "$STAGING_DASHBOARD_URL"
