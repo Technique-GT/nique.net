@@ -10,7 +10,7 @@ export type Notification = {
   title: string
   message: string
   link?: string
-  data?: Record<string, any>
+  data?: Record<string, unknown>
   read: boolean
   createdAt: string
 }

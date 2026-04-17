@@ -13,8 +13,7 @@ export function ContentEditable({
   className,
 }: Props): JSX.Element {
   const [editor] = useLexicalComposerContext()
-  const [isEmpty, setIsEmpty] = useState(true)
-  isEmpty;
+  const [, setIsEmpty] = useState(true)
   const editableRef = useRef<HTMLDivElement | null>(null)
   const [_, setOffsets] = useState({
     top: "0px",
@@ -81,7 +80,7 @@ export function ContentEditable({
           `ContentEditable__root relative block min-h-full overflow-auto px-8 py-4 focus:outline-none`
         }
         aria-placeholder={placeholder}
-        placeholder={(isEditable: boolean) => {isEditable; return null;}}
+        placeholder={(_isEditable: boolean) => null}
       />
   )
 }

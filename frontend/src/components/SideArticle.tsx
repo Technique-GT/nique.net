@@ -5,7 +5,7 @@ import { getArticleAuthorName, getArticleDescription, getArticleImage, getArticl
 interface SideArticleProps extends ArticleListProps {
     hasBreak?: boolean;
     hasDesc?: boolean;
-    aspectRatio?: String;
+    aspectRatio?: string;
 }
 
 function SideArticle({ articles, hasBreak = true, hasDesc = false, aspectRatio = "" }: SideArticleProps ) {

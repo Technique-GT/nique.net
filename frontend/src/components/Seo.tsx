@@ -11,6 +11,8 @@ type SeoProps = {
 };
 
 const SITE_URL = ((import.meta.env.VITE_SITE_URL as string | undefined) || "https://nique.net").replace(/\/+$/, "");
+const INDEXABLE_FRONTEND_HOSTS = new Set(["nique.net", "www.nique.net"]);
+const ALLOW_INDEXING = ((import.meta.env.VITE_ALLOW_INDEXING as string | undefined) || "").toLowerCase() === "true";
 
 const DEFAULT_DESCRIPTION = "Technique is Georgia Tech's independent student newspaper covering campus news, life, sports, entertainment, and opinion.";
 
@@ -41,6 +43,11 @@ const upsertLink = (rel: string, href: string) => {
   element.href = href;
 };
 
+const isIndexableFrontendHost = () => {
+  if (typeof window === "undefined") return false;
+  return INDEXABLE_FRONTEND_HOSTS.has(window.location.hostname.toLowerCase());
+};
+
 function Seo({
   title,
   description = DEFAULT_DESCRIPTION,
@@ -54,11 +61,12 @@ function Seo({
     const canonical = toAbsoluteUrl(canonicalPath) || SITE_URL;
     const imageUrl = toAbsoluteUrl(image);
     const fullTitle = `${title} | Technique`;
+    const canIndex = ALLOW_INDEXING && isIndexableFrontendHost() && !noindex;
 
     document.title = fullTitle;
 
     upsertMeta("name", "description", description);
-    upsertMeta("name", "robots", noindex ? "noindex, nofollow" : "index, follow");
+    upsertMeta("name", "robots", canIndex ? "index, follow" : "noindex, nofollow");
 
     upsertMeta("property", "og:title", fullTitle);
     upsertMeta("property", "og:description", description);

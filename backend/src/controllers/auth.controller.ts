@@ -47,6 +47,14 @@ const isAdminEmailAllowlisted = async (email: string, emailVerified: boolean) =>
   return !!adminUser;
 };
 
+const getPrimaryClientUrl = () => {
+  const raw = process.env.CLIENT_URLS || '';
+  return raw
+    .split(',')
+    .map((value) => value.trim())
+    .find(Boolean);
+};
+
 export const register = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
@@ -221,7 +229,7 @@ export const googleAuthCallback = async (req: Request, res: Response): Promise<v
     if (error) {
       // User likely canceled the login or access was denied.
       // Redirect back to the frontend with the error.
-      const appRedirect = redirect || process.env.CLIENT_URL || process.env.APP_BASE_URL || '/';
+      const appRedirect = redirect || getPrimaryClientUrl() || process.env.APP_BASE_URL || '/';
       const separator = appRedirect.includes('?') ? '&' : '?';
       // Append error param so frontend can show a toast/alert
       res.redirect(`${appRedirect}${separator}error=${encodeURIComponent(error)}`);
@@ -290,7 +298,7 @@ export const googleAuthCallback = async (req: Request, res: Response): Promise<v
     const token = generateToken(user);
     res.cookie('jwt', token, getCookieOptions());
 
-    const appRedirect = redirect || process.env.APP_BASE_URL || '/';
+    const appRedirect = redirect || getPrimaryClientUrl() || process.env.APP_BASE_URL || '/';
     res.redirect(appRedirect);
   } catch (error: any) {
     res.status(500).json(safeErrorResponse('Authentication callback failed', error));

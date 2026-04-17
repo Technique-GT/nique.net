@@ -30,7 +30,7 @@ The server runs on `http://localhost:5050` by default.
 | `GOOGLE_CLIENT_ID` | Yes | - | Google OAuth Client ID |
 | `GOOGLE_CLIENT_SECRET` | Yes | - | Google OAuth Client Secret |
 | `GOOGLE_REDIRECT_URI` | Yes | - | Google OAuth Redirect URI |
-| `CLIENT_URL` | No | `http://localhost:5173` | Frontend URL for CORS |
+| `CLIENT_URLS` | No | `http://localhost:5173,http://localhost:5174` | Comma-separated frontend/dashboard origins for CORS |
 | `NODE_ENV` | No | `development` | Environment mode |
 
 ### Safety Constraint

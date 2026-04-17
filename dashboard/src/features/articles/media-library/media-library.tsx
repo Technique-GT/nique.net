@@ -140,7 +140,7 @@ export default function MediaLibrary() {
           const next = response.data.filter((article) => !existing.has(article._id))
           return [...prev, ...next]
         })
-      } catch (error) {
+      } catch (_error) {
         toast.error('Failed to load article usage for this image')
       } finally {
         setUsageLoading(false)

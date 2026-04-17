@@ -35,6 +35,25 @@ interface SubCategoryUI extends Omit<SubCategory, 'categoryId'> {
   };
 }
 
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (
+    err &&
+    typeof err === "object" &&
+    "response" in err &&
+    typeof (err as { response?: unknown }).response === "object" &&
+    (err as { response?: { data?: unknown } }).response?.data &&
+    typeof (err as { response?: { data?: { message?: unknown } } }).response?.data?.message === "string"
+  ) {
+    return (err as { response?: { data?: { message?: string } } }).response?.data?.message || fallback;
+  }
+
+  if (err instanceof Error && err.message) {
+    return err.message;
+  }
+
+  return fallback;
+};
+
 export default function Categories() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -98,8 +117,8 @@ export default function Categories() {
       }
       resetCategoryForm();
       setIsCategoryDialogOpen(false);
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || `Error ${editingCategory ? 'updating' : 'adding'} category`);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, `Error ${editingCategory ? 'updating' : 'adding'} category`));
     }
   };
 
@@ -129,8 +148,8 @@ export default function Categories() {
       }
       resetSubCategoryForm();
       setIsSubCategoryDialogOpen(false);
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || `Error ${editingSubCategory ? 'updating' : 'adding'} sub-category`);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, `Error ${editingSubCategory ? 'updating' : 'adding'} sub-category`));
     }
   };
 
@@ -139,8 +158,8 @@ export default function Categories() {
     if (!confirm('Are you sure you want to delete this category? This will also delete all associated sub-categories.')) return;
     try {
       await deleteCategory.mutateAsync(category._id);
-    } catch (err: any) {
-      alert(err?.response?.data?.message || 'Error deleting category');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Error deleting category'));
     }
   };
 
@@ -149,8 +168,8 @@ export default function Categories() {
     if (!confirm('Are you sure you want to delete this sub-category?')) return;
     try {
       await deleteSubCategory.mutateAsync(subCategory._id);
-    } catch (err: any) {
-      alert(err?.response?.data?.message || 'Error deleting sub-category');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Error deleting sub-category'));
     }
   };
 

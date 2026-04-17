@@ -16,6 +16,10 @@ import {
   useDeleteComment,
 } from "@/hooks/use-queries";
 
+type CommentArticleRef = {
+  articleId?: string | { title?: string } | null;
+};
+
 export default function CommentsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -33,8 +37,7 @@ export default function CommentsManagement() {
     try {
       await updateCommentStatusMutation.mutateAsync({ id, approved });
       toast.success(approved ? "Comment approved" : "Comment unapproved");
-    } catch (error) {
-      console.error('Error updating comment status:', error);
+    } catch (_error) {
       toast.error("Failed to update comment status");
     }
   };
@@ -44,15 +47,14 @@ export default function CommentsManagement() {
     try {
       await deleteCommentMutation.mutateAsync(id);
       toast.success("Comment deleted");
-    } catch (error) {
-      console.error('Error deleting comment:', error);
+    } catch (_error) {
       toast.error("Failed to delete comment");
     }
   };
 
-  const getArticleTitle = (comment: any) => {
+  const getArticleTitle = (comment: CommentArticleRef) => {
     if (comment.articleId && typeof comment.articleId === "object") {
-      return comment.articleId.title;
+      return typeof comment.articleId.title === "string" ? comment.articleId.title : "Unknown article";
     }
     return "Unknown article";
   };

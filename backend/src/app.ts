@@ -45,6 +45,12 @@ export function createApp() {
     crossOriginEmbedderPolicy: false, // Disable for API compatibility
   }));
 
+  // Search engines should not index API responses.
+  app.use((_req, res, next) => {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
+    next();
+  });
+
   // Security: Rate limiting
   const isTest = process.env.NODE_ENV === 'test';
   
@@ -88,29 +94,51 @@ export function createApp() {
     }),
   );
 
-  const allowedOrigins = [
+  const allowedOrigins = new Set([
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:4173',
     'http://localhost:3000',
-    'https://technique-dash-5men.vercel.app',
     'https://nique.net',
+    'https://www.nique.net',
     'https://technique-4t5.pages.dev',
     'https://technique-dashboard.pages.dev',
-    'https://dashboard.nique.net'
+    'https://dashboard.nique.net',
+  ]);
+
+  // Allow branch-preview aliases for known frontend/dashboard projects.
+  const allowedPreviewHostPatterns = [
+    /^([a-z0-9-]+\.)?technique-4t5\.pages\.dev$/i,
+    /^([a-z0-9-]+\.)?technique-dashboard\.pages\.dev$/i,
+    /^([a-z0-9-]+\.)?technique-dash-5men\.vercel\.app$/i,
   ];
 
-  if (!isProduction && env.CLIENT_URL && !allowedOrigins.includes(env.CLIENT_URL)) {
-    allowedOrigins.push(env.CLIENT_URL);
-  }
+  const isAllowedOrigin = (origin: string): boolean => {
+    if (allowedOrigins.has(origin)) return true;
+
+    try {
+      const { protocol, hostname } = new URL(origin);
+      if (protocol !== 'https:') return false;
+      return allowedPreviewHostPatterns.some((pattern) => pattern.test(hostname));
+    } catch {
+      return false;
+    }
+  };
+
+  const configuredClientOrigins = (env.CLIENT_URLS ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  configuredClientOrigins.forEach((origin) => allowedOrigins.add(origin));
 
   app.use(
     cors({
       origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.indexOf(origin) !== -1 || !isProduction) {
+
+        if (!isProduction || isAllowedOrigin(origin)) {
           callback(null, true);
         } else {
           callback(new Error('Not allowed by CORS'));

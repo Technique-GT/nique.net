@@ -48,7 +48,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   // Fallback user if auth store is empty (shouldn't happen in protected routes)
   const displayUser = user ? {
-    name: user.name,
+    name: user.name || 'User',
     email: user.email || 'No email',
     avatar: user.avatar || '/avatars/shadcn.jpg',
   } : sidebarData.user

@@ -13,7 +13,7 @@ export const env = z
     GOOGLE_CLIENT_ID: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     GOOGLE_REDIRECT_URI: z.string().min(1),
-    CLIENT_URL: z.string().optional(),
+    CLIENT_URLS: z.string().optional(),
     LOG_LEVEL: z.string().optional(),
     NODE_ENV: z.string().optional(),
     CLOUDFLARE_ZONE_ID: z.string().trim().min(1).optional(),

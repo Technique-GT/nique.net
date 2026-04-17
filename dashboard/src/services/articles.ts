@@ -128,7 +128,7 @@ export type CreateAdminArticlePayload = {
   tagIds?: string[]
   authors?: string[]
   featuredMediaUrl?: string
-  editorState?: any
+  editorState?: unknown
   published?: boolean
   reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published'
   isFeatured?: boolean
@@ -142,7 +142,12 @@ export async function createAdminArticle(
   return res as unknown as BackendArticle
 }
 
-export async function getAdminArticleById(id: string): Promise<BackendArticle & { content?: string, editorState?: any }> {
+export type BackendArticleDetail = BackendArticle & {
+  content?: string
+  editorState?: unknown
+}
+
+export async function getAdminArticleById(id: string): Promise<BackendArticleDetail> {
   const res = await apiClient.get(`/admin/articles/${id}`)
-  return res as unknown as any
+  return res as unknown as BackendArticleDetail
 }

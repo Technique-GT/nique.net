@@ -26,10 +26,9 @@ const profileFormSchema = z.object({
       message: 'Username must not be longer than 30 characters.',
     }),
   email: z
-    .string({
-      required_error: 'Please select an email to display.',
-    } as any)
-    .email(),
+    .string()
+    .min(1, { message: 'Please select an email to display.' })
+    .email({ message: 'Please enter a valid email address.' }),
   bio: z.string().max(160).min(4).optional(),
   urls: z
     .object({
@@ -42,7 +41,6 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>
 
 export function ProfileForm() {
   const { user } = useAuthStore((state) => state.auth)
-  console.log(user?.email)
 
   const defaultValues: Partial<ProfileFormValues> = {
     username: user?.name || '',
