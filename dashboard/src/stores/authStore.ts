@@ -21,6 +21,14 @@ interface AuthState {
   };
 }
 
+type BackendAuthUser = {
+  _id: string;
+  name: string;
+  email?: string;
+  isAdmin: boolean;
+  profilePictureUrl?: string;
+}
+
 export const useAuthStore = create<AuthState>()((set) => ({
   auth: {
     user: null,
@@ -33,7 +41,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
     checkAuth: async () => {
       set((state) => ({ auth: { ...state.auth, isLoading: true, error: null } }));
       try {
-        const user = await apiClient.get('/auth/me') as any;
+        const user = await apiClient.get('/auth/me') as unknown as BackendAuthUser;
         // Transform backend user to frontend shape
         const mappedUser: AuthUser = {
           id: user._id,
@@ -47,7 +55,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
         set((state) => ({ 
           auth: { ...state.auth, user: mappedUser, isLoading: false } 
         }));
-      } catch (error: any) {
+      } catch (_error: unknown) {
         // 401 is expected if not logged in
         set((state) => ({ 
           auth: { ...state.auth, user: null, isLoading: false } 
@@ -61,8 +69,8 @@ export const useAuthStore = create<AuthState>()((set) => ({
         set((state) => ({ 
           auth: { ...state.auth, user: null } 
         }));
-      } catch (error) {
-        console.error('Logout failed', error);
+      } catch (_error) {
+        // noop
       }
     },
   },

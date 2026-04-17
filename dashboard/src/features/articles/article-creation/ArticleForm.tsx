@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from "react";
 import {
   $getRoot,
   IS_BOLD,
@@ -83,6 +83,18 @@ import { getMediaImages, type MediaImagesResponse } from "@/services/media";
 const MEDIA_PICKER_PAGE_SIZE = 12;
 const MEDIA_PICKER_STALE_TIME_MS = 5 * 60 * 1000;
 const MEDIA_PICKER_GC_TIME_MS = 15 * 60 * 1000;
+
+type LexicalNode = {
+  type?: string;
+  text?: string;
+  format?: number;
+  style?: string;
+  children?: LexicalNode[];
+  tag?: string;
+  listType?: string;
+  url?: string;
+  title?: string;
+};
 
 export default function ArticleForm({
   categories,
@@ -179,7 +191,7 @@ export default function ArticleForm({
   const extractTextFromEditorState = (editorState?: SerializedEditorState): string => {
     if (!editorState?.root?.children) return "";
 
-    const extractTextFromNode = (node: any): string => {
+    const extractTextFromNode = (node: LexicalNode): string => {
       if (node.type === "text") {
         return node.text || "";
       }
@@ -292,7 +304,7 @@ export default function ArticleForm({
         return undefined;
       };
 
-      const buildBlockStyleAttr = (node: any): string => {
+      const buildBlockStyleAttr = (node: LexicalNode): string => {
         const styles: string[] = [];
         const align = resolveAlignment(node?.format);
         if (align) {
@@ -319,32 +331,33 @@ export default function ArticleForm({
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;");
 
-      const extractFormattedTextFromNode = (node: any): string => {
+      const extractFormattedTextFromNode = (node: LexicalNode): string => {
         // Handle text nodes with formatting
         if (node.type === 'text') {
           let textContent = escapeHtml(node.text || '');
           const nodeStyle = typeof node.style === "string" ? normalizeInlineStyle(node.style) : "";
+          const nodeFormat = typeof node.format === "number" ? node.format : 0;
           
           // Apply text formatting
-          if (node.format & IS_BOLD) { // Bold
+          if (nodeFormat & IS_BOLD) { // Bold
             textContent = `<strong>${textContent}</strong>`;
           }
-          if (node.format & IS_ITALIC) { // Italic
+          if (nodeFormat & IS_ITALIC) { // Italic
             textContent = `<em>${textContent}</em>`;
           }
-          if (node.format & IS_UNDERLINE) { // Underline
+          if (nodeFormat & IS_UNDERLINE) { // Underline
             textContent = `<u>${textContent}</u>`;
           }
-          if (node.format & IS_STRIKETHROUGH) { // Strikethrough
+          if (nodeFormat & IS_STRIKETHROUGH) { // Strikethrough
             textContent = `<s>${textContent}</s>`;
           }
-          if (node.format & IS_CODE) { // Code
+          if (nodeFormat & IS_CODE) { // Code
             textContent = `<code>${textContent}</code>`;
           }
-          if (node.format & IS_SUBSCRIPT) { // Subscript
+          if (nodeFormat & IS_SUBSCRIPT) { // Subscript
             textContent = `<sub>${textContent}</sub>`;
           }
-          if (node.format & IS_SUPERSCRIPT) { // Superscript
+          if (nodeFormat & IS_SUPERSCRIPT) { // Superscript
             textContent = `<sup>${textContent}</sup>`;
           }
 
@@ -370,7 +383,7 @@ export default function ArticleForm({
         if (node.type === 'heading') {
           if (node.children && Array.isArray(node.children)) {
             const headingContent = node.children.map(extractFormattedTextFromNode).join('');
-            const tag = node.tag || 'h1';
+            const tag = typeof node.tag === "string" ? node.tag : 'h1';
             const styleAttr = buildBlockStyleAttr(node);
             return `<${tag}${styleAttr}>${headingContent}</${tag}>`;
           }
@@ -427,8 +440,10 @@ export default function ArticleForm({
         if (node.type === 'link') {
           if (node.children && Array.isArray(node.children)) {
             const linkContent = node.children.map(extractFormattedTextFromNode).join('');
-            const url = node.url || '#';
-            const title = node.title ? ` title="${node.title}"` : '';
+            const url = typeof node.url === "string" && node.url.length > 0 ? node.url : '#';
+            const title = typeof node.title === "string" && node.title.length > 0
+              ? ` title="${node.title}"`
+              : '';
             return `<a href="${url}"${title} target="_blank" rel="noopener noreferrer">${linkContent}</a>`;
           }
           return '';
@@ -452,8 +467,8 @@ export default function ArticleForm({
       }
       
       return '<p></p>';
-    } catch (error) {
-      console.error('Error converting Lexical to HTML:', error);
+    } catch (_error) {
+      // Keep rendering resilient if conversion fails for malformed editor state.
       return '<p></p>';
     }
   };  
@@ -573,8 +588,7 @@ export default function ArticleForm({
       setReviewStatus('in_review');
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Review requested");
-    } catch (error) {
-      console.error('Failed to request review:', error);
+    } catch (_error) {
       toast.error("Failed to request review");
     } finally {
       setIsSubmitting(false);
@@ -589,8 +603,7 @@ export default function ArticleForm({
       setReviewStatus('draft');
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Review cancelled");
-    } catch (error) {
-      console.error('Failed to cancel review:', error);
+    } catch (_error) {
       toast.error("Failed to cancel review");
     } finally {
       setIsSubmitting(false);
@@ -607,8 +620,7 @@ export default function ArticleForm({
       setReviewStatus('changes_requested');
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Changes requested");
-    } catch (error) {
-      console.error('Failed to request changes:', error);
+    } catch (_error) {
       toast.error("Failed to request changes");
     } finally {
       setIsSubmitting(false);
@@ -632,8 +644,7 @@ export default function ArticleForm({
       setIsPublished(true);
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Article published");
-    } catch (error) {
-      console.error('Failed to publish:', error);
+    } catch (_error) {
       toast.error("Failed to publish");
     } finally {
       setIsSubmitting(false);
@@ -649,8 +660,7 @@ export default function ArticleForm({
       setIsPublished(false);
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Article unpublished");
-    } catch (error) {
-      console.error('Failed to unpublish:', error);
+    } catch (_error) {
       toast.error("Failed to unpublish");
     } finally {
       setIsSubmitting(false);
@@ -665,9 +675,8 @@ export default function ArticleForm({
       setIsDeleting(true);
       await apiClient.delete(`/admin/articles/${initialArticle._id}`);
       await queryClient.invalidateQueries({ queryKey: ["admin-articles"] });
-      navigate({ to: "/articles" as any, replace: true });
-    } catch (error) {
-      console.error("Failed to delete article:", error);
+      navigate({ to: "/articles", replace: true });
+    } catch (_error) {
       toast.error("Failed to delete article");
     } finally {
       setIsDeleting(false);
@@ -1011,16 +1020,15 @@ export default function ArticleForm({
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
 
       setSubmitMessage({ type: 'success', message: 'Changes saved.' });
-    } catch (error: any) {
-      console.error('Save failed:', error);
-      const msg = error?.response?.data?.message || 'Failed to save changes.';
+    } catch (_error: unknown) {
+      const msg = getApiErrorMessage(_error, 'Failed to save changes.');
       setSubmitMessage({ type: 'error', message: msg });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     // Existing articles: Save immediately (no confirm dialog flow)
@@ -1066,13 +1074,12 @@ export default function ArticleForm({
 
       const created = await createAdminArticle(articleData);
       navigate({
-        to: '/articles/$articleId/edit' as any,
-        params: { articleId: created._id } as any,
+        to: '/articles/$articleId/edit',
+        params: { articleId: created._id },
         replace: true,
       });
-    } catch (error: any) {
-      console.error('Create failed:', error);
-      const msg = error?.response?.data?.message || 'Failed to create article.';
+    } catch (_error: unknown) {
+      const msg = getApiErrorMessage(_error, 'Failed to create article.');
       setSubmitMessage({ type: 'error', message: msg });
     } finally {
       setIsSubmitting(false);
@@ -1114,13 +1121,12 @@ export default function ArticleForm({
 
       const created = await createAdminArticle(articleData);
       navigate({
-        to: '/articles/$articleId/edit' as any,
-        params: { articleId: created._id } as any,
+        to: '/articles/$articleId/edit',
+        params: { articleId: created._id },
         replace: true,
       });
-    } catch (error: any) {
-      console.error('Create and publish failed:', error);
-      const msg = error?.response?.data?.message || 'Failed to publish article.';
+    } catch (_error: unknown) {
+      const msg = getApiErrorMessage(_error, 'Failed to publish article.');
       setSubmitMessage({ type: 'error', message: msg });
     } finally {
       setIsSubmitting(false);

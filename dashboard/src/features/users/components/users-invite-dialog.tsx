@@ -56,8 +56,7 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
       await refetchUsers()
       form.reset()
       onOpenChange(false)
-    } catch (error) {
-      console.error('Failed to invite user:', error)
+    } catch (_error) {
       // You might want to show an error toast here
     } finally {
       setSubmitting(false)

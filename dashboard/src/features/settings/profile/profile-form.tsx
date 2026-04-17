@@ -28,7 +28,7 @@ const profileFormSchema = z.object({
   email: z
     .string({
       required_error: 'Please select an email to display.',
-    } as any)
+    })
     .email(),
   bio: z.string().max(160).min(4).optional(),
   urls: z
@@ -42,7 +42,6 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>
 
 export function ProfileForm() {
   const { user } = useAuthStore((state) => state.auth)
-  console.log(user?.email)
 
   const defaultValues: Partial<ProfileFormValues> = {
     username: user?.name || '',

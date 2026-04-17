@@ -29,7 +29,7 @@ export async function getUsers(params?: {
   sortDir?: 'asc' | 'desc'
   isAdmin?: boolean
 }): Promise<User[]> {
-  const res: any = await apiClient.get('/users', { params })
+  const res = await apiClient.get('/users', { params })
 
   if (Array.isArray(res)) return res as User[]
   if (res && Array.isArray((res as PaginatedResponse<User>).data)) return (res as PaginatedResponse<User>).data
@@ -45,7 +45,7 @@ export async function getUsersPage(params?: {
   sortDir?: 'asc' | 'desc'
   isAdmin?: boolean
 }): Promise<{ data: User[]; pagination: PaginationMeta }> {
-  const res: any = await apiClient.get('/users', { params })
+  const res = await apiClient.get('/users', { params })
 
   if (res && Array.isArray((res as PaginatedResponse<User>).data)) {
     const response = res as PaginatedResponse<User>

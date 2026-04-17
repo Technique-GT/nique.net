@@ -1,18 +1,19 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Article, PopulatedCategory, PopulatedSubCategory, PopulatedTag, PopulatedAuthor, MessageType } from "./article";
-import { getAdminArticlesPage } from "@/services/articles";
+import { getAdminArticlesPage, type AdminArticlesQuery, type BackendArticle } from "@/services/articles";
 import {
   useTaxonomy,
   useUsers,
 } from "@/hooks/use-queries";
+import type { User } from "@/services/users";
 
 // Query key for articles
 const articlesQueryKey = (params: { 
   page: number; 
   limit: number; 
   search?: string; 
-  status?: string;
+  status?: AdminArticlesQuery["status"];
   categoryId?: string;
   subcategoryId?: string;
   isFeatured?: boolean;
@@ -20,11 +21,55 @@ const articlesQueryKey = (params: {
   hideDrafts?: boolean;
 }) => ['admin-articles', params] as const;
 
+type StatusFilter = "all" | NonNullable<AdminArticlesQuery["status"]>;
+
+type BackendUserRef = {
+  _id?: string;
+  name?: string;
+  isAdmin?: boolean;
+};
+
+type BackendArticleRef = {
+  _id?: string;
+  $oid?: string;
+};
+
+type BackendTagRef = {
+  _id?: string;
+  name?: string;
+  slug?: string;
+};
+
+type BackendArticleListItem = BackendArticle & {
+  _id: string | BackendArticleRef;
+  content?: string;
+  categoryId?: { _id?: string; name?: string; slug?: string } | string | null;
+  subcategoryId?: { _id?: string; name?: string; slug?: string } | string | null;
+  tagIds?: Array<BackendTagRef | string>;
+  authors?: Array<{ authorId?: BackendUserRef | null }>;
+  ownerId?: string | BackendArticleRef | null;
+  published?: boolean;
+  isFeatured?: boolean;
+  isSticky?: boolean;
+  allowComments?: boolean;
+};
+
+const extractObjectId = (value: unknown): string => {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object" && "$oid" in value && typeof (value as BackendArticleRef).$oid === "string") {
+    return (value as BackendArticleRef).$oid as string;
+  }
+  if (value && typeof value === "object" && "_id" in value && typeof (value as BackendArticleRef)._id === "string") {
+    return (value as BackendArticleRef)._id as string;
+  }
+  return "";
+};
+
 export const useArticles = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [subcategoryFilter, setSubcategoryFilter] = useState("all");
   const [showFeatured, setShowFeatured] = useState(false);
@@ -33,15 +78,43 @@ export const useArticles = () => {
   const [message, setMessage] = useState<MessageType | null>(null);
   
   const queryClient = useQueryClient();
+  const statusParam = statusFilter !== "all" ? statusFilter : undefined;
+  const categoryParam = categoryFilter !== "all" ? categoryFilter : undefined;
+  const subcategoryParam = subcategoryFilter !== "all" ? subcategoryFilter : undefined;
+  const queryParams = useMemo(
+    () => ({
+      page: currentPage,
+      limit: pageSize,
+      search: searchTerm || undefined,
+      status: statusParam,
+      categoryId: categoryParam,
+      subcategoryId: subcategoryParam,
+      isFeatured: showFeatured || undefined,
+      isSticky: showSticky || undefined,
+      hideDrafts: hideDrafts || undefined,
+    }),
+    [
+      currentPage,
+      pageSize,
+      searchTerm,
+      statusParam,
+      categoryParam,
+      subcategoryParam,
+      showFeatured,
+      showSticky,
+      hideDrafts,
+    ],
+  );
 
   // Helper to transform User to PopulatedAuthor
-  const transformAuthor = (user: any): PopulatedAuthor => {
+  const transformAuthor = (user: BackendUserRef | User | null | undefined): PopulatedAuthor => {
     if (!user) return { _id: '', firstName: '', lastName: '', username: '', email: '', role: '', status: '' };
+    const fullName = typeof user.name === "string" ? user.name : "Unknown";
     return {
-      _id: user._id,
-      firstName: user.name ? user.name.split(' ')[0] : 'Unknown',
-      lastName: user.name ? user.name.split(' ').slice(1).join(' ') : '',
-      username: user.name || 'Unknown',
+      _id: typeof user._id === "string" ? user._id : "",
+      firstName: fullName ? fullName.split(' ')[0] : 'Unknown',
+      lastName: fullName ? fullName.split(' ').slice(1).join(' ') : '',
+      username: fullName || 'Unknown',
       email: 'N/A',
       role: user.isAdmin ? 'admin' : 'writer',
       status: 'active'
@@ -49,34 +122,43 @@ export const useArticles = () => {
   };
 
   // Helper function
-  const transformArticleData = useCallback((article: any): Article => {
+  const transformArticleData = useCallback((article: BackendArticleListItem): Article => {
+    const categoryId = article.categoryId;
+    const resolvedCategoryId = extractObjectId(categoryId);
+    const subcategoryId = article.subcategoryId;
+
     return {
-      _id: article._id?.$oid || article._id,
+      _id: extractObjectId(article._id),
       title: article.title || '',
       content: article.content || '',
-      category: article.categoryId ? {
-        _id: article.categoryId._id || article.categoryId,
-        name: article.categoryId.name || 'Unknown',
-        slug: article.categoryId.slug || '',
+      category: categoryId ? {
+        _id: resolvedCategoryId,
+        name: typeof categoryId === "object" && typeof categoryId?.name === "string" ? categoryId.name : 'Unknown',
+        slug: typeof categoryId === "object" && typeof categoryId?.slug === "string" ? categoryId.slug : '',
         isActive: true
       } : { _id: '', name: '', slug: '', isActive: false },
-      subcategory: article.subcategoryId ? {
-         _id: article.subcategoryId._id || article.subcategoryId,
-         name: article.subcategoryId.name || 'Unknown',
-         slug: article.subcategoryId.slug || '',
-         category: article.categoryId,
+      subcategory: subcategoryId ? {
+         _id: extractObjectId(subcategoryId),
+         name: typeof subcategoryId === "object" && typeof subcategoryId?.name === "string" ? subcategoryId.name : 'Unknown',
+         slug: typeof subcategoryId === "object" && typeof subcategoryId?.slug === "string" ? subcategoryId.slug : '',
+         category: {
+          _id: resolvedCategoryId,
+          name: typeof categoryId === "object" && typeof categoryId?.name === "string" ? categoryId.name : "Unknown",
+          slug: typeof categoryId === "object" && typeof categoryId?.slug === "string" ? categoryId.slug : "",
+          isActive: true,
+         },
          isActive: true
       } : undefined,
-      tags: Array.isArray(article.tagIds) ? article.tagIds.map((t: any) => ({
-        _id: t._id || t,
-        name: t.name || 'Unknown',
-        slug: t.slug || '',
+      tags: Array.isArray(article.tagIds) ? article.tagIds.map((t) => ({
+        _id: extractObjectId(t),
+        name: typeof t === "object" && typeof t?.name === "string" ? t.name : 'Unknown',
+        slug: typeof t === "object" && typeof t?.slug === "string" ? t.slug : '',
         isActive: true
       })) : [],
-      authors: Array.isArray(article.authors) ? article.authors.map((a: any) => transformAuthor(a.authorId)) : [],
-      ownerId: typeof article.ownerId === 'string' ? article.ownerId : (article.ownerId?._id || article.ownerId?.$oid),
+      authors: Array.isArray(article.authors) ? article.authors.map((a) => transformAuthor(a.authorId)) : [],
+      ownerId: extractObjectId(article.ownerId),
       featuredMediaUrl: typeof article.featuredMediaUrl === 'string' ? article.featuredMediaUrl : '',
-      isPublished: article.published,
+      isPublished: !!article.published,
       isFeatured: article.isFeatured || false,
       isSticky: article.isSticky || false,
       status: article.published ? 'published' : 'draft',
@@ -98,40 +180,18 @@ export const useArticles = () => {
 
   // TanStack Query for articles (NOT persisted - large/fast-changing list)
   const articlesQuery = useQuery({
-    queryKey: articlesQueryKey({ 
-      page: currentPage, 
-      limit: pageSize, 
-      search: searchTerm || undefined,
-      status: statusFilter !== "all" ? statusFilter : undefined,
-      categoryId: categoryFilter !== "all" ? categoryFilter : undefined,
-      subcategoryId: subcategoryFilter !== "all" ? subcategoryFilter : undefined,
-      isFeatured: showFeatured || undefined,
-      isSticky: showSticky || undefined,
-      hideDrafts: hideDrafts || undefined,
-    }),
-    queryFn: async () => {
-      const response = await getAdminArticlesPage({ 
-        page: currentPage, 
-        limit: pageSize,
-        search: searchTerm || undefined,
-        status: statusFilter !== "all" ? (statusFilter as any) : undefined,
-        categoryId: categoryFilter !== "all" ? categoryFilter : undefined,
-        subcategoryId: subcategoryFilter !== "all" ? subcategoryFilter : undefined,
-        isFeatured: showFeatured || undefined,
-        isSticky: showSticky || undefined,
-        hideDrafts: hideDrafts || undefined,
-      });
-      return {
-        articles: response.data.map(transformArticleData),
-        pagination: response.pagination || null,
-      };
-    },
+    queryKey: articlesQueryKey(queryParams),
+    queryFn: () => getAdminArticlesPage(queryParams),
     staleTime: 15 * 1000, // 15 seconds
     placeholderData: (previousData) => previousData, // Keep previous data while loading
     // No meta.persist - this is a large, fast-changing list
   });
 
-  const articles = articlesQuery.data?.articles ?? [];
+  const rawArticles = articlesQuery.data?.data;
+  const articles = useMemo(() => {
+    const list = Array.isArray(rawArticles) ? rawArticles : [];
+    return list.map(transformArticleData);
+  }, [rawArticles, transformArticleData]);
   const pagination = articlesQuery.data?.pagination ?? null;
   const loading = articlesQuery.isLoading;
 
@@ -144,7 +204,6 @@ export const useArticles = () => {
   
   // Use centralized users hook (NOT persisted - PII)
   const { data: usersData } = useUsers();
-  const rawUsers = usersData ?? [];
   
 
   // Map taxonomy to expected format
@@ -162,7 +221,7 @@ export const useArticles = () => {
     return rawSubCategories.map((sc) => {
       const categoryId = typeof sc.categoryId === 'string' 
         ? sc.categoryId 
-        : (sc.categoryId as any)?._id || '';
+        : sc.categoryId?._id || '';
       const category = categoryMap.get(categoryId);
       return {
         _id: sc._id,
@@ -188,8 +247,9 @@ export const useArticles = () => {
   }, [rawTags]);
 
   const authors: PopulatedAuthor[] = useMemo(() => {
-    return rawUsers.map(transformAuthor);
-  }, [rawUsers]);
+    const list = Array.isArray(usersData) ? usersData : [];
+    return list.map(transformAuthor);
+  }, [usersData]);
 
 
   // Fetch articles function (invalidates query)

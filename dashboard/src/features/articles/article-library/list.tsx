@@ -85,7 +85,7 @@ export default function ArticleList() {
     try {
       const newIsPublished = !article.isPublished;
       
-      const result: any = await apiClient.patch(`/admin/articles/${article._id}/status`, {
+      const result = await apiClient.patch(`/admin/articles/${article._id}/status`, {
         status: newIsPublished ? 'published' : 'draft',
         isFeatured: newIsPublished ? article.isFeatured : false,
         isSticky: newIsPublished ? article.isSticky : false,
@@ -110,8 +110,8 @@ export default function ArticleList() {
       } else {
         setMessage({ type: 'error', text: result?.message || 'Failed to update article status' });
       }
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Network error. Please try again. ' + (error as Error).message });
+    } catch (_error) {
+      setMessage({ type: 'error', text: 'Network error. Please try again. ' + (_error as Error).message });
     } finally {
       setPublishingArticle(null);
     }
@@ -130,7 +130,7 @@ export default function ArticleList() {
 
     setFeaturingArticle(article._id);
     try {
-      const result: any = await apiClient.patch(`/admin/articles/${article._id}/featured`);
+      const result = await apiClient.patch(`/admin/articles/${article._id}/featured`);
 
       // toggleFeatured returns { success: true, message, data: article }
       if (result && (result._id || result.success)) {
@@ -142,8 +142,7 @@ export default function ArticleList() {
       } else {
         setMessage({ type: 'error', text: result?.message || 'Failed to update featured status' });
       }
-    } catch (error) {
-      console.error('Error updating featured status:', error);
+    } catch (_error) {
       setMessage({ type: 'error', text: 'Network error. Please try again.' });
     } finally {
       setFeaturingArticle(null);
@@ -163,7 +162,7 @@ export default function ArticleList() {
 
     setStickingArticle(article._id);
     try {
-      const result: any = await apiClient.patch(`/admin/articles/${article._id}/sticky`);
+      const result = await apiClient.patch(`/admin/articles/${article._id}/sticky`);
 
       // toggleSticky returns { success: true, message, data: article }
       if (result && (result._id || result.success)) {
@@ -175,8 +174,7 @@ export default function ArticleList() {
       } else {
         setMessage({ type: 'error', text: result?.message || 'Failed to update sticky status' });
       }
-    } catch (error) {
-      console.error('Error updating sticky status:', error);
+    } catch (_error) {
       setMessage({ type: 'error', text: 'Network error. Please try again.' });
     } finally {
       setStickingArticle(null);
@@ -192,8 +190,8 @@ export default function ArticleList() {
     });
     
     navigate({ 
-      to: '/articles/$articleId/edit' as any, 
-      params: { articleId: article._id } as any 
+      to: '/articles/$articleId/edit', 
+      params: { articleId: article._id } 
     });
   };
 
@@ -207,7 +205,7 @@ export default function ArticleList() {
     if (!currentArticle) return;
 
     try {
-      const result: any = await apiClient.delete(`/admin/articles/${currentArticle._id}`);
+      const result = await apiClient.delete(`/admin/articles/${currentArticle._id}`);
       
       // deleteArticle returns { success: true, message: ... }
       if (result && result.success) {
@@ -218,15 +216,14 @@ export default function ArticleList() {
       } else {
         setMessage({ type: 'error', text: result?.message || 'Failed to delete article' });
       }
-    } catch (error) {
-      console.error('Error deleting article:', error);
+    } catch (_error) {
       setMessage({ type: 'error', text: 'Network error. Please try again.' });
     }
   };
 
   // Navigation
   const handleNewArticle = async () => {
-    navigate({ to: '/articles/new' as any });
+    navigate({ to: '/articles/new' });
   };
 
   // Helper functions

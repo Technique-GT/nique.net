@@ -10,22 +10,19 @@ import { Badge } from "@/components/ui/badge"
 import { useEffect, useState } from "react"
 import { getNotifications, markAllNotificationsAsRead, markNotificationAsRead, Notification } from "@/services/notifications"
 import { formatDistanceToNow } from "date-fns"
-import { useNavigate } from "@tanstack/react-router"
 import { cn } from "@/lib/utils"
 
 export function Notifications() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
-  const navigate = useNavigate()
 
   const fetchNotifications = async () => {
     try {
       const res = await getNotifications(1, 10)
       setNotifications(Array.isArray(res?.data) ? res.data : [])
       setUnreadCount(typeof res?.metadata?.unreadCount === 'number' ? res.metadata.unreadCount : 0)
-    } catch (error) {
-      console.error("Failed to fetch notifications", error)
+    } catch (_error) {
       setNotifications([])
       setUnreadCount(0)
     }
@@ -48,13 +45,17 @@ export function Notifications() {
         await markNotificationAsRead(notification._id)
         setNotifications(prev => prev.map(n => n._id === notification._id ? { ...n, read: true } : n))
         setUnreadCount(prev => Math.max(0, prev - 1))
-      } catch (error) {
-        console.error("Failed to mark as read", error)
+      } catch (_error) {
+        // noop
       }
     }
 
     if (notification.link) {
-      navigate({ to: notification.link as any })
+      if (notification.link.startsWith('/')) {
+        window.location.assign(notification.link)
+      } else {
+        window.open(notification.link, '_self')
+      }
       setIsOpen(false)
     }
   }
@@ -64,8 +65,8 @@ export function Notifications() {
       await markAllNotificationsAsRead()
       setNotifications(prev => prev.map(n => ({ ...n, read: true })))
       setUnreadCount(0)
-    } catch (error) {
-      console.error("Failed to mark all as read", error)
+    } catch (_error) {
+      // noop
     }
   }
 

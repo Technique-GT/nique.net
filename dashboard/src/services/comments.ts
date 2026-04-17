@@ -37,7 +37,7 @@ export async function getCommentStats(): Promise<CommentStats> {
 }
 
 export async function getComments(query: CommentsQuery = {}): Promise<PaginatedResponse<Comment>> {
-  const params: any = { ...query }
+  const params: Record<string, string | number | boolean | undefined> = { ...query }
   if (typeof query.approved === 'boolean') {
     params.approved = query.approved.toString()
   }
@@ -45,10 +45,10 @@ export async function getComments(query: CommentsQuery = {}): Promise<PaginatedR
   const res = await apiClient.get('/comments', { params })
 
   if (res && typeof res === 'object' && !Array.isArray(res) && 'data' in (res as { data?: unknown })) {
-    const r = res as any
+    const r = res as { data?: unknown; pagination?: unknown }
     return {
       data: Array.isArray(r.data) ? (r.data as Comment[]) : [],
-      pagination: r.pagination,
+      pagination: r.pagination as PaginatedResponse<Comment>['pagination'],
     }
   }
 

@@ -31,8 +31,7 @@ export function UsersDeleteDialog({ open, onOpenChange, currentRow }: Props) {
 
       await refetchUsers()
       onOpenChange(false)
-    } catch (error) {
-      console.error('Failed to delete user:', error)
+    } catch (_error) {
       // You might want to show an error toast here
     } finally {
       setDeleting(false)

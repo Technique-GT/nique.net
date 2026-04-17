@@ -40,6 +40,27 @@ export interface Author {
   status: string;
 }
 
+export interface SerializedEditorNode {
+  type?: string;
+  text?: string;
+  format?: number | string;
+  style?: string;
+  children?: SerializedEditorNode[];
+  [key: string]: unknown;
+}
+
+// Define SerializedEditorState type based on Lexical's structure
+export interface SerializedEditorState {
+  root: {
+    children: SerializedEditorNode[];
+    direction: "ltr" | "rtl" | null;
+    format: number | string | null;
+    indent: number;
+    type: string;
+    version: number;
+  };
+}
+
 export interface Article {
   _id: string;
   title: string;
@@ -50,7 +71,7 @@ export interface Article {
   tags: Tag[];
   authors: Author[];
   ownerId?: string;
-  editorState?: any;
+  editorState?: SerializedEditorState;
   reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published';
   reviewedAt?: string;
   reviewedBy?: string;
@@ -68,18 +89,6 @@ export interface Article {
   seoDescription?: string;
   createdAt: string;
   updatedAt: string;
-}
-
-// Define SerializedEditorState type based on Lexical's structure
-export interface SerializedEditorState {
-  root: {
-    children: any[];
-    direction: "ltr" | "rtl" | null;
-    format: any;
-    indent: number;
-    type: string;
-    version: number;
-  };
 }
 
 export type FieldErrorKey =

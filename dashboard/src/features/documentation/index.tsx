@@ -200,9 +200,8 @@ api-staging.nique.net        -> Render staging backend service`}
               <h1>How To Deploy Preview</h1>
               <ol className='list-decimal space-y-2 pl-4'>
                 <li>Merge feature work into <code>staging</code>.</li>
-                <li>Run/verify <code>.github/workflows/deploy-staging.yml</code>.</li>
-                <li>Ensure deploy hooks trigger backend/frontend/dashboard staging deploys (hooks are POST-triggered).</li>
-                <li>Run smoke checks against staging API health and both staging site URLs.</li>
+                <li><code>.github/workflows/staging-smoke-test.yml</code> will wait 5 mins for staging environments to deploy and run smoke test against staging API health and staging site URLs.</li>
+                <li>Ensure deploy hooks auto-trigger backend/frontend/dashboard staging deploys (hooks are POST-triggered).</li>
                 <li>Validate auth, article creation, moderation, and publishing flow in staging dashboard before promotion.</li>
               </ol>
 

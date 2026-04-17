@@ -88,8 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         success: false, 
         message: 'Invalid email or password' 
       };
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch (_error) {
       return { 
         success: false, 
         message: 'An error occurred during login' 
@@ -131,8 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setIsAuthenticated(false);
       }
-    } catch (error) {
-      console.error('Auth check error:', error);
+    } catch (_error) {
       // Clear invalid auth data
       localStorage.removeItem(AUTH_KEY);
       setUser(null);
