@@ -1,0 +1,67 @@
+name: Staging Smoke Test
+
+on:
+  push:
+    branches:
+      - staging
+  workflow_dispatch:
+
+concurrency:
+  group: staging-smoke-test
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Staging Smoke Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: staging
+
+    steps:
+      - name: Wait for provider auto-deploys
+        run: sleep 300
+
+      - name: Check API health
+        env:
+          STAGING_API_HEALTHCHECK_URL: ${{ secrets.STAGING_API_HEALTHCHECK_URL }}
+        run: |
+          if [ -z "$STAGING_API_HEALTHCHECK_URL" ]; then
+            echo "Missing STAGING_API_HEALTHCHECK_URL secret"
+            exit 1
+          fi
+
+          code="$(curl --silent --show-error --location --max-time 20 --retry 2 \
+            --output /dev/null --write-out "%{http_code}" "$STAGING_API_HEALTHCHECK_URL")"
+          echo "API health status: $code"
+          test "$code" -ge 200 -a "$code" -lt 300
+
+      - name: Check frontend URL
+        env:
+          STAGING_FRONTEND_URL: ${{ secrets.STAGING_FRONTEND_URL }}
+        run: |
+          if [ -z "$STAGING_FRONTEND_URL" ]; then
+            echo "Missing STAGING_FRONTEND_URL secret"
+            exit 1
+          fi
+
+          code="$(curl --silent --show-error --location --max-time 20 --retry 2 \
+            --output /dev/null --write-out "%{http_code}" "$STAGING_FRONTEND_URL")"
+          echo "Frontend status: $code"
+          test "$code" -ge 200 -a "$code" -lt 400
+
+      - name: Check dashboard URL
+        env:
+          STAGING_DASHBOARD_URL: ${{ secrets.STAGING_DASHBOARD_URL }}
+        run: |
+          if [ -z "$STAGING_DASHBOARD_URL" ]; then
+            echo "Missing STAGING_DASHBOARD_URL secret"
+            exit 1
+          fi
+
+          code="$(curl --silent --show-error --location --max-time 20 --retry 2 \
+            --output /dev/null --write-out "%{http_code}" "$STAGING_DASHBOARD_URL")"
+          echo "Dashboard status: $code"
+          test "$code" -ge 200 -a "$code" -lt 400
