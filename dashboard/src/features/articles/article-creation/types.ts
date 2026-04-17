@@ -1,3 +1,8 @@
+import type {
+  SerializedEditorState as LexicalSerializedEditorState,
+  SerializedLexicalNode,
+} from "lexical";
+
 // Define types for fetched data
 export interface Category {
   _id: string;
@@ -40,26 +45,9 @@ export interface Author {
   status: string;
 }
 
-export interface SerializedEditorNode {
-  type?: string;
-  text?: string;
-  format?: number | string;
-  style?: string;
-  children?: SerializedEditorNode[];
-  [key: string]: unknown;
-}
-
-// Define SerializedEditorState type based on Lexical's structure
-export interface SerializedEditorState {
-  root: {
-    children: SerializedEditorNode[];
-    direction: "ltr" | "rtl" | null;
-    format: number | string | null;
-    indent: number;
-    type: string;
-    version: number;
-  };
-}
+export type SerializedEditorNode = SerializedLexicalNode;
+export type SerializedEditorState =
+  LexicalSerializedEditorState<SerializedLexicalNode>;
 
 export interface Article {
   _id: string;

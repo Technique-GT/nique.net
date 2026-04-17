@@ -8,7 +8,7 @@ import {
   useUsers,
   useAdminArticle,
 } from "@/hooks/use-queries";
-import type { Category, SubCategory, Tag, Author } from "./types";
+import type { Category, SubCategory, Tag, Author, Article } from "./types";
 import { useParams } from "@tanstack/react-router";
 import type { BackendArticle } from "@/services/articles";
 import type { User } from "@/services/users";
@@ -137,6 +137,16 @@ const mapUserToAuthor = (u: BackendUser | null | undefined): Author | null => {
   };
 };
 
+const toSerializedEditorState = (
+  value: unknown,
+): Article["editorState"] | undefined => {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  return value as Article["editorState"];
+};
+
 export default function ArticleCreation() {
   const { articleId } = useParams({ strict: false }) as { articleId?: string };
   const isEditMode = !!articleId;
@@ -148,7 +158,7 @@ export default function ArticleCreation() {
   } = useAdminArticle(articleId || "");
 
   // Transform backend article to frontend shape
-  const transformedArticle = useMemo(() => {
+  const transformedArticle = useMemo<Article | null>(() => {
     if (!initialArticle) return null;
     const backendArticle = initialArticle as BackendArticleForForm;
     const category = toCategory(backendArticle.categoryId);
@@ -162,21 +172,37 @@ export default function ArticleCreation() {
           .filter((a): a is Author => a !== null)
       : [];
 
-      return {
-        ...backendArticle,
-        // Map populated fields to expected frontend props
-        category,
-        subcategory,
-        tags,
-        isPublished: backendArticle.published,
-        allowComments: backendArticle.allowComments,
-
-        imageCaption: backendArticle.imageCaption ?? "",
-
-      // Map authors array structure
+    return {
+      _id: backendArticle._id,
+      title: backendArticle.title || "",
+      content: backendArticle.content || "",
+      imageCaption: backendArticle.imageCaption ?? "",
+      category,
+      subcategory,
+      tags,
       authors,
-
-      featuredMediaUrl: typeof backendArticle.featuredMediaUrl === 'string' ? backendArticle.featuredMediaUrl : undefined,
+      ownerId: backendArticle.ownerId,
+      editorState: toSerializedEditorState(backendArticle.editorState),
+      reviewStatus: backendArticle.reviewStatus,
+      reviewedAt: backendArticle.reviewedAt,
+      reviewedBy: backendArticle.reviewedBy,
+      reviewNotes: backendArticle.reviewNotes,
+      featuredMediaUrl:
+        typeof backendArticle.featuredMediaUrl === "string"
+          ? backendArticle.featuredMediaUrl
+          : undefined,
+      isPublished: backendArticle.published,
+      isFeatured: backendArticle.isFeatured ?? false,
+      isSticky: backendArticle.isSticky ?? false,
+      status: backendArticle.published ? "published" : "draft",
+      allowComments: backendArticle.allowComments ?? true,
+      publishedAt: backendArticle.publishedAt ?? undefined,
+      slug: backendArticle.slug || "",
+      views: backendArticle.viewCount ?? 0,
+      seoTitle: undefined,
+      seoDescription: undefined,
+      createdAt: backendArticle.createdAt,
+      updatedAt: backendArticle.updatedAt,
     };
   }, [initialArticle]);
 

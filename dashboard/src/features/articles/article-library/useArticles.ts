@@ -174,7 +174,7 @@ export const useArticles = () => {
       viewCount: article.viewCount || 0,
       createdAt: article.createdAt,
       updatedAt: article.updatedAt,
-      publishedAt: article.publishedAt
+      publishedAt: article.publishedAt ?? undefined,
     };
   }, []);
 
@@ -232,6 +232,7 @@ export const useArticles = () => {
           _id: category?._id || categoryId,
           name: category?.name || 'Unknown',
           slug: category?.slug || '',
+          isActive: true,
         },
       };
     });
@@ -266,6 +267,20 @@ export const useArticles = () => {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+
+  const handleStatusFilterChange = useCallback((value: string) => {
+    const allowed: StatusFilter[] = [
+      "all",
+      "published",
+      "draft",
+      "in_review",
+      "changes_requested",
+    ];
+
+    if (allowed.includes(value as StatusFilter)) {
+      setStatusFilter(value as StatusFilter);
+    }
+  }, []);
 
   // Handle page size change
   const handlePageSizeChange = (size: number) => {
@@ -319,6 +334,7 @@ export const useArticles = () => {
     setSearchTerm,
     statusFilter,
     setStatusFilter,
+    handleStatusFilterChange,
     categoryFilter,
     setCategoryFilter,
     subcategoryFilter,

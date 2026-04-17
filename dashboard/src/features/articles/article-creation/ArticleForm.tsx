@@ -46,6 +46,7 @@ import {
   type Author,
   type Category,
   type FieldErrorKey,
+  type SerializedEditorNode,
   type SerializedEditorState,
   type SubCategory,
   type Tag,
@@ -84,10 +85,9 @@ const MEDIA_PICKER_PAGE_SIZE = 12;
 const MEDIA_PICKER_STALE_TIME_MS = 5 * 60 * 1000;
 const MEDIA_PICKER_GC_TIME_MS = 15 * 60 * 1000;
 
-type LexicalNode = {
-  type?: string;
+type LexicalNode = SerializedEditorNode & {
   text?: string;
-  format?: number;
+  format?: number | string;
   style?: string;
   children?: LexicalNode[];
   tag?: string;
@@ -191,15 +191,17 @@ export default function ArticleForm({
   const extractTextFromEditorState = (editorState?: SerializedEditorState): string => {
     if (!editorState?.root?.children) return "";
 
-    const extractTextFromNode = (node: LexicalNode): string => {
-      if (node.type === "text") {
-        return node.text || "";
+    const extractTextFromNode = (node: SerializedEditorNode): string => {
+      const lexicalNode = node as LexicalNode;
+
+      if (lexicalNode.type === "text") {
+        return lexicalNode.text || "";
       }
-      if (node.type === "linebreak") {
+      if (lexicalNode.type === "linebreak") {
         return "\n";
       }
-      if (Array.isArray(node.children)) {
-        return node.children.map(extractTextFromNode).join("");
+      if (Array.isArray(lexicalNode.children)) {
+        return lexicalNode.children.map(extractTextFromNode).join("");
       }
       return "";
     };
@@ -304,15 +306,16 @@ export default function ArticleForm({
         return undefined;
       };
 
-      const buildBlockStyleAttr = (node: LexicalNode): string => {
+      const buildBlockStyleAttr = (node: SerializedEditorNode): string => {
+        const lexicalNode = node as LexicalNode;
         const styles: string[] = [];
-        const align = resolveAlignment(node?.format);
+        const align = resolveAlignment(lexicalNode.format);
         if (align) {
           styles.push(`text-align: ${align}`);
         }
 
-        if (typeof node?.style === "string") {
-          const normalized = normalizeInlineStyle(node.style);
+        if (typeof lexicalNode.style === "string") {
+          const normalized = normalizeInlineStyle(lexicalNode.style);
           if (normalized) {
             styles.push(normalized);
           }
@@ -331,13 +334,18 @@ export default function ArticleForm({
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;");
 
-      const extractFormattedTextFromNode = (node: LexicalNode): string => {
+      const extractFormattedTextFromNode = (node: SerializedEditorNode): string => {
+        const lexicalNode = node as LexicalNode;
+
         // Handle text nodes with formatting
-        if (node.type === 'text') {
-          let textContent = escapeHtml(node.text || '');
-          const nodeStyle = typeof node.style === "string" ? normalizeInlineStyle(node.style) : "";
-          const nodeFormat = typeof node.format === "number" ? node.format : 0;
-          
+        if (lexicalNode.type === "text") {
+          let textContent = escapeHtml(lexicalNode.text || "");
+          const nodeStyle =
+            typeof lexicalNode.style === "string"
+              ? normalizeInlineStyle(lexicalNode.style)
+              : "";
+          const nodeFormat = typeof lexicalNode.format === "number" ? lexicalNode.format : 0;
+
           // Apply text formatting
           if (nodeFormat & IS_BOLD) { // Bold
             textContent = `<strong>${textContent}</strong>`;
@@ -365,113 +373,117 @@ export default function ArticleForm({
           if (nodeStyle) {
             textContent = `<span style="${nodeStyle.replace(/"/g, "&quot;")}">${textContent}</span>`;
           }
-          
+
           return textContent;
         }
-        
+
         // Handle paragraph nodes
-        if (node.type === 'paragraph') {
-          if (node.children && Array.isArray(node.children)) {
-            const paragraphContent = node.children.map(extractFormattedTextFromNode).join('');
-            const styleAttr = buildBlockStyleAttr(node);
+        if (lexicalNode.type === "paragraph") {
+          if (Array.isArray(lexicalNode.children)) {
+            const paragraphContent = lexicalNode.children.map(extractFormattedTextFromNode).join("");
+            const styleAttr = buildBlockStyleAttr(lexicalNode);
             return paragraphContent ? `<p${styleAttr}>${paragraphContent}</p>` : `<p${styleAttr}><br></p>`;
           }
-          return '<p><br></p>';
+          return "<p><br></p>";
         }
-        
+
         // Handle heading nodes
-        if (node.type === 'heading') {
-          if (node.children && Array.isArray(node.children)) {
-            const headingContent = node.children.map(extractFormattedTextFromNode).join('');
-            const tag = typeof node.tag === "string" ? node.tag : 'h1';
-            const styleAttr = buildBlockStyleAttr(node);
+        if (lexicalNode.type === "heading") {
+          if (Array.isArray(lexicalNode.children)) {
+            const headingContent = lexicalNode.children.map(extractFormattedTextFromNode).join("");
+            const tag = typeof lexicalNode.tag === "string" ? lexicalNode.tag : "h1";
+            const styleAttr = buildBlockStyleAttr(lexicalNode);
             return `<${tag}${styleAttr}>${headingContent}</${tag}>`;
           }
-          return '';
+          return "";
         }
-        
+
         // Handle list nodes
-        if (node.type === 'list') {
-          if (node.children && Array.isArray(node.children)) {
-            const listItems = node.children.map(extractFormattedTextFromNode).join('');
-            const listTag = node.listType === 'bullet' ? 'ul' : 'ol';
-            const styleAttr = buildBlockStyleAttr(node);
+        if (lexicalNode.type === "list") {
+          if (Array.isArray(lexicalNode.children)) {
+            const listItems = lexicalNode.children.map(extractFormattedTextFromNode).join("");
+            const listTag = lexicalNode.listType === "bullet" ? "ul" : "ol";
+            const styleAttr = buildBlockStyleAttr(lexicalNode);
             return `<${listTag}${styleAttr}>${listItems}</${listTag}>`;
           }
-          return '';
+          return "";
         }
-        
+
         // Handle list item nodes
-        if (node.type === 'listitem') {
-          if (node.children && Array.isArray(node.children)) {
-            const itemContent = node.children.map(extractFormattedTextFromNode).join('');
-            const styleAttr = buildBlockStyleAttr(node);
+        if (lexicalNode.type === "listitem") {
+          if (Array.isArray(lexicalNode.children)) {
+            const itemContent = lexicalNode.children.map(extractFormattedTextFromNode).join("");
+            const styleAttr = buildBlockStyleAttr(lexicalNode);
             return `<li${styleAttr}>${itemContent}</li>`;
           }
-          return '<li></li>';
+          return "<li></li>";
         }
-        
+
         // Handle quote nodes
-        if (node.type === 'quote') {
-          if (node.children && Array.isArray(node.children)) {
-            const quoteContent = node.children.map(extractFormattedTextFromNode).join('');
-            const styleAttr = buildBlockStyleAttr(node);
+        if (lexicalNode.type === "quote") {
+          if (Array.isArray(lexicalNode.children)) {
+            const quoteContent = lexicalNode.children.map(extractFormattedTextFromNode).join("");
+            const styleAttr = buildBlockStyleAttr(lexicalNode);
             return `<blockquote${styleAttr}>${quoteContent}</blockquote>`;
           }
-          return '<blockquote></blockquote>';
+          return "<blockquote></blockquote>";
         }
-        
+
         // Handle code nodes
-        if (node.type === 'code') {
-          if (node.children && Array.isArray(node.children)) {
-            const codeContent = node.children.map(extractFormattedTextFromNode).join('');
-            const styleAttr = buildBlockStyleAttr(node);
+        if (lexicalNode.type === "code") {
+          if (Array.isArray(lexicalNode.children)) {
+            const codeContent = lexicalNode.children.map(extractFormattedTextFromNode).join("");
+            const styleAttr = buildBlockStyleAttr(lexicalNode);
             return `<pre${styleAttr}><code>${codeContent}</code></pre>`;
           }
-          return '<pre><code></code></pre>';
+          return "<pre><code></code></pre>";
         }
-        
+
         // Handle line break nodes
-        if (node.type === 'linebreak') {
-          return '<br>';
+        if (lexicalNode.type === "linebreak") {
+          return "<br>";
         }
-        
+
         // Handle link nodes
-        if (node.type === 'link') {
-          if (node.children && Array.isArray(node.children)) {
-            const linkContent = node.children.map(extractFormattedTextFromNode).join('');
-            const url = typeof node.url === "string" && node.url.length > 0 ? node.url : '#';
-            const title = typeof node.title === "string" && node.title.length > 0
-              ? ` title="${node.title}"`
-              : '';
+        if (lexicalNode.type === "link") {
+          if (Array.isArray(lexicalNode.children)) {
+            const linkContent = lexicalNode.children.map(extractFormattedTextFromNode).join("");
+            const url =
+              typeof lexicalNode.url === "string" && lexicalNode.url.length > 0
+                ? lexicalNode.url
+                : "#";
+            const title =
+              typeof lexicalNode.title === "string" && lexicalNode.title.length > 0
+                ? ` title="${lexicalNode.title}"`
+                : "";
             return `<a href="${url}"${title} target="_blank" rel="noopener noreferrer">${linkContent}</a>`;
           }
-          return '';
+          return "";
         }
-        
+
         // Recursively process children for other node types
-        if (node.children && Array.isArray(node.children)) {
-          return node.children.map(extractFormattedTextFromNode).join('');
+        if (Array.isArray(lexicalNode.children)) {
+          return lexicalNode.children.map(extractFormattedTextFromNode).join("");
         }
-        
-        return '';
+
+        return "";
       };
 
       if (editorState?.root?.children) {
         const htmlContent = editorState.root.children
           .map(extractFormattedTextFromNode)
           .filter(Boolean)
-          .join('\n');
-        
-        return htmlContent || '<p></p>';
+          .join("\n");
+
+        return htmlContent || "<p></p>";
       }
-      
-      return '<p></p>';
+
+      return "<p></p>";
     } catch (_error) {
       // Keep rendering resilient if conversion fails for malformed editor state.
-      return '<p></p>';
+      return "<p></p>";
     }
-  };  
+  };
 
   useEffect(() => {
     if (content) {

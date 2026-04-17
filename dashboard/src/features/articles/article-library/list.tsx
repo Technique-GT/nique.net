@@ -22,6 +22,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 
+type ArticleMutationResponse = {
+  _id?: string;
+  success?: boolean;
+  message?: string;
+};
+
+type DeleteArticleResponse = {
+  success?: boolean;
+  message?: string;
+};
+
 export default function ArticleList() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -37,7 +48,7 @@ export default function ArticleList() {
     searchTerm,
     setSearchTerm,
     statusFilter,
-    setStatusFilter,
+    handleStatusFilterChange,
     categoryFilter,
     setCategoryFilter,
     subcategoryFilter,
@@ -85,7 +96,7 @@ export default function ArticleList() {
     try {
       const newIsPublished = !article.isPublished;
       
-      const result = await apiClient.patch(`/admin/articles/${article._id}/status`, {
+      const result = await apiClient.patch<unknown, ArticleMutationResponse>(`/admin/articles/${article._id}/status`, {
         status: newIsPublished ? 'published' : 'draft',
         isFeatured: newIsPublished ? article.isFeatured : false,
         isSticky: newIsPublished ? article.isSticky : false,
@@ -130,7 +141,7 @@ export default function ArticleList() {
 
     setFeaturingArticle(article._id);
     try {
-      const result = await apiClient.patch(`/admin/articles/${article._id}/featured`);
+      const result = await apiClient.patch<unknown, ArticleMutationResponse>(`/admin/articles/${article._id}/featured`);
 
       // toggleFeatured returns { success: true, message, data: article }
       if (result && (result._id || result.success)) {
@@ -162,7 +173,7 @@ export default function ArticleList() {
 
     setStickingArticle(article._id);
     try {
-      const result = await apiClient.patch(`/admin/articles/${article._id}/sticky`);
+      const result = await apiClient.patch<unknown, ArticleMutationResponse>(`/admin/articles/${article._id}/sticky`);
 
       // toggleSticky returns { success: true, message, data: article }
       if (result && (result._id || result.success)) {
@@ -205,7 +216,7 @@ export default function ArticleList() {
     if (!currentArticle) return;
 
     try {
-      const result = await apiClient.delete(`/admin/articles/${currentArticle._id}`);
+      const result = await apiClient.delete<unknown, DeleteArticleResponse>(`/admin/articles/${currentArticle._id}`);
       
       // deleteArticle returns { success: true, message: ... }
       if (result && result.success) {
@@ -296,7 +307,7 @@ export default function ArticleList() {
               </div>
               <div className="flex flex-wrap gap-2 sm:gap-4">
                 {/* Status Filter */}
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
                   <SelectTrigger className="w-full sm:w-40">
                     <SelectValue placeholder="Filter by status" />
                   </SelectTrigger>
