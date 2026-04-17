@@ -21,6 +21,7 @@ const navItems = [
   { id: 'roles', label: 'Roles & Permissions' },
   { id: 'content_organization', label: 'Content Organization' },
   { id: 'caching', label: 'Caching' },
+  { id: 'staging_branch_protection', label: 'Staging and Branch Protection' },
   { id: 'flows', label: 'Flows' },
   { id: 'misc', label: 'Misc' },
   { id: 'schema', label: 'Schema' },
@@ -45,7 +46,7 @@ export default function Documentation() {
               <CardDescription>Jump to a section</CardDescription>
             </CardHeader>
             <CardContent className='pt-0'>
-              <ScrollArea className='h-65 pr-4'>
+              <ScrollArea className='h-80 pr-4'>
                 <nav className='flex flex-col gap-2 text-sm'>
                   {navItems.map((item) => (
                     <a
@@ -169,8 +170,77 @@ Legend: no frontend in-memory article/category cache`}
                       Cloudflare cache hit rate at February 2026 averages 21.43k cached requests out of 1.72M total requests per month, putting the system at a 1.25% cache hit rate. Long term goal is to improve Cloudflare cache hit rate.
                     </p>
                   <Separator />
-                  <p><i>Tip: The free tier of Render spins down after 15 mins of no inbound requests and may experience cold starts if idle for some time. A quick workaround would be to ping the <code>/health</code> route frequently although this may balloon requests to the server. MongoDB's free tier also has limitations: 512MB storage and shared cluster resources, 16MB document size limit. The instance will also go stale if idle for 90 days, requiring a manual restart to regain responsiveness.</i></p>
+                  <p><i>Tip: The free tier of Render spins down after 15 mins of no inbound requests and may experience cold starts if idle for some time. A cron job is setup to ping the <code>api/health</code> route every 15 minutes, which gives up to 744 hours of uptime per month (31 days). MongoDB's free tier also has limitations: 512MB storage and shared cluster resources, 16MB document size limit. The instance will also go stale if idle for 90 days, requiring a manual restart to regain responsiveness.</i></p>
                 </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle id='staging_branch_protection'>Staging and Branch Protection</CardTitle>
+            </CardHeader>
+            <CardContent className='space-y-3 text-sm text-muted-foreground dark:text-foreground/80'>
+              <p>
+                Preview and release environments are split across three staging domains before production:
+              </p>
+              <ul className='list-disc space-y-2 pl-4'>
+                <li><code><a href='https://staging.nique.net' target='_blank' rel='noopener noreferrer' className='hover:underline'>staging.nique.net</a></code> for the public frontend preview.</li>
+                <li><code><a href='https://dashboard-staging.nique.net' target='_blank' rel='noopener noreferrer' className='hover:underline'>dashboard-staging.nique.net</a></code> for dashboard preview.</li>
+                <li><code><a href='https://api-staging.nique.net' target='_blank' rel='noopener noreferrer' className='hover:underline'>api-staging.nique.net</a></code> for the staging backend API.</li>
+              </ul>
+              <div className='rounded-lg border bg-muted/30 p-3 text-xs leading-5 text-muted-foreground'>
+                <pre className='whitespace-pre-wrap'>
+{`Recommended mapping
+staging.nique.net            -> Cloudflare Pages frontend staging alias
+dashboard-staging.nique.net  -> Cloudflare Pages dashboard staging alias
+api-staging.nique.net        -> Render staging backend service`}
+                </pre>
+              </div>
+
+              <h1>How To Deploy Preview</h1>
+              <ol className='list-decimal space-y-2 pl-4'>
+                <li>Merge feature work into <code>staging</code>.</li>
+                <li>Run/verify <code>.github/workflows/deploy-staging.yml</code>.</li>
+                <li>Ensure deploy hooks trigger backend/frontend/dashboard staging deploys (hooks are POST-triggered).</li>
+                <li>Run smoke checks against staging API health and both staging site URLs.</li>
+                <li>Validate auth, article creation, moderation, and publishing flow in staging dashboard before promotion.</li>
+              </ol>
+
+              <h1>Staging Configuration</h1>
+              <ul className='list-disc space-y-2 pl-4'>
+                <li>Dashboard preview should set <code>VITE_API_BASE_URL=https://api-staging.nique.net</code>.</li>
+                <li>Production dashboard should set <code>VITE_API_BASE_URL=https://api.nique.net</code>.</li>
+                <li>Backend CORS should use <code>CLIENT_URLS</code> (comma-separated origins) including staging frontend and staging dashboard domains.</li>
+                <li>Staging backend should use separate DB/keys when possible (<code>MONGO_DB_NAME</code>, <code>JWT_TOKEN</code>, OAuth redirect URI).</li>
+              </ul>
+
+              <h1>Branch And Merge Rules</h1>
+              <ul className='list-disc space-y-2 pl-4'>
+                <li><code>deploy</code> is the production source branch. No direct pushes.</li>
+                <li>Branch rules: </li>
+                <ul className='list-decimal space-y-2 pl-8'>
+                  <li>Branch is read-only.</li>
+                  <li>Requires PR and 1 approval before merging into <code>deploy</code>.</li>
+                  <li>Staging environments must deploy successfully before merging.</li>
+                  <li>Status checks must pass before merging. See <code>.github/workflows/pr-checks.yml</code></li>
+                  <ul className='list-none space-y-2 pl-8'>
+                    <li><code>npm --prefix backend run lint</code></li>
+                    <li><code>npm --prefix backend run test</code></li>
+                    <li><code>npm --prefix backend run build</code></li>
+                    <li><code>npm --prefix frontend run lint</code></li>
+                    <li><code>npm --prefix frontend run build</code></li>
+                    <li><code>npm --prefix dashboard run lint</code></li>
+                    <li><code>npm --prefix dashboard run build</code></li>
+                  </ul>
+                </ul>
+                <li>Use <code>staging</code> as the integration and QA branch for preview builds/staging environments build/deploy from <code>staging</code> branch.</li>
+                <li>Promotion path: <code>{'feature/* -> staging -> deploy'}</code>.</li>
+                <li>Changes merged only to <code>staging</code> do not affect production services until promoted to <code>deploy</code>.</li>
+              </ul>
+              <Separator />
+              <p><i>
+                Tip: Staging API uses a second free service on Render, avoid keeping it warm continuously; use it during QA windows to reduce instance-hour usage. Each account has 750 free instance hours, depending on the month, you will have either 6 or 30 hours QA/testing windows. Watch instance hours in Render closely and plan usage accordingly.
+              </i></p>
             </CardContent>
           </Card>
 
