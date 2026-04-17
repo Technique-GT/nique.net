@@ -52,19 +52,23 @@ export function Notifications() {
 
     if (notification.link) {
       const link = notification.link
-      if (link.startsWith('/')) {
-        window.location.assign(link)
-        setIsOpen(false)
-      } else {
+      const isSafeUrl = (href: string): boolean => {
+        if (href.startsWith('/')) return true
         try {
-          const url = new URL(link)
-          if (url.protocol === 'http:' || url.protocol === 'https:') {
-            window.open(link, '_self')
-            setIsOpen(false)
-          }
+          const { protocol } = new URL(href)
+          return protocol === 'http:' || protocol === 'https:'
         } catch {
-          // invalid or disallowed URL scheme — ignore
+          return false
         }
+      }
+
+      if (isSafeUrl(link)) {
+        if (link.startsWith('/')) {
+          window.location.assign(link)
+        } else {
+          window.open(link, '_self')
+        }
+        setIsOpen(false)
       }
     }
   }
