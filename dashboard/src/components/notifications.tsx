@@ -51,12 +51,21 @@ export function Notifications() {
     }
 
     if (notification.link) {
-      if (notification.link.startsWith('/')) {
-        window.location.assign(notification.link)
+      const link = notification.link
+      if (link.startsWith('/')) {
+        window.location.assign(link)
+        setIsOpen(false)
       } else {
-        window.open(notification.link, '_self')
+        try {
+          const url = new URL(link)
+          if (url.protocol === 'http:' || url.protocol === 'https:') {
+            window.open(link, '_self')
+            setIsOpen(false)
+          }
+        } catch {
+          // invalid or disallowed URL scheme — ignore
+        }
       }
-      setIsOpen(false)
     }
   }
 
