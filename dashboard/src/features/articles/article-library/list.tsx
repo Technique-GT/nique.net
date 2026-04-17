@@ -111,8 +111,7 @@ export default function ArticleList() {
         setMessage({ type: 'error', text: result?.message || 'Failed to update article status' });
       }
     } catch (error) {
-      console.error('Error updating article status:', error);
-      setMessage({ type: 'error', text: 'Network error. Please try again.' });
+      setMessage({ type: 'error', text: 'Network error. Please try again. ' + (error as Error).message });
     } finally {
       setPublishingArticle(null);
     }
