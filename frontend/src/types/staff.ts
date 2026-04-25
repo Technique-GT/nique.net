@@ -7,13 +7,13 @@ export interface Staff {
 
 export const staff: Staff[] = [
     {
-        name: "Alec Grosswald",
+        name: "Kingston Barber",
         role: "Editor-in-Chief",
         email: "editor@nique.net",
         contact: null
     },
     {
-        name: "Sanika Tank",
+        name: "Parker Avery",
         role: "Managing Editor",
         email: "managing.editor@nique.net",
         contact: null
