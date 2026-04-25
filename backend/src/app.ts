@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -26,6 +29,13 @@ import { logger } from './utils/logger';
 export function createApp() {
   const app = express();
   const isProduction = env.NODE_ENV === 'production';
+  const isTest = process.env.NODE_ENV === 'test';
+
+  // Production runs behind Cloudflare/reverse proxies.
+  // Trust one proxy hop so rate limiting keys by real client IP.
+  if (isProduction) {
+    app.set('trust proxy', 1);
+  }
 
   // Security: HTTP headers
   app.use(helmet({
@@ -52,8 +62,7 @@ export function createApp() {
   });
 
   // Security: Rate limiting
-  const isTest = process.env.NODE_ENV === 'test';
-  
+
   // Global API rate limiter
   const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -71,7 +80,8 @@ export function createApp() {
     standardHeaders: true,
     legacyHeaders: false,
     message: { success: false, message: 'Too many authentication attempts, please try again later.' },
-    skip: () => isTest, // Skip rate limiting in tests
+    // Skip low-risk session checks to avoid logging users out from transient 429s.
+    skip: (req) => isTest || req.path === '/me' || req.path === '/logout',
   });
 
   // Stricter rate limiter for write operations (comments, uploads)
@@ -81,7 +91,8 @@ export function createApp() {
     standardHeaders: true,
     legacyHeaders: false,
     message: { success: false, message: 'Too many requests, please slow down.' },
-    skip: () => isTest, // Skip rate limiting in tests
+    // Only rate-limit write attempts on these route prefixes.
+    skip: (req) => isTest || ['GET', 'HEAD', 'OPTIONS'].includes(req.method),
   });
 
   // Basic middleware
@@ -192,6 +203,21 @@ export function createApp() {
   // API health check
   app.get('/health', sendHealthResponse);
   app.get('/api/health', sendHealthResponse);
+
+  // OpenAPI contract for tooling clients (e.g., Postman import).
+  app.get('/api/openapi.json', (_req, res) => {
+    const openApiPath = path.resolve(__dirname, '../openapi.json');
+
+    if (!fs.existsSync(openApiPath)) {
+      res.status(503).json({
+        success: false,
+        message: 'OpenAPI spec not found. Run `npm run openapi:generate` in backend/',
+      });
+      return;
+    }
+
+    res.sendFile(openApiPath);
+  });
 
   app.use(notFoundHandler);
   app.use(errorHandler);

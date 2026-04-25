@@ -47,6 +47,9 @@ pnpm run dev          # Start with hot reload (tsx watch)
 pnpm run build        # Compile TypeScript to dist/
 pnpm run start        # Run compiled output
 
+# OpenAPI export (for Postman import)
+pnpm run openapi:generate # Generate backend/openapi.json from route files
+
 # Testing
 pnpm run test         # Run all tests once
 pnpm run test:watch   # Run tests in watch mode
@@ -80,6 +83,24 @@ server/
 ```
 
 ## API Endpoints
+
+### OpenAPI
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/openapi.json` | Generated OpenAPI spec for import into Postman/Insomnia |
+
+Generate the file before requesting it from the API:
+
+```bash
+pnpm run openapi:generate
+```
+
+Postman setup:
+
+1. Import from URL: `http://localhost:5050/api/openapi.json` (or import `backend/openapi.json` as a file).
+2. Import `backend/postman/Technique.local.postman_environment.json`.
+3. Select the `Technique Local` environment, then set `jwt`/`xDeviceId` as needed.
 
 ### Health
 

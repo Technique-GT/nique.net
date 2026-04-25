@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { AxiosError } from 'axios';
 import { apiClient } from '@/lib/api-client';
 
 export interface AuthUser {
@@ -55,10 +56,26 @@ export const useAuthStore = create<AuthState>()((set) => ({
         set((state) => ({ 
           auth: { ...state.auth, user: mappedUser, isLoading: false } 
         }));
-      } catch (_error: unknown) {
-        // 401 is expected if not logged in
-        set((state) => ({ 
-          auth: { ...state.auth, user: null, isLoading: false } 
+      } catch (error: unknown) {
+        if (error instanceof AxiosError) {
+          const status = error.response?.status ?? 0;
+
+          // Only clear the session when auth is truly invalid.
+          if (status === 401 || status === 403) {
+            set((state) => ({
+              auth: { ...state.auth, user: null, isLoading: false }
+            }));
+            return;
+          }
+        }
+
+        // Transient failures (network/429/5xx) should not force logout.
+        set((state) => ({
+          auth: {
+            ...state.auth,
+            isLoading: false,
+            error: 'Unable to refresh session. Please try again.',
+          }
         }));
       }
     },

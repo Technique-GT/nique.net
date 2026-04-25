@@ -1,0 +1,2458 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Technique Backend API",
+    "version": "1.0.0",
+    "description": "Auto-generated from Express route definitions."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5050",
+      "description": "Local development"
+    }
+  ],
+  "tags": [
+    {
+      "name": "admin-articles"
+    },
+    {
+      "name": "admin-media"
+    },
+    {
+      "name": "articles"
+    },
+    {
+      "name": "auth"
+    },
+    {
+      "name": "authors"
+    },
+    {
+      "name": "categories"
+    },
+    {
+      "name": "comments"
+    },
+    {
+      "name": "health"
+    },
+    {
+      "name": "notifications"
+    },
+    {
+      "name": "openapi.json"
+    },
+    {
+      "name": "playlists"
+    },
+    {
+      "name": "slivers"
+    },
+    {
+      "name": "sub-categories"
+    },
+    {
+      "name": "tags"
+    },
+    {
+      "name": "users"
+    }
+  ],
+  "paths": {
+    "/api/admin/articles": {
+      "get": {
+        "tags": [
+          "admin-articles"
+        ],
+        "summary": "GET /api/admin/articles",
+        "operationId": "getApiAdminArticles",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      },
+      "post": {
+        "tags": [
+          "admin-articles"
+        ],
+        "summary": "POST /api/admin/articles",
+        "operationId": "postApiAdminArticles",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/admin/articles/{id}": {
+      "get": {
+        "tags": [
+          "admin-articles"
+        ],
+        "summary": "GET /api/admin/articles/{id}",
+        "operationId": "getApiAdminArticlesId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      },
+      "put": {
+        "tags": [
+          "admin-articles"
+        ],
+        "summary": "PUT /api/admin/articles/{id}",
+        "operationId": "putApiAdminArticlesId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      },
+      "delete": {
+        "tags": [
+          "admin-articles"
+        ],
+        "summary": "DELETE /api/admin/articles/{id}",
+        "operationId": "deleteApiAdminArticlesId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/admin/articles/{id}/featured": {
+      "patch": {
+        "tags": [
+          "admin-articles"
+        ],
+        "summary": "PATCH /api/admin/articles/{id}/featured",
+        "operationId": "patchApiAdminArticlesIdFeatured",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/admin/articles/{id}/publish": {
+      "post": {
+        "tags": [
+          "admin-articles"
+        ],
+        "summary": "POST /api/admin/articles/{id}/publish",
+        "operationId": "postApiAdminArticlesIdPublish",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/admin/articles/{id}/request-changes": {
+      "post": {
+        "tags": [
+          "admin-articles"
+        ],
+        "summary": "POST /api/admin/articles/{id}/request-changes",
+        "operationId": "postApiAdminArticlesIdRequestchanges",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/admin/articles/{id}/request-review": {
+      "post": {
+        "tags": [
+          "admin-articles"
+        ],
+        "summary": "POST /api/admin/articles/{id}/request-review",
+        "operationId": "postApiAdminArticlesIdRequestreview",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/admin/articles/{id}/status": {
+      "patch": {
+        "tags": [
+          "admin-articles"
+        ],
+        "summary": "PATCH /api/admin/articles/{id}/status",
+        "operationId": "patchApiAdminArticlesIdStatus",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/admin/articles/{id}/sticky": {
+      "patch": {
+        "tags": [
+          "admin-articles"
+        ],
+        "summary": "PATCH /api/admin/articles/{id}/sticky",
+        "operationId": "patchApiAdminArticlesIdSticky",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/admin/articles/{id}/transfer-ownership": {
+      "post": {
+        "tags": [
+          "admin-articles"
+        ],
+        "summary": "POST /api/admin/articles/{id}/transfer-ownership",
+        "operationId": "postApiAdminArticlesIdTransferownership",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/admin/articles/{id}/unpublish": {
+      "post": {
+        "tags": [
+          "admin-articles"
+        ],
+        "summary": "POST /api/admin/articles/{id}/unpublish",
+        "operationId": "postApiAdminArticlesIdUnpublish",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/admin/articles/{id}/unrequest-review": {
+      "post": {
+        "tags": [
+          "admin-articles"
+        ],
+        "summary": "POST /api/admin/articles/{id}/unrequest-review",
+        "operationId": "postApiAdminArticlesIdUnrequestreview",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/admin/articles/draft": {
+      "post": {
+        "tags": [
+          "admin-articles"
+        ],
+        "summary": "POST /api/admin/articles/draft",
+        "operationId": "postApiAdminArticlesDraft",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/admin/media/{id}": {
+      "delete": {
+        "tags": [
+          "admin-media"
+        ],
+        "summary": "DELETE /api/admin/media/{id}",
+        "operationId": "deleteApiAdminMediaId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/admin/media/{id}/usage": {
+      "get": {
+        "tags": [
+          "admin-media"
+        ],
+        "summary": "GET /api/admin/media/{id}/usage",
+        "operationId": "getApiAdminMediaIdUsage",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/admin/media/images": {
+      "get": {
+        "tags": [
+          "admin-media"
+        ],
+        "summary": "GET /api/admin/media/images",
+        "operationId": "getApiAdminMediaImages",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/admin/media/upload": {
+      "post": {
+        "tags": [
+          "admin-media"
+        ],
+        "summary": "POST /api/admin/media/upload",
+        "operationId": "postApiAdminMediaUpload",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/articles/{id}": {
+      "get": {
+        "tags": [
+          "articles"
+        ],
+        "summary": "GET /api/articles/{id}",
+        "operationId": "getApiArticlesId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/articles/{id}/view": {
+      "post": {
+        "tags": [
+          "articles"
+        ],
+        "summary": "POST /api/articles/{id}/view",
+        "operationId": "postApiArticlesIdView",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/articles/category/{category}": {
+      "get": {
+        "tags": [
+          "articles"
+        ],
+        "summary": "GET /api/articles/category/{category}",
+        "operationId": "getApiArticlesCategoryCategory",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "category",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/articles/featured": {
+      "get": {
+        "tags": [
+          "articles"
+        ],
+        "summary": "GET /api/articles/featured",
+        "operationId": "getApiArticlesFeatured",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/articles/feed": {
+      "get": {
+        "tags": [
+          "articles"
+        ],
+        "summary": "GET /api/articles/feed",
+        "operationId": "getApiArticlesFeed",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/articles/published": {
+      "get": {
+        "tags": [
+          "articles"
+        ],
+        "summary": "GET /api/articles/published",
+        "operationId": "getApiArticlesPublished",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/articles/slug/{slug}": {
+      "get": {
+        "tags": [
+          "articles"
+        ],
+        "summary": "GET /api/articles/slug/{slug}",
+        "operationId": "getApiArticlesSlugSlug",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/articles/sticky": {
+      "get": {
+        "tags": [
+          "articles"
+        ],
+        "summary": "GET /api/articles/sticky",
+        "operationId": "getApiArticlesSticky",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/auth/google": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "GET /api/auth/google",
+        "operationId": "getApiAuthGoogle",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/auth/google/callback": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "GET /api/auth/google/callback",
+        "operationId": "getApiAuthGoogleCallback",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "POST /api/auth/logout",
+        "operationId": "postApiAuthLogout",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "GET /api/auth/me",
+        "operationId": "getApiAuthMe",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/authors/{authorName}": {
+      "get": {
+        "tags": [
+          "authors"
+        ],
+        "summary": "GET /api/authors/{authorName}",
+        "operationId": "getApiAuthorsAuthorName",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "authorName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "GET /api/categories",
+        "operationId": "getApiCategories",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "POST /api/categories",
+        "operationId": "postApiCategories",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/categories/{id}": {
+      "get": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "GET /api/categories/{id}",
+        "operationId": "getApiCategoriesId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "PUT /api/categories/{id}",
+        "operationId": "putApiCategoriesId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      },
+      "patch": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "PATCH /api/categories/{id}",
+        "operationId": "patchApiCategoriesId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      },
+      "delete": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "DELETE /api/categories/{id}",
+        "operationId": "deleteApiCategoriesId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/categories/{id}/hard": {
+      "delete": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "DELETE /api/categories/{id}/hard",
+        "operationId": "deleteApiCategoriesIdHard",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/categories/slug/{slug}": {
+      "get": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "GET /api/categories/slug/{slug}",
+        "operationId": "getApiCategoriesSlugSlug",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/categories/stats": {
+      "get": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "GET /api/categories/stats",
+        "operationId": "getApiCategoriesStats",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/comments": {
+      "get": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "GET /api/comments",
+        "operationId": "getApiComments",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      },
+      "post": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "POST /api/comments",
+        "operationId": "postApiComments",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/comments/{id}": {
+      "get": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "GET /api/comments/{id}",
+        "operationId": "getApiCommentsId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      },
+      "put": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "PUT /api/comments/{id}",
+        "operationId": "putApiCommentsId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      },
+      "delete": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "DELETE /api/comments/{id}",
+        "operationId": "deleteApiCommentsId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/comments/{id}/dislike": {
+      "patch": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "PATCH /api/comments/{id}/dislike",
+        "operationId": "patchApiCommentsIdDislike",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/comments/{id}/like": {
+      "patch": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "PATCH /api/comments/{id}/like",
+        "operationId": "patchApiCommentsIdLike",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/comments/{id}/reaction": {
+      "put": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "PUT /api/comments/{id}/reaction",
+        "operationId": "putApiCommentsIdReaction",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/comments/{id}/status": {
+      "patch": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "PATCH /api/comments/{id}/status",
+        "operationId": "patchApiCommentsIdStatus",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/comments/article/{articleId}": {
+      "get": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "GET /api/comments/article/{articleId}",
+        "operationId": "getApiCommentsArticleArticleId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "articleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/comments/by-article": {
+      "get": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "GET /api/comments/by-article",
+        "operationId": "getApiCommentsByarticle",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/comments/stats": {
+      "get": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "GET /api/comments/stats",
+        "operationId": "getApiCommentsStats",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "GET /api/health",
+        "operationId": "getApiHealth",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/notifications": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "GET /api/notifications",
+        "operationId": "getApiNotifications",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/notifications/{id}/read": {
+      "patch": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "PATCH /api/notifications/{id}/read",
+        "operationId": "patchApiNotificationsIdRead",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/notifications/read-all": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "POST /api/notifications/read-all",
+        "operationId": "postApiNotificationsReadall",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated user."
+      }
+    },
+    "/api/openapi.json": {
+      "get": {
+        "tags": [
+          "openapi.json"
+        ],
+        "summary": "GET /api/openapi.json",
+        "operationId": "getApiOpenapijson",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/playlists": {
+      "get": {
+        "tags": [
+          "playlists"
+        ],
+        "summary": "GET /api/playlists",
+        "operationId": "getApiPlaylists",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "playlists"
+        ],
+        "summary": "POST /api/playlists",
+        "operationId": "postApiPlaylists",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/playlists/{id}": {
+      "get": {
+        "tags": [
+          "playlists"
+        ],
+        "summary": "GET /api/playlists/{id}",
+        "operationId": "getApiPlaylistsId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "playlists"
+        ],
+        "summary": "PUT /api/playlists/{id}",
+        "operationId": "putApiPlaylistsId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      },
+      "delete": {
+        "tags": [
+          "playlists"
+        ],
+        "summary": "DELETE /api/playlists/{id}",
+        "operationId": "deleteApiPlaylistsId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/playlists/{id}/set-active": {
+      "put": {
+        "tags": [
+          "playlists"
+        ],
+        "summary": "PUT /api/playlists/{id}/set-active",
+        "operationId": "putApiPlaylistsIdSetactive",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/playlists/active": {
+      "get": {
+        "tags": [
+          "playlists"
+        ],
+        "summary": "GET /api/playlists/active",
+        "operationId": "getApiPlaylistsActive",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/slivers": {
+      "post": {
+        "tags": [
+          "slivers"
+        ],
+        "summary": "POST /api/slivers",
+        "operationId": "postApiSlivers",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/slivers/{id}": {
+      "delete": {
+        "tags": [
+          "slivers"
+        ],
+        "summary": "DELETE /api/slivers/{id}",
+        "operationId": "deleteApiSliversId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/slivers/all": {
+      "get": {
+        "tags": [
+          "slivers"
+        ],
+        "summary": "GET /api/slivers/all",
+        "operationId": "getApiSliversAll",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/sub-categories": {
+      "get": {
+        "tags": [
+          "sub-categories"
+        ],
+        "summary": "GET /api/sub-categories",
+        "operationId": "getApiSubcategories",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "sub-categories"
+        ],
+        "summary": "POST /api/sub-categories",
+        "operationId": "postApiSubcategories",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/sub-categories/{id}": {
+      "get": {
+        "tags": [
+          "sub-categories"
+        ],
+        "summary": "GET /api/sub-categories/{id}",
+        "operationId": "getApiSubcategoriesId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "sub-categories"
+        ],
+        "summary": "PUT /api/sub-categories/{id}",
+        "operationId": "putApiSubcategoriesId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      },
+      "delete": {
+        "tags": [
+          "sub-categories"
+        ],
+        "summary": "DELETE /api/sub-categories/{id}",
+        "operationId": "deleteApiSubcategoriesId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/sub-categories/{id}/hard": {
+      "delete": {
+        "tags": [
+          "sub-categories"
+        ],
+        "summary": "DELETE /api/sub-categories/{id}/hard",
+        "operationId": "deleteApiSubcategoriesIdHard",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/sub-categories/category/{categoryId}": {
+      "get": {
+        "tags": [
+          "sub-categories"
+        ],
+        "summary": "GET /api/sub-categories/category/{categoryId}",
+        "operationId": "getApiSubcategoriesCategoryCategoryId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/sub-categories/slug/{slug}": {
+      "get": {
+        "tags": [
+          "sub-categories"
+        ],
+        "summary": "GET /api/sub-categories/slug/{slug}",
+        "operationId": "getApiSubcategoriesSlugSlug",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/sub-categories/stats": {
+      "get": {
+        "tags": [
+          "sub-categories"
+        ],
+        "summary": "GET /api/sub-categories/stats",
+        "operationId": "getApiSubcategoriesStats",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/tags": {
+      "get": {
+        "tags": [
+          "tags"
+        ],
+        "summary": "GET /api/tags",
+        "operationId": "getApiTags",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "tags"
+        ],
+        "summary": "POST /api/tags",
+        "operationId": "postApiTags",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/tags/{id}": {
+      "get": {
+        "tags": [
+          "tags"
+        ],
+        "summary": "GET /api/tags/{id}",
+        "operationId": "getApiTagsId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "tags"
+        ],
+        "summary": "PUT /api/tags/{id}",
+        "operationId": "putApiTagsId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      },
+      "patch": {
+        "tags": [
+          "tags"
+        ],
+        "summary": "PATCH /api/tags/{id}",
+        "operationId": "patchApiTagsId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      },
+      "delete": {
+        "tags": [
+          "tags"
+        ],
+        "summary": "DELETE /api/tags/{id}",
+        "operationId": "deleteApiTagsId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/tags/{id}/hard": {
+      "delete": {
+        "tags": [
+          "tags"
+        ],
+        "summary": "DELETE /api/tags/{id}/hard",
+        "operationId": "deleteApiTagsIdHard",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/tags/slug/{slug}": {
+      "get": {
+        "tags": [
+          "tags"
+        ],
+        "summary": "GET /api/tags/slug/{slug}",
+        "operationId": "getApiTagsSlugSlug",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/tags/stats": {
+      "get": {
+        "tags": [
+          "tags"
+        ],
+        "summary": "GET /api/tags/stats",
+        "operationId": "getApiTagsStats",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "GET /api/users",
+        "operationId": "getApiUsers",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      },
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "POST /api/users",
+        "operationId": "postApiUsers",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/users/{id}": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "GET /api/users/{id}",
+        "operationId": "getApiUsersId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      },
+      "put": {
+        "tags": [
+          "users"
+        ],
+        "summary": "PUT /api/users/{id}",
+        "operationId": "putApiUsersId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      },
+      "patch": {
+        "tags": [
+          "users"
+        ],
+        "summary": "PATCH /api/users/{id}",
+        "operationId": "patchApiUsersId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      },
+      "delete": {
+        "tags": [
+          "users"
+        ],
+        "summary": "DELETE /api/users/{id}",
+        "operationId": "deleteApiUsersId",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/users/bulk-delete": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "POST /api/users/bulk-delete",
+        "operationId": "postApiUsersBulkdelete",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/api/users/invite": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "POST /api/users/invite",
+        "operationId": "postApiUsersInvite",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "description": "Requires authenticated admin user.",
+        "x-required-role": "admin"
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "GET /health",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "jwt"
+      }
+    }
+  }
+}
