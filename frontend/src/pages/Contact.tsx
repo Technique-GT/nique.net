@@ -10,7 +10,7 @@ function Contact() {
             <h4 className="font-bold mb-2 text-2xl text-nique-blue">Contact The Technique</h4>
             <p> 
                 If you're trying to get in touch with a member of the <i>Technique</i> staff, please see below. 
-                If you're unsure whom to contact, email <a href={`mailto:${staff[0].email}`} className="hover:text-nique-light-blue"><u>{staff[0].name}</u></a> or call (678) 713-1980.
+                If you're unsure whom to contact, email <a href={`mailto:${staff[0].email}`} className="hover:text-nique-light-blue"><u>{staff[0].name}</u></a> or call {staff[0].contact}.
             </p>
 
             <p>
@@ -33,7 +33,7 @@ function Contact() {
             <p>{staff[10].role}: <a href={`mailto:${staff[10].email}`} className="hover:text-nique-light-blue"><u>{staff[10].name}</u></a></p>
 
             <h4 className="font-bold my-2 text-2xl text-nique-blue">Georgia Tech Student Media Administrative Staff</h4>
-            <p>{staff[11].role}: <a href={`mailto:${staff[11].email}`} className="hover:text-nique-light-blue"><u>{staff[11].name}</u></a> ({staff[11].contact})</p>
+            <p>{staff[11].role}: <a href={`mailto:${staff[11].email}`} className="hover:text-nique-light-blue"><u>{staff[11].name}</u></a>, {staff[11].contact}</p>
             <p>Student Media Marketing and Advertising Coordinator: <a href={`mailto:${staff[0].email}`} className="hover:text-nique-light-blue"><u>{staff[0].name}</u></a> & <a href={`mailto:${staff[1].email}`} className="hover:text-nique-light-blue"><u>{staff[1].name}</u></a></p>
             </div>
         </div>
