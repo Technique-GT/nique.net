@@ -10,7 +10,7 @@ export const staff: Staff[] = [
         name: "Kingston Barber",
         role: "Editor-in-Chief",
         email: "editor@nique.net",
-        contact: null
+        contact: "(901) 832-8330"
     },
     {
         name: "Parker Avery",
@@ -19,13 +19,13 @@ export const staff: Staff[] = [
         contact: null
     },
     {
-        name: "Kingston Barber",
+        name: "Amara Nnabue",
         role: "Head Copy Editor",
         email: "copy@nique.net",
         contact: null
     },
     {
-        name: "Sydney Gordon",
+        name: "Erica Yun",
         role: "Online Editor",
         email: "online@nique.net",
         contact: null
@@ -37,25 +37,25 @@ export const staff: Staff[] = [
         contact: null
     },
     {
-        name: "Madeline Dunn",
+        name: "Audrey Bewley",
         role: "Design Editor",
         email: "design@nique.net",
         contact: null
     },
     {
-        name: "Jack Elliott",
+        name: "Michael London",
         role: "Sports Editor",
-        email: "sports@nique.net", // no email address provided
+        email: "sports@nique.net",
         contact: null
     },
     {
-        name: "Parker Avery",
+        name: "Katherine Sanders",
         role: "Life Editor",
         email: "life@nique.net", // no email address provided
         contact: null
     },
     {
-        name: "Molly Khayat",
+        name: "Madison Winston",
         role: "Opinions Editor",
         email: "opinions@nique.net",
         contact: null
