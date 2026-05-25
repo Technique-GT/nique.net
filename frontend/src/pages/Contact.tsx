@@ -10,12 +10,12 @@ function Contact() {
             <h4 className="font-bold mb-2 text-2xl text-nique-blue">Contact The Technique</h4>
             <p> 
                 If you're trying to get in touch with a member of the <i>Technique</i> staff, please see below. 
-                If you're unsure whom to contact, email <a href={`mailto:${staff[0].email}`} className="hover:text-nique-light-blue"><u>{staff[0].name}</u></a> or call {staff[0].contact}.
+                If you're unsure whom to contact, email <a href={`mailto:${staff[0].email}`} className="hover:text-nique-light-blue"><u>{staff[0].name}</u></a> or text {staff[0].contact}.
             </p>
 
             <p>
                 To submit a letter to the editor, email <a href={`mailto:${staff[8].email}`} className="hover:text-nique-light-blue"><u>{staff[8].name}</u></a>, our opinions editor. 
-                For other inquiries please choose the appropriate contact from the list below.
+                For other inquiries, please choose the appropriate contact from the list below.
             </p>
 
             
