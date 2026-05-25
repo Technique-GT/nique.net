@@ -10,7 +10,7 @@ export const staff: Staff[] = [
         name: "Kingston Barber",
         role: "Editor-in-Chief",
         email: "editor@nique.net",
-        contact: "(901) 832-8330"
+        contact: "(901) 832-8380"
     },
     {
         name: "Parker Avery",
