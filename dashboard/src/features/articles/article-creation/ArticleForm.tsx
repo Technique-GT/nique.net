@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from "react";
 import {
   $getRoot,
   IS_BOLD,
@@ -46,6 +46,7 @@ import {
   type Author,
   type Category,
   type FieldErrorKey,
+  type SerializedEditorNode,
   type SerializedEditorState,
   type SubCategory,
   type Tag,
@@ -83,6 +84,17 @@ import { getMediaImages, type MediaImagesResponse } from "@/services/media";
 const MEDIA_PICKER_PAGE_SIZE = 12;
 const MEDIA_PICKER_STALE_TIME_MS = 5 * 60 * 1000;
 const MEDIA_PICKER_GC_TIME_MS = 15 * 60 * 1000;
+
+type LexicalNode = SerializedEditorNode & {
+  text?: string;
+  format?: number | string;
+  style?: string;
+  children?: LexicalNode[];
+  tag?: string;
+  listType?: string;
+  url?: string;
+  title?: string;
+};
 
 export default function ArticleForm({
   categories,
@@ -179,15 +191,17 @@ export default function ArticleForm({
   const extractTextFromEditorState = (editorState?: SerializedEditorState): string => {
     if (!editorState?.root?.children) return "";
 
-    const extractTextFromNode = (node: any): string => {
-      if (node.type === "text") {
-        return node.text || "";
+    const extractTextFromNode = (node: SerializedEditorNode): string => {
+      const lexicalNode = node as LexicalNode;
+
+      if (lexicalNode.type === "text") {
+        return lexicalNode.text || "";
       }
-      if (node.type === "linebreak") {
+      if (lexicalNode.type === "linebreak") {
         return "\n";
       }
-      if (Array.isArray(node.children)) {
-        return node.children.map(extractTextFromNode).join("");
+      if (Array.isArray(lexicalNode.children)) {
+        return lexicalNode.children.map(extractTextFromNode).join("");
       }
       return "";
     };
@@ -292,15 +306,16 @@ export default function ArticleForm({
         return undefined;
       };
 
-      const buildBlockStyleAttr = (node: any): string => {
+      const buildBlockStyleAttr = (node: SerializedEditorNode): string => {
+        const lexicalNode = node as LexicalNode;
         const styles: string[] = [];
-        const align = resolveAlignment(node?.format);
+        const align = resolveAlignment(lexicalNode.format);
         if (align) {
           styles.push(`text-align: ${align}`);
         }
 
-        if (typeof node?.style === "string") {
-          const normalized = normalizeInlineStyle(node.style);
+        if (typeof lexicalNode.style === "string") {
+          const normalized = normalizeInlineStyle(lexicalNode.style);
           if (normalized) {
             styles.push(normalized);
           }
@@ -319,32 +334,38 @@ export default function ArticleForm({
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;");
 
-      const extractFormattedTextFromNode = (node: any): string => {
+      const extractFormattedTextFromNode = (node: SerializedEditorNode): string => {
+        const lexicalNode = node as LexicalNode;
+
         // Handle text nodes with formatting
-        if (node.type === 'text') {
-          let textContent = escapeHtml(node.text || '');
-          const nodeStyle = typeof node.style === "string" ? normalizeInlineStyle(node.style) : "";
-          
+        if (lexicalNode.type === "text") {
+          let textContent = escapeHtml(lexicalNode.text || "");
+          const nodeStyle =
+            typeof lexicalNode.style === "string"
+              ? normalizeInlineStyle(lexicalNode.style)
+              : "";
+          const nodeFormat = typeof lexicalNode.format === "number" ? lexicalNode.format : 0;
+
           // Apply text formatting
-          if (node.format & IS_BOLD) { // Bold
+          if (nodeFormat & IS_BOLD) { // Bold
             textContent = `<strong>${textContent}</strong>`;
           }
-          if (node.format & IS_ITALIC) { // Italic
+          if (nodeFormat & IS_ITALIC) { // Italic
             textContent = `<em>${textContent}</em>`;
           }
-          if (node.format & IS_UNDERLINE) { // Underline
+          if (nodeFormat & IS_UNDERLINE) { // Underline
             textContent = `<u>${textContent}</u>`;
           }
-          if (node.format & IS_STRIKETHROUGH) { // Strikethrough
+          if (nodeFormat & IS_STRIKETHROUGH) { // Strikethrough
             textContent = `<s>${textContent}</s>`;
           }
-          if (node.format & IS_CODE) { // Code
+          if (nodeFormat & IS_CODE) { // Code
             textContent = `<code>${textContent}</code>`;
           }
-          if (node.format & IS_SUBSCRIPT) { // Subscript
+          if (nodeFormat & IS_SUBSCRIPT) { // Subscript
             textContent = `<sub>${textContent}</sub>`;
           }
-          if (node.format & IS_SUPERSCRIPT) { // Superscript
+          if (nodeFormat & IS_SUPERSCRIPT) { // Superscript
             textContent = `<sup>${textContent}</sup>`;
           }
 
@@ -352,111 +373,117 @@ export default function ArticleForm({
           if (nodeStyle) {
             textContent = `<span style="${nodeStyle.replace(/"/g, "&quot;")}">${textContent}</span>`;
           }
-          
+
           return textContent;
         }
-        
+
         // Handle paragraph nodes
-        if (node.type === 'paragraph') {
-          if (node.children && Array.isArray(node.children)) {
-            const paragraphContent = node.children.map(extractFormattedTextFromNode).join('');
-            const styleAttr = buildBlockStyleAttr(node);
+        if (lexicalNode.type === "paragraph") {
+          if (Array.isArray(lexicalNode.children)) {
+            const paragraphContent = lexicalNode.children.map(extractFormattedTextFromNode).join("");
+            const styleAttr = buildBlockStyleAttr(lexicalNode);
             return paragraphContent ? `<p${styleAttr}>${paragraphContent}</p>` : `<p${styleAttr}><br></p>`;
           }
-          return '<p><br></p>';
+          return "<p><br></p>";
         }
-        
+
         // Handle heading nodes
-        if (node.type === 'heading') {
-          if (node.children && Array.isArray(node.children)) {
-            const headingContent = node.children.map(extractFormattedTextFromNode).join('');
-            const tag = node.tag || 'h1';
-            const styleAttr = buildBlockStyleAttr(node);
+        if (lexicalNode.type === "heading") {
+          if (Array.isArray(lexicalNode.children)) {
+            const headingContent = lexicalNode.children.map(extractFormattedTextFromNode).join("");
+            const tag = typeof lexicalNode.tag === "string" ? lexicalNode.tag : "h1";
+            const styleAttr = buildBlockStyleAttr(lexicalNode);
             return `<${tag}${styleAttr}>${headingContent}</${tag}>`;
           }
-          return '';
+          return "";
         }
-        
+
         // Handle list nodes
-        if (node.type === 'list') {
-          if (node.children && Array.isArray(node.children)) {
-            const listItems = node.children.map(extractFormattedTextFromNode).join('');
-            const listTag = node.listType === 'bullet' ? 'ul' : 'ol';
-            const styleAttr = buildBlockStyleAttr(node);
+        if (lexicalNode.type === "list") {
+          if (Array.isArray(lexicalNode.children)) {
+            const listItems = lexicalNode.children.map(extractFormattedTextFromNode).join("");
+            const listTag = lexicalNode.listType === "bullet" ? "ul" : "ol";
+            const styleAttr = buildBlockStyleAttr(lexicalNode);
             return `<${listTag}${styleAttr}>${listItems}</${listTag}>`;
           }
-          return '';
+          return "";
         }
-        
+
         // Handle list item nodes
-        if (node.type === 'listitem') {
-          if (node.children && Array.isArray(node.children)) {
-            const itemContent = node.children.map(extractFormattedTextFromNode).join('');
-            const styleAttr = buildBlockStyleAttr(node);
+        if (lexicalNode.type === "listitem") {
+          if (Array.isArray(lexicalNode.children)) {
+            const itemContent = lexicalNode.children.map(extractFormattedTextFromNode).join("");
+            const styleAttr = buildBlockStyleAttr(lexicalNode);
             return `<li${styleAttr}>${itemContent}</li>`;
           }
-          return '<li></li>';
+          return "<li></li>";
         }
-        
+
         // Handle quote nodes
-        if (node.type === 'quote') {
-          if (node.children && Array.isArray(node.children)) {
-            const quoteContent = node.children.map(extractFormattedTextFromNode).join('');
-            const styleAttr = buildBlockStyleAttr(node);
+        if (lexicalNode.type === "quote") {
+          if (Array.isArray(lexicalNode.children)) {
+            const quoteContent = lexicalNode.children.map(extractFormattedTextFromNode).join("");
+            const styleAttr = buildBlockStyleAttr(lexicalNode);
             return `<blockquote${styleAttr}>${quoteContent}</blockquote>`;
           }
-          return '<blockquote></blockquote>';
+          return "<blockquote></blockquote>";
         }
-        
+
         // Handle code nodes
-        if (node.type === 'code') {
-          if (node.children && Array.isArray(node.children)) {
-            const codeContent = node.children.map(extractFormattedTextFromNode).join('');
-            const styleAttr = buildBlockStyleAttr(node);
+        if (lexicalNode.type === "code") {
+          if (Array.isArray(lexicalNode.children)) {
+            const codeContent = lexicalNode.children.map(extractFormattedTextFromNode).join("");
+            const styleAttr = buildBlockStyleAttr(lexicalNode);
             return `<pre${styleAttr}><code>${codeContent}</code></pre>`;
           }
-          return '<pre><code></code></pre>';
+          return "<pre><code></code></pre>";
         }
-        
+
         // Handle line break nodes
-        if (node.type === 'linebreak') {
-          return '<br>';
+        if (lexicalNode.type === "linebreak") {
+          return "<br>";
         }
-        
+
         // Handle link nodes
-        if (node.type === 'link') {
-          if (node.children && Array.isArray(node.children)) {
-            const linkContent = node.children.map(extractFormattedTextFromNode).join('');
-            const url = node.url || '#';
-            const title = node.title ? ` title="${node.title}"` : '';
+        if (lexicalNode.type === "link") {
+          if (Array.isArray(lexicalNode.children)) {
+            const linkContent = lexicalNode.children.map(extractFormattedTextFromNode).join("");
+            const url =
+              typeof lexicalNode.url === "string" && lexicalNode.url.length > 0
+                ? lexicalNode.url
+                : "#";
+            const title =
+              typeof lexicalNode.title === "string" && lexicalNode.title.length > 0
+                ? ` title="${lexicalNode.title}"`
+                : "";
             return `<a href="${url}"${title} target="_blank" rel="noopener noreferrer">${linkContent}</a>`;
           }
-          return '';
+          return "";
         }
-        
+
         // Recursively process children for other node types
-        if (node.children && Array.isArray(node.children)) {
-          return node.children.map(extractFormattedTextFromNode).join('');
+        if (Array.isArray(lexicalNode.children)) {
+          return lexicalNode.children.map(extractFormattedTextFromNode).join("");
         }
-        
-        return '';
+
+        return "";
       };
 
       if (editorState?.root?.children) {
         const htmlContent = editorState.root.children
           .map(extractFormattedTextFromNode)
           .filter(Boolean)
-          .join('\n');
-        
-        return htmlContent || '<p></p>';
+          .join("\n");
+
+        return htmlContent || "<p></p>";
       }
-      
-      return '<p></p>';
-    } catch (error) {
-      console.error('Error converting Lexical to HTML:', error);
-      return '<p></p>';
+
+      return "<p></p>";
+    } catch (_error) {
+      // Keep rendering resilient if conversion fails for malformed editor state.
+      return "<p></p>";
     }
-  };  
+  };
 
   useEffect(() => {
     if (content) {
@@ -573,8 +600,7 @@ export default function ArticleForm({
       setReviewStatus('in_review');
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Review requested");
-    } catch (error) {
-      console.error('Failed to request review:', error);
+    } catch (_error) {
       toast.error("Failed to request review");
     } finally {
       setIsSubmitting(false);
@@ -589,8 +615,7 @@ export default function ArticleForm({
       setReviewStatus('draft');
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Review cancelled");
-    } catch (error) {
-      console.error('Failed to cancel review:', error);
+    } catch (_error) {
       toast.error("Failed to cancel review");
     } finally {
       setIsSubmitting(false);
@@ -607,8 +632,7 @@ export default function ArticleForm({
       setReviewStatus('changes_requested');
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Changes requested");
-    } catch (error) {
-      console.error('Failed to request changes:', error);
+    } catch (_error) {
       toast.error("Failed to request changes");
     } finally {
       setIsSubmitting(false);
@@ -632,8 +656,7 @@ export default function ArticleForm({
       setIsPublished(true);
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Article published");
-    } catch (error) {
-      console.error('Failed to publish:', error);
+    } catch (_error) {
       toast.error("Failed to publish");
     } finally {
       setIsSubmitting(false);
@@ -649,8 +672,7 @@ export default function ArticleForm({
       setIsPublished(false);
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
       toast.success("Article unpublished");
-    } catch (error) {
-      console.error('Failed to unpublish:', error);
+    } catch (_error) {
       toast.error("Failed to unpublish");
     } finally {
       setIsSubmitting(false);
@@ -665,9 +687,8 @@ export default function ArticleForm({
       setIsDeleting(true);
       await apiClient.delete(`/admin/articles/${initialArticle._id}`);
       await queryClient.invalidateQueries({ queryKey: ["admin-articles"] });
-      navigate({ to: "/articles" as any, replace: true });
-    } catch (error) {
-      console.error("Failed to delete article:", error);
+      navigate({ to: "/articles", replace: true });
+    } catch (_error) {
       toast.error("Failed to delete article");
     } finally {
       setIsDeleting(false);
@@ -1011,16 +1032,15 @@ export default function ArticleForm({
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
 
       setSubmitMessage({ type: 'success', message: 'Changes saved.' });
-    } catch (error: any) {
-      console.error('Save failed:', error);
-      const msg = error?.response?.data?.message || 'Failed to save changes.';
+    } catch (_error: unknown) {
+      const msg = getApiErrorMessage(_error, 'Failed to save changes.');
       setSubmitMessage({ type: 'error', message: msg });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     // Existing articles: Save immediately (no confirm dialog flow)
@@ -1066,13 +1086,12 @@ export default function ArticleForm({
 
       const created = await createAdminArticle(articleData);
       navigate({
-        to: '/articles/$articleId/edit' as any,
-        params: { articleId: created._id } as any,
+        to: '/articles/$articleId/edit',
+        params: { articleId: created._id },
         replace: true,
       });
-    } catch (error: any) {
-      console.error('Create failed:', error);
-      const msg = error?.response?.data?.message || 'Failed to create article.';
+    } catch (_error: unknown) {
+      const msg = getApiErrorMessage(_error, 'Failed to create article.');
       setSubmitMessage({ type: 'error', message: msg });
     } finally {
       setIsSubmitting(false);
@@ -1114,13 +1133,12 @@ export default function ArticleForm({
 
       const created = await createAdminArticle(articleData);
       navigate({
-        to: '/articles/$articleId/edit' as any,
-        params: { articleId: created._id } as any,
+        to: '/articles/$articleId/edit',
+        params: { articleId: created._id },
         replace: true,
       });
-    } catch (error: any) {
-      console.error('Create and publish failed:', error);
-      const msg = error?.response?.data?.message || 'Failed to publish article.';
+    } catch (_error: unknown) {
+      const msg = getApiErrorMessage(_error, 'Failed to publish article.');
       setSubmitMessage({ type: 'error', message: msg });
     } finally {
       setIsSubmitting(false);

@@ -335,6 +335,7 @@ describe('Security: Header Tests', () => {
     // Helmet headers
     expect(res.headers['x-content-type-options']).toBe('nosniff');
     expect(res.headers['x-frame-options']).toBeDefined();
+    expect(res.headers['x-robots-tag']).toBe('noindex, nofollow, noarchive, nosnippet');
   });
 });
 

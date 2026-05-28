@@ -16,9 +16,52 @@ export type PaginationMeta = {
 }
 
 type PaginatedResponse<T> = {
-  success: boolean
   data: T[]
   pagination: PaginationMeta
+}
+
+type ParsedUsersResponse = {
+  data: User[]
+  pagination?: PaginationMeta
+}
+
+const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null
+
+const toPaginationMeta = (value: unknown): PaginationMeta | undefined => {
+  if (!isObjectRecord(value)) return undefined
+
+  const { total, page, pages, limit } = value
+  if (
+    typeof total === 'number'
+    && typeof page === 'number'
+    && typeof pages === 'number'
+    && typeof limit === 'number'
+  ) {
+    return { total, page, pages, limit }
+  }
+
+  return undefined
+}
+
+const parseUsersResponse = (value: unknown): ParsedUsersResponse => {
+  if (Array.isArray(value)) {
+    return { data: value as User[] }
+  }
+
+  if (!isObjectRecord(value)) {
+    return { data: [] }
+  }
+
+  if (!Array.isArray(value.data)) {
+    return { data: [] }
+  }
+
+  const response = value as PaginatedResponse<User>
+  return {
+    data: response.data,
+    pagination: toPaginationMeta(response.pagination),
+  }
 }
 
 export async function getUsers(params?: {
@@ -29,12 +72,9 @@ export async function getUsers(params?: {
   sortDir?: 'asc' | 'desc'
   isAdmin?: boolean
 }): Promise<User[]> {
-  const res: any = await apiClient.get('/users', { params })
-
-  if (Array.isArray(res)) return res as User[]
-  if (res && Array.isArray((res as PaginatedResponse<User>).data)) return (res as PaginatedResponse<User>).data
-
-  return []
+  const res = await apiClient.get('/users', { params })
+  const parsed = parseUsersResponse(res)
+  return parsed.data
 }
 
 export async function getUsersPage(params?: {
@@ -45,23 +85,23 @@ export async function getUsersPage(params?: {
   sortDir?: 'asc' | 'desc'
   isAdmin?: boolean
 }): Promise<{ data: User[]; pagination: PaginationMeta }> {
-  const res: any = await apiClient.get('/users', { params })
+  const res = await apiClient.get('/users', { params })
+  const parsed = parseUsersResponse(res)
 
-  if (res && Array.isArray((res as PaginatedResponse<User>).data)) {
-    const response = res as PaginatedResponse<User>
+  if (parsed.pagination) {
     return {
-      data: response.data,
-      pagination: response.pagination,
+      data: parsed.data,
+      pagination: parsed.pagination,
     }
   }
 
-  if (Array.isArray(res)) {
+  if (parsed.data.length > 0) {
     const page = params?.page ?? 1
-    const limit = params?.limit ?? res.length
+    const limit = params?.limit ?? parsed.data.length
     return {
-      data: res as User[],
+      data: parsed.data,
       pagination: {
-        total: res.length,
+        total: parsed.data.length,
         page,
         pages: 1,
         limit,

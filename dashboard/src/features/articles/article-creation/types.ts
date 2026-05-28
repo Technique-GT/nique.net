@@ -1,3 +1,8 @@
+import type {
+  SerializedEditorState as LexicalSerializedEditorState,
+  SerializedLexicalNode,
+} from "lexical";
+
 // Define types for fetched data
 export interface Category {
   _id: string;
@@ -40,6 +45,10 @@ export interface Author {
   status: string;
 }
 
+export type SerializedEditorNode = SerializedLexicalNode;
+export type SerializedEditorState =
+  LexicalSerializedEditorState<SerializedLexicalNode>;
+
 export interface Article {
   _id: string;
   title: string;
@@ -50,7 +59,7 @@ export interface Article {
   tags: Tag[];
   authors: Author[];
   ownerId?: string;
-  editorState?: any;
+  editorState?: SerializedEditorState;
   reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published';
   reviewedAt?: string;
   reviewedBy?: string;
@@ -68,18 +77,6 @@ export interface Article {
   seoDescription?: string;
   createdAt: string;
   updatedAt: string;
-}
-
-// Define SerializedEditorState type based on Lexical's structure
-export interface SerializedEditorState {
-  root: {
-    children: any[];
-    direction: "ltr" | "rtl" | null;
-    format: any;
-    indent: number;
-    type: string;
-    version: number;
-  };
 }
 
 export type FieldErrorKey =

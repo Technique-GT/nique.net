@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import useDialogState from '@/hooks/use-dialog-state'
 import { User, userListSchema } from '../data/schema'
-import { getUsersPage, type PaginationMeta } from '@/services/users'
+import { getUsersPage, type PaginationMeta, type User as ApiUser } from '@/services/users'
 import { queryKeys } from '@/hooks/use-queries'
 import type { ColumnFiltersState, PaginationState } from '@tanstack/react-table'
 import type { SortingState } from '@tanstack/react-table'
@@ -31,6 +31,14 @@ const UsersContext = React.createContext<UsersContextType | null>(null)
 
 interface Props {
   children: React.ReactNode
+}
+
+type RawUser = ApiUser & {
+  bio?: string
+  email?: string
+  googleSub?: string
+  profilePictureUrl?: string
+  socialLinks?: unknown[]
 }
 
 export default function UsersProvider({ children }: Props) {
@@ -65,12 +73,12 @@ export default function UsersProvider({ children }: Props) {
     queryFn: () => getUsersPage({ page, limit, search, sortBy, sortDir, isAdmin }),
     staleTime: 30 * 1000, // 30 seconds
   })
-  const rawUsers = usersResponse?.data ?? []
+  const rawUsers = (usersResponse?.data ?? []) as RawUser[]
   const paginationMeta: PaginationMeta | undefined = usersResponse?.pagination
 
   // Map backend users to frontend User schema
   const users: User[] = React.useMemo(() => {
-      const mappedUsers = rawUsers.map((u: any) => ({
+      const mappedUsers = rawUsers.map((u) => ({
         _id: u._id,
         id: u._id,
         name: typeof u.name === 'string' ? u.name : 'Unknown',

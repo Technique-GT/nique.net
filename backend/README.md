@@ -30,7 +30,7 @@ The server runs on `http://localhost:5050` by default.
 | `GOOGLE_CLIENT_ID` | Yes | - | Google OAuth Client ID |
 | `GOOGLE_CLIENT_SECRET` | Yes | - | Google OAuth Client Secret |
 | `GOOGLE_REDIRECT_URI` | Yes | - | Google OAuth Redirect URI |
-| `CLIENT_URL` | No | `http://localhost:5173` | Frontend URL for CORS |
+| `CLIENT_URLS` | No | `http://localhost:5173,http://localhost:5174` | Comma-separated frontend/dashboard origins for CORS |
 | `NODE_ENV` | No | `development` | Environment mode |
 
 ### Safety Constraint
@@ -46,6 +46,9 @@ pnpm run dev          # Start with hot reload (tsx watch)
 # Build
 pnpm run build        # Compile TypeScript to dist/
 pnpm run start        # Run compiled output
+
+# OpenAPI export (for Postman import)
+pnpm run openapi:generate # Generate backend/openapi.json from route files
 
 # Testing
 pnpm run test         # Run all tests once
@@ -80,6 +83,24 @@ server/
 ```
 
 ## API Endpoints
+
+### OpenAPI
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/openapi.json` | Generated OpenAPI spec for import into Postman/Insomnia |
+
+Generate the file before requesting it from the API:
+
+```bash
+pnpm run openapi:generate
+```
+
+Postman setup:
+
+1. Import from URL: `http://localhost:5050/api/openapi.json` (or import `backend/openapi.json` as a file).
+2. Import `backend/postman/Technique.local.postman_environment.json`.
+3. Select the `Technique Local` environment, then set `jwt`/`xDeviceId` as needed.
 
 ### Health
 

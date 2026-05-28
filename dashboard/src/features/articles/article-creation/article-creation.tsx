@@ -8,8 +8,144 @@ import {
   useUsers,
   useAdminArticle,
 } from "@/hooks/use-queries";
-import type { Category, SubCategory, Tag, Author } from "./types";
+import type { Category, SubCategory, Tag, Author, Article } from "./types";
 import { useParams } from "@tanstack/react-router";
+import type { BackendArticle } from "@/services/articles";
+import type { User } from "@/services/users";
+
+type BackendUser = {
+  _id?: string;
+  name?: string;
+  email?: string;
+  isAdmin?: boolean;
+};
+
+type BackendArticleAuthor = {
+  authorId?: BackendUser | null;
+};
+
+type BackendArticleForForm = BackendArticle & {
+  content?: string;
+  ownerId?: string;
+  editorState?: unknown;
+  isFeatured?: boolean;
+  isSticky?: boolean;
+  allowComments?: boolean;
+  categoryId?: Category | string | null;
+  subcategoryId?: SubCategory | string | null;
+  tagIds?: Array<Tag | string>;
+  authors?: BackendArticleAuthor[];
+};
+
+const toCategory = (value: Category | string | null | undefined): Category => {
+  if (value && typeof value === "object") {
+    return {
+      _id: value._id,
+      name: value.name || "Unknown",
+      slug: value.slug || "",
+      description: value.description,
+      isActive: value.isActive ?? true,
+    };
+  }
+
+  if (typeof value === "string" && value.length > 0) {
+    return {
+      _id: value,
+      name: "Unknown",
+      slug: "",
+      isActive: true,
+    };
+  }
+
+  return {
+    _id: "",
+    name: "Unknown",
+    slug: "",
+    isActive: true,
+  };
+};
+
+const toSubCategory = (value: SubCategory | string | null | undefined, parentCategoryId: string): SubCategory | undefined => {
+  if (!value) return undefined;
+
+  if (typeof value === "object") {
+    return {
+      _id: value._id,
+      name: value.name || "Unknown",
+      slug: value.slug || "",
+      description: value.description,
+      isActive: value.isActive ?? true,
+      categoryId: value.categoryId,
+      category: value.category,
+    };
+  }
+
+  if (typeof value === "string" && value.length > 0) {
+    return {
+      _id: value,
+      name: "Unknown",
+      slug: "",
+      isActive: true,
+      categoryId: parentCategoryId,
+      category: {
+        _id: parentCategoryId,
+        name: "Unknown",
+        slug: "",
+      },
+    };
+  }
+
+  return undefined;
+};
+
+const toTag = (value: Tag | string): Tag => {
+  if (typeof value === "object" && value !== null) {
+    return {
+      _id: value._id,
+      name: value.name || "Unknown",
+      slug: value.slug || "",
+      description: value.description,
+      color: value.color || "#6366f1",
+      isActive: value.isActive ?? true,
+    };
+  }
+
+  return {
+    _id: value,
+    name: "Unknown",
+    slug: "",
+    color: "#6366f1",
+    isActive: true,
+  };
+};
+
+const mapUserToAuthor = (u: BackendUser | null | undefined): Author | null => {
+  if (!u || typeof u._id !== "string" || u._id.length === 0) return null;
+  const fullName = typeof u.name === "string" ? u.name.trim() : "Unknown";
+  const parts = fullName.split(/\s+/).filter(Boolean);
+  const firstName = parts[0] || "Unknown";
+  const lastName = parts.slice(1).join(" ");
+
+  return {
+    _id: u._id,
+    firstName,
+    lastName,
+    username: fullName,
+    email: u.email || "",
+    role: u.isAdmin ? "admin" : "writer",
+    status: "active",
+  };
+};
+
+const toSerializedEditorState = (
+  value: unknown,
+): Article["editorState"] | undefined => {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  return value as Article["editorState"];
+};
 
 export default function ArticleCreation() {
   const { articleId } = useParams({ strict: false }) as { articleId?: string };
@@ -22,49 +158,51 @@ export default function ArticleCreation() {
   } = useAdminArticle(articleId || "");
 
   // Transform backend article to frontend shape
-  const transformedArticle = useMemo(() => {
+  const transformedArticle = useMemo<Article | null>(() => {
     if (!initialArticle) return null;
-    const backendArticle = initialArticle as any;
+    const backendArticle = initialArticle as BackendArticleForForm;
+    const category = toCategory(backendArticle.categoryId);
+    const subcategory = toSubCategory(backendArticle.subcategoryId, category._id);
+    const tags = Array.isArray(backendArticle.tagIds)
+      ? backendArticle.tagIds.map(toTag)
+      : [];
+    const authors = Array.isArray(backendArticle.authors)
+      ? backendArticle.authors
+          .map((a) => mapUserToAuthor(a.authorId))
+          .filter((a): a is Author => a !== null)
+      : [];
 
-    // Helper to map backend user to frontend Author
-    const mapUserToAuthor = (u: any) => {
-      if (!u) return null;
-      const fullName = typeof u.name === 'string' ? u.name.trim() : 'Unknown';
-      const parts = fullName.split(/\s+/).filter(Boolean);
-      const firstName = parts[0] || 'Unknown';
-      const lastName = parts.slice(1).join(' ');
-
-      return {
-        _id: u._id,
-        firstName,
-        lastName,
-        username: fullName,
-        email: u.email || '', // Email might not be populated, default to empty
-        role: u.isAdmin ? 'admin' : 'writer',
-        status: 'active',
-      };
-    };
-
-      return {
-        ...backendArticle,
-        // Map populated fields to expected frontend props
-        category: backendArticle.categoryId,
-        subcategory: backendArticle.subcategoryId,
-        tags: backendArticle.tagIds,
-        isPublished: backendArticle.published,
-        allowComments: backendArticle.allowComments,
-
-        imageCaption: backendArticle.imageCaption ?? "",
-
-      
-      // Map authors array structure
-      authors: Array.isArray(backendArticle.authors)
-        ? backendArticle.authors
-            .map((a: any) => mapUserToAuthor(a.authorId))
-            .filter((a: any) => a !== null)
-        : [],
-
-      featuredMediaUrl: typeof backendArticle.featuredMediaUrl === 'string' ? backendArticle.featuredMediaUrl : undefined,
+    return {
+      _id: backendArticle._id,
+      title: backendArticle.title || "",
+      content: backendArticle.content || "",
+      imageCaption: backendArticle.imageCaption ?? "",
+      category,
+      subcategory,
+      tags,
+      authors,
+      ownerId: backendArticle.ownerId,
+      editorState: toSerializedEditorState(backendArticle.editorState),
+      reviewStatus: backendArticle.reviewStatus,
+      reviewedAt: backendArticle.reviewedAt,
+      reviewedBy: backendArticle.reviewedBy,
+      reviewNotes: backendArticle.reviewNotes,
+      featuredMediaUrl:
+        typeof backendArticle.featuredMediaUrl === "string"
+          ? backendArticle.featuredMediaUrl
+          : undefined,
+      isPublished: backendArticle.published,
+      isFeatured: backendArticle.isFeatured ?? false,
+      isSticky: backendArticle.isSticky ?? false,
+      status: backendArticle.published ? "published" : "draft",
+      allowComments: backendArticle.allowComments ?? true,
+      publishedAt: backendArticle.publishedAt ?? undefined,
+      slug: backendArticle.slug || "",
+      views: backendArticle.viewCount ?? 0,
+      seoTitle: undefined,
+      seoDescription: undefined,
+      createdAt: backendArticle.createdAt,
+      updatedAt: backendArticle.updatedAt,
     };
   }, [initialArticle]);
 
@@ -105,7 +243,7 @@ export default function ArticleCreation() {
     return rawSubCategories.map((sc) => {
       const categoryId = typeof sc.categoryId === 'string' 
         ? sc.categoryId 
-        : (sc.categoryId as any)?._id || '';
+        : sc.categoryId?._id || '';
       const category = categoryMap.get(categoryId);
       
       return {
@@ -137,7 +275,7 @@ export default function ArticleCreation() {
 
   // Map canonical backend User -> UI Author shape expected by ArticleForm
   const authors: Author[] = useMemo(() => {
-    return rawUsers.map((u: any) => {
+    return rawUsers.map((u: User) => {
       const fullName = typeof u?.name === 'string' ? u.name.trim() : '';
       const parts = fullName.split(/\s+/).filter(Boolean);
       const firstName = parts[0] || 'Unknown';
@@ -206,7 +344,7 @@ export default function ArticleCreation() {
         subcategories={subcategories}
         tags={tags}
         authors={authors}
-        initialArticle={transformedArticle as any}
+        initialArticle={transformedArticle}
         isLoadingData={isLoading}
         onLastSavedChange={setLastSavedAt}
       />

@@ -81,8 +81,8 @@ export default function SpotifyPlaylistManager() {
       }
       resetForm();
       setIsDialogOpen(false);
-    } catch (error) {
-      console.error('Error saving playlist:', error);
+    } catch (_error) {
+      // noop
     }
   };
 
@@ -90,16 +90,16 @@ export default function SpotifyPlaylistManager() {
     if (!confirm('Are you sure you want to delete this playlist?')) return;
     try {
       await deletePlaylistMutation.mutateAsync(id);
-    } catch (error) {
-      console.error('Error deleting playlist:', error);
+    } catch (_error) {
+      // noop
     }
   };
 
   const handleSetActive = async (id: string) => {
     try {
       await setActivePlaylistMutation.mutateAsync(id);
-    } catch (error) {
-      console.error('Error setting active playlist:', error);
+    } catch (_error) {
+      // noop
     }
   };
 

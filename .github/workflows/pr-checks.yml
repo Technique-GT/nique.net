@@ -18,6 +18,13 @@ jobs:
   pr-gate:
     name: PR Gate
     runs-on: ubuntu-latest
+    env:
+      ATLAS_URI: ${{ secrets.ATLAS_URI }}
+      MONGO_DB_NAME: test
+      JWT_TOKEN: ${{ secrets.TEST_JWT_TOKEN }}
+      GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.TEST_GOOGLE_CLIENT_SECRET }}
+      GOOGLE_REDIRECT_URI: ${{ vars.TEST_GOOGLE_REDIRECT_URI }}
     timeout-minutes: 25
 
     steps:

@@ -18,6 +18,25 @@ import {
 import { useAuthStore } from "@/stores/authStore";
 import { canManageTaxonomy } from "@/lib/permissions";
 
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (
+    err &&
+    typeof err === "object" &&
+    "response" in err &&
+    typeof (err as { response?: unknown }).response === "object" &&
+    (err as { response?: { data?: unknown } }).response?.data &&
+    typeof (err as { response?: { data?: { message?: unknown } } }).response?.data?.message === "string"
+  ) {
+    return (err as { response?: { data?: { message?: string } } }).response?.data?.message || fallback;
+  }
+
+  if (err instanceof Error && err.message) {
+    return err.message;
+  }
+
+  return fallback;
+};
+
 export default function Tags() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -60,8 +79,8 @@ export default function Tags() {
       }
       resetForm();
       setIsDialogOpen(false);
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || `Error ${editingTag ? 'updating' : 'adding'} tag`);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, `Error ${editingTag ? 'updating' : 'adding'} tag`));
     }
   };
 
@@ -71,8 +90,8 @@ export default function Tags() {
 
     try {
       await deleteTag.mutateAsync(tag._id);
-    } catch (err: any) {
-      alert(err?.response?.data?.message || 'Error deleting tag');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Error deleting tag'));
     }
   };
 

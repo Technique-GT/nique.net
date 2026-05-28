@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { AxiosError } from 'axios';
 import { apiClient } from '@/lib/api-client';
 
 export interface AuthUser {
@@ -21,6 +22,14 @@ interface AuthState {
   };
 }
 
+type BackendAuthUser = {
+  _id: string;
+  name: string;
+  email?: string;
+  isAdmin: boolean;
+  profilePictureUrl?: string;
+}
+
 export const useAuthStore = create<AuthState>()((set) => ({
   auth: {
     user: null,
@@ -33,7 +42,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
     checkAuth: async () => {
       set((state) => ({ auth: { ...state.auth, isLoading: true, error: null } }));
       try {
-        const user = await apiClient.get('/auth/me') as any;
+        const user = await apiClient.get('/auth/me') as unknown as BackendAuthUser;
         // Transform backend user to frontend shape
         const mappedUser: AuthUser = {
           id: user._id,
@@ -47,10 +56,26 @@ export const useAuthStore = create<AuthState>()((set) => ({
         set((state) => ({ 
           auth: { ...state.auth, user: mappedUser, isLoading: false } 
         }));
-      } catch (error: any) {
-        // 401 is expected if not logged in
-        set((state) => ({ 
-          auth: { ...state.auth, user: null, isLoading: false } 
+      } catch (error: unknown) {
+        if (error instanceof AxiosError) {
+          const status = error.response?.status ?? 0;
+
+          // Only clear the session when auth is truly invalid.
+          if (status === 401 || status === 403) {
+            set((state) => ({
+              auth: { ...state.auth, user: null, isLoading: false }
+            }));
+            return;
+          }
+        }
+
+        // Transient failures (network/429/5xx) should not force logout.
+        set((state) => ({
+          auth: {
+            ...state.auth,
+            isLoading: false,
+            error: 'Unable to refresh session. Please try again.',
+          }
         }));
       }
     },
@@ -61,8 +86,8 @@ export const useAuthStore = create<AuthState>()((set) => ({
         set((state) => ({ 
           auth: { ...state.auth, user: null } 
         }));
-      } catch (error) {
-        console.error('Logout failed', error);
+      } catch (_error) {
+        // noop
       }
     },
   },
