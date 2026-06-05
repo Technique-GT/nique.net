@@ -35,19 +35,6 @@ function formatTimeSincePublished(publishedAt?: string | Date | null) {
     return 'just now';
 }
 
-// ⚠️ TEMPORARY TEST DATA (Delete this once backend is fixed!)
-const TEST_FRESH_ARTICLE = {
-    id: "test-1",
-    title: "This should BE VISIBLE (Published 1 day ago)",
-    publishedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-};
-
-const TEST_EXPIRED_ARTICLE = {
-    id: "test-2",
-    title: "This should NOT be visible (Published 7 days ago)",
-    publishedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
-};
-
 function JustInBlock({ article }: ArticleProps) {
     const navigate = useNavigate();
     const link = getArticleLink(article);
@@ -75,6 +62,5 @@ function JustInBlock({ article }: ArticleProps) {
         </div>
     )
 }
-
 
 export default JustInBlock
