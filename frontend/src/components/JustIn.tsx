@@ -35,9 +35,35 @@ function formatTimeSincePublished(publishedAt?: string | Date | null) {
     return 'just now';
 }
 
+// ⚠️ TEMPORARY TEST DATA (Delete this once backend is fixed!)
+const TEST_FRESH_ARTICLE = {
+    id: "test-1",
+    title: "This should BE VISIBLE (Published 1 day ago)",
+    publishedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+};
+
+const TEST_EXPIRED_ARTICLE = {
+    id: "test-2",
+    title: "This should NOT be visible (Published 7 days ago)",
+    publishedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+};
+
 function JustInBlock({ article }: ArticleProps) {
     const navigate = useNavigate();
     const link = getArticleLink(article);
+    
+    if (article.publishedAt) {
+        const publishedDate = new Date(article.publishedAt);
+        if (!Number.isNaN(publishedDate.getTime())) {
+            const diffInMilliseconds = Date.now() - publishedDate.getTime();
+            const fiveDaysInMilliseconds = 5 * 24 * 60 * 60 * 1000;
+
+            // If article is older than 5 days, render nothing
+            if (diffInMilliseconds > fiveDaysInMilliseconds) {
+                return null;
+            }
+        }
+    }
 
     return (
         <div className='flex flex-col sm:flex-row gap-4 content-center cursor-pointer' onClick={() => navigate(link)}>
@@ -49,5 +75,6 @@ function JustInBlock({ article }: ArticleProps) {
         </div>
     )
 }
+
 
 export default JustInBlock
