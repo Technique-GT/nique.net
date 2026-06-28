@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "import-json": "tsx src/scripts/import-json.ts",
+    "import-json:one": "ARTICLE_LIMIT=1 tsx src/scripts/import-json.ts",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",

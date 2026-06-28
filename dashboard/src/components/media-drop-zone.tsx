@@ -12,7 +12,7 @@ const ACCEPTED_TYPES = [
   'image/svg+xml',
 ];
 
-const MAX_SIZE = 10 * 1024 * 1024;
+const MAX_SIZE = 100 * 1024 * 1024;
 
 interface MediaDropZoneProps {
   onUpload: (url: string) => void;
@@ -33,7 +33,7 @@ export function MediaDropZone({ onUpload, disabled }: MediaDropZoneProps) {
         return;
       }
       if (file.size > MAX_SIZE) {
-        setError('File too large. Maximum size is 10 MB.');
+        setError('File too large. Maximum size is 100 MB.');
         return;
       }
 
@@ -155,7 +155,7 @@ export function MediaDropZone({ onUpload, disabled }: MediaDropZoneProps) {
                 <span className="text-primary underline">browse</span>
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                JPEG, PNG, GIF, WebP, SVG &mdash; max 10 MB
+                JPEG, PNG, GIF, WebP, SVG &mdash; max 100 MB
               </p>
             </div>
           </>

@@ -10,7 +10,7 @@ const ALLOWED_TYPES = new Set([
   'image/svg+xml',
 ]);
 
-const MAX_SIZE = 10 * 1024 * 1024;
+const MAX_SIZE = 100 * 1024 * 1024;
 
 export const uploadMedia = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -32,7 +32,7 @@ export const uploadMedia = async (req: AuthRequest, res: Response): Promise<void
     if (file.size > MAX_SIZE) {
       res.status(400).json({
         success: false,
-        message: 'File too large. Maximum size is 10 MB.',
+        message: 'File too large. Maximum size is 100 MB.',
       });
       return;
     }
