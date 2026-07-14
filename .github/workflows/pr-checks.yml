@@ -4,7 +4,7 @@ on:
   pull_request:
     branches:
       - main
-      - deploy
+      - staging
   workflow_dispatch:
 
 concurrency:
