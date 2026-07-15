@@ -9,7 +9,7 @@ import { Request, Response } from 'express';
 import PrintPublication, { IPrintPublication } from '../models/PrintPublication';
 
 // get dates
-export const getPublications = async (req: Request, res: Response): Promise<void> => {
+export const getPublications = async (_req: Request, res: Response): Promise<void> => {
   try {
     const publications: IPrintPublication[] = await PrintPublication.find().sort({ publishDate: -1 });
     res.status(200).json(publications);
