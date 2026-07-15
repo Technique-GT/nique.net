@@ -6,7 +6,7 @@
 //
 
 import { Request, Response } from 'express';
-import PrintPublication, { IPrintPublication } from '../models/printpublication';
+import PrintPublication, { IPrintPublication } from '../models/PrintPublication';
 
 // get dates
 export const getPublications = async (req: Request, res: Response): Promise<void> => {
