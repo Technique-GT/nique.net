@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
-import publicationService from '../services/publicationService';
+import { getPublications } from '../services/publicationService';
 import { ArticleDocument } from '../types/article';
 import { Publication, formatPublicationDate } from '../utils/dateFormat';
 import { FaFacebook, FaXTwitter, FaInstagram, FaTiktok, FaLinkedin } from "react-icons/fa6";
@@ -21,19 +21,21 @@ function About() {
             setIsLoading(true);
 
             try {
-                // fetching articles and publication dates at the same time
-                const [recentArticlesData, publicationsData] = await Promise.all([
-                    articleService.fetchRecentArticles(7, 'published', controller.signal),
-                    publicationService.getPublications()
-                ]);
-
-                if (!isMounted) return;
-
-                setRecentArticles(recentArticlesData || []);
-                setPublications(publicationsData || []);
+                const recentArticlesData = await articleService.fetchRecentArticles(7, 'published', controller.signal);
+                if (isMounted) {
+                    setRecentArticles(recentArticlesData || []);
+                }
             } catch (err) {
-                if (!isMounted) return;
-                console.error('Error loading About page data:', err);
+                console.error('Failed to fetch recent articles:', err);
+            }
+
+            try {
+                const publicationsData = await getPublications();
+                if (isMounted) {
+                    setPublications(publicationsData || []);
+                }
+            } catch (err) {
+                console.error('Failed to fetch publication dates:', err);
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -173,7 +175,7 @@ function About() {
                 </p>
                 <p className='text-lg mt-3'>
                     Please join the
-                    <a href=" https://join.slack.com/t/techniquestaf-lba4588/shared_invite/zt-2p2rgiqtx-95XC_o1P~x2mOLihFDFA~Q"
+                    <a href="https://join.slack.com/t/techniquestaf-lba4588/shared_invite/zt-2p2rgiqtx-95XC_o1P~x2mOLihFDFA~Q"
                         target="_blank"
                         rel="noopener noreferrer"
                         className='text-nique-light-blue hover:text-nique-blue-hover'> <u>Slack Channel</u> </a>

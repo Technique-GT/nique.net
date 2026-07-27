@@ -2,7 +2,7 @@ import Navbar from '../components/Navbar';
 import { useState, useEffect, Suspense, lazy } from 'react';
 import MediaKit from '../assets/media-kit-2024.pdf';
 import Spinner from '../components/Spinner';
-import publicationService from '../services/publicationService';
+import { getPublications } from '../services/publicationService';
 import { Publication, formatPublicationDate } from '../utils/dateFormat';
 
 const PDFViewer = lazy(() => import('../components/PDFViewer'));
@@ -39,12 +39,12 @@ function SubmitAd() {
 
         const loadPublications = async () => {
             try {
-                const data = await publicationService.getPublications();
+                const data = await getPublications();
                 if (isMounted) {
                     setPublications(data || []);
                 }
             } catch (err) {
-                console.error('Error loading publication dates:', err);
+                console.error('Failed to load publication dates for Submit Ad page:', err);
             }
         };
 
@@ -103,6 +103,7 @@ function SubmitAd() {
                     </Suspense>
                 )}
 
+                {/* Price Plans */}
                 <div className="my-4">
                     <h4 className="text-2xl font-bold mb-2 text-nique-blue mt-6">Price Plans</h4>
 
@@ -119,6 +120,7 @@ function SubmitAd() {
                     </div>
                 </div>
 
+                {/* Upcoming Print Dates Section */}
                 {publications.length > 0 && (
                     <div className="my-6">
                         <h4 className="text-2xl font-bold mb-2 text-nique-blue mt-6">Upcoming Print Dates</h4>
@@ -132,6 +134,7 @@ function SubmitAd() {
                     </div>
                 )}
 
+                {/* Need Help Section */}
                 <div className="my-4">
                     <h4 className="text-2xl font-bold mb-2 text-nique-blue mt-6">Need help?</h4>
                     <a href="/contact" className="block">
