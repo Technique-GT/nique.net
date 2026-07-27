@@ -11,3 +11,7 @@ export const getPublications = async (): Promise<Publication[]> => {
   const response = await apiClient.get('/publications');
   return response.data;
 };
+
+export default {
+  getPublications,
+};
