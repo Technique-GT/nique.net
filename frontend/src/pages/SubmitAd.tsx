@@ -1,7 +1,9 @@
 import Navbar from '../components/Navbar';
-import { useState, Suspense, lazy } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import MediaKit from '../assets/media-kit-2024.pdf';
 import Spinner from '../components/Spinner';
+import publicationService from '../services/publicationService';
+import { Publication, formatPublicationDate } from '../utils/dateFormat';
 
 const PDFViewer = lazy(() => import('../components/PDFViewer'));
 
@@ -26,14 +28,36 @@ const adPricePlans = [
         price: "$35-$420",
         link: "https://epay.gatech.edu/C20793_ustores/web/product_detail.jsp?PRODUCTID=5820"
     }
-]    
+];
 
 function SubmitAd() {
     const [showPDF, setShowPDF] = useState(false);
+    const [publications, setPublications] = useState<Publication[]>([]);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadPublications = async () => {
+            try {
+                const data = await publicationService.getPublications();
+                if (isMounted) {
+                    setPublications(data || []);
+                }
+            } catch (err) {
+                console.error('Error loading publication dates:', err);
+            }
+        };
+
+        loadPublications();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     const onClick = () => {
         setShowPDF(!showPDF);
-    }
+    };
 
     return (
         <>
@@ -55,9 +79,9 @@ function SubmitAd() {
                         <div className="border rounded-md border-nique-blue py-12 px-20">
                             <h4 className="text-4xl font-bold mb-4 text-nique-blue">2.</h4>
                             <h4 className="text-xl font-bold text-nique-blue">Submit online</h4>
-                            <p className="mb-4">View the price plans below and place an order for your ad.</p> 
-                            <a href="https://epay.gatech.edu/C20793_ustores/web/store_main.jsp?STOREID=13&FROMQRCODE=true" 
-                                target="_blank" 
+                            <p className="mb-4">View the price plans below and place an order for your ad.</p>
+                            <a href="https://epay.gatech.edu/C20793_ustores/web/store_main.jsp?STOREID=13&FROMQRCODE=true"
+                                target="_blank"
                                 rel="noopener noreferrer"
                             >
                                 <button className='bg-nique-blue hover:bg-nique-blue-hover rounded-md text-white px-2 py-1'>
@@ -70,7 +94,7 @@ function SubmitAd() {
 
                 {showPDF && (
                     <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xs p-4"><Spinner /></div>}>
-                        <PDFViewer 
+                        <PDFViewer
                             isOpen={showPDF}
                             onClose={() => setShowPDF(false)}
                             pdfFile={MediaKit}
@@ -83,17 +107,30 @@ function SubmitAd() {
                     <h4 className="text-2xl font-bold mb-2 text-nique-blue mt-6">Price Plans</h4>
 
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 justify-between radius-md">
-                        {adPricePlans.map((ad) => (
-                            <a href={ad.link} target="_blank" rel="noopener noreferrer">
-                            <div className="border rounded-md border-nique-blue aspect-square p-4 lg:p-6 flex flex-col justify-center hover:shadow-xl hover:bg-nique-blue-hover/4 transition duration-300">
-                                <h4 className="text-4xl font-bold text-nique-blue text-center">{ad.price}</h4>
-                                <h6 className="text-sm mb-4 text-nique-blue text-center">(price depends on color & size)</h6>
-                                <p className="text-center">{ad.type}</p>
-                             </div>
+                        {adPricePlans.map((ad, idx) => (
+                            <a key={idx} href={ad.link} target="_blank" rel="noopener noreferrer">
+                                <div className="border rounded-md border-nique-blue aspect-square p-4 lg:p-6 flex flex-col justify-center hover:shadow-xl hover:bg-nique-blue-hover/4 transition duration-300">
+                                    <h4 className="text-4xl font-bold text-nique-blue text-center">{ad.price}</h4>
+                                    <h6 className="text-sm mb-4 text-nique-blue text-center">(price depends on color & size)</h6>
+                                    <p className="text-center">{ad.type}</p>
+                                </div>
                             </a>
                         ))}
                     </div>
                 </div>
+
+                {publications.length > 0 && (
+                    <div className="my-6">
+                        <h4 className="text-2xl font-bold mb-2 text-nique-blue mt-6">Upcoming Print Dates</h4>
+                        <ul className="list-disc ml-8 text-lg">
+                            {publications.map((pub) => (
+                                <li key={pub._id} className="mt-1">
+                                    {formatPublicationDate(pub)}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 <div className="my-4">
                     <h4 className="text-2xl font-bold mb-2 text-nique-blue mt-6">Need help?</h4>
@@ -106,6 +143,6 @@ function SubmitAd() {
             </div>
         </>
     );
-};
+}
 
 export default SubmitAd;

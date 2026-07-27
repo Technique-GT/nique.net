@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
+import publicationService from '../services/publicationService';
 import { ArticleDocument } from '../types/article';
+import { Publication, formatPublicationDate } from '../utils/dateFormat';
 import { FaFacebook, FaXTwitter, FaInstagram, FaTiktok, FaLinkedin } from "react-icons/fa6";
 import Navbar from "../components/Navbar";
 import Collage from "../components/Collage";
@@ -9,41 +11,43 @@ import Spinner from '../components/Spinner';
 function About() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>([]);
+    const [publications, setPublications] = useState<Publication[]>([]);
 
     useEffect(() => {
-            let isMounted = true;
-            const controller = new AbortController();
-    
-            const loadArticles = async () => {
-                setIsLoading(true);
-    
-                try {
-                    // Services now return unwrapped data directly
-                    const recentArticlesData = await articleService.fetchRecentArticles(7, 'published', controller.signal);
-    
-                    if (!isMounted) {
-                        return;
-                    }
-    
-                    setRecentArticles(recentArticlesData || []);
-                } catch {
-                    if (!isMounted) {
-                        return;
-                    }
-                } finally {
-                    if (isMounted) {
-                        setIsLoading(false);
-                    }
+        let isMounted = true;
+        const controller = new AbortController();
+
+        const loadData = async () => {
+            setIsLoading(true);
+
+            try {
+                // fetching articles and publication dates at the same time
+                const [recentArticlesData, publicationsData] = await Promise.all([
+                    articleService.fetchRecentArticles(7, 'published', controller.signal),
+                    publicationService.getPublications()
+                ]);
+
+                if (!isMounted) return;
+
+                setRecentArticles(recentArticlesData || []);
+                setPublications(publicationsData || []);
+            } catch (err) {
+                if (!isMounted) return;
+                console.error('Error loading About page data:', err);
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
                 }
-            };
-    
-            loadArticles();
-    
-            return () => {
-                isMounted = false;
-                controller.abort();
-            };
-        }, []);
+            }
+        };
+
+        loadData();
+
+        return () => {
+            isMounted = false;
+            controller.abort();
+        };
+    }, []);
 
     if (isLoading) {
         return (
@@ -61,7 +65,7 @@ function About() {
                 <h4 className="font-bold mb-2 text-2xl text-nique-blue">About Us</h4>
             </div>
 
-            <Collage articles={[recentArticles[0], recentArticles[1], recentArticles[2], recentArticles[3], recentArticles[4], recentArticles[5], recentArticles[6]].filter(Boolean) as ArticleDocument[]} /> {/* collection of best pictures you may want to feature */}
+            <Collage articles={[recentArticles[0], recentArticles[1], recentArticles[2], recentArticles[3], recentArticles[4], recentArticles[5], recentArticles[6]].filter(Boolean) as ArticleDocument[]} />
 
             {/* Mission */}
             <div className='grid grid-cols-1 sm:grid-cols-3 max-w-[95%] md:max-w-[80%] m-auto p-5 gap-x-16'>
@@ -80,6 +84,20 @@ function About() {
                     </p>
                 </div>
             </div>
+
+            {/* Upcoming Print Schedule */}
+            {publications.length > 0 && (
+                <div className='max-w-[80%] m-auto p-5'>
+                    <h4 className='text-2xl font-bold text-nique-blue my-6'>Upcoming Print Dates</h4>
+                    <ul className='list-disc ml-8 text-lg'>
+                        {publications.map((pub) => (
+                            <li key={pub._id} className='mt-2'>
+                                {formatPublicationDate(pub)}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
             {/* Vision */}
             <div className='max-w-[80%] m-auto p-5'>
@@ -126,44 +144,44 @@ function About() {
             <div className='max-w-[80%] m-auto p-5'>
                 <h4 className='text-2xl font-bold text-nique-blue my-6'>Getting Involved</h4>
                 <p className='text-lg mt-5'>
-                    Interested in writing, photography, sales or design? If so, the Technique has a lot to offer. Our staff is comprised entirely of Tech students interested 
+                    Interested in writing, photography, sales or design? If so, the Technique has a lot to offer. Our staff is comprised entirely of Tech students interested
                     in improving their writing, communication and design skills. If you are interested in any of the following, consider joining the Technique.
                 </p>
-                    <ul className='text-lg my-3 list-disc ml-8'>
-                        <li>
-                            <strong>Improving your writing skills:</strong> By joining the Technique, you will learn how to write articles for a range of different 
-                            sections including News, Opinions, Life, Entertainment and Sports. In addition, you will learn how to interview sources and improve your skills 
-                            to analyze information and ask the right questions.
-                        </li>
-                        <li>
-                            <strong>Sales opportunities:</strong> As part of the business team, you can hone your salesmanship by selling ads for the paper. Sharpening 
-                            your sales skills can help you become a better marketer or manager in your professional career.
-                        </li>
-                        <li>
-                            <strong>Design skills:</strong> The Technique maintains two mediums of publication — both print and online formats. If you're interested in 
-                            graphic design, you'll have the opportunity to work with section editors to help design the paper layout on a weekly basis, which will help you 
-                            expand your graphic design portfolio.
-                        </li>
-                        <li>
-                            <strong>Photography:</strong> Our staff is responsible for taking photos for the paper. Lessons on topics such as shooting sports, portraits, 
-                            landscapes, etc., are held by fellow students.
-                        </li>
-                    </ul>
+                <ul className='text-lg my-3 list-disc ml-8'>
+                    <li>
+                        <strong>Improving your writing skills:</strong> By joining the Technique, you will learn how to write articles for a range of different
+                        sections including News, Opinions, Life, Entertainment and Sports. In addition, you will learn how to interview sources and improve your skills
+                        to analyze information and ask the right questions.
+                    </li>
+                    <li>
+                        <strong>Sales opportunities:</strong> As part of the business team, you can hone your salesmanship by selling ads for the paper. Sharpening
+                        your sales skills can help you become a better marketer or manager in your professional career.
+                    </li>
+                    <li>
+                        <strong>Design skills:</strong> The Technique maintains two mediums of publication — both print and online formats. If you're interested in 
+                        graphic design, you'll have the opportunity to work with section editors to help design the paper layout on a weekly basis, which will help you 
+                        expand your graphic design portfolio.
+                    </li>
+                    <li>
+                        <strong>Photography:</strong> Our staff is responsible for taking photos for the paper. Lessons on topics such as shooting sports, portraits,
+                        landscapes, etc., are held by fellow students.
+                    </li>
+                </ul>
 
                 <p className='text-lg'>
                     General Body Meetings are held weekly on Tuesdays at 7:00 p.m. in the Student Center in room 2150 (Student Media suite).
                 </p>
                 <p className='text-lg mt-3'>
-                    Please join the 
-                    <a href=" https://join.slack.com/t/techniquestaf-lba4588/shared_invite/zt-2p2rgiqtx-95XC_o1P~x2mOLihFDFA~Q" 
-                        target="_blank" 
+                    Please join the
+                    <a href=" https://join.slack.com/t/techniquestaf-lba4588/shared_invite/zt-2p2rgiqtx-95XC_o1P~x2mOLihFDFA~Q"
+                        target="_blank"
                         rel="noopener noreferrer"
-                        className='text-nique-light-blue hover:text-nique-blue-hover'> <u>Slack Channel</u> </a> 
+                        className='text-nique-light-blue hover:text-nique-blue-hover'> <u>Slack Channel</u> </a>
                     if interested!
                 </p>
             </div>
         </>
-    )
+    );
 }
 
 export default About;
