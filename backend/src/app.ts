@@ -12,6 +12,7 @@ import articleRoutes from './routes/article.routes';
 import categoryRoutes from './routes/category.routes';
 import commentRoutes from './routes/comment.routes';
 import playlistRoutes from './routes/playlist.routes';
+import publicationRoutes from './routes/publication.routes';
 import sliverRoutes from './routes/sliver.routes';
 import subCategoryRoutes from './routes/subCategory.routes';
 import tagRoutes from './routes/tag.routes';
@@ -195,6 +196,7 @@ export function createApp() {
   app.use('/api/users', userRoutes);
   app.use('/api/authors', authorRoutes);
   app.use('/api/playlists', playlistRoutes);
+  app.use('/api/publications', publicationRoutes);
   app.use('/api/slivers', sliverRoutes);
   app.use('/api/comments', commentRoutes);
   app.use('/api/admin/media', mediaRoutes);
