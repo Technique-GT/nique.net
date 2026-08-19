@@ -18,18 +18,15 @@ import { adminMiddleware } from '../middleware/admin.middleware';
 
 const router = express.Router();
 
-// All user management routes require authentication and admin privileges
 router.use(authMiddleware);
 router.use(adminMiddleware);
 
-// Static paths MUST come before parameterized /:id routes
 router.get('/', getUsers);
 router.post('/', validateBody(createUserBodySchema), createUser);
 router.post('/invite', inviteUser);
 router.post('/bulk-delete', validateBody(bulkDeleteUsersBodySchema), bulkDeleteUsers);
 router.post('/merge', mergeUsers);
 
-// Parameterized /:id routes — order matters: sub-paths first
 router.get('/:id/article-count', validateParams(idParamSchema), getUserArticleCount);
 router.get('/:id', validateParams(idParamSchema), getUserById);
 

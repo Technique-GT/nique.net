@@ -21,19 +21,6 @@ interface MergeBody {
 
 const MERGEABLE_FIELDS = ['name', 'bio', 'email', 'profilePictureUrl', 'socialLinks', 'isAdmin'] as const;
 
-/**
- * POST /api/users/merge
- * Admin-only: merge sourceId into targetId.
- *
- * - Updates the target user's profile fields based on `keepFields`
- * - Replaces all article `authors[].authorId`, `ownerId`, and `reviewedBy`
- *   references from source → target
- * - Deduplicates the `authors` array when both users co-author the same article
- * - Deletes the source user
- *
- * Uses a MongoDB transaction when available (replica set / Atlas).
- * Falls back to sequential operations on standalone instances (local dev).
- */
 export const mergeUsers = async (req: Request, res: Response): Promise<void> => {
   const body = req.body as MergeBody;
 
@@ -58,7 +45,6 @@ export const mergeUsers = async (req: Request, res: Response): Promise<void> => 
 
   const keepFields = body?.keepFields ?? {};
 
-  // Validate keepFields values
   for (const field of MERGEABLE_FIELDS) {
     const val = keepFields[field];
     if (val !== undefined && val !== 'source' && val !== 'target') {
@@ -89,7 +75,6 @@ export const mergeUsers = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-/** Core merge logic — extracted so it can be called with or without a transaction. */
 async function performMerge(
   sourceId: string,
   targetId: string,
@@ -106,7 +91,6 @@ async function performMerge(
   if (!sourceUser) throw new Error('Source user not found');
   if (!targetUser) throw new Error('Target user not found');
 
-  // ── 1. Build target profile updates from keepFields ──────────────
   const update: Record<string, unknown> = {};
   const unset: Record<string, 1> = {};
 
@@ -130,7 +114,6 @@ async function performMerge(
     await User.updateOne({ _id: targetId }, updateOps, sessionOpt);
   }
 
-  // ── 2. Transfer article references ───────────────────────────────
   const sourceOid = new mongoose.Types.ObjectId(sourceId);
   const targetOid = new mongoose.Types.ObjectId(targetId);
 
@@ -160,7 +143,6 @@ async function performMerge(
     articlesUpdated++;
   }
 
-  // Transfer ownerId
   const ownerResult = await Article.updateMany(
     { ownerId: sourceOid },
     { $set: { ownerId: targetOid } },
@@ -168,14 +150,12 @@ async function performMerge(
   );
   articlesUpdated = Math.max(articlesUpdated, ownerResult.modifiedCount);
 
-  // Transfer reviewedBy
   await Article.updateMany(
     { reviewedBy: sourceOid },
     { $set: { reviewedBy: targetOid } },
     sessionOpt,
   );
 
-  // ── 3. Delete source user ────────────────────────────────────────
   await User.deleteOne({ _id: sourceOid }, sessionOpt);
 
   const mergedUser = await User.findById(targetId).lean();
@@ -183,7 +163,6 @@ async function performMerge(
   return { mergedUser, articlesUpdated };
 }
 
-/** Try transactional merge first; fall back to non-transactional on standalone MongoDB. */
 async function executeMerge(
   sourceId: string,
   targetId: string,
@@ -197,14 +176,12 @@ async function executeMerge(
     await session.commitTransaction();
     return result;
   } catch (error: unknown) {
-    // Abort if a transaction was started
     if (session.inTransaction()) {
       await session.abortTransaction();
     }
 
     const msg = error instanceof Error ? error.message : '';
 
-    // Standalone MongoDB doesn't support transactions — fall back to sequential ops
     if (msg.includes('Transaction numbers are only allowed on a replica set')) {
       await session.endSession();
       return performMerge(sourceId, targetId, keepFields);
@@ -218,10 +195,6 @@ async function executeMerge(
   }
 }
 
-/**
- * GET /api/users/:id/article-count
- * Returns the count of articles where the user is an author or owner.
- */
 export const getUserArticleCount = async (req: Request, res: Response): Promise<void> => {
   const id = typeof req.params.id === 'string' ? req.params.id : '';
 

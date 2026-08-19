@@ -102,10 +102,8 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
   const [articleCount, setArticleCount] = useState<number | null>(null)
   const [loadingCount, setLoadingCount] = useState(false)
 
-  // The source is the currentRow (user being merged away)
   const sourceUser = currentRow
 
-  // Filter out the source user from the target list
   const targetOptions = useMemo(
     () => users.filter((u) => u._id !== sourceUser._id),
     [users, sourceUser._id]
@@ -116,7 +114,6 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
     [targetOptions, targetId]
   )
 
-  // Reset state when dialog opens/closes
   useEffect(() => {
     if (!open) return
     setStep(1)
@@ -133,7 +130,6 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
     setArticleCount(null)
   }, [open])
 
-  // Fetch article count for source user when reaching step 3
   useEffect(() => {
     if (step !== 3 || !sourceUser._id) return
 
@@ -210,7 +206,6 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        {/* ── Step 1: Select Target ─────────────────────────── */}
         {step === 1 && (
           <div className='space-y-4 py-2'>
             <div className='space-y-2'>
@@ -274,7 +269,6 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
           </div>
         )}
 
-        {/* ── Step 2: Choose Fields ─────────────────────────── */}
         {step === 2 && targetUser && (
           <ScrollArea className='h-80'>
             <div className='space-y-1 pr-4'>
@@ -291,7 +285,6 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
                       }
                       className='grid grid-cols-2 gap-3'
                     >
-                      {/* Source option */}
                       <Label
                         htmlFor={`${field}-source`}
                         className={`flex cursor-pointer items-start gap-2 rounded-md border p-3 transition-colors ${keepFields[field] === 'source'
@@ -314,7 +307,6 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
                         </div>
                       </Label>
 
-                      {/* Target option */}
                       <Label
                         htmlFor={`${field}-target`}
                         className={`flex cursor-pointer items-start gap-2 rounded-md border p-3 transition-colors ${keepFields[field] === 'target'
@@ -345,7 +337,6 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
           </ScrollArea>
         )}
 
-        {/* ── Step 3: Confirm ───────────────────────────────── */}
         {step === 3 && targetUser && (
           <div className='space-y-4 py-2'>
             <div className='bg-muted/50 rounded-md border p-4 space-y-2'>
