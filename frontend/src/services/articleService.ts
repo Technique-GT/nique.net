@@ -116,15 +116,55 @@ const fetchFeaturedArticles = async (
 
 /**
  * Fetch articles by category.
- * backend: GET /articles/category/:category
+ * Supports the legacy array-based callers and the paginated object used for initial-load
+ * and infinite-scroll requests.
+ * backend: GET /articles/category/:category?page=&limit=
  */
 const fetchArticlesByCategory = async (
   categoryId: string,
-   _limit?: number, // backend doesn't support limit on this route
-  signal?: AbortSignal
-): Promise<ArticleDocument[]> => {
-  const response = await apiClient.get(`/articles/category/${categoryId}`, { signal });
-  return unwrap(response.data);
+  paramsOrSignalOrLimit?: number | AbortSignal | { page?: number; limit?: number },
+  maybeSignal?: AbortSignal
+): Promise<ArticleDocument[] | { data: ArticleDocument[]; pagination?: { total: number; page: number; pages: number; limit: number } }> => {
+  let params: { page?: number; limit?: number } = {};
+  let signal: AbortSignal | undefined;
+
+  if (paramsOrSignalOrLimit instanceof AbortSignal) {
+    signal = paramsOrSignalOrLimit;
+  } else if (typeof paramsOrSignalOrLimit === 'number') {
+    params = { page: 1, limit: paramsOrSignalOrLimit };
+  } else if (paramsOrSignalOrLimit && typeof paramsOrSignalOrLimit === 'object') {
+    params = paramsOrSignalOrLimit;
+  }
+
+  if (maybeSignal) {
+    signal = maybeSignal;
+  }
+
+  const queryParams: Record<string, string | number> = {};
+  if (typeof params.page === 'number') queryParams.page = params.page;
+  if (typeof params.limit === 'number') queryParams.limit = params.limit;
+
+  const response = await apiClient.get(`/articles/category/${categoryId}`, { params: queryParams, signal });
+  const data = unwrap(response.data) as ArticleDocument[];
+  const result = {
+    data,
+    pagination: response.data?.pagination || {
+      total: data.length,
+      page: params.page ?? 1,
+      pages: 1,
+      limit: params.limit ?? data.length,
+    },
+  };
+
+  if (
+    paramsOrSignalOrLimit === undefined ||
+    paramsOrSignalOrLimit instanceof AbortSignal ||
+    typeof paramsOrSignalOrLimit === 'number'
+  ) {
+    return data;
+  }
+
+  return result;
 };
 
 /**

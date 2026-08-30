@@ -69,6 +69,18 @@ describe('Articles Endpoints', () => {
     });
   });
 
+  describe('GET /api/articles/category/:category', () => {
+    it('supports paginated category requests', async () => {
+      const res = await request(app).get('/api/articles/category/65f0a305095c8b6a0b100004?limit=2&page=1');
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toBeInstanceOf(Array);
+      expect(res.body.pagination).toBeDefined();
+      expect(res.body.pagination.limit).toBe(2);
+    });
+  });
+
   describe('GET /api/articles/:id', () => {
     it('returns 400 for invalid ObjectId', async () => {
       const res = await request(app).get('/api/articles/invalid-id');

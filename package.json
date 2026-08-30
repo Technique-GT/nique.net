@@ -7,10 +7,10 @@
     "dashboard"
   ],
   "scripts": {
-    "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\" \"npm --prefix dashboard run dev\"",
+    "dev": "bash -lc 'trap \"pkill -f \"\"vite\"\" || true; pkill -f \"\"tsx\"\" || true; pkill -f \"\"concurrently\"\" || true\" EXIT INT TERM; lsof -ti tcp:5050,5173,5174,5175,5176,5177 2>/dev/null | xargs -r kill -9; concurrently --kill-others --names backend,frontend,dashboard \"npm --prefix backend run dev\" \"npm --prefix frontend run dev -- --host 0.0.0.0 --port 5173 --strictPort\" \"npm --prefix dashboard run dev -- --host 0.0.0.0 --port 5174 --strictPort\"'",
     "dev:api": "npm --prefix backend run dev",
-    "dev:web": "npm --prefix frontend run dev",
-    "dev:dash": "npm --prefix dashboard run dev",
+    "dev:web": "npm --prefix frontend run dev -- --host 0.0.0.0 --port 5173 --strictPort",
+    "dev:dash": "npm --prefix dashboard run dev -- --host 0.0.0.0 --port 5174 --strictPort",
     "build": "npm --prefix backend run build && npm --prefix frontend run build && npm --prefix dashboard run build",
     "start": "concurrently \"npm run start:api\" \"npm run start:web\" \"npm run start:dash\"",
     "start:api": "npm --prefix backend run start",

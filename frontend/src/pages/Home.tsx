@@ -14,7 +14,24 @@ import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation'
 import spotifyService from '../services/spotifyService';
 import { toSpotifyEmbedUrl } from '../utils/spotify';
 
+const INITIAL_CATEGORY_PAGE_SIZE = 20;
+
 function Home() {
+    const fetchCategoryInitialPage = async (
+        categoryId: string | null,
+        signal?: AbortSignal
+    ): Promise<ArticleDocument[]> => {
+        if (!categoryId) return [];
+
+        const result = await articleService.fetchArticlesByCategory(
+            categoryId,
+            { page: 1, limit: INITIAL_CATEGORY_PAGE_SIZE },
+            signal
+        );
+
+        return Array.isArray(result) ? result : result.data;
+    };
+
     const computeDerivedState = (
         stickyArticles: ArticleDocument[],
         featuredArticles: ArticleDocument[],
@@ -103,21 +120,11 @@ function Home() {
                     articleService.fetchStickyArticles(undefined, controller.signal),
                     articleService.fetchFeaturedArticles(controller.signal),
                     articleService.fetchRecentArticles(5, 'published', controller.signal),
-                    lifeCategoryId
-                        ? articleService.fetchArticlesByCategory(lifeCategoryId, undefined, controller.signal)
-                        : Promise.resolve([] as ArticleDocument[]),
-                    newsCategoryId
-                        ? articleService.fetchArticlesByCategory(newsCategoryId, undefined, controller.signal)
-                        : Promise.resolve([] as ArticleDocument[]),
-                    entertainmentCategoryId
-                        ? articleService.fetchArticlesByCategory(entertainmentCategoryId, undefined, controller.signal)
-                        : Promise.resolve([] as ArticleDocument[]),
-                    opinionCategoryId
-                        ? articleService.fetchArticlesByCategory(opinionCategoryId, undefined, controller.signal)
-                        : Promise.resolve([] as ArticleDocument[]),
-                    sportsCategoryId
-                        ? articleService.fetchArticlesByCategory(sportsCategoryId, undefined, controller.signal)
-                        : Promise.resolve([] as ArticleDocument[]),
+                    fetchCategoryInitialPage(lifeCategoryId, controller.signal),
+                    fetchCategoryInitialPage(newsCategoryId, controller.signal),
+                    fetchCategoryInitialPage(entertainmentCategoryId, controller.signal),
+                    fetchCategoryInitialPage(opinionCategoryId, controller.signal),
+                    fetchCategoryInitialPage(sportsCategoryId, controller.signal),
                 ]);
 
                 if (!isMounted) {

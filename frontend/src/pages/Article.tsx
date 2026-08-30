@@ -147,11 +147,14 @@ export default function Article() {
 
         if (categoryId) {
           try {
-            const relatedArticles = await articleService.fetchArticlesByCategory(
+            const relatedArticlesResult = await articleService.fetchArticlesByCategory(
               categoryId,
               4,
               controller.signal
             );
+            const relatedArticles = Array.isArray(relatedArticlesResult)
+              ? relatedArticlesResult
+              : relatedArticlesResult.data;
 
             const fetchedArticleId = fetchedArticle._id || "";
 

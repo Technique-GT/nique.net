@@ -9,96 +9,56 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as UnauthenticatedRouteRouteImport } from './routes/_unauthenticated/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as UnauthenticatedIndexRouteImport } from './routes/_unauthenticated/index'
-import { Route as errors503RouteImport } from './routes/(errors)/503'
-import { Route as errors500RouteImport } from './routes/(errors)/500'
-import { Route as errors404RouteImport } from './routes/(errors)/404'
-import { Route as errors403RouteImport } from './routes/(errors)/403'
-import { Route as errors401RouteImport } from './routes/(errors)/401'
-import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
-import { Route as authSignIn2RouteImport } from './routes/(auth)/sign-in-2'
-import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
-import { Route as authOtpRouteImport } from './routes/(auth)/otp'
+import { Route as UnauthenticatedRouteRouteImport } from './routes/_unauthenticated/route'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
+import { Route as authOtpRouteImport } from './routes/(auth)/otp'
+import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
+import { Route as authSignIn2RouteImport } from './routes/(auth)/sign-in-2'
+import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
+import { Route as errors401RouteImport } from './routes/(errors)/401'
+import { Route as errors403RouteImport } from './routes/(errors)/403'
+import { Route as errors404RouteImport } from './routes/(errors)/404'
+import { Route as errors500RouteImport } from './routes/(errors)/500'
+import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
-import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
-import { Route as AuthenticatedStatsIndexRouteImport } from './routes/_authenticated/stats/index'
-import { Route as AuthenticatedSpotifyIndexRouteImport } from './routes/_authenticated/spotify/index'
-import { Route as AuthenticatedSliversIndexRouteImport } from './routes/_authenticated/slivers/index'
-import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
-import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
-import { Route as AuthenticatedDocumentationIndexRouteImport } from './routes/_authenticated/documentation/index'
-import { Route as AuthenticatedDashIndexRouteImport } from './routes/_authenticated/dash/index'
-import { Route as AuthenticatedCommentsIndexRouteImport } from './routes/_authenticated/comments/index'
+import { Route as UnauthenticatedIndexRouteImport } from './routes/_unauthenticated/index'
 import { Route as AuthenticatedArticlesIndexRouteImport } from './routes/_authenticated/articles/index'
-import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings/profile'
-import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
-import { Route as AuthenticatedArticlesTagsRouteImport } from './routes/_authenticated/articles/tags'
-import { Route as AuthenticatedArticlesNewRouteImport } from './routes/_authenticated/articles/new'
-import { Route as AuthenticatedArticlesMediaRouteImport } from './routes/_authenticated/articles/media'
-import { Route as AuthenticatedArticlesListRouteImport } from './routes/_authenticated/articles/list'
 import { Route as AuthenticatedArticlesCategoriesRouteImport } from './routes/_authenticated/articles/categories'
+import { Route as AuthenticatedArticlesListRouteImport } from './routes/_authenticated/articles/list'
+import { Route as AuthenticatedArticlesMediaRouteImport } from './routes/_authenticated/articles/media'
+import { Route as AuthenticatedArticlesNewRouteImport } from './routes/_authenticated/articles/new'
+import { Route as AuthenticatedArticlesTagsRouteImport } from './routes/_authenticated/articles/tags'
+import { Route as AuthenticatedCommentsIndexRouteImport } from './routes/_authenticated/comments/index'
+import { Route as AuthenticatedDashIndexRouteImport } from './routes/_authenticated/dash/index'
+import { Route as AuthenticatedDocumentationIndexRouteImport } from './routes/_authenticated/documentation/index'
+import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
+import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
+import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings/profile'
+import { Route as AuthenticatedSliversIndexRouteImport } from './routes/_authenticated/slivers/index'
+import { Route as AuthenticatedSpotifyIndexRouteImport } from './routes/_authenticated/spotify/index'
+import { Route as AuthenticatedStatsIndexRouteImport } from './routes/_authenticated/stats/index'
+import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedArticlesArticleIdEditRouteImport } from './routes/_authenticated/articles/$articleId/edit'
 
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UnauthenticatedRouteRoute = UnauthenticatedRouteRouteImport.update({
   id: '/_unauthenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UnauthenticatedIndexRoute = UnauthenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => UnauthenticatedRouteRoute,
-} as any)
-const errors503Route = errors503RouteImport.update({
-  id: '/(errors)/503',
-  path: '/503',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const errors500Route = errors500RouteImport.update({
-  id: '/(errors)/500',
-  path: '/500',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const errors404Route = errors404RouteImport.update({
-  id: '/(errors)/404',
-  path: '/404',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const errors403Route = errors403RouteImport.update({
-  id: '/(errors)/403',
-  path: '/403',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const errors401Route = errors401RouteImport.update({
-  id: '/(errors)/401',
-  path: '/401',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authSignUpRoute = authSignUpRouteImport.update({
-  id: '/(auth)/sign-up',
-  path: '/sign-up',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authSignIn2Route = authSignIn2RouteImport.update({
-  id: '/(auth)/sign-in-2',
-  path: '/sign-in-2',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authSignInRoute = authSignInRouteImport.update({
-  id: '/(auth)/sign-in',
-  path: '/sign-in',
+const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
+  id: '/(auth)/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authOtpRoute = authOtpRouteImport.update({
@@ -106,9 +66,44 @@ const authOtpRoute = authOtpRouteImport.update({
   path: '/otp',
   getParentRoute: () => rootRouteImport,
 } as any)
-const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
-  id: '/(auth)/forgot-password',
-  path: '/forgot-password',
+const authSignInRoute = authSignInRouteImport.update({
+  id: '/(auth)/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authSignIn2Route = authSignIn2RouteImport.update({
+  id: '/(auth)/sign-in-2',
+  path: '/sign-in-2',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authSignUpRoute = authSignUpRouteImport.update({
+  id: '/(auth)/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const errors401Route = errors401RouteImport.update({
+  id: '/(errors)/401',
+  path: '/401',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const errors403Route = errors403RouteImport.update({
+  id: '/(errors)/403',
+  path: '/403',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const errors404Route = errors404RouteImport.update({
+  id: '/(errors)/404',
+  path: '/404',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const errors500Route = errors500RouteImport.update({
+  id: '/(errors)/500',
+  path: '/500',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const errors503Route = errors503RouteImport.update({
+  id: '/(errors)/503',
+  path: '/503',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedSettingsRouteRoute =
@@ -117,97 +112,15 @@ const AuthenticatedSettingsRouteRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
-  id: '/users/',
-  path: '/users/',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const UnauthenticatedIndexRoute = UnauthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => UnauthenticatedRouteRoute,
 } as any)
-const AuthenticatedStatsIndexRoute = AuthenticatedStatsIndexRouteImport.update({
-  id: '/stats/',
-  path: '/stats/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSpotifyIndexRoute =
-  AuthenticatedSpotifyIndexRouteImport.update({
-    id: '/spotify/',
-    path: '/spotify/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSliversIndexRoute =
-  AuthenticatedSliversIndexRouteImport.update({
-    id: '/slivers/',
-    path: '/slivers/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSettingsIndexRoute =
-  AuthenticatedSettingsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
-  } as any)
-const AuthenticatedHelpCenterIndexRoute =
-  AuthenticatedHelpCenterIndexRouteImport.update({
-    id: '/help-center/',
-    path: '/help-center/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedDocumentationIndexRoute =
-  AuthenticatedDocumentationIndexRouteImport.update({
-    id: '/documentation/',
-    path: '/documentation/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedDashIndexRoute = AuthenticatedDashIndexRouteImport.update({
-  id: '/dash/',
-  path: '/dash/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedCommentsIndexRoute =
-  AuthenticatedCommentsIndexRouteImport.update({
-    id: '/comments/',
-    path: '/comments/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedArticlesIndexRoute =
   AuthenticatedArticlesIndexRouteImport.update({
     id: '/articles/',
     path: '/articles/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSettingsProfileRoute =
-  AuthenticatedSettingsProfileRouteImport.update({
-    id: '/profile',
-    path: '/profile',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
-  } as any)
-const AuthenticatedSettingsAppearanceRoute =
-  AuthenticatedSettingsAppearanceRouteImport.update({
-    id: '/appearance',
-    path: '/appearance',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
-  } as any)
-const AuthenticatedArticlesTagsRoute =
-  AuthenticatedArticlesTagsRouteImport.update({
-    id: '/articles/tags',
-    path: '/articles/tags',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedArticlesNewRoute =
-  AuthenticatedArticlesNewRouteImport.update({
-    id: '/articles/new',
-    path: '/articles/new',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedArticlesMediaRoute =
-  AuthenticatedArticlesMediaRouteImport.update({
-    id: '/articles/media',
-    path: '/articles/media',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedArticlesListRoute =
-  AuthenticatedArticlesListRouteImport.update({
-    id: '/articles/list',
-    path: '/articles/list',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedArticlesCategoriesRoute =
@@ -216,6 +129,93 @@ const AuthenticatedArticlesCategoriesRoute =
     path: '/articles/categories',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedArticlesListRoute =
+  AuthenticatedArticlesListRouteImport.update({
+    id: '/articles/list',
+    path: '/articles/list',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedArticlesMediaRoute =
+  AuthenticatedArticlesMediaRouteImport.update({
+    id: '/articles/media',
+    path: '/articles/media',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedArticlesNewRoute =
+  AuthenticatedArticlesNewRouteImport.update({
+    id: '/articles/new',
+    path: '/articles/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedArticlesTagsRoute =
+  AuthenticatedArticlesTagsRouteImport.update({
+    id: '/articles/tags',
+    path: '/articles/tags',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCommentsIndexRoute =
+  AuthenticatedCommentsIndexRouteImport.update({
+    id: '/comments/',
+    path: '/comments/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDashIndexRoute = AuthenticatedDashIndexRouteImport.update({
+  id: '/dash/',
+  path: '/dash/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDocumentationIndexRoute =
+  AuthenticatedDocumentationIndexRouteImport.update({
+    id: '/documentation/',
+    path: '/documentation/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHelpCenterIndexRoute =
+  AuthenticatedHelpCenterIndexRouteImport.update({
+    id: '/help-center/',
+    path: '/help-center/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsAppearanceRoute =
+  AuthenticatedSettingsAppearanceRouteImport.update({
+    id: '/appearance',
+    path: '/appearance',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsProfileRoute =
+  AuthenticatedSettingsProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSliversIndexRoute =
+  AuthenticatedSliversIndexRouteImport.update({
+    id: '/slivers/',
+    path: '/slivers/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSpotifyIndexRoute =
+  AuthenticatedSpotifyIndexRouteImport.update({
+    id: '/spotify/',
+    path: '/spotify/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStatsIndexRoute = AuthenticatedStatsIndexRouteImport.update({
+  id: '/stats/',
+  path: '/stats/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
+  id: '/users/',
+  path: '/users/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedArticlesArticleIdEditRoute =
   AuthenticatedArticlesArticleIdEditRouteImport.update({
     id: '/articles/$articleId/edit',
@@ -445,11 +445,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_unauthenticated': {
@@ -459,81 +459,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UnauthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_unauthenticated/': {
-      id: '/_unauthenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof UnauthenticatedIndexRouteImport
-      parentRoute: typeof UnauthenticatedRouteRoute
-    }
-    '/(errors)/503': {
-      id: '/(errors)/503'
-      path: '/503'
-      fullPath: '/503'
-      preLoaderRoute: typeof errors503RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(errors)/500': {
-      id: '/(errors)/500'
-      path: '/500'
-      fullPath: '/500'
-      preLoaderRoute: typeof errors500RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(errors)/404': {
-      id: '/(errors)/404'
-      path: '/404'
-      fullPath: '/404'
-      preLoaderRoute: typeof errors404RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(errors)/403': {
-      id: '/(errors)/403'
-      path: '/403'
-      fullPath: '/403'
-      preLoaderRoute: typeof errors403RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(errors)/401': {
-      id: '/(errors)/401'
-      path: '/401'
-      fullPath: '/401'
-      preLoaderRoute: typeof errors401RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)/sign-up': {
-      id: '/(auth)/sign-up'
-      path: '/sign-up'
-      fullPath: '/sign-up'
-      preLoaderRoute: typeof authSignUpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)/sign-in-2': {
-      id: '/(auth)/sign-in-2'
-      path: '/sign-in-2'
-      fullPath: '/sign-in-2'
-      preLoaderRoute: typeof authSignIn2RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)/sign-in': {
-      id: '/(auth)/sign-in'
-      path: '/sign-in'
-      fullPath: '/sign-in'
-      preLoaderRoute: typeof authSignInRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)/otp': {
-      id: '/(auth)/otp'
-      path: '/otp'
-      fullPath: '/otp'
-      preLoaderRoute: typeof authOtpRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/forgot-password': {
@@ -543,6 +473,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(auth)/otp': {
+      id: '/(auth)/otp'
+      path: '/otp'
+      fullPath: '/otp'
+      preLoaderRoute: typeof authOtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(auth)/sign-in': {
+      id: '/(auth)/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof authSignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(auth)/sign-in-2': {
+      id: '/(auth)/sign-in-2'
+      path: '/sign-in-2'
+      fullPath: '/sign-in-2'
+      preLoaderRoute: typeof authSignIn2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(auth)/sign-up': {
+      id: '/(auth)/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof authSignUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(errors)/401': {
+      id: '/(errors)/401'
+      path: '/401'
+      fullPath: '/401'
+      preLoaderRoute: typeof errors401RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(errors)/403': {
+      id: '/(errors)/403'
+      path: '/403'
+      fullPath: '/403'
+      preLoaderRoute: typeof errors403RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(errors)/404': {
+      id: '/(errors)/404'
+      path: '/404'
+      fullPath: '/404'
+      preLoaderRoute: typeof errors404RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(errors)/500': {
+      id: '/(errors)/500'
+      path: '/500'
+      fullPath: '/500'
+      preLoaderRoute: typeof errors500RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(errors)/503': {
+      id: '/(errors)/503'
+      path: '/503'
+      fullPath: '/503'
+      preLoaderRoute: typeof errors503RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -550,68 +543,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/users/': {
-      id: '/_authenticated/users/'
-      path: '/users'
-      fullPath: '/users/'
-      preLoaderRoute: typeof AuthenticatedUsersIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/stats/': {
-      id: '/_authenticated/stats/'
-      path: '/stats'
-      fullPath: '/stats/'
-      preLoaderRoute: typeof AuthenticatedStatsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/spotify/': {
-      id: '/_authenticated/spotify/'
-      path: '/spotify'
-      fullPath: '/spotify/'
-      preLoaderRoute: typeof AuthenticatedSpotifyIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/slivers/': {
-      id: '/_authenticated/slivers/'
-      path: '/slivers'
-      fullPath: '/slivers/'
-      preLoaderRoute: typeof AuthenticatedSliversIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/settings/': {
-      id: '/_authenticated/settings/'
+    '/_unauthenticated/': {
+      id: '/_unauthenticated/'
       path: '/'
-      fullPath: '/settings/'
-      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
-    }
-    '/_authenticated/help-center/': {
-      id: '/_authenticated/help-center/'
-      path: '/help-center'
-      fullPath: '/help-center/'
-      preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/documentation/': {
-      id: '/_authenticated/documentation/'
-      path: '/documentation'
-      fullPath: '/documentation/'
-      preLoaderRoute: typeof AuthenticatedDocumentationIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dash/': {
-      id: '/_authenticated/dash/'
-      path: '/dash'
-      fullPath: '/dash/'
-      preLoaderRoute: typeof AuthenticatedDashIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/comments/': {
-      id: '/_authenticated/comments/'
-      path: '/comments'
-      fullPath: '/comments/'
-      preLoaderRoute: typeof AuthenticatedCommentsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      fullPath: '/'
+      preLoaderRoute: typeof UnauthenticatedIndexRouteImport
+      parentRoute: typeof UnauthenticatedRouteRoute
     }
     '/_authenticated/articles/': {
       id: '/_authenticated/articles/'
@@ -620,39 +557,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedArticlesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/settings/profile': {
-      id: '/_authenticated/settings/profile'
-      path: '/profile'
-      fullPath: '/settings/profile'
-      preLoaderRoute: typeof AuthenticatedSettingsProfileRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
-    }
-    '/_authenticated/settings/appearance': {
-      id: '/_authenticated/settings/appearance'
-      path: '/appearance'
-      fullPath: '/settings/appearance'
-      preLoaderRoute: typeof AuthenticatedSettingsAppearanceRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
-    }
-    '/_authenticated/articles/tags': {
-      id: '/_authenticated/articles/tags'
-      path: '/articles/tags'
-      fullPath: '/articles/tags'
-      preLoaderRoute: typeof AuthenticatedArticlesTagsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/articles/new': {
-      id: '/_authenticated/articles/new'
-      path: '/articles/new'
-      fullPath: '/articles/new'
-      preLoaderRoute: typeof AuthenticatedArticlesNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/articles/media': {
-      id: '/_authenticated/articles/media'
-      path: '/articles/media'
-      fullPath: '/articles/media'
-      preLoaderRoute: typeof AuthenticatedArticlesMediaRouteImport
+    '/_authenticated/articles/categories': {
+      id: '/_authenticated/articles/categories'
+      path: '/articles/categories'
+      fullPath: '/articles/categories'
+      preLoaderRoute: typeof AuthenticatedArticlesCategoriesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/articles/list': {
@@ -662,11 +571,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedArticlesListRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/articles/categories': {
-      id: '/_authenticated/articles/categories'
-      path: '/articles/categories'
-      fullPath: '/articles/categories'
-      preLoaderRoute: typeof AuthenticatedArticlesCategoriesRouteImport
+    '/_authenticated/articles/media': {
+      id: '/_authenticated/articles/media'
+      path: '/articles/media'
+      fullPath: '/articles/media'
+      preLoaderRoute: typeof AuthenticatedArticlesMediaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/articles/new': {
+      id: '/_authenticated/articles/new'
+      path: '/articles/new'
+      fullPath: '/articles/new'
+      preLoaderRoute: typeof AuthenticatedArticlesNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/articles/tags': {
+      id: '/_authenticated/articles/tags'
+      path: '/articles/tags'
+      fullPath: '/articles/tags'
+      preLoaderRoute: typeof AuthenticatedArticlesTagsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/comments/': {
+      id: '/_authenticated/comments/'
+      path: '/comments'
+      fullPath: '/comments/'
+      preLoaderRoute: typeof AuthenticatedCommentsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dash/': {
+      id: '/_authenticated/dash/'
+      path: '/dash'
+      fullPath: '/dash/'
+      preLoaderRoute: typeof AuthenticatedDashIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/documentation/': {
+      id: '/_authenticated/documentation/'
+      path: '/documentation'
+      fullPath: '/documentation/'
+      preLoaderRoute: typeof AuthenticatedDocumentationIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/help-center/': {
+      id: '/_authenticated/help-center/'
+      path: '/help-center'
+      fullPath: '/help-center/'
+      preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/settings/appearance': {
+      id: '/_authenticated/settings/appearance'
+      path: '/appearance'
+      fullPath: '/settings/appearance'
+      preLoaderRoute: typeof AuthenticatedSettingsAppearanceRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/settings/profile': {
+      id: '/_authenticated/settings/profile'
+      path: '/profile'
+      fullPath: '/settings/profile'
+      preLoaderRoute: typeof AuthenticatedSettingsProfileRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/slivers/': {
+      id: '/_authenticated/slivers/'
+      path: '/slivers'
+      fullPath: '/slivers/'
+      preLoaderRoute: typeof AuthenticatedSliversIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/spotify/': {
+      id: '/_authenticated/spotify/'
+      path: '/spotify'
+      fullPath: '/spotify/'
+      preLoaderRoute: typeof AuthenticatedSpotifyIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/stats/': {
+      id: '/_authenticated/stats/'
+      path: '/stats'
+      fullPath: '/stats/'
+      preLoaderRoute: typeof AuthenticatedStatsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/users/': {
+      id: '/_authenticated/users/'
+      path: '/users'
+      fullPath: '/users/'
+      preLoaderRoute: typeof AuthenticatedUsersIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/articles/$articleId/edit': {

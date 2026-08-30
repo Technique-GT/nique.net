@@ -7,7 +7,9 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 // https://vite.dev/config/
 export default defineConfig({
   server: {
+    host: '0.0.0.0',
     port: 5174,
+    strictPort: true,
   },
   preview: {
     port: 4174,
