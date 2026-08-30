@@ -83,7 +83,7 @@ function Opinions() {
                     controller.signal
                 );
 
-                const allOpinions = opinionResponse || [];
+                const allOpinions = Array.isArray(opinionResponse) ? opinionResponse : opinionResponse.data;
 
                 if (!isMounted) {
                     return;

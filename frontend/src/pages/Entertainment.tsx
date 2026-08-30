@@ -94,7 +94,7 @@ function Entertainment() {
                     controller.signal
                 );
 
-                const allEntertainment = entertainmentResponse || [];
+                const allEntertainment = Array.isArray(entertainmentResponse) ? entertainmentResponse : entertainmentResponse.data;
 
                 if (!isMounted) {
                     return;
