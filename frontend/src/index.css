@@ -60,6 +60,78 @@ h5, th, td {
   margin-top: 0;
 }
 
+/* WordPress alignment classes carried over by the content migration
+   (inline <img class="alignleft|alignright|aligncenter"> and
+   <figure class="wp-caption align...">). Tailwind's prose doesn't style
+   these, so map them here. */
+.article-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+.article-body .aligncenter,
+.article-body figure.aligncenter {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.article-body .alignnone {
+  display: block;
+}
+
+.article-body .alignleft {
+  float: left;
+  margin: 0.4rem 1.5rem 1rem 0;
+  max-width: 50%;
+}
+
+.article-body .alignright {
+  float: right;
+  margin: 0.4rem 0 1rem 1.5rem;
+  max-width: 50%;
+}
+
+/* Captions: <figure class="wp-caption ..."> with a <figcaption>. */
+.article-body figure.wp-caption {
+  max-width: 100%;
+}
+
+.article-body figure.alignleft,
+.article-body figure.alignright {
+  max-width: 50%;
+}
+
+.article-body figcaption,
+.article-body .wp-caption-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  text-align: center;
+  opacity: 0.75;
+  margin-top: 0.4rem;
+}
+
+/* Clear floats so a short article body doesn't collapse around an
+   aligned image, and stack left/right images full-width on narrow screens. */
+.article-body::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+@media (max-width: 640px) {
+  .article-body .alignleft,
+  .article-body .alignright,
+  .article-body figure.alignleft,
+  .article-body figure.alignright {
+    float: none;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
 @keyframes scroll {
     from {
         transform: translateX(0);

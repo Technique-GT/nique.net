@@ -86,7 +86,7 @@ function Sports() {
                     controller.signal
                 );
 
-                const allSportsArticles = sportsResponse || [];
+                const allSportsArticles = Array.isArray(sportsResponse) ? sportsResponse : sportsResponse.data;
 
                 if (!isMounted) {
                     return;

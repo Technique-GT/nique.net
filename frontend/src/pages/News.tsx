@@ -95,7 +95,7 @@ function News() {
                     controller.signal
                 );
 
-                const allNewsArticles = newsResponse || [];
+                const allNewsArticles = Array.isArray(newsResponse) ? newsResponse : newsResponse.data;
 
                 if (!isMounted) {
                     return;

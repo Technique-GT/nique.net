@@ -559,9 +559,20 @@ export const getArticlesByCategory = async (req: Request, res: Response): Promis
       return;
     }
 
-    const articles = await populateArticle(
-      Article.find({ categoryId, published: true }).sort({ isSticky: -1, publishedAt: -1 }),
-    );
+    const { page, limit } = req.query as { page?: string; limit?: string };
+    const pageNum = Math.max(Number(page) || 1, 1);
+    const limitNum = Math.max(Number(limit) || 20, 1);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [articles, total] = await Promise.all([
+      populateArticle(
+        Article.find({ categoryId, published: true })
+          .sort({ isSticky: -1, publishedAt: -1 })
+          .skip(skip)
+          .limit(limitNum),
+      ),
+      Article.countDocuments({ categoryId, published: true }),
+    ]);
 
     setCacheTags(
       res,
@@ -570,7 +581,11 @@ export const getArticlesByCategory = async (req: Request, res: Response): Promis
       }),
     );
 
-    res.json({ success: true, data: articles });
+    res.json({
+      success: true,
+      data: articles,
+      pagination: { total, page: pageNum, pages: Math.ceil(total / limitNum), limit: limitNum },
+    });
   } catch (error: any) {
     res.status(500).json(safeErrorResponse('Failed to fetch articles by category', error));
   }

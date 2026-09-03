@@ -73,7 +73,7 @@ function About() {
             <div className='grid grid-cols-1 sm:grid-cols-3 max-w-[95%] md:max-w-[80%] m-auto p-5 gap-x-16'>
                 <div className='col-span-1 sm:col-span-2'>
                     <h4 className='text-2xl font-bold text-nique-blue my-6'>Our Mission</h4>
-                    <p className='text-lg mt-5'>The purpose of the <i>Technique</i> is to serve the campus community by providing information, analysis and opinions that reflect the needs and interests of the student body at Georgia Tech.</p>
+                    <p className='text-lg mt-5'>The <i>Technique</i> serves the campus community by providing information, analysis and opinions that reflect the needs and interests of the student body at the Georgia Institute of Technology.</p>
                 </div>
                 <div className='col-span-1 ml-20 mt-8 p-8 bg-nique-blue text-white'>
                     <h4 className='text-2xl font-bold text-right mb-4'>Follow Technique</h4>
@@ -119,7 +119,7 @@ function About() {
                     <li className="mt-2">
                         Use our role as a college newspaper to provide unique content to the community by:
                         <ol className="list-decimal ml-8 mt-1">
-                            <li>Providing coverage and analyses of news and events both on- and off-campus that affect the student body</li>
+                            <li>Providing coverage and analysis of news and events both on- and off-campus that affect the student body</li>
                             <li>Informing students about opportunities available on campus and around Atlanta to help them make decisions about how to spend their time</li>
                             <li>Offering a feature centric, in-depth look at important sports around campus in the simplest and most effective manner possible</li>
                         </ol>
@@ -146,40 +146,39 @@ function About() {
             <div className='max-w-[80%] m-auto p-5'>
                 <h4 className='text-2xl font-bold text-nique-blue my-6'>Getting Involved</h4>
                 <p className='text-lg mt-5'>
-                    Interested in writing, photography, sales or design? If so, the Technique has a lot to offer. Our staff is comprised entirely of Tech students interested
+                    Our staff is comprised entirely of Tech students interested 
                     in improving their writing, communication and design skills. If you are interested in any of the following, consider joining the Technique.
                 </p>
-                <ul className='text-lg my-3 list-disc ml-8'>
-                    <li>
-                        <strong>Improving your writing skills:</strong> By joining the Technique, you will learn how to write articles for a range of different
-                        sections including News, Opinions, Life, Entertainment and Sports. In addition, you will learn how to interview sources and improve your skills
-                        to analyze information and ask the right questions.
-                    </li>
-                    <li>
-                        <strong>Sales opportunities:</strong> As part of the business team, you can hone your salesmanship by selling ads for the paper. Sharpening
-                        your sales skills can help you become a better marketer or manager in your professional career.
-                    </li>
-                    <li>
-                        <strong>Design skills:</strong> The Technique maintains two mediums of publication — both print and online formats. If you're interested in 
-                        graphic design, you'll have the opportunity to work with section editors to help design the paper layout on a weekly basis, which will help you 
-                        expand your graphic design portfolio.
-                    </li>
-                    <li>
-                        <strong>Photography:</strong> Our staff is responsible for taking photos for the paper. Lessons on topics such as shooting sports, portraits,
-                        landscapes, etc., are held by fellow students.
-                    </li>
-                </ul>
+                    <ul className='text-lg my-3 list-disc ml-8'>
+                        <li>
+                            <strong>Improving your writing skills:</strong> By joining the Technique, you will learn how to write articles for a range of different 
+                            sections including News, Opinions, Life, Entertainment and Sports. In addition, you will learn how to interview sources and improve your skills 
+                            in analyzing information and asking the right questions.
+                        </li>
+                        <li>
+                            <strong>Design skills:</strong> The Technique maintains two media of publication — both print and online formats. If you're interested in 
+                            graphic design, you'll have the opportunity to work with section editors to help design the paper layout on a weekly basis, which will help you 
+                            expand your graphic design portfolio.
+                        </li>
+                        <li>
+                            <strong>Photography:</strong> Our staff is responsible for taking photos for the paper. Lessons on topics such as shooting sports, portraits and 
+                            landscapes are taught by fellow students.
+                        </li>
+                        <li>
+                            <strong>Web Development:</strong> The Technique website was completely designed by and is maintained by Tech students. Whether you are interested in frontend, backend, or full-stack development, The Technique offers an opportunity to learn the basics of web development in a low-stakes environment.
+                        </li>
+                    </ul>
 
                 <p className='text-lg'>
-                    General Body Meetings are held weekly on Tuesdays at 7:00 p.m. in the Student Center in room 2150 (Student Media suite).
+                    General Body Meetings are held weekly during the Fall and Spring semesters on Tuesdays at 7:00 p.m. in the Student Center in room 2150 (Student Media Suite).
                 </p>
                 <p className='text-lg mt-3'>
-                    Please join the
-                    <a href="https://join.slack.com/t/techniquestaf-lba4588/shared_invite/zt-2p2rgiqtx-95XC_o1P~x2mOLihFDFA~Q"
-                        target="_blank"
+                    Our main form of internal communication is on Slack. You can log in to Slack with your Tech credentials  
+                    <a href=" https://join.slack.com/t/techniquestaf-lba4588/shared_invite/zt-2p2rgiqtx-95XC_o1P~x2mOLihFDFA~Q" 
+                        target="_blank" 
                         rel="noopener noreferrer"
-                        className='text-nique-light-blue hover:text-nique-blue-hover'> <u>Slack Channel</u> </a>
-                    if interested!
+                        className='text-nique-light-blue hover:text-nique-blue-hover'> <u>here</u> </a> 
+                    and search "The Technique" to join the new Slack.
                 </p>
             </div>
         </>

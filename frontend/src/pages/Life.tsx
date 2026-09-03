@@ -88,7 +88,7 @@ function Life() {
                     controller.signal
                 );
 
-                const allLifeArticles = lifeResponse || [];
+                const allLifeArticles = Array.isArray(lifeResponse) ? lifeResponse : lifeResponse.data;
 
                 if (!isMounted) {
                     return;
