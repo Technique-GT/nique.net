@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import articleService from '../services/articleService';
+import { getPublications } from '../services/publicationService';
 import { ArticleDocument } from '../types/article';
+import { Publication, formatPublicationDate } from '../utils/dateFormat';
 import { FaFacebook, FaXTwitter, FaInstagram, FaTiktok, FaLinkedin } from "react-icons/fa6";
 import Navbar from "../components/Navbar";
 import Collage from "../components/Collage";
@@ -9,41 +11,45 @@ import Spinner from '../components/Spinner';
 function About() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>([]);
+    const [publications, setPublications] = useState<Publication[]>([]);
 
     useEffect(() => {
-            let isMounted = true;
-            const controller = new AbortController();
-    
-            const loadArticles = async () => {
-                setIsLoading(true);
-    
-                try {
-                    // Services now return unwrapped data directly
-                    const recentArticlesData = await articleService.fetchRecentArticles(7, 'published', controller.signal);
-    
-                    if (!isMounted) {
-                        return;
-                    }
-    
+        let isMounted = true;
+        const controller = new AbortController();
+
+        const loadData = async () => {
+            setIsLoading(true);
+
+            try {
+                const recentArticlesData = await articleService.fetchRecentArticles(7, 'published', controller.signal);
+                if (isMounted) {
                     setRecentArticles(recentArticlesData || []);
-                } catch {
-                    if (!isMounted) {
-                        return;
-                    }
-                } finally {
-                    if (isMounted) {
-                        setIsLoading(false);
-                    }
                 }
-            };
-    
-            loadArticles();
-    
-            return () => {
-                isMounted = false;
-                controller.abort();
-            };
-        }, []);
+            } catch (err) {
+                console.error('Failed to fetch recent articles:', err);
+            }
+
+            try {
+                const publicationsData = await getPublications();
+                if (isMounted) {
+                    setPublications(publicationsData || []);
+                }
+            } catch (err) {
+                console.error('Failed to fetch publication dates:', err);
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        loadData();
+
+        return () => {
+            isMounted = false;
+            controller.abort();
+        };
+    }, []);
 
     if (isLoading) {
         return (
@@ -61,7 +67,7 @@ function About() {
                 <h4 className="font-bold mb-2 text-2xl text-nique-blue">About Us</h4>
             </div>
 
-            <Collage articles={[recentArticles[0], recentArticles[1], recentArticles[2], recentArticles[3], recentArticles[4], recentArticles[5], recentArticles[6]].filter(Boolean) as ArticleDocument[]} /> {/* collection of best pictures you may want to feature */}
+            <Collage articles={[recentArticles[0], recentArticles[1], recentArticles[2], recentArticles[3], recentArticles[4], recentArticles[5], recentArticles[6]].filter(Boolean) as ArticleDocument[]} />
 
             {/* Mission */}
             <div className='grid grid-cols-1 sm:grid-cols-3 max-w-[95%] md:max-w-[80%] m-auto p-5 gap-x-16'>
@@ -80,6 +86,20 @@ function About() {
                     </p>
                 </div>
             </div>
+
+            {/* Upcoming Print Schedule */}
+            {publications.length > 0 && (
+                <div className='max-w-[80%] m-auto p-5'>
+                    <h4 className='text-2xl font-bold text-nique-blue my-6'>Upcoming Print Dates</h4>
+                    <ul className='list-disc ml-8 text-lg'>
+                        {publications.map((pub) => (
+                            <li key={pub._id} className='mt-2'>
+                                {formatPublicationDate(pub)}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
             {/* Vision */}
             <div className='max-w-[80%] m-auto p-5'>
@@ -162,7 +182,7 @@ function About() {
                 </p>
             </div>
         </>
-    )
+    );
 }
 
 export default About;
