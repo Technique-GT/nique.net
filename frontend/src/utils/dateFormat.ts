@@ -1,3 +1,6 @@
+import type { Publication } from '../services/publicationService';
+export type { Publication };
+
 export const formatPublicationDate = (pub: Publication): string => {
   const date = new Date(pub.publishDate);
   
