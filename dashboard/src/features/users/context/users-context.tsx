@@ -7,7 +7,7 @@ import { queryKeys } from '@/hooks/use-queries'
 import type { ColumnFiltersState, PaginationState } from '@tanstack/react-table'
 import type { SortingState } from '@tanstack/react-table'
 
-type UsersDialogType = 'invite' | 'add' | 'edit' | 'delete'
+type UsersDialogType = 'invite' | 'add' | 'edit' | 'delete' | 'merge'
 
 interface UsersContextType {
   open: UsersDialogType | null
