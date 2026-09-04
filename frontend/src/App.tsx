@@ -5,6 +5,7 @@ import { Suspense, lazy } from "react";
 // import ReactGA from 'react-ga4';
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Spinner from "./components/Spinner";
+import HomeSkeleton from "./components/HomeSkeleton";
 import Footer from "./components/Footer";
 import Seo from "./components/Seo";
 
@@ -85,17 +86,27 @@ function RouteSeo() {
   );
 }
 
+function RouteFallback() {
+  const location = useLocation();
+
+  if (location.pathname === "/") {
+    return <HomeSkeleton />;
+  }
+
+  return (
+    <div className="flex justify-center items-center h-screen">
+      <Spinner />
+    </div>
+  );
+}
+
 function App() {
   return (
     <Router>
       <RouteSeo />
       <div className="App min-h-screen flex flex-col">
         <div className="flex-1">
-          <Suspense fallback={
-              <div className="flex justify-center items-center h-screen">
-                  <Spinner />
-              </div>
-          }>
+          <Suspense fallback={<RouteFallback />}>
               <Routes>
             {/* Public routes */}
             <Route path="/" element={<Home />} />
