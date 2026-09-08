@@ -7,8 +7,8 @@ import Seo from '../components/Seo';
 import ArticleBlock from '../components/ArticleBlock';
 import authorService from '../services/authorService';
 import articleService from '../services/articleService';
+import { Globe, Linkedin, Github, Twitter, Instagram, Youtube, Facebook, Mail, type LucideIcon } from 'lucide-react';
 import type { ArticleDocument, AuthorProfile } from '../types/article';
-
 const PAGE_SIZE = 8;
 
 const DEFAULT_AUTHOR_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120' fill='none'%3E%3Crect width='120' height='120' rx='60' fill='%23E5E7EB'/%3E%3Ccircle cx='60' cy='45' r='22' fill='%239CA3AF'/%3E%3Cpath d='M25 100c0-19.33 15.67-35 35-35s35 15.67 35 35' fill='%239CA3AF'/%3E%3C/svg%3E";
@@ -23,6 +23,31 @@ const toSafeExternalUrl = (value: string): string | null => {
     } catch {
         return null;
     }
+};
+
+const getSocialPlatformMeta = (platform: string): { Icon: LucideIcon; label: string } => {
+  const normalized = platform.trim().toLowerCase();
+
+  switch (normalized) {
+    case 'twitter':
+    case 'x':
+      return { Icon: Twitter, label: 'Twitter / X' };
+    case 'linkedin':
+      return { Icon: Linkedin, label: 'LinkedIn' };
+    case 'github':
+      return { Icon: Github, label: 'GitHub' };
+    case 'instagram':
+      return { Icon: Instagram, label: 'Instagram' };
+    case 'youtube':
+      return { Icon: Youtube, label: 'YouTube' };
+    case 'facebook':
+      return { Icon: Facebook, label: 'Facebook' };
+    case 'email':
+    case 'mail':
+      return { Icon: Mail, label: 'Email' };
+    default:
+      return { Icon: Globe, label: platform };
+  }
 };
 
 export default function Authors() {
@@ -220,20 +245,25 @@ export default function Authors() {
                 <h3 className='text-3xl font-bold text-nique-blue'>{author.name}</h3>
                 {author.bio?.trim() && <p className='max-w-3xl text-base text-nique-blue/90 whitespace-pre-wrap wrap-break-word'>{author.bio}</p>}
 
-                {safeSocials.length > 0 && (
-                    <div className='flex flex-wrap gap-3'>
-                    {safeSocials.map((link) => (
+               {safeSocials.length > 0 && (
+                <div className='flex flex-wrap items-center gap-2 pt-1'>
+                    {safeSocials.map((link) => {
+                    const { Icon, label } = getSocialPlatformMeta(link.platform);
+                    return (
+                        <div key={`${link.platform}-${link.url}`} className='group relative inline-flex items-center'>
                         <a
-                        key={`${link.platform}-${link.url}`}
-                        href={link.url}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='rounded-full border border-slate-300 px-3 py-1 text-sm text-nique-blue hover:bg-slate-50'
+                            href={link.url}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            aria-label={`${author.name} on ${label}`}
+                            className='inline-flex size-9 items-center justify-center rounded-full border border-nique-blue bg-white text-nique-blue transition-all duration-200 hover:bg-nique-blue hover:text-white focus:outline-none focus:ring-2 focus:ring-nique-blue/30'
                         >
-                        {link.platform}
+                            <Icon className='size-4 shrink-0 stroke-[2.25] text-current' />
                         </a>
-                    ))}
-                    </div>
+                        </div>
+                    );
+                    })}
+                </div>
                 )}
                 </div>
             </div>
