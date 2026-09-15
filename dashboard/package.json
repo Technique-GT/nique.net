@@ -73,7 +73,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.31.0",
-    "@faker-js/faker": "^9.9.0",
+    "@faker-js/faker": "^10.6.0",
     "@tanstack/eslint-plugin-query": "^5.81.2",
     "@tanstack/react-query-devtools": "^5.83.0",
     "@tanstack/react-router-devtools": "^1.129.0",
