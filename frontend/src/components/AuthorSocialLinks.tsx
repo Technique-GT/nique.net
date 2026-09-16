@@ -41,7 +41,7 @@ export const AuthorSocialLinks: React.FC<AuthorSocialLinksProps> = ({ socials, c
   if (!socials) return null;
 
   const activeSocials = Object.entries(socials).filter(
-    ([_, url]) => typeof url === 'string' && url.trim().length > 0
+    ([, url]) => typeof url === 'string' && url.trim().length > 0
   );
 
   if (activeSocials.length === 0) return null;
