@@ -4,6 +4,10 @@ import { objectIdString } from './objectId.schema';
 const SOCIAL_PLATFORM_HOSTS = {
   instagram: 'instagram.com',
   linkedin: 'linkedin.com',
+  github: 'github.com',
+  x: 'x.com',
+  youtube: 'youtube.com',
+  facebook: 'facebook.com',
 } as const;
 
 const isAllowedSocialUrl = (rawUrl: string, platform: keyof typeof SOCIAL_PLATFORM_HOSTS): boolean => {
@@ -20,12 +24,33 @@ const isAllowedSocialUrl = (rawUrl: string, platform: keyof typeof SOCIAL_PLATFO
 
 export const socialLinkSchema = z.object({
   platform: z
-    .enum(['instagram', 'linkedin'])
-    .transform((value) => value.toLowerCase() as 'instagram' | 'linkedin'),
+    .enum([
+      'instagram',
+      'linkedin',
+      'github',
+      'x',
+      'youtube',
+      'facebook',
+      'website',
+    ])
+    .transform(
+      (value) =>
+        value.toLowerCase() as
+          | 'instagram'
+          | 'linkedin'
+          | 'github'
+          | 'x'
+          | 'youtube'
+          | 'facebook'
+          | 'website',
+    ),
   url: z.string().trim().url(),
 })
   .superRefine((value, ctx) => {
-    if (!isAllowedSocialUrl(value.url, value.platform)) {
+    if (
+      value.platform !== 'website' &&
+      !isAllowedSocialUrl(value.url, value.platform)
+    ) {
       ctx.addIssue({
         code: 'custom',
         path: ['url'],
