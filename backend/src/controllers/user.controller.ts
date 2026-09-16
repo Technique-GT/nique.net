@@ -7,23 +7,31 @@ const SOCIAL_PLATFORM_HOSTS: Record<string, string> = {
   instagram: 'instagram.com',
   linkedin: 'linkedin.com',
   github: 'github.com',
-  twitter: 'twitter.com',
   x: 'x.com',
   youtube: 'youtube.com',
   facebook: 'facebook.com',};
 
-const isAllowedSocialUrl = (rawUrl: string, platform: string): boolean => {
+type SocialPlatform = keyof typeof SOCIAL_PLATFORM_HOSTS | 'website';  
+
+const isAllowedSocialUrl = (
+  rawUrl: string,
+  platform: SocialPlatform,
+): boolean => {
   try {
     const parsed = new URL(rawUrl);
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
-    
+
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return false;
+    }
+
+    if (platform === 'website') {
+      return true;
+    }
+
     const hostname = parsed.hostname.toLowerCase();
     const expected = SOCIAL_PLATFORM_HOSTS[platform];
-    
-    if (expected) {
-      return hostname === expected || hostname.endsWith(`.${expected}`);
-    }
-    return true; 
+
+    return hostname === expected || hostname.endsWith(`.${expected}`);
   } catch {
     return false;
   }
