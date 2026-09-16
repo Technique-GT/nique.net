@@ -7,22 +7,25 @@
 Raw photo uploads from the admin/editor panel are currently written directly to object storage and lead to high storage consumption and large payload sizes over the CDN. We need an automated pre-storage transformation step to normalize and compress uploads.
 
 ## Recommendation
-Process uploads server-side using **[`sharp`](https://sharp.pixelplumbing.com/)** before sending assets to object storage.
+Use AVIF as the primary delivery format to modern supporting browsers, paired with WebP and JPEG fallbacks.
+
+Pre-Storage Pipeline (sharp): Encode assets directly to AVIF (and necessary fallbacks) on upload prior to CDN storage, keeping runtime operations simple and free from third-party runtime billing.
+
+Edge Resizing API (Cloudflare): Store full-resolution master copies and leverage an edge resizing API (like Cloudflare Image Resizing) to negotiate format, dimensions, and crops on the fly based on the client request.
 
 ### Pipeline Strategy
-* **Primary format: WebP**
-  * Provides ~65–75% reduction over raw uncompressed camera files, and ~25–35% smaller footprints than JPEGs based on [Google's WebP compression data](https://developers.google.com/speed/webp/docs/compression).
-  * Native browser support is >96% globally according to [Can I Use: WebP](https://caniuse.com/webp).
-* **AVIF?** While AVIF has 15–25% higher compression efficiency at equivalent SSIM, AVIF encoding speed in libvips/sharp takes roughly 4–10x longer per image than WebP (according to [sharp format performance discussions](https://github.com/lovell/sharp/discussions)). 
-* **Fallbacks:**
-  * Generate a single progressive JPEG for RSS feeds, legacy clients, and OpenGraph/social meta tags.
-  * Retain original assets in an archival/cold storage if uncompressed copies are needed.
+* Primary Format: AVIF
+  * Modern browsers get AVIF for maximum compression efficiency and bandwidth savings
+* Fallbacks: WebP & JPEG
+  * WebP: Serves browsers without native AVIF support
+  * JPEG: Retained for RSS feeds, legacy clients, OpenGraph/social meta crawlers, and email newsletters
+* Master Asset Retention: Retain high-resolution originals in cold/archival storage for future re-processing or print usage
 
 ### Things to Consider
-We should resize incoming images into three standard widths so that different devices don't display the wrong size image:
-* **Thumbnail (`400px`):** Author bios, sidebar widgets, related story grids.
-* **Inline (`800px`):** Standard inline story content.
-* **Main Image (`1600px`):** Headers and article cover images.
+Generate or request images in three standard widths to prevent mobile devices from downloading desktop assets:
+* Thumbnail (400px): Author bios, sidebar widgets, related story grids
+* Inline (800px): Standard inline story content
+* Main Image (1600px): Headers and article cover images
 
 ## Alternatives
 
@@ -33,9 +36,10 @@ We should resize incoming images into three standard widths so that different de
 | **Legacy MozJPEG Only** | 100% universal compatibility | 25–35% larger payloads than WebP | Less efficient bandwidth and speed on mobile. |
 
 ## Trade-offs
-* **Server Compute:** Batch uploads will spike CPU usage. We will need to enforce upload payload limits and throttle concurrent resize tasks.
-* **More individual files, but less total disk space:** Saving three resized copies (thumbnail, inline, hero) for every photo means storing more total files, but because they are compressed, all three combined will still take up far fewer megabytes than the original raw image.
+* Encoding Overhead vs. Bandwidth: AVIF encoding takes longer than WebP, but delivers superior compression ratios on modern connections
+
+* Dynamic Edge vs. Static Variants: Dynamic edge resizing requires an external API subscription, whereas static pre-generation requires writing multiple files per upload to object storage
 
 ## Next Steps
-1. Create implementation issue: *"Add sharp compression middleware to media upload routes"*.
-2. Establish storage key conventions (e.g., `/media/:id/{thumb,inline,hero}.webp`).
+1. Evaluate whether our Cloudflare plan includes Image Resizing quotas, or if we should default to server-side pre-generation
+2. Define asset path conventions (e.g., /media/:id/{size}.{avif,webp,jpg})
