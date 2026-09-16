@@ -4,35 +4,69 @@ import { objectIdString } from './objectId.schema';
 const SOCIAL_PLATFORM_HOSTS = {
   instagram: 'instagram.com',
   linkedin: 'linkedin.com',
+  github: 'github.com',
+  x: 'x.com',
+  youtube: 'youtube.com',
+  facebook: 'facebook.com',
 } as const;
+type SocialPlatform = keyof typeof SOCIAL_PLATFORM_HOSTS | 'website';
 
-const isAllowedSocialUrl = (rawUrl: string, platform: keyof typeof SOCIAL_PLATFORM_HOSTS): boolean => {
+const isAllowedSocialUrl = (
+  rawUrl: string,
+  platform: SocialPlatform,
+): boolean => {
   try {
     const parsed = new URL(rawUrl);
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return false;
+    }
+
+    if (platform === 'website') {
+      return true;
+    }
+
     const hostname = parsed.hostname.toLowerCase();
     const expected = SOCIAL_PLATFORM_HOSTS[platform];
+
     return hostname === expected || hostname.endsWith(`.${expected}`);
   } catch {
     return false;
   }
 };
-
 export const socialLinkSchema = z.object({
   platform: z
-    .enum(['instagram', 'linkedin'])
-    .transform((value) => value.toLowerCase() as 'instagram' | 'linkedin'),
+    .enum([
+      'instagram',
+      'linkedin',
+      'github',
+      'x',
+      'youtube',
+      'facebook',
+      'website',
+    ])
+    .transform(
+      (value) =>
+        value.toLowerCase() as
+          | 'instagram'
+          | 'linkedin'
+          | 'github'
+          | 'x'
+          | 'youtube'
+          | 'facebook'
+          | 'website',
+    ),
   url: z.string().trim().url(),
 })
   .superRefine((value, ctx) => {
-    if (!isAllowedSocialUrl(value.url, value.platform)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['url'],
-        message: `URL must be a valid ${value.platform} link`,
-      });
-    }
-  });
+  if (!isAllowedSocialUrl(value.url, value.platform)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['url'],
+      message: `URL must be a valid ${value.platform} link`,
+    });
+  }
+});
 
 export const createUserBodySchema = z.object({
   name: z.string().trim().min(1),
