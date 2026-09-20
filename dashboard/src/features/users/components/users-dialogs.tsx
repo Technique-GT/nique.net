@@ -2,6 +2,7 @@ import { useUsers } from '../context/users-context'
 import { UsersActionDialog } from './users-action-dialog'
 import { UsersDeleteDialog } from './users-delete-dialog'
 import { UsersInviteDialog } from './users-invite-dialog'
+import { UsersMergeDialog } from './users-merge-dialog'
 
 export function UsersDialogs() {
   const { open, setOpen, currentRow, setCurrentRow } = useUsers()
@@ -38,6 +39,18 @@ export function UsersDialogs() {
             open={open === 'delete'}
             onOpenChange={() => {
               setOpen('delete')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            currentRow={currentRow}
+          />
+
+          <UsersMergeDialog
+            key={`user-merge-${currentRow.id}`}
+            open={open === 'merge'}
+            onOpenChange={() => {
+              setOpen('merge')
               setTimeout(() => {
                 setCurrentRow(null)
               }, 500)
