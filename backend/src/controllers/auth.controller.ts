@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import _ from 'lodash';
 import User from '../models/User';
 import { AuthRequest, getTokenFromRequest } from '../middleware/auth.middleware';
 import { hashToken, safeErrorResponse } from '../utils/security';
@@ -323,7 +324,8 @@ export const devLogin = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const user = await AuthUser.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+    const safeName = _.escapeRegExp(name);
+    const user = await AuthUser.findOne({ name: { $regex: new RegExp(`^${safeName}$`, 'i') } });
     if (!user) {
       res.status(404).json({ success: false, message: `No user found with name "${name}"` });
       return;
