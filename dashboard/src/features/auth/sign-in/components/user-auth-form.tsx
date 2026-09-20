@@ -21,7 +21,7 @@ export function UserAuthForm({ className }: UserAuthFormProps) {
 			await checkAuth();
 			// Navigate after auth refreshes — the ProtectedRoute will handle it
 			window.location.href = "/";
-		} catch (err: unknown) {
+		} catch (err: AxiosError) {
 			const msg = err?.response?.data?.message || "Dev login failed";
 			toast.error(msg);
 		} finally {
