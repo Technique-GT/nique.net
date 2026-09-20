@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import { type HTMLAttributes, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,11 @@ export function UserAuthForm({ className }: UserAuthFormProps) {
 			await checkAuth();
 			// Navigate after auth refreshes — the ProtectedRoute will handle it
 			window.location.href = "/";
-		} catch (err: AxiosError) {
-			const msg = err?.response?.data?.message || "Dev login failed";
+		} catch (err) {
+			const msg =
+				err instanceof AxiosError
+					? err?.response?.data?.message
+					: "Dev login failed";
 			toast.error(msg);
 		} finally {
 			setLoading(false);
