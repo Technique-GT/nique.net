@@ -94,5 +94,5 @@ ArticleSchema.index({ 'authors.authorId': 1, published: 1, publishedAt: -1 });
 ArticleSchema.index({ categoryId: 1, published: 1, publishedAt: -1 });
 ArticleSchema.index({ isFeatured: 1, published: 1, publishedAt: -1 });
 ArticleSchema.index({ featuredMediaUrl: 1 }, { sparse: true });
-
+ArticleSchema.index({ createdAt: -1, publishedAt: -1 });
 export default mongoose.model<IArticle>('Article', ArticleSchema);
