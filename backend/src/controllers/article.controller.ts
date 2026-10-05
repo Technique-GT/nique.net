@@ -117,6 +117,7 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
   const featuredMediaUrlRaw = typeof body?.featuredMediaUrl === 'string' ? body.featuredMediaUrl.trim() : '';
   const featuredMediaUrl = featuredMediaUrlRaw.length > 0 ? featuredMediaUrlRaw : undefined;
   const imageCaption = typeof body?.imageCaption === 'string' ? body.imageCaption : undefined;
+  const imageCarousel = body?.imageCarousel;
 
   const published = typeof body?.published === 'boolean' ? body.published : undefined;
   const allowComments = typeof body?.allowComments === 'boolean' ? body.allowComments : undefined;
@@ -144,7 +145,8 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
 
   if (featuredMediaUrl !== undefined) update.featuredMediaUrl = featuredMediaUrl;
   if (imageCaption !== undefined) update.imageCaption = imageCaption;
-
+  if (imageCarousel !== undefined) update.imageCarousel = imageCarousel;
+  
   if (editorState !== undefined) update.editorState = editorState;
   if (reviewStatus !== undefined) update.reviewStatus = reviewStatus;
 
@@ -235,7 +237,15 @@ const hasArticleChanged = (existing: IArticle, update: Partial<IArticle>): boole
   }
   
   if (update.imageCaption !== undefined && update.imageCaption !== existing.imageCaption) return true;
-
+  if (update.imageCarousel !== undefined) {
+    try {
+      if (JSON.stringify(update.imageCarousel) !== JSON.stringify(existing.imageCarousel)) {
+        return true;
+      }
+    } catch (e) {
+      return true;
+    }
+  }
   return false;
 };
 

@@ -70,6 +70,13 @@ export interface ArticleDocument {
   authors: ArticleAuthor[];
   featuredMediaUrl?: string | null;
   imageCaption?: string;
+  imageCarousel?: {
+    images: Array<{
+      url: string;
+      caption: string;
+      credit: string;
+    }>;
+  };
   published: boolean;
   publishedAt: Date | string | null;
   allowComments: boolean;

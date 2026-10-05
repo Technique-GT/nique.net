@@ -12,6 +12,7 @@ import { ArticleDocument, User, Comment as CommentType } from "../types/article"
 import Seo from "../components/Seo";
 import { getArticleDescription, getArticleLink } from "../utils/articlePresentation";
 import { withMediaSessionRevalidation } from "../utils/mediaUrl";
+import ImageCarousel from "../components/ImageCarousel";
 
 type DisplayComment = {
   _id: string;
@@ -441,6 +442,13 @@ export default function Article() {
               </figcaption>
             )}
           </figure>
+        )}
+
+        {/* Image Carousel */}
+        {article.imageCarousel?.images && article.imageCarousel.images.length > 0 && (
+          <div className="max-w-3xl w-full mx-auto">
+            <ImageCarousel images={article.imageCarousel.images} />
+          </div>
         )}
 
         {/* Article Content */}

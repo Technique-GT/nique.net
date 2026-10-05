@@ -5,6 +5,12 @@ export type AuthorRef = {
   order: number;
 };
 
+export type ArticleCarouselImage = {
+  url: string;
+  caption: string;
+  credit: string;
+};
+
 export interface IArticle extends Document {
   title: string;
   slug: string;
@@ -17,6 +23,10 @@ export interface IArticle extends Document {
 
   featuredMediaUrl?: string;
   imageCaption?: string;
+
+  imageCarousel?: {
+    images: ArticleCarouselImage[];
+  };
 
   published: boolean;
   publishedAt: Date | null;
@@ -46,6 +56,26 @@ const AuthorRefSchema = new Schema<AuthorRef>(
   { _id: false },
 );
 
+const ArticleCarouselImageSchema = new Schema<ArticleCarouselImage>(
+  {
+    url: { type: String, required: true, trim: true },
+    caption: { type: String, required: false, default: '' },
+    credit: { type: String, required: false, default: '' },
+  },
+  { _id: false },
+);
+
+const ArticleImageCarouselSchema = new Schema(
+  {
+    images: {
+      type: [ArticleCarouselImageSchema],
+      required: true,
+      default: [],
+    },
+  },
+  { _id: false },
+);
+
 const ArticleSchema = new Schema<IArticle>(
   {
     title: { type: String, required: true, trim: true, maxlength: 200 },
@@ -60,6 +90,11 @@ const ArticleSchema = new Schema<IArticle>(
 
     featuredMediaUrl: { type: String, required: false, trim: true },
     imageCaption: { type: String, required: false },
+
+    imageCarousel: {
+      type: ArticleImageCarouselSchema,
+      required: false,
+    },
 
     published: { type: Boolean, required: true, default: false },
     publishedAt: { type: Date, required: false, default: null },
