@@ -19,39 +19,9 @@ export const staff: Staff[] = [
         contact: null
     },
     {
-        name: "Amara Nnabue",
-        role: "Head Copy Editor",
-        email: "copy@nique.net",
-        contact: null
-    },
-    {
-        name: "Erica Yun",
-        role: "Online Editor",
-        email: "online@nique.net",
-        contact: null
-    },
-    {
-        name: "Anika Nallur",
-        role: "Photography Editor",
-        email: "photo@nique.net",
-        contact: null
-    },
-    {
-        name: "Audrey Bewley",
-        role: "Design Editor",
-        email: "design@nique.net",
-        contact: null
-    },
-    {
-        name: "Michael London",
-        role: "Sports Editor",
-        email: "sports@nique.net",
-        contact: null
-    },
-    {
-        name: "Katherine Sanders",
-        role: "Life Editor",
-        email: "life@nique.net", // no email address provided
+        name: "Haris Rashli",
+        role: "News Editor",
+        email: "news@nique.net",
         contact: null
     },
     {
@@ -61,9 +31,9 @@ export const staff: Staff[] = [
         contact: null
     },
     {
-        name: "Haris Rashli",
-        role: "News Editor",
-        email: "news@nique.net",
+        name: "Katherine Sanders",
+        role: "Life Editor",
+        email: "life@nique.net", // no email address provided
         contact: null
     },
     {
@@ -73,9 +43,27 @@ export const staff: Staff[] = [
         contact: null
     },
     {
-        name: "Mac Pitts",
-        role: "Director of Student Media",
-        email: "mac.pitts@vpss.gatech.edu",
-        contact: "(404) 894-7732"
+        name: "Michael London",
+        role: "Sports Editor",
+        email: "sports@nique.net",
+        contact: null
+    },
+    {
+        name: "Anika Nallur",
+        role: "Photography Editor",
+        email: "photo@nique.net",
+        contact: null
+    },
+    {
+        name: "Erica Yun",
+        role: "Online Editor",
+        email: "online@nique.net",
+        contact: null
+    },
+    {
+        name: "Audrey Bewley",
+        role: "Design Editor",
+        email: "design@nique.net",
+        contact: null
     }
 ];

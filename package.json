@@ -18,6 +18,7 @@
     "start:dash": "npm --prefix dashboard run preview"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.25",
     "concurrently": "^9.2.1"
   },
   "overrides": {

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import _ from 'lodash';
 import User from '../models/User';
 import { AuthRequest, getTokenFromRequest } from '../middleware/auth.middleware';
 import { hashToken, safeErrorResponse } from '../utils/security';
@@ -302,5 +303,47 @@ export const googleAuthCallback = async (req: Request, res: Response): Promise<v
     res.redirect(appRedirect);
   } catch (error: any) {
     res.status(500).json(safeErrorResponse('Authentication callback failed', error));
+  }
+};
+
+/**
+ * DEV-ONLY: Log in as any existing user by name, bypassing Google OAuth.
+ * Returns 404 in production so the route is completely hidden.
+ */
+export const devLogin = async (req: Request, res: Response): Promise<void> => {
+  if (process.env.NODE_ENV === 'production') {
+    res.status(404).json({ message: 'Not found' });
+    return;
+  }
+
+  try {
+    const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+
+    if (!name) {
+      res.status(400).json({ success: false, message: 'name is required' });
+      return;
+    }
+
+    const safeName = _.escapeRegExp(name);
+    const user = await AuthUser.findOne({ name: { $regex: new RegExp(`^${safeName}$`, 'i') } });
+    if (!user) {
+      res.status(404).json({ success: false, message: `No user found with name "${name}"` });
+      return;
+    }
+
+    const token = generateToken(user);
+    res.cookie('jwt', token, getCookieOptions());
+
+    res.json({
+      success: true,
+      data: {
+        _id: user._id,
+        name: user.name,
+        isAdmin: user.isAdmin,
+        token,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json(safeErrorResponse('Dev login failed', error));
   }
 };

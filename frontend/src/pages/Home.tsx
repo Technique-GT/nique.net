@@ -8,7 +8,7 @@ import SideWidget from '../components/SideWidget';
 import SideArticle from '../components/SideArticle';
 import { Categories } from '../types/categories';
 import Navbar from '../components/Navbar';
-import Spinner from '../components/Spinner';
+import HomeSkeleton from '../components/HomeSkeleton';
 import InfiniteScrollModule from '../components/InfiniteScrollModule';
 import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
 import spotifyService from '../services/spotifyService';
@@ -193,11 +193,7 @@ function Home() {
     }, [opinionArticles]);
 
     if (isLoading) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <Spinner/>
-            </div>
-        );
+        return <HomeSkeleton />;
     }
 
     if (error) {
