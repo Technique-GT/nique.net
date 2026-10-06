@@ -7,8 +7,8 @@ import Seo from '../components/Seo';
 import ArticleBlock from '../components/ArticleBlock';
 import authorService from '../services/authorService';
 import articleService from '../services/articleService';
+import { AuthorSocialLinks } from '../components/AuthorSocialLinks';
 import type { ArticleDocument, AuthorProfile } from '../types/article';
-
 const PAGE_SIZE = 8;
 
 const DEFAULT_AUTHOR_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120' fill='none'%3E%3Crect width='120' height='120' rx='60' fill='%23E5E7EB'/%3E%3Ccircle cx='60' cy='45' r='22' fill='%239CA3AF'/%3E%3Cpath d='M25 100c0-19.33 15.67-35 35-35s35 15.67 35 35' fill='%239CA3AF'/%3E%3C/svg%3E";
@@ -221,19 +221,7 @@ export default function Authors() {
                 {author.bio?.trim() && <p className='max-w-3xl text-base text-nique-blue/90 whitespace-pre-wrap wrap-break-word'>{author.bio}</p>}
 
                 {safeSocials.length > 0 && (
-                    <div className='flex flex-wrap gap-3'>
-                    {safeSocials.map((link) => (
-                        <a
-                        key={`${link.platform}-${link.url}`}
-                        href={link.url}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='rounded-full border border-slate-300 px-3 py-1 text-sm text-nique-blue hover:bg-slate-50'
-                        >
-                        {link.platform}
-                        </a>
-                    ))}
-                    </div>
+                    <AuthorSocialLinks socials={safeSocials} className="pt-1" />
                 )}
                 </div>
             </div>
