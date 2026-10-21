@@ -17,6 +17,9 @@ export default defineConfig({
     tailwindcss(),
     react()
   ],
+  optimizeDeps: {
+    exclude: ['pdfjs-dist', 'react-pdf'],
+  },
   build: {
     rollupOptions: {
       output: {
