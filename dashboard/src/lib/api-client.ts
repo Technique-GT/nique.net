@@ -32,7 +32,7 @@ apiClient.interceptors.request.use(
           });
           csrfToken = response.data.csrfToken;
         } catch (error) {
-          console.error('Failed to fetch CSRF token:', error);
+          // console.error('Failed to fetch CSRF token:', error);
         }
       }
 

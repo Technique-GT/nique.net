@@ -407,7 +407,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                     <FormField
                       key={key}
                       control={form.control}
-                      name={key as any}
+                      name={key as PlatformKey}
                       render={({ field }) => (
                         <FormItem className='flex flex-col items-start space-y-1'>
                           <FormLabel>{label}</FormLabel>
