@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
 import express from 'express';
 import cors from 'cors';
@@ -164,6 +165,42 @@ export function createApp() {
 
   app.use(express.json({ limit: '10mb' }));
   app.use(cookieParser());
+  
+  // Double-Submit Cookie CSRF Protection Middleware
+  const csrfProtection = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // Skip safe methods and test environments
+    if (isTest || ['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+      return next();
+    }
+
+    const tokenFromHeader = req.headers['x-csrf-token'];
+    const tokenFromCookie = req.cookies['csrf-token'];
+
+    if (!tokenFromHeader || !tokenFromCookie || tokenFromHeader !== tokenFromCookie) {
+      res.status(403).json({ success: false, message: 'Invalid or missing CSRF token' });
+      return;
+    }
+
+    next();
+  };
+
+  // Endpoint to issue CSRF token cookie to frontend clients
+  app.get('/api/csrf-token', (req, res) => {
+    let csrfToken = req.cookies['csrf-token'];
+    if (!csrfToken) {
+      csrfToken = crypto.randomBytes(32).toString('hex');
+      res.cookie('csrf-token', csrfToken, {
+        httpOnly: false, // Must be readable by frontend JS to attach to headers
+        secure: isProduction,
+        sameSite: 'lax',
+        path: '/',
+      });
+    }
+    res.json({ success: true, csrfToken });
+  });
+
+  // Apply CSRF protection globally to state-changing API requests
+  app.use('/api', csrfProtection);
 
   const sendHealthResponse = (_req: express.Request, res: express.Response) => {
     res.json({

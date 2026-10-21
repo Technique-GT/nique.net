@@ -1,5 +1,3 @@
-// TODO - finish wiring up social links to frontend author pages
-
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
