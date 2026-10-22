@@ -114,10 +114,20 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
     }
   }
 
-  const featuredMediaUrlRaw = typeof body?.featuredMediaUrl === 'string' ? body.featuredMediaUrl.trim() : '';
-  const featuredMediaUrl = featuredMediaUrlRaw.length > 0 ? featuredMediaUrlRaw : undefined;
+  const hasFeaturedMediaUrl = Object.prototype.hasOwnProperty.call(body ?? {}, 'featuredMediaUrl');
+  const featuredMediaUrl = hasFeaturedMediaUrl && typeof body?.featuredMediaUrl === 'string'
+    ? body.featuredMediaUrl.trim()
+    : undefined;
   const imageCaption = typeof body?.imageCaption === 'string' ? body.imageCaption : undefined;
-  const imageCarousel = body?.imageCarousel;
+  const imageCarousel = body?.imageCarousel && Array.isArray(body.imageCarousel.images)
+    ? {
+        images: body.imageCarousel.images.map((image: { url: string; caption: string; credit: string }) => ({
+          url: image.url.trim(),
+          caption: image.caption,
+          credit: image.credit,
+        })),
+      }
+    : undefined;
 
   const published = typeof body?.published === 'boolean' ? body.published : undefined;
   const allowComments = typeof body?.allowComments === 'boolean' ? body.allowComments : undefined;
@@ -706,11 +716,8 @@ export const updateArticle = async (req: any, res: Response): Promise<void> => {
       }
     }
 
-    const article = await Article.findByIdAndUpdate(id, update, { new: true, runValidators: true });
-    if (!article) {
-      res.status(404).json({ success: false, message: 'Article not found' });
-      return;
-    }
+    Object.assign(existing, update);
+    const article = await existing.save();
 
     const populatedArticle = await populateArticle(Article.findById(article._id));
 

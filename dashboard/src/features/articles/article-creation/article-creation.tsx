@@ -35,6 +35,9 @@ type BackendArticleForForm = BackendArticle & {
   subcategoryId?: SubCategory | string | null;
   tagIds?: Array<Tag | string>;
   authors?: BackendArticleAuthor[];
+  imageCarousel?: {
+    images: Array<{ url: string; caption: string; credit: string }>;
+  };
 };
 
 const toCategory = (value: Category | string | null | undefined): Category => {
@@ -191,6 +194,7 @@ export default function ArticleCreation() {
         typeof backendArticle.featuredMediaUrl === "string"
           ? backendArticle.featuredMediaUrl
           : undefined,
+      imageCarousel: backendArticle.imageCarousel,
       isPublished: backendArticle.published,
       isFeatured: backendArticle.isFeatured ?? false,
       isSticky: backendArticle.isSticky ?? false,

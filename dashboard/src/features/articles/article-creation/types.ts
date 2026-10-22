@@ -65,6 +65,9 @@ export interface Article {
   reviewedBy?: string;
   reviewNotes?: string;
   featuredMediaUrl?: string;
+  imageCarousel?: {
+    images: ArticleCarouselImage[];
+  };
   isPublished: boolean;
   isFeatured: boolean;
   isSticky: boolean;
@@ -77,6 +80,12 @@ export interface Article {
   seoDescription?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ArticleCarouselImage {
+  url: string;
+  caption: string;
+  credit: string;
 }
 
 export type FieldErrorKey =

@@ -10,398 +10,415 @@ import articleService from "../services/articleService";
 import commentService from "../services/commentService";
 import { ArticleDocument, User, Comment as CommentType } from "../types/article";
 import Seo from "../components/Seo";
-import { getArticleDescription, getArticleLink } from "../utils/articlePresentation";
-import { withMediaSessionRevalidation } from "../utils/mediaUrl";
+import {
+  getArticleDescription,
+  getArticleImage,
+  getArticleLink,
+} from "../utils/articlePresentation";
 import ImageCarousel from "../components/ImageCarousel";
 
 type DisplayComment = {
-  _id: string;
-  commentId: string;
-  content: string;
-  createdAt: string;
-  thumbsUp: number;
-  thumbsDown: number;
-  myReaction: "up" | "down" | null;
-  parentCommentId?: string;
-  username: string;
-  replies: DisplayComment[];
+  _id: string;
+  commentId: string;
+  content: string;
+  createdAt: string;
+  thumbsUp: number;
+  thumbsDown: number;
+  myReaction: "up" | "down" | null;
+  parentCommentId?: string;
+  username: string;
+  replies: DisplayComment[];
 };
 
 /**
- * Map API comment (backend shape) to display format.
- * backend uses `username` directly, not `author.name/avatar`.
- */
+ * Map API comment (backend shape) to display format.
+ * backend uses `username` directly, not `author.name/avatar`.
+ */
 const mapApiCommentToDisplay = (comment: CommentType): DisplayComment => {
-  return {
-    _id: comment._id,
-    commentId: comment._id,
-    content: comment.content,
-    createdAt: typeof comment.createdAt === "string" ? comment.createdAt : String(comment.createdAt),
-    thumbsUp: comment.thumbsUp ?? 0,
-    thumbsDown: comment.thumbsDown ?? 0,
-    myReaction: comment.myReaction ?? null,
-    parentCommentId: comment.parentCommentId,
-    username: comment.username || "Anonymous",
-    replies: (comment.replies || []).map(mapApiCommentToDisplay),
-  };
+  return {
+    _id: comment._id,
+    commentId: comment._id,
+    content: comment.content,
+    createdAt: typeof comment.createdAt === "string" ? comment.createdAt : String(comment.createdAt),
+    thumbsUp: comment.thumbsUp ?? 0,
+    thumbsDown: comment.thumbsDown ?? 0,
+    myReaction: comment.myReaction ?? null,
+    parentCommentId: comment.parentCommentId,
+    username: comment.username || "Anonymous",
+    replies: (comment.replies || []).map(mapApiCommentToDisplay),
+  };
 };
 
 const sortRepliesByOldest = (list: DisplayComment[]): DisplayComment[] => {
-  const mapped = list.map((comment) => ({
-    ...comment,
-    replies: sortRepliesByOldest(comment.replies || []),
-  }));
-  return mapped.sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-  );
+  const mapped = list.map((comment) => ({
+    ...comment,
+    replies: sortRepliesByOldest(comment.replies || []),
+  }));
+  return mapped.sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
 };
 
 const sortComments = (
-  list: DisplayComment[],
-  sortMode: "Best" | "Newest" | "Oldest"
+  list: DisplayComment[],
+  sortMode: "Best" | "Newest" | "Oldest"
 ): DisplayComment[] => {
-  const withSortedReplies = list.map((comment) => ({
-    ...comment,
-    replies: sortRepliesByOldest(comment.replies || []),
-  }));
+  const withSortedReplies = list.map((comment) => ({
+    ...comment,
+    replies: sortRepliesByOldest(comment.replies || []),
+  }));
 
-  switch (sortMode) {
-    case "Oldest":
-      return [...withSortedReplies].sort(
-        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
-    case "Newest":
-      return [...withSortedReplies].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-    default:
-      return [...withSortedReplies].sort((a, b) => (b.thumbsUp || 0) - (a.thumbsUp || 0));
-  }
+  switch (sortMode) {
+    case "Oldest":
+      return [...withSortedReplies].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+    case "Newest":
+      return [...withSortedReplies].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    default:
+      return [...withSortedReplies].sort((a, b) => (b.thumbsUp || 0) - (a.thumbsUp || 0));
+  }
 };
 
 export default function Article() {
-  const { id, slug, category } = useParams();
-  const navigate = useNavigate();
-  const normalizedId = useMemo(() => {
-    if (slug) return undefined; // prefer slug if available
-    if (!id) return undefined;
-    return /^[a-f0-9]{24}:\d+$/i.test(id) ? id.split(":")[0] : id;
-  }, [id, slug]);
+  const { id, slug, category } = useParams();
+  const navigate = useNavigate();
+  const normalizedId = useMemo(() => {
+    if (slug) return undefined; // prefer slug if available
+    if (!id) return undefined;
+    return /^[a-f0-9]{24}:\d+$/i.test(id) ? id.split(":")[0] : id;
+  }, [id, slug]);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [article, setArticle] = useState<ArticleDocument | null>(null);
-  const [relatedArticles, setRelatedArticles] = useState<ArticleDocument[]>([]);
-  const [comments, setComments] = useState<DisplayComment[]>([]);
-  const [numCommentsToView, setNumCommentsToView] = useState(5);
-  const [commentsSortBy, setCommentsSort] = useState<"Best" | "Newest" | "Oldest">("Best");
+  const [isLoading, setIsLoading] = useState(true);
+  const [article, setArticle] = useState<ArticleDocument | null>(null);
+  const [relatedArticles, setRelatedArticles] = useState<ArticleDocument[]>([]);
+  const [comments, setComments] = useState<DisplayComment[]>([]);
+  const [numCommentsToView, setNumCommentsToView] = useState(5);
+  const [commentsSortBy, setCommentsSort] = useState<"Best" | "Newest" | "Oldest">("Best");
 
-  const [newCommentName, setNewCommentName] = useState("");
-  const [newCommentText, setNewCommentText] = useState("");
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [showSubmitMessage, setShowSubmitMessage] = useState(false);
-  const [commentSubmitError, setCommentSubmitError] = useState<string | null>(null);
-  const lastTrackedArticleId = useRef<string | null>(null);
-  const commentsSortRef = useRef(commentsSortBy);
+  const [newCommentName, setNewCommentName] = useState("");
+  const [newCommentText, setNewCommentText] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [showSubmitMessage, setShowSubmitMessage] = useState(false);
+  const [commentSubmitError, setCommentSubmitError] = useState<string | null>(null);
+  const lastTrackedArticleId = useRef<string | null>(null);
+  const commentsSortRef = useRef(commentsSortBy);
 
-  useEffect(() => {
-    commentsSortRef.current = commentsSortBy;
-  }, [commentsSortBy]);
+  useEffect(() => {
+    commentsSortRef.current = commentsSortBy;
+  }, [commentsSortBy]);
 
-  useEffect(() => {
-    if (!normalizedId && !slug) return;
+  useEffect(() => {
+    if (!normalizedId && !slug) return;
 
-    const controller = new AbortController();
-    const load = async () => {
-      try {
-        setIsLoading(true);
-        setArticle(null);
-        setRelatedArticles([]);
-        setComments([]);
-        let fetchedArticle: ArticleDocument;
+    const controller = new AbortController();
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        setArticle(null);
+        setRelatedArticles([]);
+        setComments([]);
+        let fetchedArticle: ArticleDocument;
 
-        if (slug) {
-          fetchedArticle = await articleService.fetchArticleBySlug(slug, controller.signal);
-        } else if (normalizedId) {
-          fetchedArticle = await articleService.fetchArticleById(normalizedId, controller.signal);
-        } else {
-          return;
-        }
+        if (slug) {
+          fetchedArticle = await articleService.fetchArticleBySlug(slug, controller.signal);
+        } else if (normalizedId) {
+          fetchedArticle = await articleService.fetchArticleById(normalizedId, controller.signal);
+        } else {
+          return;
+        }
 
-        // Canonicalize the URL when an article moves categories. The backend
-        // resolves article detail by slug, so the path segment itself is not authoritative.
-        if (slug) {
-          const canonicalLink = getArticleLink(fetchedArticle);
-          const fetchedCategorySlug =
-            fetchedArticle.categoryId && typeof fetchedArticle.categoryId === "object"
-              ? fetchedArticle.categoryId.slug
-              : undefined;
+        // Canonicalize the URL when an article moves categories. The backend
+        // resolves article detail by slug, so the path segment itself is not authoritative.
+        if (slug) {
+          const canonicalLink = getArticleLink(fetchedArticle);
+          const fetchedCategorySlug =
+            fetchedArticle.categoryId && typeof fetchedArticle.categoryId === "object"
+              ? fetchedArticle.categoryId.slug
+              : undefined;
 
-          if (canonicalLink && fetchedCategorySlug && category !== fetchedCategorySlug) {
-            navigate(canonicalLink, { replace: true });
-          }
-        }
+          if (canonicalLink && fetchedCategorySlug && category !== fetchedCategorySlug) {
+            navigate(canonicalLink, { replace: true });
+          }
+        }
 
-        setArticle(fetchedArticle);
+        setArticle(fetchedArticle);
 
-        // backend uses categoryId (populated object), not categories[]
-        const categoryId = fetchedArticle.categoryId?._id;
+        // backend uses categoryId (populated object), not categories[]
+        const categoryId = fetchedArticle.categoryId?._id;
 
-        if (categoryId) {
-          try {
-            const relatedArticlesResult = await articleService.fetchArticlesByCategory(
-              categoryId,
-              4,
-              controller.signal
-            );
-            const relatedArticles = Array.isArray(relatedArticlesResult)
-              ? relatedArticlesResult
-              : relatedArticlesResult.data;
+        if (categoryId) {
+          try {
+            const relatedArticlesResult = await articleService.fetchArticlesByCategory(
+              categoryId,
+              4,
+              controller.signal
+            );
+            const relatedArticles = Array.isArray(relatedArticlesResult)
+              ? relatedArticlesResult
+              : relatedArticlesResult.data;
 
-            const fetchedArticleId = fetchedArticle._id || "";
+            const fetchedArticleId = fetchedArticle._id || "";
 
-            const filteredRelated = relatedArticles.filter((item) => item._id !== fetchedArticleId);
-            setRelatedArticles(filteredRelated);
-          } catch (relatedErr) {
-            console.warn("Unable to load related articles", relatedErr);
-            setRelatedArticles([]);
-          }
-        } else {
-          setRelatedArticles([]);
-        }
+            const filteredRelated = relatedArticles.filter((item) => item._id !== fetchedArticleId);
+            setRelatedArticles(filteredRelated);
+          } catch (relatedErr) {
+            console.warn("Unable to load related articles", relatedErr);
+            setRelatedArticles([]);
+          }
+        } else {
+          setRelatedArticles([]);
+        }
 
-        if (fetchedArticle.allowComments) {
-          try {
-            const fetchedComments = await commentService.fetchCommentsByArticle(
-              fetchedArticle._id, // use the real ID from the fetched article
-              controller.signal
-            );
-            const mappedComments = fetchedComments.map(mapApiCommentToDisplay);
-            setComments(sortComments(mappedComments, commentsSortRef.current));
-          } catch {
-            setComments([]);
-          }
-        } else {
-          setComments([]);
-        }
-      } catch (err) {
-        if (
-          (err as { name?: string; code?: string })?.name === "CanceledError" ||
-          (err as { code?: string })?.code === "ERR_CANCELED"
-        ) {
-          return;
-        }
-        console.error("Failed to load article", err);
-        setArticle(null);
-        setRelatedArticles([]);
-        setComments([]);
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    };
+        if (fetchedArticle.allowComments) {
+          try {
+            const fetchedComments = await commentService.fetchCommentsByArticle(
+              fetchedArticle._id, // use the real ID from the fetched article
+              controller.signal
+            );
+            const mappedComments = fetchedComments.map(mapApiCommentToDisplay);
+            setComments(sortComments(mappedComments, commentsSortRef.current));
+          } catch {
+            setComments([]);
+          }
+        } else {
+          setComments([]);
+        }
+      } catch (err) {
+        if (
+          (err as { name?: string; code?: string })?.name === "CanceledError" ||
+          (err as { code?: string })?.code === "ERR_CANCELED"
+        ) {
+          return;
+        }
+        console.error("Failed to load article", err);
+        setArticle(null);
+        setRelatedArticles([]);
+        setComments([]);
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    };
 
-    load();
+    load();
 
-    return () => controller.abort();
-  }, [category, navigate, normalizedId, slug]);
+    return () => controller.abort();
+  }, [category, navigate, normalizedId, slug]);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [normalizedId, slug]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [normalizedId, slug]);
 
-  useEffect(() => {
-    const articleId = article?._id;
-    if (!articleId) return;
-    if (lastTrackedArticleId.current === articleId) return;
+  useEffect(() => {
+    const articleId = article?._id;
+    if (!articleId) return;
+    if (lastTrackedArticleId.current === articleId) return;
 
-    const sessionKey = `viewed:${articleId}`;
-    if (typeof window !== "undefined" && window.sessionStorage.getItem(sessionKey)) {
-      lastTrackedArticleId.current = articleId;
-      return;
-    }
+    const sessionKey = `viewed:${articleId}`;
+    if (typeof window !== "undefined" && window.sessionStorage.getItem(sessionKey)) {
+      lastTrackedArticleId.current = articleId;
+      return;
+    }
 
-    lastTrackedArticleId.current = articleId;
+    lastTrackedArticleId.current = articleId;
 
-    articleService
-      .recordArticleView(articleId)
-      .then(() => {
-        if (typeof window !== "undefined") {
-          window.sessionStorage.setItem(sessionKey, "1");
-        }
+    articleService
+      .recordArticleView(articleId)
+      .then(() => {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem(sessionKey, "1");
+        }
+      })
+      .catch((error) => {
+        console.warn("Failed to record article view", error);
+        lastTrackedArticleId.current = null;
+      });
+  }, [article?._id]);
+
+  const articleContent = typeof article?.content === "string" ? article.content : null;
+
+  const sanitizedContent = useMemo(() => {
+    if (!articleContent) return "";
+    return DOMPurify.sanitize(articleContent);
+  }, [articleContent]);
+
+  const handleSubmitComment = async () => {
+    const articleId = article?._id || normalizedId;
+    if (!articleId || !newCommentText.trim() || isSubmittingComment) {
+      return;
+    }
+
+    setIsSubmittingComment(true);
+    setCommentSubmitError(null);
+
+    try {
+      await commentService.createComment(articleId, {
+        content: newCommentText.trim(),
+        username: newCommentName.trim() || undefined,
+      });
+
+      // const displayComment = mapApiCommentToDisplay(createdComment);
+      // setComments((prev) => sortComments([displayComment, ...prev], commentsSortBy));
+      setShowSubmitMessage(true);
+      setTimeout(() => setShowSubmitMessage(false), 3000);
+      setNewCommentText("");
+      setNewCommentName("");
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      setCommentSubmitError("Unable to submit your comment. Please try again.");
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  useEffect(() => {
+    setNumCommentsToView(5);
+    setComments((prev) => sortComments(prev, commentsSortBy));
+  }, [commentsSortBy]);
+
+  const updateCommentsSort = () => {
+    setCommentsSort((prev) => {
+      if (prev === "Best") return "Newest";
+      if (prev === "Newest") return "Oldest";
+      return "Best";
+    });
+  };
+
+//   const featuredMediaNonce = useMemo(
+//     () =>
+//       `${article?._id ?? "no-article"}-${Date.now().toString(36)}${Math.random()
+//         .toString(36)
+//         .slice(2, 8)}`,
+//     [article?._id]
+//   );
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (!article) {
+    return (
+      <>
+        <Navbar />
+        <div className="flex justify-center items-center h-screen">
+          <p className="text-lg text-nique-blue">Article not found.</p>
+        </div>
+      </>
+    );
+  }
+
+  // Extract authors from backend's authors[].authorId shape.
+  const authorEntries =
+    article.authors
+      ?.map((authorEntry) => {
+        const authorId = authorEntry.authorId;
+        if (!authorId) return null;
+
+        if (typeof authorId === "object") {
+          const user = authorId as User;
+          if (!user.name) return null;
+          return {
+            name: user.name,
+            href: `/author/${encodeURIComponent(user.name)}`,
+          };
+        }
+
+        if (typeof authorId === "string" && authorId.trim().length > 0) {
+          return {
+            name: authorId,
+            href: `/author/${encodeURIComponent(authorId)}`,
+          };
+        }
+
+        return null;
+      })
+      .filter((entry): entry is { name: string; href: string } => Boolean(entry)) || [];
+  const authorNames = authorEntries.map((author) => author.name);
+
+  const publishedDate =
+    article.publishedAt &&
+    new Date(article.publishedAt).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+  // backend uses tagIds, not tags
+  const tagsDisplay = article.tagIds?.map((tag) => tag.name).filter(Boolean).join(" • ");
+  const articleDescription = getArticleDescription(article).slice(0, 160);
+  const canonicalPath = getArticleLink(article);
+  const carouselImages = article.imageCarousel?.images?.length
+    ? article.imageCarousel.images
+    : article.featuredMediaUrl
+      ? [{
+          url: article.featuredMediaUrl,
+          caption: article.imageCaption || "",
+          credit: "",
+        }]
+      : [];
+  const carouselThumbnail = carouselImages[0];
+
+  const articleImage = carouselThumbnail
+    ? getArticleImage({
+        ...article,
+        imageCarousel: {
+          ...article.imageCarousel,
+          images: [carouselThumbnail],
+        },
       })
-      .catch((error) => {
-        console.warn("Failed to record article view", error);
-        lastTrackedArticleId.current = null;
-      });
-  }, [article?._id]);
+    : getArticleImage(article);
 
-  const articleContent = typeof article?.content === "string" ? article.content : null;
 
-  const sanitizedContent = useMemo(() => {
-    if (!articleContent) return "";
-    return DOMPurify.sanitize(articleContent);
-  }, [articleContent]);
+  const toIsoOrUndefined = (value: Date | string | null | undefined) => {
+    if (!value) return undefined;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return undefined;
+    return date.toISOString();
+  };
+  const publishedTimeIso = toIsoOrUndefined(article.publishedAt);
+  const modifiedTimeIso = toIsoOrUndefined(article.updatedAt);
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: article.title,
+    description: articleDescription,
+    image: articleImage ? [articleImage] : undefined,
+    datePublished: publishedTimeIso,
+    dateModified: modifiedTimeIso,
+    mainEntityOfPage: canonicalPath,
+    author: authorNames.length
+      ? authorNames.map((name) => ({ "@type": "Person", name }))
+      : [{ "@type": "Organization", name: "Technique" }],
+    publisher: {
+      "@type": "Organization",
+      name: "Technique",
+      url: "https://nique.net",
+    },
+  };
 
-  const handleSubmitComment = async () => {
-    const articleId = article?._id || normalizedId;
-    if (!articleId || !newCommentText.trim() || isSubmittingComment) {
-      return;
-    }
-
-    setIsSubmittingComment(true);
-    setCommentSubmitError(null);
-
-    try {
-      await commentService.createComment(articleId, {
-        content: newCommentText.trim(),
-        username: newCommentName.trim() || undefined,
-      });
-
-      // const displayComment = mapApiCommentToDisplay(createdComment);
-      // setComments((prev) => sortComments([displayComment, ...prev], commentsSortBy));
-      setShowSubmitMessage(true);
-      setTimeout(() => setShowSubmitMessage(false), 3000);
-      setNewCommentText("");
-      setNewCommentName("");
-    } catch (error) {
-      console.error("Error creating comment:", error);
-      setCommentSubmitError("Unable to submit your comment. Please try again.");
-    } finally {
-      setIsSubmittingComment(false);
-    }
-  };
-
-  useEffect(() => {
-    setNumCommentsToView(5);
-    setComments((prev) => sortComments(prev, commentsSortBy));
-  }, [commentsSortBy]);
-
-  const updateCommentsSort = () => {
-    setCommentsSort((prev) => {
-      if (prev === "Best") return "Newest";
-      if (prev === "Newest") return "Oldest";
-      return "Best";
-    });
-  };
-
-  const featuredMediaNonce = useMemo(
-    () =>
-      `${article?._id ?? "no-article"}-${Date.now().toString(36)}${Math.random()
-        .toString(36)
-        .slice(2, 8)}`,
-    [article?._id]
-  );
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Spinner />
-      </div>
-    );
-  }
-
-  if (!article) {
-    return (
-      <>
-        <Navbar />
-        <div className="flex justify-center items-center h-screen">
-          <p className="text-lg text-nique-blue">Article not found.</p>
-        </div>
-      </>
-    );
-  }
-
-  // Extract authors from backend's authors[].authorId shape.
-  const authorEntries =
-    article.authors
-      ?.map((authorEntry) => {
-        const authorId = authorEntry.authorId;
-        if (!authorId) return null;
-
-        if (typeof authorId === "object") {
-          const user = authorId as User;
-          if (!user.name) return null;
-          return {
-            name: user.name,
-            href: `/author/${encodeURIComponent(user.name)}`,
-          };
-        }
-
-        if (typeof authorId === "string" && authorId.trim().length > 0) {
-          return {
-            name: authorId,
-            href: `/author/${encodeURIComponent(authorId)}`,
-          };
-        }
-
-        return null;
-      })
-      .filter((entry): entry is { name: string; href: string } => Boolean(entry)) || [];
-  const authorNames = authorEntries.map((author) => author.name);
-
-  const publishedDate =
-    article.publishedAt &&
-    new Date(article.publishedAt).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-  // backend uses tagIds, not tags
-  const tagsDisplay = article.tagIds?.map((tag) => tag.name).filter(Boolean).join(" • ");
-  const featuredMedia =
-    article.featuredMediaUrl && typeof article.featuredMediaUrl === "string"
-      ? withMediaSessionRevalidation(article.featuredMediaUrl, featuredMediaNonce)
-      : null;
-  const articleDescription = getArticleDescription(article).slice(0, 160);
-  const canonicalPath = getArticleLink(article);
-  const articleImage =
-    article.featuredMediaUrl && typeof article.featuredMediaUrl === "string"
-      ? article.featuredMediaUrl
-      : undefined;
-  const toIsoOrUndefined = (value: Date | string | null | undefined) => {
-    if (!value) return undefined;
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return undefined;
-    return date.toISOString();
-  };
-  const publishedTimeIso = toIsoOrUndefined(article.publishedAt);
-  const modifiedTimeIso = toIsoOrUndefined(article.updatedAt);
-  const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "NewsArticle",
-    headline: article.title,
-    description: articleDescription,
-    image: articleImage ? [articleImage] : undefined,
-    datePublished: publishedTimeIso,
-    dateModified: modifiedTimeIso,
-    mainEntityOfPage: canonicalPath,
-    author: authorNames.length
-      ? authorNames.map((name) => ({ "@type": "Person", name }))
-      : [{ "@type": "Organization", name: "Technique" }],
-    publisher: {
-      "@type": "Organization",
-      name: "Technique",
-      url: "https://nique.net",
-    },
-  };
-
-  return (
-    <>
-      <Seo
-        title={article.title}
-        description={articleDescription}
-        canonicalPath={canonicalPath}
-        image={articleImage}
-        type="article"
-        structuredData={articleJsonLd}
-      />
-      <Navbar />
-      <div className="max-w-6xl mx-auto p-6 space-y-6">
-        {/* Title */}
-        <header className="space-y-2">
-          <h3 className="text-4xl font-bold mt-2 mb-1">{article.title}</h3>
+  return (
+    <>
+      <Seo
+        title={article.title}
+        description={articleDescription}
+        canonicalPath={canonicalPath}
+        image={articleImage ?? undefined}
+        type="article"
+        structuredData={articleJsonLd}
+      />
+      <Navbar />
+      <div className="max-w-6xl mx-auto p-6 space-y-6">
+        {/* Title */}
+        <header className="space-y-2">
+          <h3 className="text-4xl font-bold mt-2 mb-1">{article.title}</h3>
           <h4 className="flex flex-wrap mb-2 gap-x-4 text-nique-blue text-lg justify-between">
             <div>
               {authorEntries.length > 0 ? (
@@ -423,140 +440,123 @@ export default function Article() {
               <span>{article.categoryId.name}</span>
             )}
           </h4>
-          {tagsDisplay && <p className="text-xs text-nique-blue">{tagsDisplay}</p>}
-          <hr className="opacity-50" />
-        </header>
+          {tagsDisplay && <p className="text-xs text-nique-blue">{tagsDisplay}</p>}
+          <hr className="opacity-50" />
+        </header>
 
-        {/* Featured Image - backend uses featuredMediaUrl, not featuredImage */}
-        {featuredMedia && (
-          <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
-            <img
-              className="w-full aspect-3/2 object-cover rounded-md"
-              src={featuredMedia}
-              loading="lazy"
-              alt={article.title}
-            />
-            {article.imageCaption && (
-              <figcaption className="w-full text-xs text-nique-blue mt-2">
-                {article.imageCaption}
-              </figcaption>
-            )}
-          </figure>
-        )}
-
-        {/* Image Carousel */}
-        {article.imageCarousel?.images && article.imageCarousel.images.length > 0 && (
+        {/* Image Carousel */}
+        {carouselImages.length > 0 && (
           <div className="max-w-3xl w-full mx-auto">
-            <ImageCarousel images={article.imageCarousel.images} />
+            <ImageCarousel images={carouselImages} />
           </div>
         )}
 
-        {/* Article Content */}
-        <section className="prose prose-lg max-w-3xl mx-auto text-nique-blue article-body">
-          {sanitizedContent ? (
-            <article dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
-          ) : null}
-        </section>
+        {/* Article Content */}
+        <section className="prose prose-lg max-w-3xl mx-auto text-nique-blue article-body">
+          {sanitizedContent ? (
+            <article dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+          ) : null}
+        </section>
 
-        {/* Comments */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-nique-blue">
-              Comments ({comments.length})
-            </h3>
-            <button
-              onClick={updateCommentsSort}
-              className="text-sm text-nique-blue underline"
-            >
-              Sort: {commentsSortBy}
-            </button>
-          </div>
+        {/* Comments */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-semibold text-nique-blue">
+              Comments ({comments.length})
+            </h3>
+            <button
+              onClick={updateCommentsSort}
+              className="text-sm text-nique-blue underline"
+            >
+              Sort: {commentsSortBy}
+            </button>
+          </div>
 
-          {article.allowComments ? (
-            <>
-              <div className="grid gap-4">
-                {comments.slice(0, numCommentsToView).map((com) => (
-                  <Comment
-                    key={com.commentId}
-                    commentId={com.commentId}
-                    username={com.username}
-                    content={com.content}
-                    createdAt={String(com.createdAt)}
-                    thumbsDown={com.thumbsDown}
-                    thumbsUp={com.thumbsUp}
-                    myReaction={com.myReaction}
-                    replies={com.replies}
-                    articleId={article._id}
-                    onReplySubmitted={() => {
-                      setShowSubmitMessage(true);
-                      setTimeout(() => setShowSubmitMessage(false), 3000);
-                    }}
-                  />
-                ))}
-              </div>
+          {article.allowComments ? (
+            <>
+              <div className="grid gap-4">
+                {comments.slice(0, numCommentsToView).map((com) => (
+                  <Comment
+                    key={com.commentId}
+                    commentId={com.commentId}
+                    username={com.username}
+                    content={com.content}
+                    createdAt={String(com.createdAt)}
+                    thumbsDown={com.thumbsDown}
+                    thumbsUp={com.thumbsUp}
+                    myReaction={com.myReaction}
+                    replies={com.replies}
+                    articleId={article._id}
+                    onReplySubmitted={() => {
+                      setShowSubmitMessage(true);
+                      setTimeout(() => setShowSubmitMessage(false), 3000);
+                    }}
+                  />
+                ))}
+              </div>
 
-              {numCommentsToView < comments.length && (
-                <button
-                  onClick={() => setNumCommentsToView((prev) => prev + 5)}
-                  className="text-sm text-nique-blue underline"
-                >
-                  Load more comments
-                </button>
-              )}
+              {numCommentsToView < comments.length && (
+                <button
+                  onClick={() => setNumCommentsToView((prev) => prev + 5)}
+                  className="text-sm text-nique-blue underline"
+                >
+                  Load more comments
+                </button>
+              )}
 
-              <div className="space-y-2">
-                <h4 className="text-lg font-semibold text-nique-blue">Leave a comment</h4>
-                <input
-                  value={newCommentName}
-                  onChange={(event) => setNewCommentName(event.target.value)}
-                  placeholder="Name"
-                  className="w-full border border-nique-blue/40 rounded-md px-3 py-2"
-                />
-                <textarea
-                  value={newCommentText}
-                  onChange={(event) => setNewCommentText(event.target.value)}
-                  placeholder="Comment"
-                  className="w-full border border-nique-blue/40 rounded-md px-3 py-2"
-                  rows={4}
-                />
-                {commentSubmitError && (
-                  <p className="text-sm text-red-600">{commentSubmitError}</p>
-                )}
-                <div className='flex flex-row'>
-                  <button
-                    onClick={handleSubmitComment}
-                    disabled={!newCommentText.trim() || isSubmittingComment}
-                    className="px-4 py-2 bg-nique-blue text-white rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    <h4>{isSubmittingComment ? "Submitting..." : "Submit"}</h4>
-                  </button>
-                  {showSubmitMessage && (
-                    <div className="flex flex-row submit-toast fixed top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 bg-gray-200/70 text-nique-blue backdrop-blur-xs py-2 px-4 gap-2 rounded-md items-center">
-                      <SuccessTick className='text-nique-blue'/>
-                      <p>Your comment has been submitted and is awaiting approval. Check back in a bit!</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </>
-          ) : (
-            <p className="text-sm text-nique-blue">Comments are disabled for this article.</p>
-          )}
-        </section>
+              <div className="space-y-2">
+                <h4 className="text-lg font-semibold text-nique-blue">Leave a comment</h4>
+                <input
+                  value={newCommentName}
+                  onChange={(event) => setNewCommentName(event.target.value)}
+                  placeholder="Name"
+                  className="w-full border border-nique-blue/40 rounded-md px-3 py-2"
+                />
+                <textarea
+                  value={newCommentText}
+                  onChange={(event) => setNewCommentText(event.target.value)}
+                  placeholder="Comment"
+                  className="w-full border border-nique-blue/40 rounded-md px-3 py-2"
+                  rows={4}
+                />
+                {commentSubmitError && (
+                  <p className="text-sm text-red-600">{commentSubmitError}</p>
+                )}
+                <div className='flex flex-row'>
+                  <button
+                    onClick={handleSubmitComment}
+                    disabled={!newCommentText.trim() || isSubmittingComment}
+                    className="px-4 py-2 bg-nique-blue text-white rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <h4>{isSubmittingComment ? "Submitting..." : "Submit"}</h4>
+                  </button>
+                  {showSubmitMessage && (
+                    <div className="flex flex-row submit-toast fixed top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 bg-gray-200/70 text-nique-blue backdrop-blur-xs py-2 px-4 gap-2 rounded-md items-center">
+                      <SuccessTick className='text-nique-blue'/>
+                      <p>Your comment has been submitted and is awaiting approval. Check back in a bit!</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-nique-blue">Comments are disabled for this article.</p>
+          )}
+        </section>
 
-        {/* Related Articles - fetches 4 published articles from the same category */}
-        {relatedArticles.length > 0 && (
-          <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-nique-blue">Related Articles</h2>
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-              {relatedArticles.map((related) => (
-                <ArticleBlock key={related._id || related.slug} article={related} height="230px" />
-              ))}
-            </div>
-          </section>
-        )}
+        {/* Related Articles - fetches 4 published articles from the same category */}
+        {relatedArticles.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold text-nique-blue">Related Articles</h2>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+              {relatedArticles.map((related) => (
+                <ArticleBlock key={related._id || related.slug} article={related} height="230px" />
+              ))}
+            </div>
+          </section>
+        )}
 
-      </div>
-    </>
-  );
+      </div>
+    </>
+  );
 }

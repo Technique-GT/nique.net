@@ -42,11 +42,31 @@ export const getArticleDescription = (article: ArticleDocument) => {
   return stripHtml(raw);
 };
 
+
 export const getArticleImage = (article: ArticleDocument) => {
+  const firstCarouselImage = article.imageCarousel?.images?.[0];
+
+  // Prefer the first carousel image.
+  if (typeof firstCarouselImage === 'string' && firstCarouselImage) {
+    return withMediaSessionRevalidation(firstCarouselImage);
+  }
+
+  // Support carousel images stored as objects with a URL.
+  if (
+    firstCarouselImage &&
+    typeof firstCarouselImage === 'object' &&
+    'url' in firstCarouselImage &&
+    typeof firstCarouselImage.url === 'string'
+  ) {
+    return withMediaSessionRevalidation(firstCarouselImage.url);
+  }
+
+  // Fall back to the featured image.
   const media = article.featuredMediaUrl;
   if (media && typeof media === 'string') {
     return withMediaSessionRevalidation(media);
   }
+
   return null;
 };
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import {
   $getRoot,
   IS_BOLD,
@@ -29,7 +29,18 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { MediaDropZone } from "@/components/media-drop-zone";
-import { Info, Search, X, ChevronDown, Check, AlertCircle, ImagePlus } from "lucide-react";
+import {
+  Info,
+  Search,
+  X,
+  ChevronDown,
+  Check,
+  AlertCircle,
+  ImagePlus,
+  ArrowDown,
+  ArrowUp,
+  Trash2,
+} from "lucide-react";
 
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/authStore";
@@ -43,6 +54,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   type Article,
+  type ArticleCarouselImage,
   type Author,
   type Category,
   type FieldErrorKey,
@@ -52,7 +64,7 @@ import {
   type Tag,
 } from "./types";
 import { apiClient } from "@/lib/api-client";
-import { createAdminArticle } from "@/services/articles";
+import { createAdminArticle, getAdminArticleById } from "@/services/articles";
 import { useNavigate } from "@tanstack/react-router";
 import {
   AlertDialog,
@@ -78,13 +90,6 @@ interface ArticleFormProps {
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/hooks/use-queries";
 import { withMediaSessionRevalidation } from "@/lib/media-url";
-import { MediaPickerSheet } from "./MediaPickerSheet";
-import { getMediaImages, type MediaImagesResponse } from "@/services/media";
-
-const MEDIA_PICKER_PAGE_SIZE = 12;
-const MEDIA_PICKER_STALE_TIME_MS = 5 * 60 * 1000;
-const MEDIA_PICKER_GC_TIME_MS = 15 * 60 * 1000;
-
 type LexicalNode = SerializedEditorNode & {
   text?: string;
   format?: number | string;
@@ -114,7 +119,6 @@ export default function ArticleForm({
     initialArticle?.editorState,
   );
   const [contentText, setContentText] = useState("");
-  const [imageCaption, setImageCaption] = useState(initialArticle?.imageCaption || "");
   const [category, setCategory] = useState(initialArticle?.category?._id || "");
   const [subcategory, setSubcategory] = useState(
     initialArticle?.subcategory?._id || "",
@@ -125,9 +129,18 @@ export default function ArticleForm({
   const [selectedAuthors, setSelectedAuthors] = useState<Author[]>(
     initialArticle?.authors || [],
   );
-  const [featuredMediaUrl, setFeaturedMediaUrl] = useState<string>(
-    initialArticle?.featuredMediaUrl || "",
-  );
+  const [carouselImages, setCarouselImages] = useState<ArticleCarouselImage[]>(() => {
+    if (initialArticle?.imageCarousel?.images?.length) {
+      return initialArticle.imageCarousel.images.map((image) => ({ ...image }));
+    }
+    return initialArticle?.featuredMediaUrl
+      ? [{
+          url: initialArticle.featuredMediaUrl,
+          caption: initialArticle.imageCaption || "",
+          credit: "",
+        }]
+      : [];
+  });
   const [isPublished, setIsPublished] = useState(initialArticle?.isPublished || false);
   const [allowComments, setAllowComments] = useState(initialArticle?.allowComments ?? true);
   const [isFeatured, setIsFeatured] = useState(initialArticle?.isFeatured || false);
@@ -138,16 +151,16 @@ export default function ArticleForm({
   const [reviewConfirmOpen, setReviewConfirmOpen] = useState(false);
   const [mediaPreviewFailed, setMediaPreviewFailed] = useState(false);
   const [hideImage, setHideImage] = useState(true);
-  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const initializedArticleId = useRef<string | null>(null);
   const mediaPreviewNonce = useMemo(
     () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
     [],
   );
 
   const featuredMediaPreviewUrl = useMemo(() => {
-    const trimmed = featuredMediaUrl.trim();
+    const trimmed = carouselImages[0]?.url.trim() || "";
     return trimmed ? withMediaSessionRevalidation(trimmed, mediaPreviewNonce) : '';
-  }, [featuredMediaUrl, mediaPreviewNonce]);
+  }, [carouselImages, mediaPreviewNonce]);
 
   const isOwner = me?.id === initialArticle?.ownerId;
   const isAdmin = !!me?.isAdmin;
@@ -156,7 +169,7 @@ export default function ArticleForm({
 
   useEffect(() => {
     setMediaPreviewFailed(false);
-  }, [featuredMediaUrl]);
+  }, [carouselImages]);
 
   useEffect(() => {
     if (initialArticle?._id) return;
@@ -211,16 +224,26 @@ export default function ArticleForm({
 
   // Sync state with initialArticle when it's loaded
   useEffect(() => {
-    if (initialArticle) {
+    if (initialArticle && initializedArticleId.current !== initialArticle._id) {
+      initializedArticleId.current = initialArticle._id;
       setTitle(initialArticle.title || "");
       setContent(initialArticle.editorState);
       setContentText(extractTextFromEditorState(initialArticle.editorState));
-      setImageCaption(initialArticle.imageCaption || "");
       setCategory(initialArticle.category?._id || "");
       setSubcategory(initialArticle.subcategory?._id || "");
       setSelectedTags(initialArticle.tags?.map((t) => t._id) || []);
       setSelectedAuthors(initialArticle.authors || []);
-      setFeaturedMediaUrl(initialArticle.featuredMediaUrl || "");
+      setCarouselImages(
+        initialArticle.imageCarousel?.images?.length
+          ? initialArticle.imageCarousel.images.map((image) => ({ ...image }))
+          : initialArticle.featuredMediaUrl
+            ? [{
+                url: initialArticle.featuredMediaUrl,
+                caption: initialArticle.imageCaption || "",
+                credit: "",
+              }]
+            : [],
+      );
       setIsPublished(initialArticle.isPublished || false);
       setAllowComments(initialArticle.allowComments ?? true);
       setIsFeatured(initialArticle.isFeatured || false);
@@ -782,40 +805,54 @@ export default function ArticleForm({
     });
   };
 
-  const handleMediaPickerOpenChange = (open: boolean) => {
-    setMediaPickerOpen(open);
+  const updateCarouselImage = (
+    index: number,
+    field: keyof ArticleCarouselImage,
+    value: string,
+  ) => {
+    setCarouselImages((images) =>
+      images.map((image, imageIndex) =>
+        imageIndex === index ? { ...image, [field]: value } : image,
+      ),
+    );
   };
 
-  const handleOpenMediaPickerFromIcon = () => {
-    if (isLocked) return;
-    setMediaPickerOpen(true);
+  const addCarouselImage = (url = "") => {
+    setCarouselImages((images) => [
+      ...images,
+      { url, caption: "", credit: "" },
+    ]);
   };
 
-  const handlePrefetchMediaPicker = () => {
-    if (isLocked) return;
-    void queryClient.prefetchInfiniteQuery({
-      queryKey: ["media-picker-images", MEDIA_PICKER_PAGE_SIZE, ""],
-      queryFn: ({ pageParam }) =>
-        getMediaImages({
-          cursor: pageParam as string | undefined,
-          limit: MEDIA_PICKER_PAGE_SIZE,
-          q: "",
-        }),
-      initialPageParam: undefined as string | undefined,
-      getNextPageParam: (lastPage: MediaImagesResponse) =>
-        lastPage.pagination.hasMore ? (lastPage.pagination.nextCursor ?? undefined) : undefined,
-      staleTime: MEDIA_PICKER_STALE_TIME_MS,
-      gcTime: MEDIA_PICKER_GC_TIME_MS,
+  const removeCarouselImage = (index: number) => {
+    setCarouselImages((images) => images.filter((_, imageIndex) => imageIndex !== index));
+  };
+
+  const moveCarouselImage = (index: number, direction: -1 | 1) => {
+    setCarouselImages((images) => {
+      const nextIndex = index + direction;
+      if (nextIndex < 0 || nextIndex >= images.length) return images;
+      const next = [...images];
+      [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+      return next;
     });
   };
 
-  const handleMediaPickerSelect = (url: string) => {
-    setFeaturedMediaUrl(url);
-    setMediaPreviewFailed(false);
-    if (formErrors.featuredMedia) {
-      clearFieldError("featuredMedia");
-    }
-    setMediaPickerOpen(false);
+  const getImagePayload = () => {
+    const images = carouselImages
+      .map((image) => ({
+        url: image.url.trim(),
+        caption: image.caption.trim(),
+        credit: image.credit.trim(),
+      }))
+      .filter((image) => image.url);
+    const firstImage = images[0];
+
+    return {
+      imageCarousel: { images },
+      featuredMediaUrl: firstImage?.url || "",
+      imageCaption: firstImage?.caption || "",
+    };
   };
 
   // Author selection functions
@@ -1010,7 +1047,7 @@ export default function ArticleForm({
         title: title.trim(),
         content: htmlContent,
         editorState: content,
-        ...(imageCaption.trim() ? { imageCaption: imageCaption.trim() } : {}),
+        ...getImagePayload(),
         ...(category ? { categoryId: category } : {}),
         ...(subcategory ? { subcategoryId: subcategory } : {}),
         ...(selectedTags.length ? { tagIds: selectedTags } : {}),
@@ -1018,7 +1055,6 @@ export default function ArticleForm({
         ...(canManageAuthorsPerm ? { 
           authors: selectedAuthors.filter((a) => !!a?._id).map((a) => a._id) 
         } : {}),
-        ...(featuredMediaUrl.trim() ? { featuredMediaUrl: featuredMediaUrl.trim() } : {}),
         published: isPublished,
         allowComments,
         isFeatured: isPublished ? isFeatured : false,
@@ -1026,10 +1062,14 @@ export default function ArticleForm({
       };
 
       await apiClient.put(`/admin/articles/${initialArticle._id}`, articleData);
+      const savedArticle = await getAdminArticleById(initialArticle._id);
 
       onLastSavedChange?.(new Date());
 
-      await queryClient.invalidateQueries({ queryKey: queryKeys.adminArticle(initialArticle._id) });
+      queryClient.setQueryData(
+        queryKeys.adminArticle(initialArticle._id),
+        savedArticle,
+      );
 
       setSubmitMessage({ type: 'success', message: 'Changes saved.' });
     } catch (_error: unknown) {
@@ -1070,14 +1110,13 @@ export default function ArticleForm({
         title: title.trim(),
         content: htmlContent,
         editorState: content,
-        ...(imageCaption.trim() ? { imageCaption: imageCaption.trim() } : {}),
+        ...getImagePayload(),
         categoryId: category,
         ...(subcategory ? { subcategoryId: subcategory } : {}),
         ...(selectedTags.length ? { tagIds: selectedTags } : {}),
         ...(canManageAuthorsPerm
           ? { authors: selectedAuthors.filter((a) => !!a?._id).map((a) => a._id) }
           : {}),
-        ...(featuredMediaUrl.trim() ? { featuredMediaUrl: featuredMediaUrl.trim() } : {}),
         published: isPublished,
         allowComments,
         isFeatured: isPublished ? isFeatured : false,
@@ -1116,14 +1155,13 @@ export default function ArticleForm({
         title: title.trim(),
         content: htmlContent,
         editorState: content,
-        ...(imageCaption.trim() ? { imageCaption: imageCaption.trim() } : {}),
+        ...getImagePayload(),
         categoryId: category,
         ...(subcategory ? { subcategoryId: subcategory } : {}),
         ...(selectedTags.length ? { tagIds: selectedTags } : {}),
         ...(canManageAuthorsPerm
           ? { authors: selectedAuthors.filter((a) => !!a?._id).map((a) => a._id) }
           : {}),
-        ...(featuredMediaUrl.trim() ? { featuredMediaUrl: featuredMediaUrl.trim() } : {}),
         published: true,
         allowComments,
         reviewStatus: "published" as const,
@@ -1235,88 +1273,104 @@ export default function ArticleForm({
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
               <div className="space-y-6">
-                {/* Featured Media */}
+                {/* Image carousel */}
                 <div className="space-y-2">
-                  <Label className='gap-0'>Featured Media</Label>
-
-                  <MediaDropZone
-                    onUpload={(url) => {
-                      setFeaturedMediaUrl(url);
-                      setMediaPreviewFailed(false);
-                      if (formErrors.featuredMedia) clearFieldError("featuredMedia");
-                    }}
-                    disabled={isLocked}
-                  />
-
-                  <div className="relative flex items-center justify-center">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-muted" />
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="gap-0">Image Carousel</Label>
+                      <p className="text-xs text-muted-foreground">
+                        The first image is used as the article thumbnail.
+                      </p>
                     </div>
-                    <span className="relative bg-background px-2 text-xs text-muted-foreground">or</span>
-                  </div>
-
-                  <div className="relative">
-                    <Input
-                      id="featured-media"
-                      value={featuredMediaUrl}
-                      disabled={isLocked}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setFeaturedMediaUrl(value);
-                        setMediaPreviewFailed(false);
-                        if (formErrors.featuredMedia && value.trim()) {
-                          clearFieldError("featuredMedia");
-                        }
-                      }}
-                      placeholder="Paste featured media URL"
-                      className={cn(
-                        "pr-11",
-                        formErrors.featuredMedia && "border-destructive focus-visible:ring-destructive"
-                      )}
-                      aria-invalid={Boolean(formErrors.featuredMedia)}
-                    />
                     <Button
                       type="button"
-                      size="icon"
-                      variant="ghost"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onMouseEnter={handlePrefetchMediaPicker}
-                      onFocus={handlePrefetchMediaPicker}
-                      onClick={handleOpenMediaPickerFromIcon}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addCarouselImage()}
                       disabled={isLocked}
-                      className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
-                      aria-label="Open media picker"
                     >
-                      <ImagePlus className="h-4 w-4" />
+                      <ImagePlus className="mr-2 h-4 w-4" />
+                      Add image
                     </Button>
                   </div>
-                  
-                  {formErrors.featuredMedia && (
-                    <p className="text-xs text-destructive">{formErrors.featuredMedia}</p>
+
+                  {carouselImages.map((image, index) => (
+                    <Card key={`${index}-${image.url}`} className="overflow-hidden">
+                      <CardContent className="space-y-3 p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <Badge variant={index === 0 ? "default" : "secondary"}>
+                            {index === 0 ? "Thumbnail" : `Image ${index + 1}`}
+                          </Badge>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => moveCarouselImage(index, -1)}
+                              disabled={isLocked || index === 0}
+                              aria-label={`Move image ${index + 1} up`}
+                            >
+                              <ArrowUp className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => moveCarouselImage(index, 1)}
+                              disabled={isLocked || index === carouselImages.length - 1}
+                              aria-label={`Move image ${index + 1} down`}
+                            >
+                              <ArrowDown className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeCarouselImage(index)}
+                              disabled={isLocked}
+                              aria-label={`Remove image ${index + 1}`}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <MediaDropZone
+                          onUpload={(url) => updateCarouselImage(index, "url", url)}
+                          disabled={isLocked}
+                        />
+                        <Input
+                          value={image.url}
+                          disabled={isLocked}
+                          onChange={(e) => updateCarouselImage(index, "url", e.target.value)}
+                          placeholder="Paste image URL"
+                          aria-label={`Image ${index + 1} URL`}
+                        />
+                        <Input
+                          value={image.caption}
+                          disabled={isLocked}
+                          onChange={(e) => updateCarouselImage(index, "caption", e.target.value)}
+                          placeholder="Caption for this image"
+                          aria-label={`Caption for image ${index + 1}`}
+                          className="italic"
+                        />
+                        <Input
+                          value={image.credit}
+                          disabled={isLocked}
+                          onChange={(e) => updateCarouselImage(index, "credit", e.target.value)}
+                          placeholder="Photo credit for this image"
+                          aria-label={`Photo credit for image ${index + 1}`}
+                        />
+                      </CardContent>
+                    </Card>
+                  ))}
+
+                  {carouselImages.length === 0 && (
+                    <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+                      No images added. Add one image for a single photo or more than one for a carousel.
+                    </p>
                   )}
 
-                  <MediaPickerSheet
-                    open={mediaPickerOpen}
-                    onOpenChange={handleMediaPickerOpenChange}
-                    onSelect={handleMediaPickerSelect}
-                    disabled={isLocked}
-                  />
-                </div>
-                
-                {/* Image Caption */}
-                <div className="space-y-2">
-                  <Label htmlFor="image-caption" className='gap-0'>Image Caption</Label>
-                  <Input
-                    id="image-caption"
-                    value={imageCaption}
-                    disabled={isLocked}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setImageCaption(value);
-                    }}
-                    placeholder="Enter caption"
-                    className="italic"
-                  />
                 </div>
 
                 {/* Image preview */}

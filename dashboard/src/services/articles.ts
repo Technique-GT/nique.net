@@ -18,6 +18,9 @@ export type BackendArticle = {
   slug: string
   imageCaption?: string
   featuredMediaUrl?: string
+  imageCarousel?: {
+    images: Array<{ url: string; caption: string; credit: string }>
+  }
   published: boolean
   publishedAt: string | null
   createdAt: string
@@ -128,6 +131,9 @@ export type CreateAdminArticlePayload = {
   tagIds?: string[]
   authors?: string[]
   featuredMediaUrl?: string
+  imageCarousel?: {
+    images: Array<{ url: string; caption: string; credit: string }>
+  }
   editorState?: unknown
   published?: boolean
   reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published'

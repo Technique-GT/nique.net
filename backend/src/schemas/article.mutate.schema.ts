@@ -23,8 +23,15 @@ export const createArticleBodySchema = z.object({
     )
     .optional(),
 
-  featuredMediaUrl: z.string().trim().min(1).optional(),
+  featuredMediaUrl: z.string().trim().optional(),
   imageCaption: z.string().optional(),
+  imageCarousel: z.object({
+    images: z.array(z.object({
+      url: z.string().trim().min(1),
+      caption: z.string(),
+      credit: z.string(),
+    })),
+  }).optional(),
 
   editorState: z.any().optional(),
   reviewStatus: z.enum(['draft', 'in_review', 'changes_requested', 'published']).optional(),

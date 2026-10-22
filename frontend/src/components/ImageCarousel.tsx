@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { withMediaSessionRevalidation } from '../utils/mediaUrl';
 
 interface CarouselImage {
   url: string;
@@ -37,7 +38,7 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
       {/* Image */}
       <div className="relative w-full">
         <img
-          src={currentImage.url}
+          src={withMediaSessionRevalidation(currentImage.url)}
           alt={currentImage.caption}
           loading="lazy"
           decoding="async"
@@ -70,27 +71,50 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
         {/* Navigation */}
         {images.length > 1 && (
           <div className="flex shrink-0 items-center gap-2">
+            {/* CURRENT STYLE: White circle with blue border and blue arrow */}
+
             <button
               type="button"
               onClick={previousImage}
               aria-label="Previous image"
-              className="p-1 text-[#1A1E47] transition-opacity hover:opacity-60"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white border border-[#1A1E47] text-[#1A1E47] transition-opacity hover:opacity-80"
             >
-              <ArrowLeft size={24} />
+              <ArrowLeft size={20} />
             </button>
 
             <button
               type="button"
               onClick={nextImage}
               aria-label="Next image"
-              className="p-1 text-[#1A1E47] transition-opacity hover:opacity-60"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white border border-[#1A1E47] text-[#1A1E47] transition-opacity hover:opacity-80"
             >
-              <ArrowRight size={24} />
+              <ArrowRight size={20} />
             </button>
+
+
+            {/* PREVIOUS STYLE*/}
+            {/*
+            <button
+              type="button"
+              onClick={previousImage}
+              aria-label="Previous image"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1A1E47] text-white transition-opacity hover:opacity-80"
+            >
+              <ArrowLeft size={20} />
+            </button>
+
+            <button
+              type="button"
+              onClick={nextImage}
+              aria-label="Next image"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1A1E47] text-white transition-opacity hover:opacity-80"
+            >
+              <ArrowRight size={20} />
+            </button>
+              */}
           </div>
         )}
-
-              </div>
+      </div>
     </div>
   );
 }
