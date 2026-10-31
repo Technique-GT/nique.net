@@ -42,12 +42,22 @@ export const getArticleDescription = (article: ArticleDocument) => {
   return stripHtml(raw);
 };
 
+export const getYoutubeThumbnailUrl = (videoId?: string | null) =>
+  videoId && /^[A-Za-z0-9_-]{11}$/.test(videoId)
+    ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+    : null;
+
+export const getYoutubeEmbedUrl = (videoId?: string | null) =>
+  videoId && /^[A-Za-z0-9_-]{11}$/.test(videoId)
+    ? `https://www.youtube-nocookie.com/embed/${videoId}`
+    : null;
+
 export const getArticleImage = (article: ArticleDocument) => {
   const media = article.featuredMediaUrl;
   if (media && typeof media === 'string') {
     return withMediaSessionRevalidation(media);
   }
-  return null;
+  return getYoutubeThumbnailUrl(article.youtubeVideoId);
 };
 
 export const getArticleTimestamp = (article: ArticleDocument) => {

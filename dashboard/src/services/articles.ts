@@ -18,6 +18,7 @@ export type BackendArticle = {
   slug: string
   imageCaption?: string
   featuredMediaUrl?: string
+  youtubeVideoId?: string | null
   published: boolean
   publishedAt: string | null
   createdAt: string
@@ -128,6 +129,7 @@ export type CreateAdminArticlePayload = {
   tagIds?: string[]
   authors?: string[]
   featuredMediaUrl?: string
+  youtubeVideoId?: string
   editorState?: unknown
   published?: boolean
   reviewStatus?: 'draft' | 'in_review' | 'changes_requested' | 'published'

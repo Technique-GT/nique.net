@@ -13,6 +13,7 @@ import {
 import { Editor } from "@/components/blocks/editor-00/editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
@@ -80,6 +81,7 @@ import { queryKeys } from "@/hooks/use-queries";
 import { withMediaSessionRevalidation } from "@/lib/media-url";
 import { MediaPickerSheet } from "./MediaPickerSheet";
 import { getMediaImages, type MediaImagesResponse } from "@/services/media";
+import { parseYouTubeVideoInput } from "./youtube";
 
 const MEDIA_PICKER_PAGE_SIZE = 12;
 const MEDIA_PICKER_STALE_TIME_MS = 5 * 60 * 1000;
@@ -128,6 +130,11 @@ export default function ArticleForm({
   const [featuredMediaUrl, setFeaturedMediaUrl] = useState<string>(
     initialArticle?.featuredMediaUrl || "",
   );
+  const [youtubeVideoInput, setYoutubeVideoInput] = useState(
+    initialArticle?.youtubeVideoId
+      ? `https://youtu.be/${initialArticle.youtubeVideoId}`
+      : "",
+  );
   const [isPublished, setIsPublished] = useState(initialArticle?.isPublished || false);
   const [allowComments, setAllowComments] = useState(initialArticle?.allowComments ?? true);
   const [isFeatured, setIsFeatured] = useState(initialArticle?.isFeatured || false);
@@ -148,6 +155,7 @@ export default function ArticleForm({
     const trimmed = featuredMediaUrl.trim();
     return trimmed ? withMediaSessionRevalidation(trimmed, mediaPreviewNonce) : '';
   }, [featuredMediaUrl, mediaPreviewNonce]);
+  const parsedYoutubeVideoId = parseYouTubeVideoInput(youtubeVideoInput);
 
   const isOwner = me?.id === initialArticle?.ownerId;
   const isAdmin = !!me?.isAdmin;
@@ -221,6 +229,11 @@ export default function ArticleForm({
       setSelectedTags(initialArticle.tags?.map((t) => t._id) || []);
       setSelectedAuthors(initialArticle.authors || []);
       setFeaturedMediaUrl(initialArticle.featuredMediaUrl || "");
+      setYoutubeVideoInput(
+        initialArticle.youtubeVideoId
+          ? `https://youtu.be/${initialArticle.youtubeVideoId}`
+          : "",
+      );
       setIsPublished(initialArticle.isPublished || false);
       setAllowComments(initialArticle.allowComments ?? true);
       setIsFeatured(initialArticle.isFeatured || false);
@@ -983,6 +996,10 @@ export default function ArticleForm({
       errors.category = "Category is required.";
     }
 
+    if (youtubeVideoInput.trim() && !parsedYoutubeVideoId) {
+      errors.youtubeVideo = "Enter a valid YouTube URL or iframe embed snippet.";
+    }
+
     return errors;
   };
 
@@ -1010,6 +1027,7 @@ export default function ArticleForm({
         title: title.trim(),
         content: htmlContent,
         editorState: content,
+        youtubeVideoId: parsedYoutubeVideoId,
         ...(imageCaption.trim() ? { imageCaption: imageCaption.trim() } : {}),
         ...(category ? { categoryId: category } : {}),
         ...(subcategory ? { subcategoryId: subcategory } : {}),
@@ -1070,6 +1088,7 @@ export default function ArticleForm({
         title: title.trim(),
         content: htmlContent,
         editorState: content,
+        ...(parsedYoutubeVideoId ? { youtubeVideoId: parsedYoutubeVideoId } : {}),
         ...(imageCaption.trim() ? { imageCaption: imageCaption.trim() } : {}),
         categoryId: category,
         ...(subcategory ? { subcategoryId: subcategory } : {}),
@@ -1116,6 +1135,7 @@ export default function ArticleForm({
         title: title.trim(),
         content: htmlContent,
         editorState: content,
+        ...(parsedYoutubeVideoId ? { youtubeVideoId: parsedYoutubeVideoId } : {}),
         ...(imageCaption.trim() ? { imageCaption: imageCaption.trim() } : {}),
         categoryId: category,
         ...(subcategory ? { subcategoryId: subcategory } : {}),
@@ -1303,6 +1323,32 @@ export default function ArticleForm({
                   />
                 </div>
                 
+                {/* YouTube video */}
+                <div className="space-y-2">
+                  <Label htmlFor="youtube-video">YouTube video</Label>
+                  <Textarea
+                    id="youtube-video"
+                    value={youtubeVideoInput}
+                    disabled={isLocked}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setYoutubeVideoInput(value);
+                      if (!value.trim() || parseYouTubeVideoInput(value)) {
+                        clearFieldError("youtubeVideo");
+                      }
+                    }}
+                    placeholder="Paste a YouTube URL or iframe embed snippet"
+                    aria-invalid={Boolean(formErrors.youtubeVideo)}
+                    className={formErrors.youtubeVideo ? "border-destructive" : ""}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    We save only the YouTube video ID, not the pasted HTML.
+                  </p>
+                  {formErrors.youtubeVideo && (
+                    <p className="text-xs text-destructive">{formErrors.youtubeVideo}</p>
+                  )}
+                </div>
+
                 {/* Image Caption */}
                 <div className="space-y-2">
                   <Label htmlFor="image-caption" className='gap-0'>Image Caption</Label>
@@ -1331,7 +1377,17 @@ export default function ArticleForm({
                   </Button>
 
                   {!hideImage && <AspectRatio ratio={16 / 9} className="bg-muted/50 rounded-md overflow-hidden">
-                    {featuredMediaPreviewUrl && !mediaPreviewFailed ? (
+                    {parsedYoutubeVideoId ? (
+                      <iframe
+                        src={`https://www.youtube-nocookie.com/embed/${parsedYoutubeVideoId}`}
+                        title="YouTube video preview"
+                        className="h-full w-full"
+                        loading="lazy"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                      />
+                    ) : featuredMediaPreviewUrl && !mediaPreviewFailed ? (
                       <img
                         src={featuredMediaPreviewUrl}
                         className="object-cover h-full w-full"

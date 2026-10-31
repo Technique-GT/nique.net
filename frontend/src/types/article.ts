@@ -69,6 +69,7 @@ export interface ArticleDocument {
   tagIds: Tag[];
   authors: ArticleAuthor[];
   featuredMediaUrl?: string | null;
+  youtubeVideoId?: string | null;
   imageCaption?: string;
   published: boolean;
   publishedAt: Date | string | null;

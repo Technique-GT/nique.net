@@ -116,6 +116,10 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
 
   const featuredMediaUrlRaw = typeof body?.featuredMediaUrl === 'string' ? body.featuredMediaUrl.trim() : '';
   const featuredMediaUrl = featuredMediaUrlRaw.length > 0 ? featuredMediaUrlRaw : undefined;
+  const youtubeVideoId =
+    typeof body?.youtubeVideoId === 'string' || body?.youtubeVideoId === null
+      ? body.youtubeVideoId
+      : undefined;
   const imageCaption = typeof body?.imageCaption === 'string' ? body.imageCaption : undefined;
 
   const published = typeof body?.published === 'boolean' ? body.published : undefined;
@@ -143,6 +147,9 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
   if (tagIds !== undefined) update.tagIds = tagIds as any;
 
   if (featuredMediaUrl !== undefined) update.featuredMediaUrl = featuredMediaUrl;
+  if (youtubeVideoId !== undefined || body?.youtubeVideoId === null) {
+    update.youtubeVideoId = youtubeVideoId;
+  }
   if (imageCaption !== undefined) update.imageCaption = imageCaption;
 
   if (editorState !== undefined) update.editorState = editorState;
@@ -209,6 +216,7 @@ const hasArticleChanged = (existing: IArticle, update: Partial<IArticle>): boole
   if ('categoryId' in update && !idsAreEqual(update.categoryId, existing.categoryId)) return true;
   if ('subcategoryId' in update && !idsAreEqual(update.subcategoryId, existing.subcategoryId)) return true;
   if ('featuredMediaUrl' in update && update.featuredMediaUrl !== existing.featuredMediaUrl) return true;
+  if ('youtubeVideoId' in update && update.youtubeVideoId !== existing.youtubeVideoId) return true;
 
   if (update.tagIds && !arraysAreEqual(update.tagIds, existing.tagIds, idsAreEqual)) return true;
 

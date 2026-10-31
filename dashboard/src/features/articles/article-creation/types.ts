@@ -65,6 +65,7 @@ export interface Article {
   reviewedBy?: string;
   reviewNotes?: string;
   featuredMediaUrl?: string;
+  youtubeVideoId?: string | null;
   isPublished: boolean;
   isFeatured: boolean;
   isSticky: boolean;
@@ -83,6 +84,7 @@ export type FieldErrorKey =
   | "title"
   | "content"
   | "featuredMedia"
+  | "youtubeVideo"
   | "authors"
   | "category"
   | "subcategory"

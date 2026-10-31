@@ -24,6 +24,7 @@ export const createArticleBodySchema = z.object({
     .optional(),
 
   featuredMediaUrl: z.string().trim().min(1).optional(),
+  youtubeVideoId: z.string().regex(/^[A-Za-z0-9_-]{11}$/).nullable().optional(),
   imageCaption: z.string().optional(),
 
   editorState: z.any().optional(),
