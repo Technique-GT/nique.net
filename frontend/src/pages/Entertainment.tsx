@@ -14,36 +14,45 @@ import spotifyService from '../services/spotifyService';
 import { toSpotifyEmbedUrl } from '../utils/spotify';
 
 // Helper to process raw articles into page sections
+
 const processEntertainmentArticles = (allEntertainment: ArticleDocument[]) => {
     const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
         getArticleTimestamp(b) - getArticleTimestamp(a);
 
-    const stickyPosts = allEntertainment.filter((article) => article.isSticky).sort(sortByPublishedDesc);
-    const nonStickyPosts = allEntertainment.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
-    const orderedEntertainment = [...stickyPosts, ...nonStickyPosts];
-    const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
-        articles
+    // The carousel shows the three newest pinned articles.
+    const recentSelection = allEntertainment
+        .filter((article) => article.isSticky)
+        .sort(sortByPublishedDesc)
+        .slice(0, 3);
+
+    const recentIds = new Set(recentSelection.map(getArticleId));
+
+    // Subsections show the newest articles, regardless of pin/star status.
+    const filterBySubcategory = (subcategory: string) =>
+        allEntertainment
             .filter((article) => {
                 if (article.subcategoryId && typeof article.subcategoryId === 'object') {
                     return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
                 }
                 return false;
             })
-            .filter((article) => !recentIds.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
 
-    const recentSelection = orderedEntertainment.slice(0, 3);
-    const recentIds = new Set(recentSelection.map(getArticleId));
-    const filmtv = filterBySubcategory(allEntertainment, 'film & tv');
-    const music = filterBySubcategory(allEntertainment, 'music');
-    const artsTheater = filterBySubcategory(allEntertainment, 'arts & theater');
+    const filmtv = filterBySubcategory('film & tv');
+    const music = filterBySubcategory('music');
+    const artsTheater = filterBySubcategory('arts & theater');
+
+    // Keep the sidebar from repeating carousel or subsection articles.
     const subcategoryIds = new Set(
         [...filmtv, ...music, ...artsTheater].map(getArticleId)
     );
-    const remainingEntertainment = orderedEntertainment.filter((article) => {
-        const id = getArticleId(article);
-        return !recentIds.has(id) && !subcategoryIds.has(id);
-    });
+
+    const remainingEntertainment = [...allEntertainment]
+        .filter((article) => {
+            const id = getArticleId(article);
+            return !recentIds.has(id) && !subcategoryIds.has(id);
+        })
+        .sort(sortByPublishedDesc);
 
     return {
         recentEntertainment: recentSelection,
@@ -53,6 +62,7 @@ const processEntertainmentArticles = (allEntertainment: ArticleDocument[]) => {
         artsTheater,
     };
 };
+
 
 function Entertainment() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -90,7 +100,7 @@ function Entertainment() {
 
                 const entertainmentResponse = await articleService.fetchArticlesByCategory(
                     entertainmentCategory._id,
-                    undefined,
+                    { page: 1, limit: 100 },
                     controller.signal
                 );
 
