@@ -25,7 +25,6 @@ const processOpinionArticles = (allOpinions: ArticleDocument[]) => {
         ? orderedOpinion.filter((article) => getArticleId(article) !== getArticleId(featured))
         : orderedOpinion;
     const recentSelection = [featured, ...orderedWithoutFeatured].filter(Boolean) as ArticleDocument[];
-    const recentIds = new Set(recentSelection.slice(0,1).map(getArticleId));
 
     const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
         articles
@@ -35,8 +34,8 @@ const processOpinionArticles = (allOpinions: ArticleDocument[]) => {
                 }
                 return false;
             })
-            .filter((article) => !recentIds.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
+
 
     return {
         recentOpinionArticles: recentSelection,
@@ -79,7 +78,7 @@ function Opinions() {
 
                 const opinionResponse = await articleService.fetchArticlesByCategory(
                     opinionCategory._id,
-                    undefined,
+                    { page: 1, limit: 100 },
                     controller.signal
                 );
 

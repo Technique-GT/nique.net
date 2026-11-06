@@ -32,8 +32,6 @@ const processNewsArticles = (allNewsArticles: ArticleDocument[]) => {
     const recentSelection = [justIn, featured].filter(Boolean) as ArticleDocument[];
     const recentIds = new Set(recentSelection.map(getArticleId));
     const sideNewsArticles = orderedNews.filter((article) => !recentIds.has(getArticleId(article))).slice(0, 5);
-    const sideIds = new Set(sideNewsArticles.map(getArticleId));
-    const excludedIds = new Set([...recentIds, ...sideIds]);
 
     const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
         articles
@@ -43,7 +41,6 @@ const processNewsArticles = (allNewsArticles: ArticleDocument[]) => {
                 }
                 return false;
             })
-            .filter((article) => !excludedIds.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
 
     return {
@@ -91,7 +88,7 @@ function News() {
 
                 const newsResponse = await articleService.fetchArticlesByCategory(
                     categoryId,
-                    undefined,
+                    { page: 1, limit: 100 },
                     controller.signal
                 );
 
@@ -174,14 +171,14 @@ function News() {
                         </div>
                         <div className='col-span-2'>
                             {(() => {
-                                const articles = theInstituteNews.slice(6, 8);
+                                const articles = theInstituteNews.slice(4, 6);
                                 return articles.length ? <SmallArticle articles={articles} direction='left'/> : null;
                             })()}
                         </div>
                         <hr className="block lg:hidden col-span-2" />
                         <div className='col-span-2'>
                             {(() => {
-                                const articles = theInstituteNews.slice(8, 10);
+                                const articles = theInstituteNews.slice(6, 8);
                                 return articles.length ? <SmallArticle articles={articles} direction='left'/> : null;
                             })()}
                         </div>

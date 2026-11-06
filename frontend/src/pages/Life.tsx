@@ -26,8 +26,6 @@ const processLifeArticles = (allLifeArticles: ArticleDocument[]) => {
     const recentSelection = [primaryStory].filter(Boolean) as ArticleDocument[];
     const recentIds = new Set(recentSelection.map(getArticleId));
     const sideLifeArticles = orderedLife.filter((article) => !recentIds.has(getArticleId(article))).slice(0, 5);
-    const sideIds = new Set(sideLifeArticles.map(getArticleId));
-    const excludedIds = new Set([...recentIds, ...sideIds]);
     const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
         articles
             .filter((article) => {
@@ -36,8 +34,8 @@ const processLifeArticles = (allLifeArticles: ArticleDocument[]) => {
                 }
                 return false;
             })
-            .filter((article) => !excludedIds.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
+
 
     return {
         recentLifeArticles: recentSelection,
@@ -84,9 +82,10 @@ function Life() {
 
                 const lifeResponse = await articleService.fetchArticlesByCategory(
                     lifeCategory._id,
-                    undefined,
+                    { page: 1, limit: 100 },
                     controller.signal
                 );
+
 
                 const allLifeArticles = Array.isArray(lifeResponse) ? lifeResponse : lifeResponse.data;
 
@@ -166,14 +165,14 @@ function Life() {
                         </div>
                         <div className='col-span-2'>
                             {(() => {
-                                const articles = events.slice(6, 8);
+                                const articles = events.slice(4, 6);
                                 return articles.length ? <SmallArticle articles={articles} direction='left'/> : null;
                             })()}
                         </div>
                         <hr className="block lg:hidden col-span-2" />
                         <div className='col-span-2'>
                             {(() => {
-                                const articles = events.slice(8, 10);
+                                const articles = events.slice(6, 8);
                                 return articles.length ? <SmallArticle articles={articles} direction='left'/> : null;
                             })()}
                         </div>
