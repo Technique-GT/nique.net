@@ -3,7 +3,7 @@ import articleService from '../services/articleService';
 import ArticleBlock from "../components/ArticleBlock";
 import { ArticleDocument, Category } from '../types/article';
 import SideArticle from '../components/SideArticle';
-import Carousel from '../components/Carousel';
+import FeaturedStory from '../components/FeaturedStory';
 import SmallArticle from '../components/SmallArticle';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
@@ -32,7 +32,7 @@ const processEntertainmentArticles = (allEntertainment: ArticleDocument[]) => {
             .filter((article) => !recentIds.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
 
-    const recentSelection = orderedEntertainment.slice(0, 3);
+    const recentSelection = orderedEntertainment.slice(0, 5);
     const recentIds = new Set(recentSelection.map(getArticleId));
     const filmtv = filterBySubcategory(allEntertainment, 'film & tv');
     const music = filterBySubcategory(allEntertainment, 'music');
@@ -169,13 +169,27 @@ function Entertainment() {
         <div className='max-w-[95%] md:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
             {/* Main */}
             <div className='w-full'>
-            <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
-                <div className='lg:col-span-4 m-0'>
-                {recentEntertainment.slice(0, 4).length > 0 && (
-                    <Carousel articles={recentEntertainment.slice(0, 3)} width='70%'/>
-                )}
+            <div className='grid gap-5 grid-cols-1 lg:grid-cols-[auto_35%] lg:grid-rows-4 w-full h-[80vh]'>
+                <div className='flex flex-col gap-4 lg:row-span-4'>
+                    {recentEntertainment[0] && (
+                        <FeaturedStory
+                            article={recentEntertainment[0]}
+                            height="100%"
+                        />
+                    )}
+                </div>
+
+                <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:grid-rows-4 lg:row-span-4 h-full'>
+                    {recentEntertainment.slice(1, 5).map((article) => (
+                        <ArticleBlock
+                            key={article._id || article.slug}
+                            article={article}
+                            height="100%"
+                        />
+                    ))}
                 </div>
             </div>
+
             <hr className='my-3' />
 
             {/* Subcategories */}
