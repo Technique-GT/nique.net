@@ -28,7 +28,6 @@ const processSportsArticles = (allSportsArticles: ArticleDocument[]) => {
         : orderedSports;
     const recentSelection = [featured, ...orderedWithoutFeatured].filter(Boolean) as ArticleDocument[];
     const visibleRecent = recentSelection.slice(0, 5);
-    const recentIds = new Set(visibleRecent.map(getArticleId));
 
     const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
         articles
@@ -38,7 +37,6 @@ const processSportsArticles = (allSportsArticles: ArticleDocument[]) => {
                 }
                 return false;
             })
-            .filter((article) => !recentIds.has(getArticleId(article)))
             .sort(sortByPublishedDesc);
 
     return {
@@ -82,7 +80,7 @@ function Sports() {
 
                 const sportsResponse = await articleService.fetchArticlesByCategory(
                     sportsCategory._id,
-                    undefined,
+                    { page: 1, limit: 100 },
                     controller.signal
                 );
 
