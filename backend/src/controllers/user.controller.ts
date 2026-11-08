@@ -3,17 +3,34 @@ import mongoose from 'mongoose';
 import User from '../models/User';
 import { safeRegex, safeErrorResponse } from '../utils/security';
 
-const SOCIAL_PLATFORM_HOSTS: Record<'instagram' | 'linkedin', string> = {
+const SOCIAL_PLATFORM_HOSTS: Record<string, string> = {  
   instagram: 'instagram.com',
   linkedin: 'linkedin.com',
-};
+  github: 'github.com',
+  x: 'x.com',
+  youtube: 'youtube.com',
+  facebook: 'facebook.com',};
 
-const isAllowedSocialUrl = (rawUrl: string, platform: keyof typeof SOCIAL_PLATFORM_HOSTS): boolean => {
+type SocialPlatform = keyof typeof SOCIAL_PLATFORM_HOSTS | 'website';  
+
+const isAllowedSocialUrl = (
+  rawUrl: string,
+  platform: SocialPlatform,
+): boolean => {
   try {
     const parsed = new URL(rawUrl);
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return false;
+    }
+
+    if (platform === 'website') {
+      return true;
+    }
+
     const hostname = parsed.hostname.toLowerCase();
     const expected = SOCIAL_PLATFORM_HOSTS[platform];
+
     return hostname === expected || hostname.endsWith(`.${expected}`);
   } catch {
     return false;
@@ -27,9 +44,9 @@ const readSocialLinks = (value: any): Array<{ platform: string; url: string }> =
       platform: typeof v?.platform === 'string' ? v.platform.trim().toLowerCase() : '',
       url: typeof v?.url === 'string' ? v.url.trim() : '',
     }))
-    .filter((v): v is { platform: 'instagram' | 'linkedin'; url: string } =>
-      (v.platform === 'instagram' || v.platform === 'linkedin') &&
-      v.url.length > 0 &&
+    .filter((v) => 
+      v.platform.length > 0 && 
+      v.url.length > 0 && 
       isAllowedSocialUrl(v.url, v.platform)
     );
 };

@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export type SocialLink = {
-  platform: 'instagram' | 'linkedin';
+  platform: 'instagram' | 'linkedin' | 'github' | 'x' | 'youtube' | 'facebook' | 'website';
   url: string;
 };
 
@@ -22,7 +22,15 @@ const SocialLinkSchema = new Schema<SocialLink>(
       required: true,
       trim: true,
       lowercase: true,
-      enum: ['instagram', 'linkedin'],
+            enum: [
+        'instagram',
+        'linkedin',
+        'github',
+        'x',
+        'youtube',
+        'facebook',
+        'website',
+      ],
     },
     url: { type: String, required: true, trim: true },
   },

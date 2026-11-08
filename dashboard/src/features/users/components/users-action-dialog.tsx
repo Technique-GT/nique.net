@@ -1,5 +1,3 @@
-// TODO - finish wiring up social links to frontend author pages
-
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
@@ -30,7 +28,7 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { User } from '../data/schema'
 import { useUsers } from '../context/users-context'
-import { IconX } from '@tabler/icons-react';
+import { IconX } from '@tabler/icons-react'
 
 const ACCEPTED_HEADSHOT_TYPES = [
   'image/jpeg',
@@ -41,10 +39,23 @@ const ACCEPTED_HEADSHOT_TYPES = [
 ]
 const MAX_HEADSHOT_SIZE_BYTES = 10 * 1024 * 1024
 
-const isExpectedSocialDomain = (rawUrl: string, expectedDomain: string): boolean => {
+const SOCIAL_PLATFORMS = [
+  { key: 'instagram', label: 'Instagram', domain: 'instagram.com' },
+  { key: 'linkedin', label: 'LinkedIn', domain: 'linkedin.com' },
+  { key: 'github', label: 'GitHub', domain: 'github.com' },
+  { key: 'x', label: 'X (Twitter)', domain: 'x.com' },
+  { key: 'youtube', label: 'YouTube', domain: 'youtube.com' },
+  { key: 'facebook', label: 'Facebook', domain: 'facebook.com' },
+  { key: 'website', label: 'Website', domain: null },
+] as const
+
+type PlatformKey = typeof SOCIAL_PLATFORMS[number]['key']
+
+const isExpectedSocialDomain = (rawUrl: string, expectedDomain: string | null): boolean => {
   try {
     const parsed = new URL(rawUrl)
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false
+    if (!expectedDomain) return true // Website can be any valid http/https URL
     const hostname = parsed.hostname.toLowerCase()
     return hostname === expectedDomain || hostname.endsWith(`.${expectedDomain}`)
   } catch {
@@ -52,7 +63,7 @@ const isExpectedSocialDomain = (rawUrl: string, expectedDomain: string): boolean
   }
 }
 
-const extractSocialUrl = (user: User | undefined, platform: 'instagram' | 'linkedin'): string => {
+const extractSocialUrl = (user: User | undefined, platform: string): string => {
   if (!user?.socialLinks?.length) return ''
   const match = user.socialLinks.find(
     (link) => link.platform.trim().toLowerCase() === platform
@@ -60,18 +71,14 @@ const extractSocialUrl = (user: User | undefined, platform: 'instagram' | 'linke
   return match?.url ?? ''
 }
 
-const buildSocialLinks = (instagramUrl?: string, linkedinUrl?: string) => {
-  const links: Array<{ platform: 'instagram' | 'linkedin'; url: string }> = []
-  const instagram = instagramUrl?.trim()
-  const linkedin = linkedinUrl?.trim()
-
-  if (instagram) {
-    links.push({ platform: 'instagram', url: instagram })
+const buildSocialLinks = (values: Record<PlatformKey, string | undefined>) => {
+  const links: Array<{ platform: PlatformKey; url: string }> = []
+  for (const { key } of SOCIAL_PLATFORMS) {
+    const val = values[key]?.trim()
+    if (val) {
+      links.push({ platform: key, url: val })
+    }
   }
-  if (linkedin) {
-    links.push({ platform: 'linkedin', url: linkedin })
-  }
-
   return links
 }
 
@@ -80,8 +87,13 @@ const buildDefaultValues = (user?: User) => ({
   isAdmin: user?.isAdmin ?? false,
   email: user?.email ?? '',
   bio: user?.bio ?? '',
-  instagramUrl: extractSocialUrl(user, 'instagram'),
-  linkedinUrl: extractSocialUrl(user, 'linkedin'),
+  instagram: extractSocialUrl(user, 'instagram'),
+  linkedin: extractSocialUrl(user, 'linkedin'),
+  github: extractSocialUrl(user, 'github'),
+  x: extractSocialUrl(user, 'x'),
+  youtube: extractSocialUrl(user, 'youtube'),
+  facebook: extractSocialUrl(user, 'facebook'),
+  website: extractSocialUrl(user, 'website'),
 })
 
 const formSchema = z.object({
@@ -89,22 +101,13 @@ const formSchema = z.object({
   isAdmin: z.boolean(),
   email: z.string().trim().email('Please enter a valid email.').optional().or(z.literal('')),
   bio: z.string().optional(),
-  instagramUrl: z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal(''))
-    .refine((value) => !value || isExpectedSocialDomain(value, 'instagram.com'), {
-      message: 'Instagram URL must use instagram.com',
-    }),
-  linkedinUrl: z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal(''))
-    .refine((value) => !value || isExpectedSocialDomain(value, 'linkedin.com'), {
-      message: 'LinkedIn URL must use linkedin.com',
-    }),
+  instagram: z.string().trim().optional().or(z.literal('')).refine((v) => !v || isExpectedSocialDomain(v, 'instagram.com'), { message: 'Must use instagram.com' }),
+  linkedin: z.string().trim().optional().or(z.literal('')).refine((v) => !v || isExpectedSocialDomain(v, 'linkedin.com'), { message: 'Must use linkedin.com' }),
+  github: z.string().trim().optional().or(z.literal('')).refine((v) => !v || isExpectedSocialDomain(v, 'github.com'), { message: 'Must use github.com' }),
+  x: z.string().trim().optional().or(z.literal('')).refine((v) => !v || isExpectedSocialDomain(v, 'x.com'), { message: 'Must use x.com' }),
+  youtube: z.string().trim().optional().or(z.literal('')).refine((v) => !v || isExpectedSocialDomain(v, 'youtube.com'), { message: 'Must use youtube.com' }),
+  facebook: z.string().trim().optional().or(z.literal('')).refine((v) => !v || isExpectedSocialDomain(v, 'facebook.com'), { message: 'Must use facebook.com' }),
+  website: z.string().trim().optional().or(z.literal('')).refine((v) => !v || isExpectedSocialDomain(v, null), { message: 'Must be a valid URL' }),
 })
 type UserForm = z.infer<typeof formSchema>
 
@@ -222,7 +225,15 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
       }
 
       const bio = values.bio?.trim()
-      const socialLinks = buildSocialLinks(values.instagramUrl, values.linkedinUrl)
+      const socialLinks = buildSocialLinks({
+        instagram: values.instagram,
+        linkedin: values.linkedin,
+        github: values.github,
+        x: values.x,
+        youtube: values.youtube,
+        facebook: values.facebook,
+        website: values.website,
+      })
 
       if (isEdit && currentRow) {
         const userData: Record<string, unknown> = {
@@ -338,14 +349,13 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                           }}
                           disabled={submitting}
                         >
-                          <span aria-hidden='true' className='leading-none ciolo'><IconX className='size-3'/></span>
+                          <span aria-hidden='true' className='leading-none'><IconX className='size-3'/></span>
                         </Button>
                       )}
                     </div>
                   </div>
 
                   {avatarError && <p className='text-sm text-destructive'>{avatarError}</p>}
-
                   {submitError && <p className='text-sm text-destructive'>{submitError}</p>}
                 </div>
 
@@ -392,33 +402,23 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name='instagramUrl'
-                    render={({ field }) => (
-                      <FormItem className='flex flex-col items-start space-y-1'>
-                        <FormLabel>Instagram</FormLabel>
-                        <FormControl>
-                          <Input placeholder='https://instagram.com/username' {...field} />
-                        </FormControl>
-                        <FormMessage/>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name='linkedinUrl'
-                    render={({ field }) => (
-                      <FormItem className='flex flex-col items-start space-y-1'>
-                        <FormLabel>LinkedIn</FormLabel>
-                        <FormControl>
-                          <Input placeholder='https://linkedin.com/in/username' {...field} />
-                        </FormControl>
-                        <FormMessage/>
-                      </FormItem>
-                    )}
-                  />
+                  {/* Render all 7 platforms dynamically */}
+                  {SOCIAL_PLATFORMS.map(({ key, label }) => (
+                    <FormField
+                      key={key}
+                      control={form.control}
+                      name={key as PlatformKey}
+                      render={({ field }) => (
+                        <FormItem className='flex flex-col items-start space-y-1'>
+                          <FormLabel>{label}</FormLabel>
+                          <FormControl>
+                            <Input placeholder={`https://${key}.com/username`} {...field} />
+                          </FormControl>
+                          <FormMessage/>
+                        </FormItem>
+                      )}
+                    />
+                  ))}
 
                   <FormField
                     control={form.control}
