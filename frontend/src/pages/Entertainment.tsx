@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
-import articleService from "../services/articleService";
 import ArticleBlock from "../components/ArticleBlock";
-import { ArticleDocument, Category } from "../types/article";
-import SideArticle from "../components/SideArticle";
 import FeaturedStory from "../components/FeaturedStory";
-import SmallArticle from "../components/SmallArticle";
-import Navbar from "../components/Navbar";
-import Spinner from "../components/Spinner";
-import { Categories } from "../types/categories";
 import InfiniteScrollModule from "../components/InfiniteScrollModule";
+import Navbar from "../components/Navbar";
+import SideArticle from "../components/SideArticle";
+import SmallArticle from "../components/SmallArticle";
+import Spinner from "../components/Spinner";
+import articleService from "../services/articleService";
+import spotifyService from "../services/spotifyService";
+import type { ArticleDocument, Category } from "../types/article";
+import { Categories } from "../types/categories";
 import {
 	getArticleId,
 	getArticleTimestamp,
 } from "../utils/articlePresentation";
-import spotifyService from "../services/spotifyService";
 import { toSpotifyEmbedUrl } from "../utils/spotify";
 
 // Helper to process raw articles into page sections
@@ -22,18 +22,17 @@ const processEntertainmentArticles = (allEntertainment: ArticleDocument[]) => {
 	const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
 		getArticleTimestamp(b) - getArticleTimestamp(a);
 
-	const stickyPosts = allEntertainment
+	// The carousel shows the three newest pinned articles.
+	const recentSelection = allEntertainment
 		.filter((article) => article.isSticky)
-		.sort(sortByPublishedDesc);
-	const nonStickyPosts = allEntertainment
-		.filter((article) => !article.isSticky)
-		.sort(sortByPublishedDesc);
-	const orderedEntertainment = [...stickyPosts, ...nonStickyPosts];
-	const filterBySubcategory = (
-		articles: ArticleDocument[],
-		subcategory: string,
-	) =>
-		articles
+		.sort(sortByPublishedDesc)
+		.slice(0, 5);
+
+	const recentIds = new Set(recentSelection.map(getArticleId));
+
+	// Subsections show the newest articles, regardless of pin/star status.
+	const filterBySubcategory = (subcategory: string) =>
+		allEntertainment
 			.filter((article) => {
 				if (
 					article.subcategoryId &&
@@ -46,21 +45,23 @@ const processEntertainmentArticles = (allEntertainment: ArticleDocument[]) => {
 				}
 				return false;
 			})
-			.filter((article) => !recentIds.has(getArticleId(article)))
 			.sort(sortByPublishedDesc);
 
-	const recentSelection = orderedEntertainment.slice(0, 5);
-	const recentIds = new Set(recentSelection.map(getArticleId));
-	const filmtv = filterBySubcategory(allEntertainment, "film & tv");
-	const music = filterBySubcategory(allEntertainment, "music");
-	const artsTheater = filterBySubcategory(allEntertainment, "arts & theater");
+	const filmtv = filterBySubcategory("film & tv");
+	const music = filterBySubcategory("music");
+	const artsTheater = filterBySubcategory("arts & theater");
+
+	// Keep the sidebar from repeating carousel or subsection articles.
 	const subcategoryIds = new Set(
 		[...filmtv, ...music, ...artsTheater].map(getArticleId),
 	);
-	const remainingEntertainment = orderedEntertainment.filter((article) => {
-		const id = getArticleId(article);
-		return !recentIds.has(id) && !subcategoryIds.has(id);
-	});
+
+	const remainingEntertainment = [...allEntertainment]
+		.filter((article) => {
+			const id = getArticleId(article);
+			return !recentIds.has(id) && !subcategoryIds.has(id);
+		})
+		.sort(sortByPublishedDesc);
 
 	return {
 		recentEntertainment: recentSelection,
@@ -121,7 +122,7 @@ function Entertainment() {
 				const entertainmentResponse =
 					await articleService.fetchArticlesByCategory(
 						entertainmentCategory._id,
-						undefined,
+						{ page: 1, limit: 100 },
 						controller.signal,
 					);
 
