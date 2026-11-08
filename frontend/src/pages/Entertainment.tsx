@@ -1,256 +1,310 @@
-import { useEffect, useState } from 'react';
-import articleService from '../services/articleService';
+import { useEffect, useState } from "react";
 import ArticleBlock from "../components/ArticleBlock";
-import { ArticleDocument, Category } from '../types/article';
-import SideArticle from '../components/SideArticle';
-import FeaturedStory from '../components/FeaturedStory';
-import SmallArticle from '../components/SmallArticle';
-import Navbar from '../components/Navbar';
-import Spinner from '../components/Spinner';
-import { Categories } from '../types/categories';
-import InfiniteScrollModule from '../components/InfiniteScrollModule';
-import { getArticleId, getArticleTimestamp } from '../utils/articlePresentation';
-import spotifyService from '../services/spotifyService';
-import { toSpotifyEmbedUrl } from '../utils/spotify';
+import FeaturedStory from "../components/FeaturedStory";
+import InfiniteScrollModule from "../components/InfiniteScrollModule";
+import Navbar from "../components/Navbar";
+import SideArticle from "../components/SideArticle";
+import SmallArticle from "../components/SmallArticle";
+import Spinner from "../components/Spinner";
+import articleService from "../services/articleService";
+import spotifyService from "../services/spotifyService";
+import type { ArticleDocument, Category } from "../types/article";
+import { Categories } from "../types/categories";
+import {
+	getArticleId,
+	getArticleTimestamp,
+} from "../utils/articlePresentation";
+import { toSpotifyEmbedUrl } from "../utils/spotify";
 
 // Helper to process raw articles into page sections
+
 const processEntertainmentArticles = (allEntertainment: ArticleDocument[]) => {
-    const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
-        getArticleTimestamp(b) - getArticleTimestamp(a);
+	const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+		getArticleTimestamp(b) - getArticleTimestamp(a);
 
-    const stickyPosts = allEntertainment.filter((article) => article.isSticky).sort(sortByPublishedDesc);
-    const nonStickyPosts = allEntertainment.filter((article) => !article.isSticky).sort(sortByPublishedDesc);
-    const orderedEntertainment = [...stickyPosts, ...nonStickyPosts];
-    const filterBySubcategory = (articles: ArticleDocument[], subcategory: string) =>
-        articles
-            .filter((article) => {
-                if (article.subcategoryId && typeof article.subcategoryId === 'object') {
-                    return article.subcategoryId.name?.toLowerCase() === subcategory.toLowerCase();
-                }
-                return false;
-            })
-            .filter((article) => !recentIds.has(getArticleId(article)))
-            .sort(sortByPublishedDesc);
+	// The carousel shows the three newest pinned articles.
+	const recentSelection = allEntertainment
+		.filter((article) => article.isSticky)
+		.sort(sortByPublishedDesc)
+		.slice(0, 5);
 
-    const recentSelection = orderedEntertainment.slice(0, 5);
-    const recentIds = new Set(recentSelection.map(getArticleId));
-    const filmtv = filterBySubcategory(allEntertainment, 'film & tv');
-    const music = filterBySubcategory(allEntertainment, 'music');
-    const artsTheater = filterBySubcategory(allEntertainment, 'arts & theater');
-    const subcategoryIds = new Set(
-        [...filmtv, ...music, ...artsTheater].map(getArticleId)
-    );
-    const remainingEntertainment = orderedEntertainment.filter((article) => {
-        const id = getArticleId(article);
-        return !recentIds.has(id) && !subcategoryIds.has(id);
-    });
+	const recentIds = new Set(recentSelection.map(getArticleId));
 
-    return {
-        recentEntertainment: recentSelection,
-        entertainmentArticles: remainingEntertainment,
-        filmtv,
-        music,
-        artsTheater,
-    };
+	// Subsections show the newest articles, regardless of pin/star status.
+	const filterBySubcategory = (subcategory: string) =>
+		allEntertainment
+			.filter((article) => {
+				if (
+					article.subcategoryId &&
+					typeof article.subcategoryId === "object"
+				) {
+					return (
+						article.subcategoryId.name?.toLowerCase() ===
+						subcategory.toLowerCase()
+					);
+				}
+				return false;
+			})
+			.sort(sortByPublishedDesc);
+
+	const filmtv = filterBySubcategory("film & tv");
+	const music = filterBySubcategory("music");
+	const artsTheater = filterBySubcategory("arts & theater");
+
+	// Keep the sidebar from repeating carousel or subsection articles.
+	const subcategoryIds = new Set(
+		[...filmtv, ...music, ...artsTheater].map(getArticleId),
+	);
+
+	const remainingEntertainment = [...allEntertainment]
+		.filter((article) => {
+			const id = getArticleId(article);
+			return !recentIds.has(id) && !subcategoryIds.has(id);
+		})
+		.sort(sortByPublishedDesc);
+
+	return {
+		recentEntertainment: recentSelection,
+		entertainmentArticles: remainingEntertainment,
+		filmtv,
+		music,
+		artsTheater,
+	};
 };
 
 function Entertainment() {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [recentEntertainment, setRecentEntertainment] = useState<ArticleDocument[]>([]);
-    const [entertainmentArticles, setEntertainmentArticles] = useState<ArticleDocument[]>([]);
-    const [filmtv, setFilmAndTV] = useState<ArticleDocument[]>([]);
-    const [music, setMusic] = useState<ArticleDocument[]>([]);
-    const [artsTheater, setArtsTheater] = useState<ArticleDocument[]>([]);
-    const [error, setError] = useState<string | null>(null);
-    const [entertainmentCategoryId, setEntertainmentCategoryId] = useState<string | null>(null);
-    const [activePlaylistEmbedUrl, setActivePlaylistEmbedUrl] = useState<string | null>(null);
+	const [isLoading, setIsLoading] = useState<boolean>(true);
+	const [recentEntertainment, setRecentEntertainment] = useState<
+		ArticleDocument[]
+	>([]);
+	const [entertainmentArticles, setEntertainmentArticles] = useState<
+		ArticleDocument[]
+	>([]);
+	const [filmtv, setFilmAndTV] = useState<ArticleDocument[]>([]);
+	const [music, setMusic] = useState<ArticleDocument[]>([]);
+	const [artsTheater, setArtsTheater] = useState<ArticleDocument[]>([]);
+	const [error, setError] = useState<string | null>(null);
+	const [entertainmentCategoryId, setEntertainmentCategoryId] = useState<
+		string | null
+	>(null);
+	const [activePlaylistEmbedUrl, setActivePlaylistEmbedUrl] = useState<
+		string | null
+	>(null);
 
-    useEffect(() => {
-        let isMounted = true;
-        const controller = new AbortController();
+	useEffect(() => {
+		let isMounted = true;
+		const controller = new AbortController();
 
-        const loadArticles = async () => {
-            setIsLoading(true);
-            setError(null);
+		const loadArticles = async () => {
+			setIsLoading(true);
+			setError(null);
 
-            try {
-                const categories = await articleService.fetchCategories(50, controller.signal);
+			try {
+				const categories = await articleService.fetchCategories(
+					50,
+					controller.signal,
+				);
 
-                const entertainmentCategory = categories.find((category: Category) =>
-                    category.name?.toLowerCase() === Categories.ENTERTAINMENT.toLowerCase()
-                );
-                setEntertainmentCategoryId(entertainmentCategory?._id || null);
+				const entertainmentCategory = categories.find(
+					(category: Category) =>
+						category.name?.toLowerCase() ===
+						Categories.ENTERTAINMENT.toLowerCase(),
+				);
+				setEntertainmentCategoryId(entertainmentCategory?._id || null);
 
-                if (!entertainmentCategory?._id) {
-                    if (!isMounted) return;
-                    setEntertainmentArticles([]);
-                    setError('Entertainment category not found.');
-                    return;
-                }
+				if (!entertainmentCategory?._id) {
+					if (!isMounted) return;
+					setEntertainmentArticles([]);
+					setError("Entertainment category not found.");
+					return;
+				}
 
-                const entertainmentResponse = await articleService.fetchArticlesByCategory(
-                    entertainmentCategory._id,
-                    undefined,
-                    controller.signal
-                );
+				const entertainmentResponse =
+					await articleService.fetchArticlesByCategory(
+						entertainmentCategory._id,
+						{ page: 1, limit: 100 },
+						controller.signal,
+					);
 
-                const allEntertainment = Array.isArray(entertainmentResponse) ? entertainmentResponse : entertainmentResponse.data;
+				const allEntertainment = Array.isArray(entertainmentResponse)
+					? entertainmentResponse
+					: entertainmentResponse.data;
 
-                if (!isMounted) {
-                    return;
-                }
+				if (!isMounted) {
+					return;
+				}
 
-                const processed = processEntertainmentArticles(allEntertainment);
-                setRecentEntertainment(processed.recentEntertainment);
-                setEntertainmentArticles(processed.entertainmentArticles);
-                setFilmAndTV(processed.filmtv);
-                setMusic(processed.music);
-                setArtsTheater(processed.artsTheater);
-            } catch {
-                if (!isMounted) {
-                    return;
-                }
-                setError('Unable to load articles. Please try again later.');
-            } finally {
-                if (isMounted) {
-                    setIsLoading(false);
-                }
-            }
-        };
+				const processed = processEntertainmentArticles(allEntertainment);
+				setRecentEntertainment(processed.recentEntertainment);
+				setEntertainmentArticles(processed.entertainmentArticles);
+				setFilmAndTV(processed.filmtv);
+				setMusic(processed.music);
+				setArtsTheater(processed.artsTheater);
+			} catch {
+				if (!isMounted) {
+					return;
+				}
+				setError("Unable to load articles. Please try again later.");
+			} finally {
+				if (isMounted) {
+					setIsLoading(false);
+				}
+			}
+		};
 
-        loadArticles();
+		loadArticles();
 
-        return () => {
-            isMounted = false;
-            controller.abort();
-        };
-    }, []);
+		return () => {
+			isMounted = false;
+			controller.abort();
+		};
+	}, []);
 
-    useEffect(() => {
-        const controller = new AbortController();
-        const loadActivePlaylist = async () => {
-            try {
-                const playlist = await spotifyService.fetchActivePlaylist(controller.signal);
-                setActivePlaylistEmbedUrl(playlist ? toSpotifyEmbedUrl(playlist.spotifyUrl) : null);
-            } catch {
-                setActivePlaylistEmbedUrl(null);
-            }
-        };
+	useEffect(() => {
+		const controller = new AbortController();
+		const loadActivePlaylist = async () => {
+			try {
+				const playlist = await spotifyService.fetchActivePlaylist(
+					controller.signal,
+				);
+				setActivePlaylistEmbedUrl(
+					playlist ? toSpotifyEmbedUrl(playlist.spotifyUrl) : null,
+				);
+			} catch {
+				setActivePlaylistEmbedUrl(null);
+			}
+		};
 
-        loadActivePlaylist();
+		loadActivePlaylist();
 
-        return () => {
-            controller.abort();
-        };
-    }, []);
+		return () => {
+			controller.abort();
+		};
+	}, []);
 
-    if (isLoading) {
-        return (
-        <div className="flex justify-center items-center h-screen">
-            <Spinner />
-        </div>
-        );
-    }
+	if (isLoading) {
+		return (
+			<div className="flex justify-center items-center h-screen">
+				<Spinner />
+			</div>
+		);
+	}
 
-    if (error) {
-        return (
-        <>
-            <Navbar />
-            <div className="flex justify-center items-center h-screen">
-            <p className="text-center text-lg text-red-600">{error}</p>
-            </div>
-        </>
-        );
-    }
+	if (error) {
+		return (
+			<>
+				<Navbar />
+				<div className="flex justify-center items-center h-screen">
+					<p className="text-center text-lg text-red-600">{error}</p>
+				</div>
+			</>
+		);
+	}
 
-    return (
-        <>
-        <Navbar />
-        <div className='max-w-[95%] md:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5'>
-            {/* Main */}
-            <div className='w-full'>
-            <div className='grid gap-5 grid-cols-1 lg:grid-cols-[auto_35%] lg:grid-rows-4 w-full h-[80vh]'>
-                <div className='flex flex-col gap-4 lg:row-span-4'>
-                    {recentEntertainment[0] && (
-                        <FeaturedStory
-                            article={recentEntertainment[0]}
-                            height="100%"
-                        />
-                    )}
-                </div>
+	return (
+		<>
+			<Navbar />
+			<div className="max-w-[95%] md:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5">
+				{/* Main */}
+				<div className="w-full">
+					<div className="grid gap-5 grid-cols-1 lg:grid-cols-[auto_35%] lg:grid-rows-4 w-full h-[80vh]">
+						<div className="flex flex-col gap-4 lg:row-span-4">
+							{recentEntertainment[0] && (
+								<FeaturedStory article={recentEntertainment[0]} height="100%" />
+							)}
+						</div>
 
-                <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:grid-rows-4 lg:row-span-4 h-full'>
-                    {recentEntertainment.slice(1, 5).map((article) => (
-                        <ArticleBlock
-                            key={article._id || article.slug}
-                            article={article}
-                            height="100%"
-                        />
-                    ))}
-                </div>
-            </div>
+						<div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:grid-rows-4 lg:row-span-4 h-full">
+							{recentEntertainment.slice(1, 5).map((article) => (
+								<ArticleBlock
+									key={article._id || article.slug}
+									article={article}
+									height="100%"
+								/>
+							))}
+						</div>
+					</div>
 
-            <hr className='my-3' />
+					<hr className="my-3" />
 
-            {/* Subcategories */}
-            <h4 className="font-bold mb-2 text-2xl text-nique-blue">Music</h4>
-            <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
-                <div className='lg:col-span-2 sm:col-span-2'>
-                {music[0] && <ArticleBlock article={music[0]} height='400px'/>}
-                </div>
+					{/* Subcategories */}
+					<h4 className="font-bold mb-2 text-2xl text-nique-blue">Music</h4>
+					<div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+						<div className="lg:col-span-2 sm:col-span-2">
+							{music[0] && <ArticleBlock article={music[0]} height="400px" />}
+						</div>
 
-                <div className='grid gap-4 grid-cols-2 lg:col-span-2'>
-                {music.slice(1, 5).map((article) => (
-                    <ArticleBlock key={article._id || article.slug} article={article} height='190px' />
-                ))}
-                </div>
-            </div>
+						<div className="grid gap-4 grid-cols-2 lg:col-span-2">
+							{music.slice(1, 5).map((article) => (
+								<ArticleBlock
+									key={article._id || article.slug}
+									article={article}
+									height="190px"
+								/>
+							))}
+						</div>
+					</div>
 
-            <hr className='my-3' />
+					<hr className="my-3" />
 
-            <h4 className="font-bold mb-2 text-2xl text-nique-blue">Film & TV</h4>
-            <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
-                {filmtv.slice(0, 4).map((article) => (
-                <ArticleBlock key={article._id || article.slug} article={article} height='230px' />
-                ))}
-            </div>
+					<h4 className="font-bold mb-2 text-2xl text-nique-blue">Film & TV</h4>
+					<div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+						{filmtv.slice(0, 4).map((article) => (
+							<ArticleBlock
+								key={article._id || article.slug}
+								article={article}
+								height="230px"
+							/>
+						))}
+					</div>
 
-            <hr className='my-3' />
+					<hr className="my-3" />
 
-            <h4 className="font-bold mb-2 text-2xl text-nique-blue">Arts & Theater</h4>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 items-start'>
-                {(() => {
-                const articles = artsTheater.slice(0, 2);
-                return articles.length ? <SmallArticle articles={articles} direction="left"/> : null;
-                })()}
-                {(() => {
-                const articles = artsTheater.slice(2, 4);
-                return articles.length ? <SmallArticle articles={articles} direction="left"/> : null;
-                })()}
-            </div>
+					<h4 className="font-bold mb-2 text-2xl text-nique-blue">
+						Arts & Theater
+					</h4>
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+						{(() => {
+							const articles = artsTheater.slice(0, 2);
+							return articles.length ? (
+								<SmallArticle articles={articles} direction="left" />
+							) : null;
+						})()}
+						{(() => {
+							const articles = artsTheater.slice(2, 4);
+							return articles.length ? (
+								<SmallArticle articles={articles} direction="left" />
+							) : null;
+						})()}
+					</div>
 
-            <InfiniteScrollModule categoryId={entertainmentCategoryId ?? undefined} />
-            </div>
+					<InfiniteScrollModule
+						categoryId={entertainmentCategoryId ?? undefined}
+					/>
+				</div>
 
-            <div className='flex flex-col gap-4'>
-                {activePlaylistEmbedUrl && (
-                    <iframe
-                        className="rounded-md w-full h-137.5"
-                        src={activePlaylistEmbedUrl}
-                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                        loading="lazy"
-                        title="Active Spotify playlist"
-                    />
-                )}
-                {(() => {
-                    const articles = entertainmentArticles.slice(0, 5)
-                    .filter(Boolean) as ArticleDocument[];
-                    return articles.length ? <SideArticle articles={articles} width='28%'/> : null;
-                })()}
-            </div>
-        </div>
-        </>
-    )
+				<div className="flex flex-col gap-4">
+					{activePlaylistEmbedUrl && (
+						<iframe
+							className="rounded-md w-full h-137.5"
+							src={activePlaylistEmbedUrl}
+							allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+							loading="lazy"
+							title="Active Spotify playlist"
+						/>
+					)}
+					{(() => {
+						const articles = entertainmentArticles
+							.slice(0, 5)
+							.filter(Boolean) as ArticleDocument[];
+						return articles.length ? (
+							<SideArticle articles={articles} width="28%" />
+						) : null;
+					})()}
+				</div>
+			</div>
+		</>
+	);
 }
 
 export default Entertainment;
