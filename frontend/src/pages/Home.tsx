@@ -1,20 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import articleService from "../services/articleService";
 import ArticleBlock from "../components/ArticleBlock";
-import { ArticleDocument } from "../types/article";
 import FeaturedStory from "../components/FeaturedStory";
-import JustInBlock from "../components/JustIn";
-import SideWidget from "../components/SideWidget";
-import SideArticle from "../components/SideArticle";
-import { Categories } from "../types/categories";
-import Navbar from "../components/Navbar";
 import HomeSkeleton from "../components/HomeSkeleton";
 import InfiniteScrollModule from "../components/InfiniteScrollModule";
+import JustInBlock from "../components/JustIn";
+import Navbar from "../components/Navbar";
+import SideArticle from "../components/SideArticle";
+import SideWidget from "../components/SideWidget";
+import articleService from "../services/articleService";
+import spotifyService from "../services/spotifyService";
+import type { ArticleDocument } from "../types/article";
+import { Categories } from "../types/categories";
 import {
 	getArticleId,
 	getArticleTimestamp,
 } from "../utils/articlePresentation";
-import spotifyService from "../services/spotifyService";
 import { toSpotifyEmbedUrl } from "../utils/spotify";
 
 const INITIAL_CATEGORY_PAGE_SIZE = 20;
@@ -66,11 +66,29 @@ function Home() {
 		const sortedRecent = [...stickySorted, ...nonStickyRecent].filter(
 			(article) => getArticleId(article) !== featuredId,
 		);
-		const recentIds = new Set([...mainSet, ...sortedRecent.map(getArticleId)]);
-		const filterAndSort = (articles: ArticleDocument[]) =>
-			articles
-				.filter((article) => !recentIds.has(getArticleId(article)))
-				.sort(sortByPublishedDesc);
+		const recentIds = new Set([
+			...stickySorted.slice(0, 5).map(getArticleId),
+			...sortedRecent.slice(0, 5).map(getArticleId),
+			...(featuredId ? [featuredId] : []),
+		]);
+
+		const filterAndSort = (articles: ArticleDocument[]) => {
+			const sorted = articles.sort(sortByPublishedDesc);
+
+			// Prefer articles that aren't already featured on the homepage.
+			const unique = sorted.filter(
+				(article) => !recentIds.has(getArticleId(article)),
+			);
+
+			// If there aren't enough unique articles, use duplicates
+			// rather than leave the section empty.
+			return unique.length >= 8
+				? unique
+				: [
+						...unique,
+						...sorted.filter((article) => recentIds.has(getArticleId(article))),
+					];
+		};
 
 		return {
 			recentArticles: sortedRecent,
