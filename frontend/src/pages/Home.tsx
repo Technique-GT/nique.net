@@ -59,9 +59,29 @@ function Home() {
         const sortedRecent = [...stickySorted, ...nonStickyRecent].filter(
             (article) => getArticleId(article) !== featuredId
         );
-        const recentIds = new Set([...mainSet, ...sortedRecent.map(getArticleId)]);
-        const filterAndSort = (articles: ArticleDocument[]) =>
-            articles.filter((article) => !recentIds.has(getArticleId(article))).sort(sortByPublishedDesc);
+        const recentIds = new Set([
+            ...stickySorted.slice(0, 5).map(getArticleId),
+            ...sortedRecent.slice(0, 5).map(getArticleId),
+            ...(featuredId ? [featuredId] : []),
+        ]);
+
+        const filterAndSort = (articles: ArticleDocument[]) => {
+            const sorted = [...articles].sort(sortByPublishedDesc);
+
+            // Prefer articles that aren't already featured on the homepage.
+            const unique = sorted.filter(
+                (article) => !recentIds.has(getArticleId(article))
+            );
+
+            // If there aren't enough unique articles, use duplicates
+            // rather than leave the section empty.
+            return unique.length >= 8 ? unique : [
+                ...unique,
+                ...sorted.filter(
+                    (article) => recentIds.has(getArticleId(article))
+                ),
+            ];
+        };
 
         return {
             recentArticles: sortedRecent,
