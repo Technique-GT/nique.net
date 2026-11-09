@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Sliver from '../models/Sliver';
-import { safeRegex, safeErrorResponse } from '../utils/security';
+import { safeErrorResponse, safeRegex } from '../utils/security';
 
 const SLIVER_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -12,7 +12,12 @@ const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId 
 
 export const createSliver = async (req: Request, res: Response): Promise<void> => {
   try {
-    const textRaw = typeof req.body?.text === 'string' ? req.body.text : typeof req.body?.content === 'string' ? req.body.content : '';
+    const textRaw =
+      typeof req.body?.text === 'string'
+        ? req.body.text
+        : typeof req.body?.content === 'string'
+          ? req.body.content
+          : '';
     const text = textRaw.trim();
 
     if (!text) {
@@ -32,7 +37,13 @@ export const createSliver = async (req: Request, res: Response): Promise<void> =
 
 export const getAllSlivers = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { page = 1, limit = 20, search, sortBy, sortDir } = req.query as unknown as {
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      sortBy,
+      sortDir,
+    } = req.query as unknown as {
       page?: number;
       limit?: number;
       search?: string;
@@ -55,7 +66,11 @@ export const getAllSlivers = async (req: Request, res: Response): Promise<void> 
     const sortDirection = sortDir === 'asc' ? 1 : -1;
 
     const [slivers, total] = await Promise.all([
-      Sliver.find(query).sort({ [sortKey]: sortDirection }).skip(skip).limit(limitNum).lean(),
+      Sliver.find(query)
+        .sort({ [sortKey]: sortDirection })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
       Sliver.countDocuments(query),
     ]);
 

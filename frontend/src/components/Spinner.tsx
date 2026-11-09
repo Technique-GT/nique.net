@@ -1,9 +1,8 @@
 const Spinner = () => {
-
   return (
-    <div 
+    <div
       className={`animate-spin rounded-full h-12 w-12 border-2 border-t-transparent border-nique-blue`}
-      aria-label="Loading"
+      aria-label='Loading'
     />
   );
 };

@@ -1,6 +1,6 @@
-import { ThumbsUp, ThumbsDown, Reply } from "lucide-react";
-import { useEffect, useState } from "react";
-import commentService from "../services/commentService";
+import { Reply, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import commentService from '../services/commentService';
 
 /**
  * Comment component props aligned with backend Comment shape.
@@ -12,7 +12,7 @@ interface CommentData {
   createdAt: string;
   thumbsUp: number;
   thumbsDown: number;
-  myReaction?: "up" | "down" | null;
+  myReaction?: 'up' | 'down' | null;
   content: string;
   replies?: CommentData[];
 }
@@ -28,58 +28,56 @@ const DEFAULT_AVATAR =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23999'%3E%3Cpath d='M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z'/%3E%3C/svg%3E";
 
 const Comment = (data: CommentProps) => {
-  const [dateText, setDateText] = useState<string>("");
+  const [dateText, setDateText] = useState<string>('');
   const [thumbsUp, setThumbsUp] = useState<number>(data.thumbsUp);
   const [thumbsDown, setThumbsDown] = useState<number>(data.thumbsDown);
-  const [reactionInFlight, setReactionInFlight] = useState<"up" | "down" | null>(null);
-  const [reaction, setReaction] = useState<"up" | "down" | null>(data.myReaction ?? null);
+  const [reactionInFlight, setReactionInFlight] = useState<'up' | 'down' | null>(null);
+  const [reaction, setReaction] = useState<'up' | 'down' | null>(data.myReaction ?? null);
   const [showReplyForm, setShowReplyForm] = useState(false);
-  const [replyName, setReplyName] = useState("");
-  const [replyText, setReplyText] = useState("");
+  const [replyName, setReplyName] = useState('');
+  const [replyText, setReplyText] = useState('');
   const [replyError, setReplyError] = useState<string | null>(null);
   const [replySubmitting, setReplySubmitting] = useState(false);
 
   useEffect(() => {
-    const seconds = Math.floor(
-      (new Date().getTime() - new Date(data.createdAt).getTime()) / 1000
-    );
+    const seconds = Math.floor((new Date().getTime() - new Date(data.createdAt).getTime()) / 1000);
 
     let interval = seconds / 31536000;
     if (interval > 1) {
-      const suffix = Math.floor(interval) === 1 ? " year ago" : " years ago";
+      const suffix = Math.floor(interval) === 1 ? ' year ago' : ' years ago';
       setDateText(Math.floor(interval) + suffix);
       return;
     }
 
     interval = seconds / 2592000;
     if (interval > 1) {
-      const suffix = Math.floor(interval) === 1 ? " month ago" : " months ago";
+      const suffix = Math.floor(interval) === 1 ? ' month ago' : ' months ago';
       setDateText(Math.floor(interval) + suffix);
       return;
     }
 
     interval = seconds / 86400;
     if (interval > 1) {
-      const suffix = Math.floor(interval) === 1 ? " day ago" : " days ago";
+      const suffix = Math.floor(interval) === 1 ? ' day ago' : ' days ago';
       setDateText(Math.floor(interval) + suffix);
       return;
     }
 
     interval = seconds / 3600;
     if (interval > 1) {
-      const suffix = Math.floor(interval) === 1 ? " hour ago" : " hours ago";
+      const suffix = Math.floor(interval) === 1 ? ' hour ago' : ' hours ago';
       setDateText(Math.floor(interval) + suffix);
       return;
     }
 
     interval = seconds / 60;
     if (interval > 1) {
-      const suffix = Math.floor(interval) === 1 ? " minute ago" : " minutes ago";
+      const suffix = Math.floor(interval) === 1 ? ' minute ago' : ' minutes ago';
       setDateText(Math.floor(interval) + suffix);
       return;
     }
 
-    const suffix = Math.floor(seconds) === 1 ? " second ago" : " seconds ago";
+    const suffix = Math.floor(seconds) === 1 ? ' second ago' : ' seconds ago';
     setDateText(Math.floor(seconds) + suffix);
   }, [data.createdAt]);
 
@@ -95,13 +93,13 @@ const Comment = (data: CommentProps) => {
     const prevUp = thumbsUp;
     const prevDown = thumbsDown;
 
-    setReactionInFlight("up");
-    if (prevReaction === "up") {
+    setReactionInFlight('up');
+    if (prevReaction === 'up') {
       setReaction(null);
       setThumbsUp((prev) => Math.max(0, prev - 1));
     } else {
-      setReaction("up");
-      if (prevReaction === "down") {
+      setReaction('up');
+      if (prevReaction === 'down') {
         setThumbsUp((prev) => prev + 1);
         setThumbsDown((prev) => Math.max(0, prev - 1));
       } else {
@@ -109,11 +107,11 @@ const Comment = (data: CommentProps) => {
       }
     }
     try {
-      const nextReaction = prevReaction === "up" ? null : "up";
+      const nextReaction = prevReaction === 'up' ? null : 'up';
       const updated = await commentService.setCommentReaction(data.commentId, nextReaction);
-      if (typeof updated?.thumbsUp === "number") setThumbsUp(updated.thumbsUp);
-      if (typeof updated?.thumbsDown === "number") setThumbsDown(updated.thumbsDown);
-      if (updated?.myReaction === "up" || updated?.myReaction === "down" || updated?.myReaction === null) {
+      if (typeof updated?.thumbsUp === 'number') setThumbsUp(updated.thumbsUp);
+      if (typeof updated?.thumbsDown === 'number') setThumbsDown(updated.thumbsDown);
+      if (updated?.myReaction === 'up' || updated?.myReaction === 'down' || updated?.myReaction === null) {
         setReaction(updated.myReaction ?? null);
       }
     } catch {
@@ -131,13 +129,13 @@ const Comment = (data: CommentProps) => {
     const prevUp = thumbsUp;
     const prevDown = thumbsDown;
 
-    setReactionInFlight("down");
-    if (prevReaction === "down") {
+    setReactionInFlight('down');
+    if (prevReaction === 'down') {
       setReaction(null);
       setThumbsDown((prev) => Math.max(0, prev - 1));
     } else {
-      setReaction("down");
-      if (prevReaction === "up") {
+      setReaction('down');
+      if (prevReaction === 'up') {
         setThumbsUp((prev) => Math.max(0, prev - 1));
         setThumbsDown((prev) => prev + 1);
       } else {
@@ -145,11 +143,11 @@ const Comment = (data: CommentProps) => {
       }
     }
     try {
-      const nextReaction = prevReaction === "down" ? null : "down";
+      const nextReaction = prevReaction === 'down' ? null : 'down';
       const updated = await commentService.setCommentReaction(data.commentId, nextReaction);
-      if (typeof updated?.thumbsUp === "number") setThumbsUp(updated.thumbsUp);
-      if (typeof updated?.thumbsDown === "number") setThumbsDown(updated.thumbsDown);
-      if (updated?.myReaction === "up" || updated?.myReaction === "down" || updated?.myReaction === null) {
+      if (typeof updated?.thumbsUp === 'number') setThumbsUp(updated.thumbsUp);
+      if (typeof updated?.thumbsDown === 'number') setThumbsDown(updated.thumbsDown);
+      if (updated?.myReaction === 'up' || updated?.myReaction === 'down' || updated?.myReaction === null) {
         setReaction(updated.myReaction ?? null);
       }
     } catch {
@@ -163,7 +161,7 @@ const Comment = (data: CommentProps) => {
 
   const handleReplySubmit = async () => {
     if (!replyText.trim()) {
-      setReplyError("Reply cannot be empty.");
+      setReplyError('Reply cannot be empty.');
       return;
     }
 
@@ -172,93 +170,93 @@ const Comment = (data: CommentProps) => {
     try {
       await commentService.createComment(data.articleId, {
         content: replyText.trim(),
-        username: replyName.trim() || "Anonymous",
+        username: replyName.trim() || 'Anonymous',
         parentCommentId: data.commentId,
       });
-      setReplyText("");
-      setReplyName("");
+      setReplyText('');
+      setReplyName('');
       setShowReplyForm(false);
       data.onReplySubmitted?.();
     } catch {
-      setReplyError("Unable to submit reply. Please try again.");
+      setReplyError('Unable to submit reply. Please try again.');
     } finally {
       setReplySubmitting(false);
     }
   };
 
   const depth = data.depth ?? 0;
-  const indentClass = depth > 0 ? "pl-3 border-l border-gray-200" : "";
+  const indentClass = depth > 0 ? 'pl-3 border-l border-gray-200' : '';
 
   return (
     <div className={`flex gap-4 ${indentClass}`}>
       <img
         src={DEFAULT_AVATAR}
         alt={`${data.username}'s avatar`}
-        className="border border-gray-300 size-12 rounded-full bg-gray-100"
+        className='border border-gray-300 size-12 rounded-full bg-gray-100'
       />
-      <div className="flex-auto flex flex-col gap-3">
-        <div className="flex items-center gap-6">
+      <div className='flex-auto flex flex-col gap-3'>
+        <div className='flex items-center gap-6'>
           <div>
             <p>
               <b>{data.username}</b>
             </p>
-            <p className="text-xs text-nique-blue mt-auto">{dateText}</p>
+            <p className='text-xs text-nique-blue mt-auto'>{dateText}</p>
           </div>
         </div>
-        <p className="whitespace-pre-wrap wrap-break-word">{data.content}</p>
-        <div className="flex gap-4 text-sm justify-end text-nique-blue">
+        <p className='whitespace-pre-wrap wrap-break-word'>{data.content}</p>
+        <div className='flex gap-4 text-sm justify-end text-nique-blue'>
           <button
-            className="flex items-center gap-1 hover:bg-gray-100 rounded-md px-2 py-1"
+            className='flex items-center gap-1 hover:bg-gray-100 rounded-md px-2 py-1'
             onClick={() => setShowReplyForm((prev) => !prev)}
           >
             <Reply size={16} />
           </button>
           <button
             className={`flex items-center gap-1 rounded-md px-2 py-1 disabled:opacity-60 ${
-              reaction === "up" ? "bg-nique-blue/5 text-nique-blue font-bold" : "hover:bg-gray-100"
+              reaction === 'up' ? 'bg-nique-blue/5 text-nique-blue font-bold' : 'hover:bg-gray-100'
             }`}
             onClick={handleThumbsUp}
             disabled={reactionInFlight !== null}
-            aria-pressed={reaction === "up"}
+            aria-pressed={reaction === 'up'}
           >
-            <ThumbsUp size={16} strokeWidth={reaction === "up" ? 2.5 : 2} />
+            <ThumbsUp size={16} strokeWidth={reaction === 'up' ? 2.5 : 2} />
             <span>{thumbsUp}</span>
           </button>
           <button
             className={`flex items-center gap-1 rounded-md px-2 py-1 disabled:opacity-60 ${
-              reaction === "down" ? "bg-nique-blue/5 text-nique-blue font-bold" : "hover:bg-gray-100"
+              reaction === 'down' ? 'bg-nique-blue/5 text-nique-blue font-bold' : 'hover:bg-gray-100'
             }`}
             onClick={handleThumbsDown}
             disabled={reactionInFlight !== null}
-            aria-pressed={reaction === "down"}
+            aria-pressed={reaction === 'down'}
           >
-            <ThumbsDown size={16} strokeWidth={reaction === "down" ? 2.5 : 2} />
+            <ThumbsDown size={16} strokeWidth={reaction === 'down' ? 2.5 : 2} />
             <span>{thumbsDown}</span>
           </button>
         </div>
         {showReplyForm && (
-          <div className="mt-2 space-y-2">
+          <div className='mt-2 space-y-2'>
             <input
               value={replyName}
               onChange={(event) => setReplyName(event.target.value)}
-              placeholder="Name"
-              className="w-full border border-nique-blue/40 rounded-md px-3 py-2 text-sm"
+              placeholder='Name'
+              className='w-full border border-nique-blue/40 rounded-md px-3 py-2 text-sm'
             />
             <textarea
               value={replyText}
               onChange={(event) => setReplyText(event.target.value)}
-              placeholder="Write a reply..."
-              className="w-full border border-nique-blue/40 rounded-md px-3 py-2 text-sm"
+              placeholder='Write a reply...'
+              className='w-full border border-nique-blue/40 rounded-md px-3 py-2 text-sm'
               rows={3}
             />
-            {replyError && <p className="text-sm text-red-600">{replyError}</p>}
-            <div className="flex justify-end">
+            {replyError && <p className='text-sm text-red-600'>{replyError}</p>}
+            <div className='flex justify-end'>
               <button
                 onClick={handleReplySubmit}
                 disabled={!replyText.trim() || replySubmitting}
-                className="px-3 py-1.5 bg-nique-blue text-white rounded-md text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                className='px-3 py-1.5 bg-nique-blue text-white rounded-md text-sm disabled:opacity-60 disabled:cursor-not-allowed'
               >
-                {replySubmitting ? "Submitting..." : "Reply"}
+                {replySubmitting ? 'Submitting...' : 'Reply'}
               </button>
             </div>
           </div>

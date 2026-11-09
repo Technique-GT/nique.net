@@ -1,7 +1,7 @@
-import { JSX, useEffect, useRef, useState } from "react"
-import { ContentEditable as LexicalContentEditable } from "@lexical/react/LexicalContentEditable"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { $getRoot } from "lexical"
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
+import { ContentEditable as LexicalContentEditable } from '@lexical/react/LexicalContentEditable'
+import { $getRoot } from 'lexical'
+import { JSX, useEffect, useRef, useState } from 'react'
 
 type Props = {
   placeholder: string
@@ -16,9 +16,9 @@ export function ContentEditable({
   const [, setIsEmpty] = useState(true)
   const editableRef = useRef<HTMLDivElement | null>(null)
   const [_, setOffsets] = useState({
-    top: "0px",
-    left: "0px",
-    right: "0px",
+    top: '0px',
+    left: '0px',
+    right: '0px',
   })
 
   useEffect(() => {
@@ -56,10 +56,10 @@ export function ContentEditable({
     }
 
     updateOffsets()
-    window.addEventListener("resize", updateOffsets)
+    window.addEventListener('resize', updateOffsets)
 
     return () => {
-      window.removeEventListener("resize", updateOffsets)
+      window.removeEventListener('resize', updateOffsets)
     }
   }, [])
 
@@ -73,14 +73,14 @@ export function ContentEditable({
   // )
 
   return (
-      <LexicalContentEditable
-        ref={editableRef}
-        className={
-          className ??
-          `ContentEditable__root relative block min-h-full overflow-auto px-8 py-4 focus:outline-none`
-        }
-        aria-placeholder={placeholder}
-        placeholder={(_isEditable: boolean) => null}
-      />
+    <LexicalContentEditable
+      ref={editableRef}
+      className={
+        className ??
+        `ContentEditable__root relative block min-h-full overflow-auto px-8 py-4 focus:outline-none`
+      }
+      aria-placeholder={placeholder}
+      placeholder={(_isEditable: boolean) => null}
+    />
   )
 }

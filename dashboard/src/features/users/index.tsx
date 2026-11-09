@@ -1,14 +1,13 @@
 import { Main } from '@/components/layout/main'
-import { PageHeader } from "@/components/layout/page-header"
+import { PageHeader } from '@/components/layout/page-header'
 import { Badge } from '@/components/ui/badge'
+import { canManageStaff } from '@/lib/permissions'
+import { useAuthStore } from '@/stores/authStore'
 import { columns } from './components/users-columns'
 import { UsersDialogs } from './components/users-dialogs'
 import { UsersPrimaryButtons } from './components/users-primary-buttons'
 import { UsersTable } from './components/users-table'
-import UsersProvider from './context/users-context'
-import { useUsers } from './context/users-context'
-import { useAuthStore } from '@/stores/authStore'
-import { canManageStaff } from '@/lib/permissions'
+import UsersProvider, { useUsers } from './context/users-context'
 
 function UsersContent() {
   const {
@@ -28,11 +27,11 @@ function UsersContent() {
     <>
       <Main>
         <PageHeader
-          title="Staff Members"
-          description="Manage your users and access details here."
+          title='Staff Members'
+          description='Manage your users and access details here.'
           badge={
             !hasEditAccess ? (
-              <Badge variant="destructive" className="text-xs">
+              <Badge variant='destructive' className='text-xs'>
                 View only
               </Badge>
             ) : null

@@ -1,59 +1,66 @@
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Oswald:wght@200..700&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Oswald:wght@200..700&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
 @import "tailwindcss";
 
 @theme {
-    --color-nique-blue: #003057;
-    --color-nique-blue-hover: #0E3682;
-    --color-nique-light-blue: #5C8EB7;
+  --color-nique-blue: #003057;
+  --color-nique-blue-hover: #0e3682;
+  --color-nique-light-blue: #5c8eb7;
 
-    --font-serif: 'EB Garamond', Times, serif;
-    --font-sans-serif: 'Oswald', sans-serif;
+  --font-serif: "EB Garamond", Times, serif;
+  --font-sans-serif: "Oswald", sans-serif;
 }
 
 h3 {
-    font-family: 'Times New Roman', Times, serif;
+  font-family: "Times New Roman", Times, serif;
 }
 
 h4 {
-    font-family: 'Oswald', sans-serif;
+  font-family: "Oswald", sans-serif;
 }
 
-figcaption, h6 {
-    font-family: "Roboto Condensed", sans-serif;
+figcaption,
+h6 {
+  font-family: "Roboto Condensed", sans-serif;
 }
 
-p, li, blockquote, input, textarea {
-    font-family: 'EB Garamond', Times, serif;
-    /* margin-bottom: 1.1704rem; */
+p,
+li,
+blockquote,
+input,
+textarea {
+  font-family: "EB Garamond", Times, serif;
+  /* margin-bottom: 1.1704rem; */
 }
 
 a {
-    transition: all 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 button {
-    transition: all 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 button:hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .title:hover {
-    opacity: 0.7;
+  opacity: 0.7;
 }
 
-h5, th, td {
-    font-family: 'DM Sans', sans-serif;
+h5,
+th,
+td {
+  font-family: "DM Sans", sans-serif;
 }
 
 .article-body p {
-    font-family: 'EB Garamond', Times, serif;
-    font-weight: 400;
-    font-size: 1.3704rem;
-    /* text-indent: 1.5rem; */
-    margin-top: 1.4704rem;
+  font-family: "EB Garamond", Times, serif;
+  font-weight: 400;
+  font-size: 1.3704rem;
+  /* text-indent: 1.5rem; */
+  margin-top: 1.4704rem;
 }
 
 .article-body p:first-child {
@@ -104,7 +111,7 @@ h5, th, td {
 
 .article-body figcaption,
 .article-body .wp-caption-text {
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-size: 0.9rem;
   line-height: 1.35;
   text-align: center;
@@ -133,31 +140,31 @@ h5, th, td {
 }
 
 @keyframes scroll {
-    from {
-        transform: translateX(0);
-    }
-    to {
-        transform: translateX(-50%);
-    }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 @keyframes submit-toast {
-    0% {
-        opacity: 0;
-    }
-    10% {
-        opacity: 1;
-    }
-    90% {
-        opacity: 1;
-    }
-    100% {
-        opacity: 0;
-    }
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .submit-toast {
-    animation: submit-toast 3s ease-in-out forwards;
+  animation: submit-toast 3s ease-in-out forwards;
 }
 
 .scroll-container {
@@ -166,13 +173,13 @@ h5, th, td {
 }
 
 .scroll-content {
-    display: flex;
-    flex: inline;
-    animation: scroll 120s linear infinite;
+  display: flex;
+  flex: inline;
+  animation: scroll 120s linear infinite;
 }
 
 @media (min-width: 768px) {
-    .scroll-content {
-        width: calc(250%);
-    }
+  .scroll-content {
+    width: calc(250%);
+  }
 }

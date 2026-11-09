@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import Comment from '../models/Comment';
 import Article from '../models/Article';
+import Comment from '../models/Comment';
 import CommentReaction from '../models/CommentReaction';
-import { stripHtml, safeErrorResponse } from '../utils/security';
+import { safeErrorResponse, stripHtml } from '../utils/security';
 
 const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId | null => {
   if (!id || Array.isArray(id) || !mongoose.Types.ObjectId.isValid(id)) return null;
@@ -25,10 +25,20 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
     // Sanitize comment content to prevent XSS
     const content = stripHtml(contentRaw.trim());
 
-    const articleIdRaw = typeof req.body?.articleId === 'string' ? req.body.articleId : typeof req.body?.article === 'string' ? req.body.article : undefined;
+    const articleIdRaw =
+      typeof req.body?.articleId === 'string'
+        ? req.body.articleId
+        : typeof req.body?.article === 'string'
+          ? req.body.article
+          : undefined;
     const articleId = toObjectId(articleIdRaw);
 
-    const parentCommentIdRaw = typeof req.body?.parentCommentId === 'string' ? req.body.parentCommentId : typeof req.body?.parentComment === 'string' ? req.body.parentComment : undefined;
+    const parentCommentIdRaw =
+      typeof req.body?.parentCommentId === 'string'
+        ? req.body.parentCommentId
+        : typeof req.body?.parentComment === 'string'
+          ? req.body.parentComment
+          : undefined;
     const parentCommentId = toObjectId(parentCommentIdRaw) ?? undefined;
 
     const usernameRaw = typeof req.body?.username === 'string' ? req.body.username : '';
@@ -209,11 +219,20 @@ export const getAllComments = async (req: Request, res: Response): Promise<void>
     const skip = (pageNum - 1) * limitNum;
 
     const [comments, total] = await Promise.all([
-      Comment.find(filter).populate('articleId', 'title slug').sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+      Comment.find(filter)
+        .populate('articleId', 'title slug')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
       Comment.countDocuments(filter),
     ]);
 
-    res.status(200).json({ success: true, data: comments, pagination: { total, page: pageNum, pages: Math.ceil(total / limitNum), limit: limitNum } });
+    res.status(200).json({
+      success: true,
+      data: comments,
+      pagination: { total, page: pageNum, pages: Math.ceil(total / limitNum), limit: limitNum },
+    });
   } catch (error: any) {
     res.status(500).json(safeErrorResponse('Error fetching comments', error));
   }
@@ -289,7 +308,11 @@ export const updateCommentStatus = async (req: Request, res: Response): Promise<
       return;
     }
 
-    const comment = await Comment.findByIdAndUpdate(objectId, { approved }, { new: true, runValidators: true });
+    const comment = await Comment.findByIdAndUpdate(
+      objectId,
+      { approved },
+      { new: true, runValidators: true },
+    );
     if (!comment) {
       res.status(404).json({ success: false, message: 'Comment not found' });
       return;
@@ -317,7 +340,11 @@ export const likeComment = async (req: Request, res: Response): Promise<void> =>
 
 export const dislikeComment = async (req: Request, res: Response): Promise<void> => {
   try {
-    const comment = await Comment.findByIdAndUpdate(req.params.id, { $inc: { thumbsDown: 1 } }, { new: true });
+    const comment = await Comment.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { thumbsDown: 1 } },
+      { new: true },
+    );
     if (!comment) {
       res.status(404).json({ success: false, message: 'Comment not found' });
       return;
@@ -412,7 +439,10 @@ export const getCommentStats = async (_req: Request, res: Response): Promise<voi
       Comment.countDocuments({ approved: true }),
     ]);
 
-    res.status(200).json({ success: true, data: { totalComments: total, approvedComments: approved, pendingComments: total - approved } });
+    res.status(200).json({
+      success: true,
+      data: { totalComments: total, approvedComments: approved, pendingComments: total - approved },
+    });
   } catch (error: any) {
     res.status(500).json(safeErrorResponse('Error fetching comment stats', error));
   }

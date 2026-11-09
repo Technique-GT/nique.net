@@ -1,5 +1,3 @@
-import React from 'react'
-import { useNavigate } from '@tanstack/react-router'
 import {
   IconArrowRightDashed,
   IconChevronRight,
@@ -7,8 +5,8 @@ import {
   IconMoon,
   IconSun,
 } from '@tabler/icons-react'
-import { useSearch } from '@/context/search-context'
-import { useTheme } from '@/context/theme-context'
+import { useNavigate } from '@tanstack/react-router'
+import React from 'react'
 import {
   CommandDialog,
   CommandEmpty,
@@ -18,6 +16,8 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command'
+import { useSearch } from '@/context/search-context'
+import { useTheme } from '@/context/theme-context'
 import { sidebarData } from './layout/data/sidebar-data'
 import { ScrollArea } from './ui/scroll-area'
 

@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import request from 'supertest';
 import jwt from 'jsonwebtoken';
+import request from 'supertest';
+import { describe, expect, it } from 'vitest';
 import { createApp } from '../src/app';
 import User from '../src/models/User';
 
@@ -132,9 +132,7 @@ describe('Users Endpoints', () => {
   });
 
   it('GET /api/users returns data for admin', async () => {
-    const res = await request(app)
-      .get('/api/users')
-      .set('Authorization', `Bearer ${adminToken}`);
+    const res = await request(app).get('/api/users').set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
@@ -214,9 +212,7 @@ describe('Slivers Endpoints', () => {
   });
 
   it('GET /api/slivers/all returns all slivers for admin', async () => {
-    const res = await request(app)
-      .get('/api/slivers/all')
-      .set('Authorization', `Bearer ${adminToken}`);
+    const res = await request(app).get('/api/slivers/all').set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
@@ -235,9 +231,7 @@ describe('Comments Endpoints', () => {
     });
 
     it('returns comments for admin', async () => {
-      const res = await request(app)
-        .get('/api/comments')
-        .set('Authorization', `Bearer ${adminToken}`);
+      const res = await request(app).get('/api/comments').set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);

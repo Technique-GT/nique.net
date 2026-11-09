@@ -28,7 +28,7 @@ function InfiniteScrollModule({ categoryId, startPage = 1 }: InfiniteScrollModul
 
   const supportsIntersectionObserver = useMemo(
     () => typeof window !== 'undefined' && 'IntersectionObserver' in window,
-    []
+    [],
   );
 
   // Reset when categoryId changes
@@ -50,7 +50,7 @@ function InfiniteScrollModule({ categoryId, startPage = 1 }: InfiniteScrollModul
       try {
         const response = await articleService.fetchArticleFeed(
           { page, categoryId, limit: PAGE_SIZE },
-          controller.signal
+          controller.signal,
         );
 
         if (!isCurrent) return;
@@ -99,7 +99,7 @@ function InfiniteScrollModule({ categoryId, startPage = 1 }: InfiniteScrollModul
           requestNextPage();
         }
       },
-      { rootMargin: '400px 0px 0px 0px' }
+      { rootMargin: '400px 0px 0px 0px' },
     );
 
     observer.observe(sentinel);
@@ -115,17 +115,16 @@ function InfiniteScrollModule({ categoryId, startPage = 1 }: InfiniteScrollModul
     return (
       <article
         key={article._id || article.slug}
-        className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md cursor-pointer"
+        className='rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md cursor-pointer'
         onClick={() => navigate(link)}
       >
-        <p className="text-xs uppercase tracking-wide text-slate-400">
+        <p className='text-xs uppercase tracking-wide text-slate-400'>
           {(() => {
             const rawDate = article.publishedAt ?? article.createdAt ?? Date.now();
             return new Date(rawDate).toLocaleDateString();
-          })()}{' '}
-          &#8226; {category}
+          })()} &#8226; {category}
         </p>
-        <h3 className="mt-1 text-xl font-semibold text-nique-blue">{article.title}</h3>
+        <h3 className='mt-1 text-xl font-semibold text-nique-blue'>{article.title}</h3>
       </article>
     );
   };
@@ -136,33 +135,33 @@ function InfiniteScrollModule({ categoryId, startPage = 1 }: InfiniteScrollModul
   }
 
   return (
-    <div className="space-y-6">
-      <hr className="my-4" />
-      <div className="grid gap-4 md:grid-cols-2">{articles.map(renderArticle)}</div>
+    <div className='space-y-6'>
+      <hr className='my-4' />
+      <div className='grid gap-4 md:grid-cols-2'>{articles.map(renderArticle)}</div>
 
       {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+        <div className='rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700' role='alert'>
           {error}
         </div>
       )}
 
-      <div ref={sentinelRef} aria-hidden="true" className="flex w-full justify-center py-4">
+      <div ref={sentinelRef} aria-hidden='true' className='flex w-full justify-center py-4'>
         {isLoading ? (
-          <span className="text-sm text-slate-500">Loading more stories…</span>
+          <span className='text-sm text-slate-500'>Loading more stories…</span>
         ) : hasMore ? (
-          <span className="text-sm text-slate-400">Keep scrolling for more</span>
+          <span className='text-sm text-slate-400'>Keep scrolling for more</span>
         ) : articles.length > 0 ? (
-          <span className="text-sm text-slate-400">You've reached the end</span>
+          <span className='text-sm text-slate-400'>You've reached the end</span>
         ) : null}
       </div>
 
       {!supportsIntersectionObserver && hasMore && (
-        <div className="flex justify-center">
+        <div className='flex justify-center'>
           <button
-            type="button"
+            type='button'
             onClick={requestNextPage}
             disabled={isLoading}
-            className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className='rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50'
           >
             {isLoading ? 'Loading…' : 'Load more'}
           </button>

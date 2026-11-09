@@ -1,6 +1,6 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
-import { Row } from '@tanstack/react-table'
 import { IconEdit, IconGitMerge, IconTrash } from '@tabler/icons-react'
+import { Row } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -10,10 +10,10 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { canManageStaff } from '@/lib/permissions'
+import { useAuthStore } from '@/stores/authStore'
 import { useUsers } from '../context/users-context'
 import { User } from '../data/schema'
-import { useAuthStore } from '@/stores/authStore'
-import { canManageStaff } from '@/lib/permissions'
 
 interface DataTableRowActionsProps {
   row: Row<User>

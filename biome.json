@@ -9,11 +9,11 @@
     "ignoreUnknown": true,
     "includes": [
       "**",
-      "!**/dist/**",
-      "!**/node_modules/**",
-      "!**/coverage/**",
+      "!**/dist",
+      "!**/node_modules",
+      "!**/coverage",
       "!dashboard/src/routeTree.gen.ts",
-      "!dashboard/src/components/ui/**"
+      "!dashboard/src/components/ui"
     ]
   },
   "formatter": {

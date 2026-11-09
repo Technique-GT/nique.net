@@ -1,6 +1,6 @@
-import apiClient, { unwrap, extractPagination } from './apiClient';
 import { API_BASE_URL } from '../config';
 import type { ArticleDocument, Category, FeedResponse } from '../types/article';
+import apiClient, { extractPagination, unwrap } from './apiClient';
 
 // =============================================================================
 // Types
@@ -33,7 +33,7 @@ export interface FetchArticlesParams {
  */
 const fetchPublishedArticles = async (
   params: FetchArticlesParams = {},
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<ArticleDocument[]> => {
   const queryParams: Record<string, string | number> = {};
 
@@ -65,7 +65,7 @@ const fetchPublishedArticles = async (
 const fetchRecentArticles = async (
   limit = 5,
   _status = 'published', // kept for signature compat, ignored
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<ArticleDocument[]> => {
   void _status;
   return fetchPublishedArticles({ limit }, signal);
@@ -77,7 +77,7 @@ const fetchRecentArticles = async (
  */
 const fetchArticles = async (
   params: { category?: string; status?: string; limit?: number; search?: string } = {},
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<ArticleDocument[]> => {
   // backend /articles/published uses categoryId, not category
   return fetchPublishedArticles(
@@ -86,7 +86,7 @@ const fetchArticles = async (
       limit: params.limit,
       search: params.search,
     },
-    signal
+    signal,
   );
 };
 
@@ -95,8 +95,8 @@ const fetchArticles = async (
  * backend: GET /articles/sticky
  */
 const fetchStickyArticles = async (
-   _limit?: number, // backend sticky endpoint doesn't support limit, returns all
-  signal?: AbortSignal
+  _limit?: number, // backend sticky endpoint doesn't support limit, returns all
+  signal?: AbortSignal,
 ): Promise<ArticleDocument[]> => {
   void _limit;
   const response = await apiClient.get('/articles/sticky', { signal });
@@ -107,9 +107,7 @@ const fetchStickyArticles = async (
  * Fetch featured articles.
  * backend: GET /articles/featured
  */
-const fetchFeaturedArticles = async (
-  signal?: AbortSignal
-): Promise<ArticleDocument[]> => {
+const fetchFeaturedArticles = async (signal?: AbortSignal): Promise<ArticleDocument[]> => {
   const response = await apiClient.get('/articles/featured', { signal });
   return unwrap(response.data);
 };
@@ -123,8 +121,11 @@ const fetchFeaturedArticles = async (
 const fetchArticlesByCategory = async (
   categoryId: string,
   paramsOrSignalOrLimit?: number | AbortSignal | { page?: number; limit?: number },
-  maybeSignal?: AbortSignal
-): Promise<ArticleDocument[] | { data: ArticleDocument[]; pagination?: { total: number; page: number; pages: number; limit: number } }> => {
+  maybeSignal?: AbortSignal,
+): Promise<
+  | ArticleDocument[]
+  | { data: ArticleDocument[]; pagination?: { total: number; page: number; pages: number; limit: number } }
+> => {
   let params: { page?: number; limit?: number } = {};
   let signal: AbortSignal | undefined;
 
@@ -171,10 +172,7 @@ const fetchArticlesByCategory = async (
  * Fetch a single article by ID.
  * backend: GET /articles/:id
  */
-const fetchArticleById = async (
-  id: string,
-  signal?: AbortSignal
-): Promise<ArticleDocument> => {
+const fetchArticleById = async (id: string, signal?: AbortSignal): Promise<ArticleDocument> => {
   const response = await apiClient.get(`/articles/${id}`, { signal });
   return unwrap(response.data);
 };
@@ -183,10 +181,7 @@ const fetchArticleById = async (
  * Fetch a single article by slug.
  * backend: GET /articles/slug/:slug
  */
-const fetchArticleBySlug = async (
-  slug: string,
-  signal?: AbortSignal
-): Promise<ArticleDocument> => {
+const fetchArticleBySlug = async (slug: string, signal?: AbortSignal): Promise<ArticleDocument> => {
   const response = await apiClient.get(`/articles/slug/${slug}`, { signal });
   return unwrap(response.data);
 };
@@ -218,7 +213,7 @@ const recordArticleView = async (id: string): Promise<void> => {
 const searchArticles = async (
   query: string,
   limit?: number,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<ArticleDocument[]> => {
   return fetchPublishedArticles({ search: query, limit }, signal);
 };
@@ -230,7 +225,7 @@ const searchArticles = async (
  */
 const fetchArticleFeed = async (
   params: FetchArticleFeedParams = {},
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<FeedResponse> => {
   const queryParams: Record<string, string | number> = {};
 
@@ -264,7 +259,7 @@ const fetchArticleFeed = async (
  */
 const fetchCategories = async (
   _limit = 50, // kept for signature compat, ignored
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<Category[]> => {
   void _limit;
   const response = await apiClient.get('/categories', { signal });

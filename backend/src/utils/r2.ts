@@ -1,9 +1,4 @@
-import {
-  S3Client,
-  PutObjectCommand,
-  DeleteObjectCommand,
-  ListObjectsV2Command,
-} from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { env } from './env';
 
 let client: S3Client | null = null;
@@ -25,11 +20,7 @@ function getClient(): S3Client {
   return client;
 }
 
-export async function uploadToR2(
-  buffer: Buffer,
-  key: string,
-  contentType: string,
-): Promise<string> {
+export async function uploadToR2(buffer: Buffer, key: string, contentType: string): Promise<string> {
   await getClient().send(
     new PutObjectCommand({
       Bucket: env.R2_BUCKET_NAME,
@@ -63,11 +54,9 @@ export type ListR2ObjectsResult = {
   hasMore: boolean;
 };
 
-export async function listR2Objects(params: {
-  cursor?: string;
-  limit?: number;
-  prefix?: string;
-} = {}): Promise<ListR2ObjectsResult> {
+export async function listR2Objects(
+  params: { cursor?: string; limit?: number; prefix?: string } = {},
+): Promise<ListR2ObjectsResult> {
   const limit = Math.min(Math.max(params.limit ?? 24, 1), 1000);
 
   const result = await getClient().send(

@@ -2,17 +2,15 @@
 //   "migration/Archive 2/Untitled-1.json" \
 //   "migration/Archive 2/articles-objectids.json"
 
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
-const inputPath =
-  process.argv[2] || path.join("migration", "Archive 2", "Untitled-1.json");
-const outputPath =
-  process.argv[3] || path.join("migration", "Archive 2", "articles-objectids.json");
+const inputPath = process.argv[2] || path.join('migration', 'Archive 2', 'Untitled-1.json');
+const outputPath = process.argv[3] || path.join('migration', 'Archive 2', 'articles-objectids.json');
 
 const readJsonArray = (raw) => {
   const trimmed = raw.trim();
-  if (trimmed.startsWith("[")) {
+  if (trimmed.startsWith('[')) {
     return JSON.parse(trimmed);
   }
   const lines = raw
@@ -24,24 +22,24 @@ const readJsonArray = (raw) => {
 
 const toObjectId = (value) => {
   if (!value) return value;
-  if (typeof value === "object" && typeof value.$oid === "string") return value;
-  if (typeof value === "string") return { $oid: value };
+  if (typeof value === 'object' && typeof value.$oid === 'string') return value;
+  if (typeof value === 'string') return { $oid: value };
   return value;
 };
 
 const toObjectIdArray = (value) => {
   if (Array.isArray(value)) return value.map(toObjectId);
-  if (typeof value === "string") return [{ $oid: value }];
+  if (typeof value === 'string') return [{ $oid: value }];
   return [];
 };
 
-const raw = fs.readFileSync(inputPath, "utf8");
+const raw = fs.readFileSync(inputPath, 'utf8');
 const articles = readJsonArray(raw);
 
 let updated = 0;
 
 const normalized = articles.map((article) => {
-  if (!article || typeof article !== "object") return article;
+  if (!article || typeof article !== 'object') return article;
   updated += 1;
 
   const next = { ...article };
@@ -55,7 +53,7 @@ const normalized = articles.map((article) => {
 
   if (Array.isArray(next.authors)) {
     next.authors = next.authors.map((author) => {
-      if (!author || typeof author !== "object") return author;
+      if (!author || typeof author !== 'object') return author;
       return {
         ...author,
         authorId: toObjectId(author.authorId),

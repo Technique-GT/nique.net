@@ -7,16 +7,19 @@ export default function SignIn2() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const error = params.get('error')
-    
+
     if (error) {
       toast.error('Authentication Error', {
-        description: error === 'access_denied' 
-          ? 'Access was denied. Please try again.' 
-          : error
+        description:
+          error === 'access_denied'
+            ? 'Access was denied. Please try again.'
+            : error,
       })
-      
+
       // Optional: Clean up URL
-      const newUrl = window.location.pathname + (params.get('redirect') ? `?redirect=${params.get('redirect')}` : '')
+      const newUrl =
+        window.location.pathname +
+        (params.get('redirect') ? `?redirect=${params.get('redirect')}` : '')
       window.history.replaceState({}, '', newUrl)
     }
   }, [])

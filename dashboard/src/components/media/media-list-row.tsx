@@ -42,8 +42,12 @@ export function MediaListRow({
         <div className='flex items-start gap-2'>
           <ImageIcon className='mt-0.5 h-4 w-4 shrink-0 text-muted-foreground' />
           <div className='min-w-0'>
-            <p className='truncate font-medium'>{image.key.split('/').pop() || image.key}</p>
-            <p className='truncate text-xs text-muted-foreground'>{image.key}</p>
+            <p className='truncate font-medium'>
+              {image.key.split('/').pop() || image.key}
+            </p>
+            <p className='truncate text-xs text-muted-foreground'>
+              {image.key}
+            </p>
           </div>
         </div>
       </TableCell>

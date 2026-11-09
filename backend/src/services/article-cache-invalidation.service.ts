@@ -1,17 +1,10 @@
-import { CloudflareCacheService } from './cloudflare-cache.service';
 import { ArticleCacheSnapshot } from '../utils/cache-tags';
+import { CloudflareCacheService } from './cloudflare-cache.service';
 
 type InvalidateParams = {
   before?: ArticleCacheSnapshot | null;
   after?: ArticleCacheSnapshot | null;
-  mutationType:
-    | 'create'
-    | 'update'
-    | 'delete'
-    | 'publish'
-    | 'unpublish'
-    | 'feature'
-    | 'sticky';
+  mutationType: 'create' | 'update' | 'delete' | 'publish' | 'unpublish' | 'feature' | 'sticky';
 };
 
 export class ArticleCacheInvalidationService {

@@ -10,11 +10,11 @@ import {
   hardDeleteTag,
   updateTag,
 } from '../controllers/tag.controller';
-import { validateBody, validateParams } from '../middleware/validate.middleware';
-import { createTagBodySchema, updateTagBodySchema } from '../schemas/tag.schema';
-import { idParamSchema, slugParamSchema } from '../schemas/params.schema';
-import { authMiddleware } from '../middleware/auth.middleware';
 import { adminMiddleware } from '../middleware/admin.middleware';
+import { authMiddleware } from '../middleware/auth.middleware';
+import { validateBody, validateParams } from '../middleware/validate.middleware';
+import { idParamSchema, slugParamSchema } from '../schemas/params.schema';
+import { createTagBodySchema, updateTagBodySchema } from '../schemas/tag.schema';
 
 const router = express.Router();
 
@@ -26,8 +26,22 @@ router.get('/slug/:slug', validateParams(slugParamSchema), getTagBySlug);
 
 // Protected routes (require authentication + admin)
 router.post('/', authMiddleware, adminMiddleware, validateBody(createTagBodySchema), createTag);
-router.put('/:id', authMiddleware, adminMiddleware, validateParams(idParamSchema), validateBody(updateTagBodySchema), updateTag);
-router.patch('/:id', authMiddleware, adminMiddleware, validateParams(idParamSchema), validateBody(updateTagBodySchema), updateTag);
+router.put(
+  '/:id',
+  authMiddleware,
+  adminMiddleware,
+  validateParams(idParamSchema),
+  validateBody(updateTagBodySchema),
+  updateTag,
+);
+router.patch(
+  '/:id',
+  authMiddleware,
+  adminMiddleware,
+  validateParams(idParamSchema),
+  validateBody(updateTagBodySchema),
+  updateTag,
+);
 router.delete('/:id', authMiddleware, adminMiddleware, validateParams(idParamSchema), deleteTag);
 router.delete('/:id/hard', authMiddleware, adminMiddleware, validateParams(idParamSchema), hardDeleteTag);
 

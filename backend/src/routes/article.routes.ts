@@ -12,8 +12,8 @@ import {
 } from '../controllers/article.controller';
 import { applyPublicReadCacheHeaders } from '../middleware/public-cache.middleware';
 import { validateParams, validateQuery } from '../middleware/validate.middleware';
-import { publishedArticlesQuerySchema } from '../schemas/article.query.schema';
 import { feedQuerySchema } from '../schemas/article.feed.schema';
+import { publishedArticlesQuerySchema } from '../schemas/article.query.schema';
 import { idParamSchema, slugParamSchema } from '../schemas/params.schema';
 
 const router = Router();
@@ -23,7 +23,12 @@ const router = Router();
 // Fast public feed (paginated, no content)
 router.get('/feed', applyPublicReadCacheHeaders, validateQuery(feedQuerySchema), getFeed);
 
-router.get('/published', applyPublicReadCacheHeaders, validateQuery(publishedArticlesQuerySchema), getPublishedArticles);
+router.get(
+  '/published',
+  applyPublicReadCacheHeaders,
+  validateQuery(publishedArticlesQuerySchema),
+  getPublishedArticles,
+);
 router.get('/featured', applyPublicReadCacheHeaders, getFeaturedArticles);
 router.get('/sticky', applyPublicReadCacheHeaders, getStickyArticles);
 

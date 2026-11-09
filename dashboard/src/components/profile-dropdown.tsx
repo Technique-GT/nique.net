@@ -22,14 +22,22 @@ export function ProfileDropdown() {
   // Fallback for visual testing if needed, though usually gated by auth
   const displayName = user?.name || 'Guest'
   const displayEmail = user?.email || 'No email'
-  const displayInitials = displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+  const displayInitials = displayName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase()
 
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
           <Avatar className='h-8 w-8'>
-            <AvatarImage src={user?.avatar || '/avatars/01.png'} alt={displayName} />
+            <AvatarImage
+              src={user?.avatar || '/avatars/01.png'}
+              alt={displayName}
+            />
             <AvatarFallback>{displayInitials}</AvatarFallback>
           </Avatar>
         </Button>
@@ -66,7 +74,7 @@ export function ProfileDropdown() {
           <DropdownMenuItem>New Team</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+        <DropdownMenuItem onClick={handleLogout} className='cursor-pointer'>
           Log out
           <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
         </DropdownMenuItem>

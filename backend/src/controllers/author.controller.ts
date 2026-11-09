@@ -48,7 +48,9 @@ export const getAuthorByName = async (req: Request, res: Response): Promise<void
         _id: author._id,
         name: author.name,
         ...(typeof author.bio === 'string' ? { bio: author.bio } : {}),
-        ...(typeof author.profilePictureUrl === 'string' ? { profilePictureUrl: author.profilePictureUrl } : {}),
+        ...(typeof author.profilePictureUrl === 'string'
+          ? { profilePictureUrl: author.profilePictureUrl }
+          : {}),
         socialLinks: sanitizeSocialLinks(author.socialLinks),
       },
     });

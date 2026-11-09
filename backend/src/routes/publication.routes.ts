@@ -1,7 +1,7 @@
 import express from 'express';
-import { getPublications, createPublication } from '../controllers/publication.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
+import { createPublication, getPublications } from '../controllers/publication.controller';
 import { adminMiddleware } from '../middleware/admin.middleware';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getAdminArticlesAll, type BackendArticle } from '@/services/articles'
+import { type BackendArticle, getAdminArticlesAll } from '@/services/articles'
 import { getCommentStats } from '@/services/comments'
 
 function startOfDay(d: Date) {
@@ -68,7 +68,10 @@ export function useDashboardMetrics() {
         return t >= since30.getTime()
       }).length
 
-      const totalViews = articles.reduce((sum, a) => sum + (typeof a.viewCount === 'number' ? a.viewCount : 0), 0)
+      const totalViews = articles.reduce(
+        (sum, a) => sum + (typeof a.viewCount === 'number' ? a.viewCount : 0),
+        0
+      )
 
       // Last 12 months bucket (including current month)
       const start = startOfDay(addMonths(now, -11))
@@ -81,22 +84,30 @@ export function useDashboardMetrics() {
         monthStarts.push(m)
       }
 
-      const publishedByMonth: PublishedByMonthPoint[] = monthStarts.map((mStart, idx) => {
-        const next = idx < monthStarts.length - 1 ? monthStarts[idx + 1] : addMonths(mStart, 1)
-        const total = published.filter((a) => {
-          if (!a.publishedAt) return false
-          const t = Date.parse(a.publishedAt)
-          if (Number.isNaN(t)) return false
-          return t >= mStart.getTime() && t < next.getTime()
-        }).length
+      const publishedByMonth: PublishedByMonthPoint[] = monthStarts.map(
+        (mStart, idx) => {
+          const next =
+            idx < monthStarts.length - 1
+              ? monthStarts[idx + 1]
+              : addMonths(mStart, 1)
+          const total = published.filter((a) => {
+            if (!a.publishedAt) return false
+            const t = Date.parse(a.publishedAt)
+            if (Number.isNaN(t)) return false
+            return t >= mStart.getTime() && t < next.getTime()
+          }).length
 
-        return { name: formatMonthLabel(mStart), total }
-      })
+          return { name: formatMonthLabel(mStart), total }
+        }
+      )
 
       const recentArticles: RecentArticle[] = published
         .filter((a) => a.publishedAt)
         .slice()
-        .sort((a, b) => Date.parse(b.publishedAt || '') - Date.parse(a.publishedAt || ''))
+        .sort(
+          (a, b) =>
+            Date.parse(b.publishedAt || '') - Date.parse(a.publishedAt || '')
+        )
         .slice(0, 5)
         .map((a) => ({
           id: a._id,

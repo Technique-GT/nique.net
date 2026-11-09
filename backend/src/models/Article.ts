@@ -70,11 +70,11 @@ const ArticleSchema = new Schema<IArticle>(
 
     ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     editorState: { type: Schema.Types.Mixed, required: false },
-    reviewStatus: { 
-      type: String, 
-      enum: ['draft', 'in_review', 'changes_requested', 'published'], 
-      required: true, 
-      default: 'draft' 
+    reviewStatus: {
+      type: String,
+      enum: ['draft', 'in_review', 'changes_requested', 'published'],
+      required: true,
+      default: 'draft',
     },
     reviewedAt: { type: Date, required: false },
     reviewedBy: { type: Schema.Types.ObjectId, ref: 'User', required: false },

@@ -4,16 +4,10 @@ import { AuthRequest } from '../middleware/auth.middleware';
 import Article from '../models/Article';
 import MediaAsset from '../models/MediaAsset';
 import { CloudflareCacheService } from '../services/cloudflare-cache.service';
-import { deleteFromR2, listR2Objects, uploadToR2 } from '../utils/r2';
 import { env } from '../utils/env';
+import { deleteFromR2, listR2Objects, uploadToR2 } from '../utils/r2';
 
-const ALLOWED_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/svg+xml',
-]);
+const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']);
 
 const MAX_SIZE = 10 * 1024 * 1024;
 const MAX_LIST_LIMIT = 100;
@@ -23,15 +17,7 @@ const SYNC_COOLDOWN_MS = 2 * 60 * 1000;
 const DEFAULT_USAGE_LIMIT = 10;
 const MAX_USAGE_LIMIT = 50;
 
-const IMAGE_EXTENSIONS = new Set([
-  '.jpg',
-  '.jpeg',
-  '.png',
-  '.gif',
-  '.webp',
-  '.svg',
-  '.avif',
-]);
+const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.avif']);
 
 let syncPromise: Promise<void> | null = null;
 let lastSyncAt = 0;
@@ -211,11 +197,7 @@ async function ensureMediaIndexFresh(force = false): Promise<void> {
   }
 }
 
-async function getMediaUsageByUrl(params: {
-  mediaUrl: string;
-  page: number;
-  limit: number;
-}): Promise<{
+async function getMediaUsageByUrl(params: { mediaUrl: string; page: number; limit: number }): Promise<{
   articles: Array<{
     _id: string;
     title: string;
@@ -320,7 +302,10 @@ export const uploadMedia = async (req: AuthRequest, res: Response): Promise<void
 export const listMediaImages = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const limitRaw = Number(req.query.limit);
-    const limit = Math.min(Math.max(Number.isNaN(limitRaw) ? DEFAULT_LIST_LIMIT : limitRaw, 1), MAX_LIST_LIMIT);
+    const limit = Math.min(
+      Math.max(Number.isNaN(limitRaw) ? DEFAULT_LIST_LIMIT : limitRaw, 1),
+      MAX_LIST_LIMIT,
+    );
     const cursorRaw = typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
     const forceSync = req.query.refresh === 'true';
     const q = normalizeQuery(req.query.q);
@@ -388,15 +373,16 @@ export const listMediaImages = async (req: AuthRequest, res: Response): Promise<
     const hasMore = rows.length > limit;
     const page = hasMore ? rows.slice(0, limit) : rows;
     const last = page[page.length - 1];
-    const nextCursor = hasMore && last
-      ? encodeCursor({
-          sortBy,
-          sortDir,
-          q,
-          lastSortValue: sortBy === 'date' ? new Date(last.uploadedAt).toISOString() : last.size,
-          lastId: String(last._id),
-        })
-      : null;
+    const nextCursor =
+      hasMore && last
+        ? encodeCursor({
+            sortBy,
+            sortDir,
+            q,
+            lastSortValue: sortBy === 'date' ? new Date(last.uploadedAt).toISOString() : last.size,
+            lastId: String(last._id),
+          })
+        : null;
 
     const data = page.map((item) => ({
       _id: String(item._id),

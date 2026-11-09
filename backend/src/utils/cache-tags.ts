@@ -14,7 +14,7 @@ const sanitizeCacheTagPart = (value: string): string =>
   value
     .normalize('NFKD')
     .replace(/[^\x20-\x7E]/g, '') // strip non-ASCII
-    .replace(/[\s,;"]/g, '-')     // replace header-problem chars
+    .replace(/[\s,;"]/g, '-') // replace header-problem chars
     .replace(/-+/g, '-')
     .trim();
 
@@ -52,7 +52,9 @@ export const articleCacheSnapshotFromDoc = (article: Partial<IArticle> | null | 
     slug: typeof (article as any).slug === 'string' ? (article as any).slug : '',
     published: Boolean((article as any).published),
     categoryId: toStringId((article as any).categoryId),
-    tagIds: tagIds.map((tag: any) => toStringId(tag)).filter((tagId: string | null): tagId is string => Boolean(tagId)),
+    tagIds: tagIds
+      .map((tag: any) => toStringId(tag))
+      .filter((tagId: string | null): tagId is string => Boolean(tagId)),
     authorIds: authors
       .map((author: any) => toStringId(author?.authorId))
       .filter((authorId: string | null): authorId is string => Boolean(authorId)),

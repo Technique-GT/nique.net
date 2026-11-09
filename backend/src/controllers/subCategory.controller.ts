@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import SubCategory from '../models/Subcategory';
 import Category from '../models/Category';
-import { escapeRegex, safeRegex, safeErrorResponse } from '../utils/security';
+import SubCategory from '../models/Subcategory';
+import { escapeRegex, safeErrorResponse, safeRegex } from '../utils/security';
 
 const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId | null => {
   if (!id || Array.isArray(id) || !mongoose.Types.ObjectId.isValid(id)) return null;
@@ -26,7 +26,12 @@ export const createSubCategory = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    const categoryIdRaw = typeof req.body?.categoryId === 'string' ? req.body.categoryId : typeof req.body?.category === 'string' ? req.body.category : undefined;
+    const categoryIdRaw =
+      typeof req.body?.categoryId === 'string'
+        ? req.body.categoryId
+        : typeof req.body?.category === 'string'
+          ? req.body.category
+          : undefined;
     const categoryId = toObjectId(categoryIdRaw);
     if (!categoryId) {
       res.status(400).json({ success: false, message: 'Invalid category ID' });
@@ -39,9 +44,14 @@ export const createSubCategory = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    const slug = typeof req.body?.slug === 'string' && req.body.slug.trim().length > 0 ? req.body.slug.trim() : slugify(name);
+    const slug =
+      typeof req.body?.slug === 'string' && req.body.slug.trim().length > 0
+        ? req.body.slug.trim()
+        : slugify(name);
 
-    const existing = await SubCategory.findOne({ $or: [{ slug }, { name: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } }] });
+    const existing = await SubCategory.findOne({
+      $or: [{ slug }, { name: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } }],
+    });
     if (existing) {
       res.status(409).json({ success: false, message: 'Sub-category with this name or slug already exists' });
       return;
@@ -70,7 +80,8 @@ export const getSubCategories = async (req: Request, res: Response): Promise<voi
       query.$or = [{ name: rx }, { slug: rx }];
     }
 
-    const catRaw = typeof categoryId === 'string' ? categoryId : typeof category === 'string' ? category : undefined;
+    const catRaw =
+      typeof categoryId === 'string' ? categoryId : typeof category === 'string' ? category : undefined;
     if (catRaw) {
       const catId = toObjectId(catRaw);
       if (!catId) {
@@ -147,7 +158,12 @@ export const updateSubCategory = async (req: Request, res: Response): Promise<vo
       update.slug = slugify(update.name);
     }
 
-    const categoryIdRaw = typeof req.body?.categoryId === 'string' ? req.body.categoryId : typeof req.body?.category === 'string' ? req.body.category : undefined;
+    const categoryIdRaw =
+      typeof req.body?.categoryId === 'string'
+        ? req.body.categoryId
+        : typeof req.body?.category === 'string'
+          ? req.body.category
+          : undefined;
     if (categoryIdRaw !== undefined) {
       const catId = toObjectId(categoryIdRaw);
       if (!catId) {
@@ -164,7 +180,10 @@ export const updateSubCategory = async (req: Request, res: Response): Promise<vo
       update.categoryId = catId;
     }
 
-    const subCategory = await SubCategory.findByIdAndUpdate(objectId, update, { new: true, runValidators: true });
+    const subCategory = await SubCategory.findByIdAndUpdate(objectId, update, {
+      new: true,
+      runValidators: true,
+    });
     if (!subCategory) {
       res.status(404).json({ success: false, message: 'Sub-category not found' });
       return;

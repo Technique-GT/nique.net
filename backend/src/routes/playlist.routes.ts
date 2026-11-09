@@ -1,15 +1,15 @@
 import express from 'express';
 import {
   createPlaylist,
-  getPlaylists,
-  getPlaylistById,
-  updatePlaylist,
   deletePlaylist,
+  getActivePlaylist,
+  getPlaylistById,
+  getPlaylists,
   setActivePlaylist,
-  getActivePlaylist
+  updatePlaylist,
 } from '../controllers/playlist.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
 import { adminMiddleware } from '../middleware/admin.middleware';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = express.Router();
 

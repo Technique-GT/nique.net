@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -77,10 +77,10 @@
 }
 
 @theme inline {
-  --font-serif: 'EB Garamond', Times, serif;
-  --font-sans-serif: 'Oswald', sans-serif;
-  --font-inter: 'Oswald', sans-serif;
-  --font-manrope: 'EB Garamond', Times, serif;
+  --font-serif: "EB Garamond", Times, serif;
+  --font-sans-serif: "Oswald", sans-serif;
+  --font-inter: "Oswald", sans-serif;
+  --font-manrope: "EB Garamond", Times, serif;
   --color-nique-blue: #003057;
   --color-nique-blue-hover: #0e3682;
   --color-nique-light-blue: #5c8eb7;
@@ -137,7 +137,7 @@
   }
 
   button:not(:disabled),
-  [role='button']:not(:disabled) {
+  [role="button"]:not(:disabled) {
     cursor: pointer;
   }
 
@@ -174,10 +174,10 @@
 .CollapsibleContent {
   overflow: hidden;
 }
-.CollapsibleContent[data-state='open'] {
+.CollapsibleContent[data-state="open"] {
   animation: slideDown 300ms ease-out;
 }
-.CollapsibleContent[data-state='closed'] {
+.CollapsibleContent[data-state="closed"] {
   animation: slideUp 300ms ease-out;
 }
 

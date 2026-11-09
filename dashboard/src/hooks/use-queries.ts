@@ -7,39 +7,36 @@
  * - Do NOT persist: auth, large/fast-changing lists (articles, comments, users).
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { apiClient } from '@/lib/api-client'
 import {
-  getCategories,
-  getSubCategories,
-  getTags,
-  type Category,
-  type SubCategory,
-  type Tag,
-} from '@/services/taxonomy'
+  createAdminArticleDraft,
+  getAdminArticleById,
+} from '@/services/articles'
 import {
-  getUsers,
-  type User,
-} from '@/services/users'
-import {
-  getComments,
-  getCommentStats,
-  updateCommentStatus,
-  deleteComment,
   type Comment,
-  type CommentsQuery,
   type CommentStats,
+  type CommentsQuery,
+  deleteComment,
+  getCommentStats,
+  getComments,
+  updateCommentStatus,
 } from '@/services/comments'
 import {
-  getSlivers,
   deleteSliver,
+  getSlivers,
   type Sliver,
   type SliversQuery,
 } from '@/services/slivers'
 import {
-  getAdminArticleById,
-  createAdminArticleDraft,
-} from '@/services/articles'
-import { apiClient } from '@/lib/api-client'
+  type Category,
+  getCategories,
+  getSubCategories,
+  getTags,
+  type SubCategory,
+  type Tag,
+} from '@/services/taxonomy'
+import { getUsers, type User } from '@/services/users'
 
 // ============================================================================
 // Query Keys (centralized for consistency)
@@ -62,10 +59,9 @@ export const queryKeys = {
     sortBy?: string
     sortDir?: 'asc' | 'desc'
     isAdmin?: boolean
-  }) =>
-    ['users', params] as const,
-  usersList: (page: number, limit: number) => ['users-list', page, limit] as const,
-
+  }) => ['users', params] as const,
+  usersList: (page: number, limit: number) =>
+    ['users-list', page, limit] as const,
 
   // Comments - NOT persisted (fast-changing)
   comments: (query?: CommentsQuery) => ['comments', query] as const,
@@ -126,7 +122,8 @@ export function useTaxonomy() {
     categories: categories.data ?? [],
     subCategories: subCategories.data ?? [],
     tags: tags.data ?? [],
-    isLoading: categories.isLoading || subCategories.isLoading || tags.isLoading,
+    isLoading:
+      categories.isLoading || subCategories.isLoading || tags.isLoading,
     isError: categories.isError || subCategories.isError || tags.isError,
     refetch: () => {
       categories.refetch()
@@ -264,7 +261,13 @@ export function useCreatePlaylist() {
 export function useUpdatePlaylist() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<Playlist> }) => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string
+      data: Partial<Playlist>
+    }) => {
       const res = await apiClient.put(`/playlists/${id}`, data)
       return res as unknown as Playlist
     },
@@ -320,7 +323,13 @@ export function useCreateTag() {
 export function useUpdateTag() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: { name: string } }) => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string
+      data: { name: string }
+    }) => {
       const res = await apiClient.put(`/tags/${id}`, data)
       return res as unknown as Tag
     },
@@ -376,7 +385,13 @@ export function useCreateCategory() {
 export function useUpdateCategory() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: { name: string } }) => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string
+      data: { name: string }
+    }) => {
       const res = await apiClient.put(`/categories/${id}`, data)
       return res as unknown as Category
     },
@@ -432,7 +447,13 @@ export function useCreateSubCategory() {
 export function useUpdateSubCategory() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: { name: string; categoryId?: string } }) => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string
+      data: { name: string; categoryId?: string }
+    }) => {
       const res = await apiClient.put(`/sub-categories/${id}`, data)
       return res as unknown as SubCategory
     },
@@ -495,4 +516,4 @@ export function useCreateArticleDraft() {
 }
 
 // Re-export types for convenience
-export type { Category, SubCategory, Tag, User, Comment, CommentStats, Sliver }
+export type { Category, Comment, CommentStats, Sliver, SubCategory, Tag, User }

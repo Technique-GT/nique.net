@@ -8,18 +8,15 @@ async function backfill() {
     await mongoose.connect(env.ATLAS_URI);
     console.log('Connected.');
 
-    const articles = await Article.find({ 
-      $or: [
-        { ownerId: { $exists: false } },
-        { reviewStatus: { $exists: false } }
-      ]
+    const articles = await Article.find({
+      $or: [{ ownerId: { $exists: false } }, { reviewStatus: { $exists: false } }],
     });
 
     console.log(`Found ${articles.length} articles to backfill.`);
 
     for (const article of articles) {
       const updates: any = {};
-      
+
       if (!article.ownerId) {
         // Assign to first author, or if none, we'll need a fallback.
         // For this script, we'll try authors[0].

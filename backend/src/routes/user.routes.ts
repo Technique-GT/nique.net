@@ -9,12 +9,16 @@ import {
   inviteUser,
   updateUser,
 } from '../controllers/user.controller';
-import { mergeUsers, getUserArticleCount } from '../controllers/user.merge.controller';
-import { validateBody, validateParams } from '../middleware/validate.middleware';
-import { bulkDeleteUsersBodySchema, createUserBodySchema, updateUserBodySchema } from '../schemas/user.schema';
-import { idParamSchema } from '../schemas/params.schema';
-import { authMiddleware } from '../middleware/auth.middleware';
+import { getUserArticleCount, mergeUsers } from '../controllers/user.merge.controller';
 import { adminMiddleware } from '../middleware/admin.middleware';
+import { authMiddleware } from '../middleware/auth.middleware';
+import { validateBody, validateParams } from '../middleware/validate.middleware';
+import { idParamSchema } from '../schemas/params.schema';
+import {
+  bulkDeleteUsersBodySchema,
+  createUserBodySchema,
+  updateUserBodySchema,
+} from '../schemas/user.schema';
 
 const router = express.Router();
 

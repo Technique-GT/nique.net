@@ -1,11 +1,11 @@
 import express from 'express';
 
 import {
+  devLogin,
   getCurrentUser,
   googleAuth,
   googleAuthCallback,
   logout,
-  devLogin,
 } from '../controllers/auth.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 

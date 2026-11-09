@@ -1,182 +1,183 @@
-import { useMemo, useState } from "react";
-import ArticleForm from "./ArticleForm";
-import { Main } from "@/components/layout/main";
-import { PageHeader } from "@/components/layout/page-header";
-import { formatDistanceToNow } from "date-fns";
-import {
-  useTaxonomy,
-  useUsers,
-  useAdminArticle,
-} from "@/hooks/use-queries";
-import type { Category, SubCategory, Tag, Author, Article } from "./types";
-import { useParams } from "@tanstack/react-router";
-import type { BackendArticle } from "@/services/articles";
-import type { User } from "@/services/users";
+import { useParams } from '@tanstack/react-router'
+import { formatDistanceToNow } from 'date-fns'
+import { useMemo, useState } from 'react'
+import { Main } from '@/components/layout/main'
+import { PageHeader } from '@/components/layout/page-header'
+import { useAdminArticle, useTaxonomy, useUsers } from '@/hooks/use-queries'
+import type { BackendArticle } from '@/services/articles'
+import type { User } from '@/services/users'
+import ArticleForm from './ArticleForm'
+import type { Article, Author, Category, SubCategory, Tag } from './types'
 
 type BackendUser = {
-  _id?: string;
-  name?: string;
-  email?: string;
-  isAdmin?: boolean;
-};
+  _id?: string
+  name?: string
+  email?: string
+  isAdmin?: boolean
+}
 
 type BackendArticleAuthor = {
-  authorId?: BackendUser | null;
-};
+  authorId?: BackendUser | null
+}
 
 type BackendArticleForForm = BackendArticle & {
-  content?: string;
-  ownerId?: string;
-  editorState?: unknown;
-  isFeatured?: boolean;
-  isSticky?: boolean;
-  allowComments?: boolean;
-  categoryId?: Category | string | null;
-  subcategoryId?: SubCategory | string | null;
-  tagIds?: Array<Tag | string>;
-  authors?: BackendArticleAuthor[];
-};
+  content?: string
+  ownerId?: string
+  editorState?: unknown
+  isFeatured?: boolean
+  isSticky?: boolean
+  allowComments?: boolean
+  categoryId?: Category | string | null
+  subcategoryId?: SubCategory | string | null
+  tagIds?: Array<Tag | string>
+  authors?: BackendArticleAuthor[]
+}
 
 const toCategory = (value: Category | string | null | undefined): Category => {
-  if (value && typeof value === "object") {
+  if (value && typeof value === 'object') {
     return {
       _id: value._id,
-      name: value.name || "Unknown",
-      slug: value.slug || "",
+      name: value.name || 'Unknown',
+      slug: value.slug || '',
       description: value.description,
       isActive: value.isActive ?? true,
-    };
+    }
   }
 
-  if (typeof value === "string" && value.length > 0) {
+  if (typeof value === 'string' && value.length > 0) {
     return {
       _id: value,
-      name: "Unknown",
-      slug: "",
+      name: 'Unknown',
+      slug: '',
       isActive: true,
-    };
+    }
   }
 
   return {
-    _id: "",
-    name: "Unknown",
-    slug: "",
+    _id: '',
+    name: 'Unknown',
+    slug: '',
     isActive: true,
-  };
-};
+  }
+}
 
-const toSubCategory = (value: SubCategory | string | null | undefined, parentCategoryId: string): SubCategory | undefined => {
-  if (!value) return undefined;
+const toSubCategory = (
+  value: SubCategory | string | null | undefined,
+  parentCategoryId: string
+): SubCategory | undefined => {
+  if (!value) return undefined
 
-  if (typeof value === "object") {
+  if (typeof value === 'object') {
     return {
       _id: value._id,
-      name: value.name || "Unknown",
-      slug: value.slug || "",
+      name: value.name || 'Unknown',
+      slug: value.slug || '',
       description: value.description,
       isActive: value.isActive ?? true,
       categoryId: value.categoryId,
       category: value.category,
-    };
+    }
   }
 
-  if (typeof value === "string" && value.length > 0) {
+  if (typeof value === 'string' && value.length > 0) {
     return {
       _id: value,
-      name: "Unknown",
-      slug: "",
+      name: 'Unknown',
+      slug: '',
       isActive: true,
       categoryId: parentCategoryId,
       category: {
         _id: parentCategoryId,
-        name: "Unknown",
-        slug: "",
+        name: 'Unknown',
+        slug: '',
       },
-    };
+    }
   }
 
-  return undefined;
-};
+  return undefined
+}
 
 const toTag = (value: Tag | string): Tag => {
-  if (typeof value === "object" && value !== null) {
+  if (typeof value === 'object' && value !== null) {
     return {
       _id: value._id,
-      name: value.name || "Unknown",
-      slug: value.slug || "",
+      name: value.name || 'Unknown',
+      slug: value.slug || '',
       description: value.description,
-      color: value.color || "#6366f1",
+      color: value.color || '#6366f1',
       isActive: value.isActive ?? true,
-    };
+    }
   }
 
   return {
     _id: value,
-    name: "Unknown",
-    slug: "",
-    color: "#6366f1",
+    name: 'Unknown',
+    slug: '',
+    color: '#6366f1',
     isActive: true,
-  };
-};
+  }
+}
 
 const mapUserToAuthor = (u: BackendUser | null | undefined): Author | null => {
-  if (!u || typeof u._id !== "string" || u._id.length === 0) return null;
-  const fullName = typeof u.name === "string" ? u.name.trim() : "Unknown";
-  const parts = fullName.split(/\s+/).filter(Boolean);
-  const firstName = parts[0] || "Unknown";
-  const lastName = parts.slice(1).join(" ");
+  if (!u || typeof u._id !== 'string' || u._id.length === 0) return null
+  const fullName = typeof u.name === 'string' ? u.name.trim() : 'Unknown'
+  const parts = fullName.split(/\s+/).filter(Boolean)
+  const firstName = parts[0] || 'Unknown'
+  const lastName = parts.slice(1).join(' ')
 
   return {
     _id: u._id,
     firstName,
     lastName,
     username: fullName,
-    email: u.email || "",
-    role: u.isAdmin ? "admin" : "writer",
-    status: "active",
-  };
-};
+    email: u.email || '',
+    role: u.isAdmin ? 'admin' : 'writer',
+    status: 'active',
+  }
+}
 
 const toSerializedEditorState = (
-  value: unknown,
-): Article["editorState"] | undefined => {
-  if (!value || typeof value !== "object") {
-    return undefined;
+  value: unknown
+): Article['editorState'] | undefined => {
+  if (!value || typeof value !== 'object') {
+    return undefined
   }
 
-  return value as Article["editorState"];
-};
+  return value as Article['editorState']
+}
 
 export default function ArticleCreation() {
-  const { articleId } = useParams({ strict: false }) as { articleId?: string };
-  const isEditMode = !!articleId;
-  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const { articleId } = useParams({ strict: false }) as { articleId?: string }
+  const isEditMode = !!articleId
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
 
-  const {
-    data: initialArticle,
-    isLoading: articleLoading,
-  } = useAdminArticle(articleId || "");
+  const { data: initialArticle, isLoading: articleLoading } = useAdminArticle(
+    articleId || ''
+  )
 
   // Transform backend article to frontend shape
   const transformedArticle = useMemo<Article | null>(() => {
-    if (!initialArticle) return null;
-    const backendArticle = initialArticle as BackendArticleForForm;
-    const category = toCategory(backendArticle.categoryId);
-    const subcategory = toSubCategory(backendArticle.subcategoryId, category._id);
+    if (!initialArticle) return null
+    const backendArticle = initialArticle as BackendArticleForForm
+    const category = toCategory(backendArticle.categoryId)
+    const subcategory = toSubCategory(
+      backendArticle.subcategoryId,
+      category._id
+    )
     const tags = Array.isArray(backendArticle.tagIds)
       ? backendArticle.tagIds.map(toTag)
-      : [];
+      : []
     const authors = Array.isArray(backendArticle.authors)
       ? backendArticle.authors
           .map((a) => mapUserToAuthor(a.authorId))
           .filter((a): a is Author => a !== null)
-      : [];
+      : []
 
     return {
       _id: backendArticle._id,
-      title: backendArticle.title || "",
-      content: backendArticle.content || "",
-      imageCaption: backendArticle.imageCaption ?? "",
+      title: backendArticle.title || '',
+      content: backendArticle.content || '',
+      imageCaption: backendArticle.imageCaption ?? '',
       category,
       subcategory,
       tags,
@@ -188,42 +189,45 @@ export default function ArticleCreation() {
       reviewedBy: backendArticle.reviewedBy,
       reviewNotes: backendArticle.reviewNotes,
       featuredMediaUrl:
-        typeof backendArticle.featuredMediaUrl === "string"
+        typeof backendArticle.featuredMediaUrl === 'string'
           ? backendArticle.featuredMediaUrl
           : undefined,
       isPublished: backendArticle.published,
       isFeatured: backendArticle.isFeatured ?? false,
       isSticky: backendArticle.isSticky ?? false,
-      status: backendArticle.published ? "published" : "draft",
+      status: backendArticle.published ? 'published' : 'draft',
       allowComments: backendArticle.allowComments ?? true,
       publishedAt: backendArticle.publishedAt ?? undefined,
-      slug: backendArticle.slug || "",
+      slug: backendArticle.slug || '',
       views: backendArticle.viewCount ?? 0,
       seoTitle: undefined,
       seoDescription: undefined,
       createdAt: backendArticle.createdAt,
       updatedAt: backendArticle.updatedAt,
-    };
-  }, [initialArticle]);
+    }
+  }, [initialArticle])
 
   // TanStack Query hooks - all taxonomy data is persisted
-  const { categories: rawCategories, subCategories: rawSubCategories, tags: rawTags, isLoading: taxonomyLoading, isError: taxonomyError } = useTaxonomy();
-  const { data: usersData, isLoading: usersLoading } = useUsers({ limit: 1000 });
-  const rawUsers = usersData ?? [];
-  const isLoading =
-    taxonomyLoading ||
-    usersLoading ||
-    articleLoading;
+  const {
+    categories: rawCategories,
+    subCategories: rawSubCategories,
+    tags: rawTags,
+    isLoading: taxonomyLoading,
+    isError: taxonomyError,
+  } = useTaxonomy()
+  const { data: usersData, isLoading: usersLoading } = useUsers({ limit: 1000 })
+  const rawUsers = usersData ?? []
+  const isLoading = taxonomyLoading || usersLoading || articleLoading
 
   const subtitle = useMemo(() => {
-    if (!isEditMode) return "Draft, schedule, or publish a new post";
-    
+    if (!isEditMode) return 'Draft, schedule, or publish a new post'
+
     if (lastSavedAt) {
-      return `Saved ${formatDistanceToNow(lastSavedAt, { addSuffix: true })}`;
+      return `Saved ${formatDistanceToNow(lastSavedAt, { addSuffix: true })}`
     }
-    
-    return "";
-  }, [isEditMode, lastSavedAt]);
+
+    return ''
+  }, [isEditMode, lastSavedAt])
 
   // Map to UI shapes with default values for missing fields
   const categories: Category[] = useMemo(() => {
@@ -233,19 +237,20 @@ export default function ArticleCreation() {
       slug: c.slug,
       description: c.description,
       isActive: true, // Default since backend doesn't provide
-    }));
-  }, [rawCategories]);
+    }))
+  }, [rawCategories])
 
   const subcategories: SubCategory[] = useMemo(() => {
     // Create a map for category lookup
-    const categoryMap = new Map(rawCategories.map((cat) => [cat._id, cat]));
-    
+    const categoryMap = new Map(rawCategories.map((cat) => [cat._id, cat]))
+
     return rawSubCategories.map((sc) => {
-      const categoryId = typeof sc.categoryId === 'string' 
-        ? sc.categoryId 
-        : sc.categoryId?._id || '';
-      const category = categoryMap.get(categoryId);
-      
+      const categoryId =
+        typeof sc.categoryId === 'string'
+          ? sc.categoryId
+          : sc.categoryId?._id || ''
+      const category = categoryMap.get(categoryId)
+
       return {
         _id: sc._id,
         name: sc.name,
@@ -258,9 +263,9 @@ export default function ArticleCreation() {
           name: category?.name || 'Unknown',
           slug: category?.slug || '',
         },
-      };
-    });
-  }, [rawSubCategories, rawCategories]);
+      }
+    })
+  }, [rawSubCategories, rawCategories])
 
   const tags: Tag[] = useMemo(() => {
     return rawTags.map((t) => ({
@@ -270,16 +275,16 @@ export default function ArticleCreation() {
       description: undefined,
       color: '#6366f1', // Default color
       isActive: true,
-    }));
-  }, [rawTags]);
+    }))
+  }, [rawTags])
 
   // Map canonical backend User -> UI Author shape expected by ArticleForm
   const authors: Author[] = useMemo(() => {
     return rawUsers.map((u: User) => {
-      const fullName = typeof u?.name === 'string' ? u.name.trim() : '';
-      const parts = fullName.split(/\s+/).filter(Boolean);
-      const firstName = parts[0] || 'Unknown';
-      const lastName = parts.slice(1).join(' ');
+      const fullName = typeof u?.name === 'string' ? u.name.trim() : ''
+      const parts = fullName.split(/\s+/).filter(Boolean)
+      const firstName = parts[0] || 'Unknown'
+      const lastName = parts.slice(1).join(' ')
 
       return {
         _id: u._id,
@@ -289,54 +294,56 @@ export default function ArticleCreation() {
         email: 'N/A',
         role: u.isAdmin ? 'admin' : 'writer',
         status: 'active',
-      };
-    });
-  }, [rawUsers]);
+      }
+    })
+  }, [rawUsers])
 
   if (isLoading) {
     return (
       <Main>
-        <PageHeader 
-          title={isEditMode ? "Edit Article" : "Create New Article"} 
-          description="Loading form data..." 
+        <PageHeader
+          title={isEditMode ? 'Edit Article' : 'Create New Article'}
+          description='Loading form data...'
         />
-        <div className="border rounded-lg p-6">
-          <div className="flex items-center justify-center h-32">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
-              <p className="text-muted-foreground">Loading form data...</p>
+        <div className='border rounded-lg p-6'>
+          <div className='flex items-center justify-center h-32'>
+            <div className='text-center'>
+              <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2'></div>
+              <p className='text-muted-foreground'>Loading form data...</p>
             </div>
           </div>
         </div>
       </Main>
-    );
+    )
   }
 
   if (taxonomyError) {
     return (
       <Main>
-        <PageHeader 
-          title={isEditMode ? "Edit Article" : "Create New Article"} 
-          description="Fix the errors and retry" 
+        <PageHeader
+          title={isEditMode ? 'Edit Article' : 'Create New Article'}
+          description='Fix the errors and retry'
         />
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md">
-          <p className="font-medium">Error loading form data</p>
-          <p className="text-sm mt-1">Failed to load taxonomy data. Please try again.</p>
+        <div className='bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md'>
+          <p className='font-medium'>Error loading form data</p>
+          <p className='text-sm mt-1'>
+            Failed to load taxonomy data. Please try again.
+          </p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-2 px-3 py-1 border border-red-300 rounded text-sm hover:bg-red-100"
+            className='mt-2 px-3 py-1 border border-red-300 rounded text-sm hover:bg-red-100'
           >
             Retry
           </button>
         </div>
       </Main>
-    );
+    )
   }
 
   return (
     <Main>
       <PageHeader
-        title={isEditMode ? "Edit Article" : "Create New Article"}
+        title={isEditMode ? 'Edit Article' : 'Create New Article'}
         description={subtitle}
       />
       <ArticleForm
@@ -349,5 +356,5 @@ export default function ArticleCreation() {
         onLastSavedChange={setLastSavedAt}
       />
     </Main>
-  );
+  )
 }

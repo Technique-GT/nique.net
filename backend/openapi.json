@@ -61,9 +61,7 @@
   "paths": {
     "/api/admin/articles": {
       "get": {
-        "tags": [
-          "admin-articles"
-        ],
+        "tags": ["admin-articles"],
         "summary": "GET /api/admin/articles",
         "operationId": "getApiAdminArticles",
         "responses": {
@@ -82,9 +80,7 @@
         "description": "Requires authenticated user."
       },
       "post": {
-        "tags": [
-          "admin-articles"
-        ],
+        "tags": ["admin-articles"],
         "summary": "POST /api/admin/articles",
         "operationId": "postApiAdminArticles",
         "responses": {
@@ -105,9 +101,7 @@
     },
     "/api/admin/articles/{id}": {
       "get": {
-        "tags": [
-          "admin-articles"
-        ],
+        "tags": ["admin-articles"],
         "summary": "GET /api/admin/articles/{id}",
         "operationId": "getApiAdminArticlesId",
         "responses": {
@@ -136,9 +130,7 @@
         "description": "Requires authenticated user."
       },
       "put": {
-        "tags": [
-          "admin-articles"
-        ],
+        "tags": ["admin-articles"],
         "summary": "PUT /api/admin/articles/{id}",
         "operationId": "putApiAdminArticlesId",
         "responses": {
@@ -167,9 +159,7 @@
         "description": "Requires authenticated user."
       },
       "delete": {
-        "tags": [
-          "admin-articles"
-        ],
+        "tags": ["admin-articles"],
         "summary": "DELETE /api/admin/articles/{id}",
         "operationId": "deleteApiAdminArticlesId",
         "responses": {
@@ -200,9 +190,7 @@
     },
     "/api/admin/articles/{id}/featured": {
       "patch": {
-        "tags": [
-          "admin-articles"
-        ],
+        "tags": ["admin-articles"],
         "summary": "PATCH /api/admin/articles/{id}/featured",
         "operationId": "patchApiAdminArticlesIdFeatured",
         "responses": {
@@ -233,9 +221,7 @@
     },
     "/api/admin/articles/{id}/publish": {
       "post": {
-        "tags": [
-          "admin-articles"
-        ],
+        "tags": ["admin-articles"],
         "summary": "POST /api/admin/articles/{id}/publish",
         "operationId": "postApiAdminArticlesIdPublish",
         "responses": {
@@ -266,9 +252,7 @@
     },
     "/api/admin/articles/{id}/request-changes": {
       "post": {
-        "tags": [
-          "admin-articles"
-        ],
+        "tags": ["admin-articles"],
         "summary": "POST /api/admin/articles/{id}/request-changes",
         "operationId": "postApiAdminArticlesIdRequestchanges",
         "responses": {
@@ -299,9 +283,7 @@
     },
     "/api/admin/articles/{id}/request-review": {
       "post": {
-        "tags": [
-          "admin-articles"
-        ],
+        "tags": ["admin-articles"],
         "summary": "POST /api/admin/articles/{id}/request-review",
         "operationId": "postApiAdminArticlesIdRequestreview",
         "responses": {
@@ -332,9 +314,7 @@
     },
     "/api/admin/articles/{id}/status": {
       "patch": {
-        "tags": [
-          "admin-articles"
-        ],
+        "tags": ["admin-articles"],
         "summary": "PATCH /api/admin/articles/{id}/status",
         "operationId": "patchApiAdminArticlesIdStatus",
         "responses": {
@@ -365,9 +345,7 @@
     },
     "/api/admin/articles/{id}/sticky": {
       "patch": {
-        "tags": [
-          "admin-articles"
-        ],
+        "tags": ["admin-articles"],
         "summary": "PATCH /api/admin/articles/{id}/sticky",
         "operationId": "patchApiAdminArticlesIdSticky",
         "responses": {
@@ -398,9 +376,7 @@
     },
     "/api/admin/articles/{id}/transfer-ownership": {
       "post": {
-        "tags": [
-          "admin-articles"
-        ],
+        "tags": ["admin-articles"],
         "summary": "POST /api/admin/articles/{id}/transfer-ownership",
         "operationId": "postApiAdminArticlesIdTransferownership",
         "responses": {
@@ -431,9 +407,7 @@
     },
     "/api/admin/articles/{id}/unpublish": {
       "post": {
-        "tags": [
-          "admin-articles"
-        ],
+        "tags": ["admin-articles"],
         "summary": "POST /api/admin/articles/{id}/unpublish",
         "operationId": "postApiAdminArticlesIdUnpublish",
         "responses": {
@@ -464,9 +438,7 @@
     },
     "/api/admin/articles/{id}/unrequest-review": {
       "post": {
-        "tags": [
-          "admin-articles"
-        ],
+        "tags": ["admin-articles"],
         "summary": "POST /api/admin/articles/{id}/unrequest-review",
         "operationId": "postApiAdminArticlesIdUnrequestreview",
         "responses": {
@@ -497,9 +469,7 @@
     },
     "/api/admin/articles/draft": {
       "post": {
-        "tags": [
-          "admin-articles"
-        ],
+        "tags": ["admin-articles"],
         "summary": "POST /api/admin/articles/draft",
         "operationId": "postApiAdminArticlesDraft",
         "responses": {
@@ -520,9 +490,7 @@
     },
     "/api/admin/media/{id}": {
       "delete": {
-        "tags": [
-          "admin-media"
-        ],
+        "tags": ["admin-media"],
         "summary": "DELETE /api/admin/media/{id}",
         "operationId": "deleteApiAdminMediaId",
         "responses": {
@@ -554,9 +522,7 @@
     },
     "/api/admin/media/{id}/usage": {
       "get": {
-        "tags": [
-          "admin-media"
-        ],
+        "tags": ["admin-media"],
         "summary": "GET /api/admin/media/{id}/usage",
         "operationId": "getApiAdminMediaIdUsage",
         "responses": {
@@ -588,9 +554,7 @@
     },
     "/api/admin/media/images": {
       "get": {
-        "tags": [
-          "admin-media"
-        ],
+        "tags": ["admin-media"],
         "summary": "GET /api/admin/media/images",
         "operationId": "getApiAdminMediaImages",
         "responses": {
@@ -611,9 +575,7 @@
     },
     "/api/admin/media/upload": {
       "post": {
-        "tags": [
-          "admin-media"
-        ],
+        "tags": ["admin-media"],
         "summary": "POST /api/admin/media/upload",
         "operationId": "postApiAdminMediaUpload",
         "responses": {
@@ -634,9 +596,7 @@
     },
     "/api/articles/{id}": {
       "get": {
-        "tags": [
-          "articles"
-        ],
+        "tags": ["articles"],
         "summary": "GET /api/articles/{id}",
         "operationId": "getApiArticlesId",
         "responses": {
@@ -658,9 +618,7 @@
     },
     "/api/articles/{id}/view": {
       "post": {
-        "tags": [
-          "articles"
-        ],
+        "tags": ["articles"],
         "summary": "POST /api/articles/{id}/view",
         "operationId": "postApiArticlesIdView",
         "responses": {
@@ -682,9 +640,7 @@
     },
     "/api/articles/category/{category}": {
       "get": {
-        "tags": [
-          "articles"
-        ],
+        "tags": ["articles"],
         "summary": "GET /api/articles/category/{category}",
         "operationId": "getApiArticlesCategoryCategory",
         "responses": {
@@ -706,9 +662,7 @@
     },
     "/api/articles/featured": {
       "get": {
-        "tags": [
-          "articles"
-        ],
+        "tags": ["articles"],
         "summary": "GET /api/articles/featured",
         "operationId": "getApiArticlesFeatured",
         "responses": {
@@ -720,9 +674,7 @@
     },
     "/api/articles/feed": {
       "get": {
-        "tags": [
-          "articles"
-        ],
+        "tags": ["articles"],
         "summary": "GET /api/articles/feed",
         "operationId": "getApiArticlesFeed",
         "responses": {
@@ -734,9 +686,7 @@
     },
     "/api/articles/published": {
       "get": {
-        "tags": [
-          "articles"
-        ],
+        "tags": ["articles"],
         "summary": "GET /api/articles/published",
         "operationId": "getApiArticlesPublished",
         "responses": {
@@ -748,9 +698,7 @@
     },
     "/api/articles/slug/{slug}": {
       "get": {
-        "tags": [
-          "articles"
-        ],
+        "tags": ["articles"],
         "summary": "GET /api/articles/slug/{slug}",
         "operationId": "getApiArticlesSlugSlug",
         "responses": {
@@ -772,9 +720,7 @@
     },
     "/api/articles/sticky": {
       "get": {
-        "tags": [
-          "articles"
-        ],
+        "tags": ["articles"],
         "summary": "GET /api/articles/sticky",
         "operationId": "getApiArticlesSticky",
         "responses": {
@@ -786,9 +732,7 @@
     },
     "/api/auth/google": {
       "get": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "GET /api/auth/google",
         "operationId": "getApiAuthGoogle",
         "responses": {
@@ -800,9 +744,7 @@
     },
     "/api/auth/google/callback": {
       "get": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "GET /api/auth/google/callback",
         "operationId": "getApiAuthGoogleCallback",
         "responses": {
@@ -814,9 +756,7 @@
     },
     "/api/auth/logout": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "POST /api/auth/logout",
         "operationId": "postApiAuthLogout",
         "responses": {
@@ -828,9 +768,7 @@
     },
     "/api/auth/me": {
       "get": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "GET /api/auth/me",
         "operationId": "getApiAuthMe",
         "responses": {
@@ -851,9 +789,7 @@
     },
     "/api/authors/{authorName}": {
       "get": {
-        "tags": [
-          "authors"
-        ],
+        "tags": ["authors"],
         "summary": "GET /api/authors/{authorName}",
         "operationId": "getApiAuthorsAuthorName",
         "responses": {
@@ -875,9 +811,7 @@
     },
     "/api/categories": {
       "get": {
-        "tags": [
-          "categories"
-        ],
+        "tags": ["categories"],
         "summary": "GET /api/categories",
         "operationId": "getApiCategories",
         "responses": {
@@ -887,9 +821,7 @@
         }
       },
       "post": {
-        "tags": [
-          "categories"
-        ],
+        "tags": ["categories"],
         "summary": "POST /api/categories",
         "operationId": "postApiCategories",
         "responses": {
@@ -911,9 +843,7 @@
     },
     "/api/categories/{id}": {
       "get": {
-        "tags": [
-          "categories"
-        ],
+        "tags": ["categories"],
         "summary": "GET /api/categories/{id}",
         "operationId": "getApiCategoriesId",
         "responses": {
@@ -933,9 +863,7 @@
         ]
       },
       "put": {
-        "tags": [
-          "categories"
-        ],
+        "tags": ["categories"],
         "summary": "PUT /api/categories/{id}",
         "operationId": "putApiCategoriesId",
         "responses": {
@@ -965,9 +893,7 @@
         "x-required-role": "admin"
       },
       "patch": {
-        "tags": [
-          "categories"
-        ],
+        "tags": ["categories"],
         "summary": "PATCH /api/categories/{id}",
         "operationId": "patchApiCategoriesId",
         "responses": {
@@ -997,9 +923,7 @@
         "x-required-role": "admin"
       },
       "delete": {
-        "tags": [
-          "categories"
-        ],
+        "tags": ["categories"],
         "summary": "DELETE /api/categories/{id}",
         "operationId": "deleteApiCategoriesId",
         "responses": {
@@ -1031,9 +955,7 @@
     },
     "/api/categories/{id}/hard": {
       "delete": {
-        "tags": [
-          "categories"
-        ],
+        "tags": ["categories"],
         "summary": "DELETE /api/categories/{id}/hard",
         "operationId": "deleteApiCategoriesIdHard",
         "responses": {
@@ -1065,9 +987,7 @@
     },
     "/api/categories/slug/{slug}": {
       "get": {
-        "tags": [
-          "categories"
-        ],
+        "tags": ["categories"],
         "summary": "GET /api/categories/slug/{slug}",
         "operationId": "getApiCategoriesSlugSlug",
         "responses": {
@@ -1089,9 +1009,7 @@
     },
     "/api/categories/stats": {
       "get": {
-        "tags": [
-          "categories"
-        ],
+        "tags": ["categories"],
         "summary": "GET /api/categories/stats",
         "operationId": "getApiCategoriesStats",
         "responses": {
@@ -1103,9 +1021,7 @@
     },
     "/api/comments": {
       "get": {
-        "tags": [
-          "comments"
-        ],
+        "tags": ["comments"],
         "summary": "GET /api/comments",
         "operationId": "getApiComments",
         "responses": {
@@ -1125,9 +1041,7 @@
         "x-required-role": "admin"
       },
       "post": {
-        "tags": [
-          "comments"
-        ],
+        "tags": ["comments"],
         "summary": "POST /api/comments",
         "operationId": "postApiComments",
         "responses": {
@@ -1139,9 +1053,7 @@
     },
     "/api/comments/{id}": {
       "get": {
-        "tags": [
-          "comments"
-        ],
+        "tags": ["comments"],
         "summary": "GET /api/comments/{id}",
         "operationId": "getApiCommentsId",
         "responses": {
@@ -1171,9 +1083,7 @@
         "x-required-role": "admin"
       },
       "put": {
-        "tags": [
-          "comments"
-        ],
+        "tags": ["comments"],
         "summary": "PUT /api/comments/{id}",
         "operationId": "putApiCommentsId",
         "responses": {
@@ -1203,9 +1113,7 @@
         "x-required-role": "admin"
       },
       "delete": {
-        "tags": [
-          "comments"
-        ],
+        "tags": ["comments"],
         "summary": "DELETE /api/comments/{id}",
         "operationId": "deleteApiCommentsId",
         "responses": {
@@ -1237,9 +1145,7 @@
     },
     "/api/comments/{id}/dislike": {
       "patch": {
-        "tags": [
-          "comments"
-        ],
+        "tags": ["comments"],
         "summary": "PATCH /api/comments/{id}/dislike",
         "operationId": "patchApiCommentsIdDislike",
         "responses": {
@@ -1261,9 +1167,7 @@
     },
     "/api/comments/{id}/like": {
       "patch": {
-        "tags": [
-          "comments"
-        ],
+        "tags": ["comments"],
         "summary": "PATCH /api/comments/{id}/like",
         "operationId": "patchApiCommentsIdLike",
         "responses": {
@@ -1285,9 +1189,7 @@
     },
     "/api/comments/{id}/reaction": {
       "put": {
-        "tags": [
-          "comments"
-        ],
+        "tags": ["comments"],
         "summary": "PUT /api/comments/{id}/reaction",
         "operationId": "putApiCommentsIdReaction",
         "responses": {
@@ -1309,9 +1211,7 @@
     },
     "/api/comments/{id}/status": {
       "patch": {
-        "tags": [
-          "comments"
-        ],
+        "tags": ["comments"],
         "summary": "PATCH /api/comments/{id}/status",
         "operationId": "patchApiCommentsIdStatus",
         "responses": {
@@ -1343,9 +1243,7 @@
     },
     "/api/comments/article/{articleId}": {
       "get": {
-        "tags": [
-          "comments"
-        ],
+        "tags": ["comments"],
         "summary": "GET /api/comments/article/{articleId}",
         "operationId": "getApiCommentsArticleArticleId",
         "responses": {
@@ -1367,9 +1265,7 @@
     },
     "/api/comments/by-article": {
       "get": {
-        "tags": [
-          "comments"
-        ],
+        "tags": ["comments"],
         "summary": "GET /api/comments/by-article",
         "operationId": "getApiCommentsByarticle",
         "responses": {
@@ -1381,9 +1277,7 @@
     },
     "/api/comments/stats": {
       "get": {
-        "tags": [
-          "comments"
-        ],
+        "tags": ["comments"],
         "summary": "GET /api/comments/stats",
         "operationId": "getApiCommentsStats",
         "responses": {
@@ -1405,9 +1299,7 @@
     },
     "/api/health": {
       "get": {
-        "tags": [
-          "health"
-        ],
+        "tags": ["health"],
         "summary": "GET /api/health",
         "operationId": "getApiHealth",
         "responses": {
@@ -1419,9 +1311,7 @@
     },
     "/api/notifications": {
       "get": {
-        "tags": [
-          "notifications"
-        ],
+        "tags": ["notifications"],
         "summary": "GET /api/notifications",
         "operationId": "getApiNotifications",
         "responses": {
@@ -1442,9 +1332,7 @@
     },
     "/api/notifications/{id}/read": {
       "patch": {
-        "tags": [
-          "notifications"
-        ],
+        "tags": ["notifications"],
         "summary": "PATCH /api/notifications/{id}/read",
         "operationId": "patchApiNotificationsIdRead",
         "responses": {
@@ -1475,9 +1363,7 @@
     },
     "/api/notifications/read-all": {
       "post": {
-        "tags": [
-          "notifications"
-        ],
+        "tags": ["notifications"],
         "summary": "POST /api/notifications/read-all",
         "operationId": "postApiNotificationsReadall",
         "responses": {
@@ -1498,9 +1384,7 @@
     },
     "/api/openapi.json": {
       "get": {
-        "tags": [
-          "openapi.json"
-        ],
+        "tags": ["openapi.json"],
         "summary": "GET /api/openapi.json",
         "operationId": "getApiOpenapijson",
         "responses": {
@@ -1512,9 +1396,7 @@
     },
     "/api/playlists": {
       "get": {
-        "tags": [
-          "playlists"
-        ],
+        "tags": ["playlists"],
         "summary": "GET /api/playlists",
         "operationId": "getApiPlaylists",
         "responses": {
@@ -1524,9 +1406,7 @@
         }
       },
       "post": {
-        "tags": [
-          "playlists"
-        ],
+        "tags": ["playlists"],
         "summary": "POST /api/playlists",
         "operationId": "postApiPlaylists",
         "responses": {
@@ -1548,9 +1428,7 @@
     },
     "/api/playlists/{id}": {
       "get": {
-        "tags": [
-          "playlists"
-        ],
+        "tags": ["playlists"],
         "summary": "GET /api/playlists/{id}",
         "operationId": "getApiPlaylistsId",
         "responses": {
@@ -1570,9 +1448,7 @@
         ]
       },
       "put": {
-        "tags": [
-          "playlists"
-        ],
+        "tags": ["playlists"],
         "summary": "PUT /api/playlists/{id}",
         "operationId": "putApiPlaylistsId",
         "responses": {
@@ -1602,9 +1478,7 @@
         "x-required-role": "admin"
       },
       "delete": {
-        "tags": [
-          "playlists"
-        ],
+        "tags": ["playlists"],
         "summary": "DELETE /api/playlists/{id}",
         "operationId": "deleteApiPlaylistsId",
         "responses": {
@@ -1636,9 +1510,7 @@
     },
     "/api/playlists/{id}/set-active": {
       "put": {
-        "tags": [
-          "playlists"
-        ],
+        "tags": ["playlists"],
         "summary": "PUT /api/playlists/{id}/set-active",
         "operationId": "putApiPlaylistsIdSetactive",
         "responses": {
@@ -1670,9 +1542,7 @@
     },
     "/api/playlists/active": {
       "get": {
-        "tags": [
-          "playlists"
-        ],
+        "tags": ["playlists"],
         "summary": "GET /api/playlists/active",
         "operationId": "getApiPlaylistsActive",
         "responses": {
@@ -1684,9 +1554,7 @@
     },
     "/api/slivers": {
       "post": {
-        "tags": [
-          "slivers"
-        ],
+        "tags": ["slivers"],
         "summary": "POST /api/slivers",
         "operationId": "postApiSlivers",
         "responses": {
@@ -1698,9 +1566,7 @@
     },
     "/api/slivers/{id}": {
       "delete": {
-        "tags": [
-          "slivers"
-        ],
+        "tags": ["slivers"],
         "summary": "DELETE /api/slivers/{id}",
         "operationId": "deleteApiSliversId",
         "responses": {
@@ -1732,9 +1598,7 @@
     },
     "/api/slivers/all": {
       "get": {
-        "tags": [
-          "slivers"
-        ],
+        "tags": ["slivers"],
         "summary": "GET /api/slivers/all",
         "operationId": "getApiSliversAll",
         "responses": {
@@ -1756,9 +1620,7 @@
     },
     "/api/sub-categories": {
       "get": {
-        "tags": [
-          "sub-categories"
-        ],
+        "tags": ["sub-categories"],
         "summary": "GET /api/sub-categories",
         "operationId": "getApiSubcategories",
         "responses": {
@@ -1768,9 +1630,7 @@
         }
       },
       "post": {
-        "tags": [
-          "sub-categories"
-        ],
+        "tags": ["sub-categories"],
         "summary": "POST /api/sub-categories",
         "operationId": "postApiSubcategories",
         "responses": {
@@ -1792,9 +1652,7 @@
     },
     "/api/sub-categories/{id}": {
       "get": {
-        "tags": [
-          "sub-categories"
-        ],
+        "tags": ["sub-categories"],
         "summary": "GET /api/sub-categories/{id}",
         "operationId": "getApiSubcategoriesId",
         "responses": {
@@ -1814,9 +1672,7 @@
         ]
       },
       "put": {
-        "tags": [
-          "sub-categories"
-        ],
+        "tags": ["sub-categories"],
         "summary": "PUT /api/sub-categories/{id}",
         "operationId": "putApiSubcategoriesId",
         "responses": {
@@ -1846,9 +1702,7 @@
         "x-required-role": "admin"
       },
       "delete": {
-        "tags": [
-          "sub-categories"
-        ],
+        "tags": ["sub-categories"],
         "summary": "DELETE /api/sub-categories/{id}",
         "operationId": "deleteApiSubcategoriesId",
         "responses": {
@@ -1880,9 +1734,7 @@
     },
     "/api/sub-categories/{id}/hard": {
       "delete": {
-        "tags": [
-          "sub-categories"
-        ],
+        "tags": ["sub-categories"],
         "summary": "DELETE /api/sub-categories/{id}/hard",
         "operationId": "deleteApiSubcategoriesIdHard",
         "responses": {
@@ -1914,9 +1766,7 @@
     },
     "/api/sub-categories/category/{categoryId}": {
       "get": {
-        "tags": [
-          "sub-categories"
-        ],
+        "tags": ["sub-categories"],
         "summary": "GET /api/sub-categories/category/{categoryId}",
         "operationId": "getApiSubcategoriesCategoryCategoryId",
         "responses": {
@@ -1938,9 +1788,7 @@
     },
     "/api/sub-categories/slug/{slug}": {
       "get": {
-        "tags": [
-          "sub-categories"
-        ],
+        "tags": ["sub-categories"],
         "summary": "GET /api/sub-categories/slug/{slug}",
         "operationId": "getApiSubcategoriesSlugSlug",
         "responses": {
@@ -1962,9 +1810,7 @@
     },
     "/api/sub-categories/stats": {
       "get": {
-        "tags": [
-          "sub-categories"
-        ],
+        "tags": ["sub-categories"],
         "summary": "GET /api/sub-categories/stats",
         "operationId": "getApiSubcategoriesStats",
         "responses": {
@@ -1976,9 +1822,7 @@
     },
     "/api/tags": {
       "get": {
-        "tags": [
-          "tags"
-        ],
+        "tags": ["tags"],
         "summary": "GET /api/tags",
         "operationId": "getApiTags",
         "responses": {
@@ -1988,9 +1832,7 @@
         }
       },
       "post": {
-        "tags": [
-          "tags"
-        ],
+        "tags": ["tags"],
         "summary": "POST /api/tags",
         "operationId": "postApiTags",
         "responses": {
@@ -2012,9 +1854,7 @@
     },
     "/api/tags/{id}": {
       "get": {
-        "tags": [
-          "tags"
-        ],
+        "tags": ["tags"],
         "summary": "GET /api/tags/{id}",
         "operationId": "getApiTagsId",
         "responses": {
@@ -2034,9 +1874,7 @@
         ]
       },
       "put": {
-        "tags": [
-          "tags"
-        ],
+        "tags": ["tags"],
         "summary": "PUT /api/tags/{id}",
         "operationId": "putApiTagsId",
         "responses": {
@@ -2066,9 +1904,7 @@
         "x-required-role": "admin"
       },
       "patch": {
-        "tags": [
-          "tags"
-        ],
+        "tags": ["tags"],
         "summary": "PATCH /api/tags/{id}",
         "operationId": "patchApiTagsId",
         "responses": {
@@ -2098,9 +1934,7 @@
         "x-required-role": "admin"
       },
       "delete": {
-        "tags": [
-          "tags"
-        ],
+        "tags": ["tags"],
         "summary": "DELETE /api/tags/{id}",
         "operationId": "deleteApiTagsId",
         "responses": {
@@ -2132,9 +1966,7 @@
     },
     "/api/tags/{id}/hard": {
       "delete": {
-        "tags": [
-          "tags"
-        ],
+        "tags": ["tags"],
         "summary": "DELETE /api/tags/{id}/hard",
         "operationId": "deleteApiTagsIdHard",
         "responses": {
@@ -2166,9 +1998,7 @@
     },
     "/api/tags/slug/{slug}": {
       "get": {
-        "tags": [
-          "tags"
-        ],
+        "tags": ["tags"],
         "summary": "GET /api/tags/slug/{slug}",
         "operationId": "getApiTagsSlugSlug",
         "responses": {
@@ -2190,9 +2020,7 @@
     },
     "/api/tags/stats": {
       "get": {
-        "tags": [
-          "tags"
-        ],
+        "tags": ["tags"],
         "summary": "GET /api/tags/stats",
         "operationId": "getApiTagsStats",
         "responses": {
@@ -2204,9 +2032,7 @@
     },
     "/api/users": {
       "get": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "GET /api/users",
         "operationId": "getApiUsers",
         "responses": {
@@ -2226,9 +2052,7 @@
         "x-required-role": "admin"
       },
       "post": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "POST /api/users",
         "operationId": "postApiUsers",
         "responses": {
@@ -2250,9 +2074,7 @@
     },
     "/api/users/{id}": {
       "get": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "GET /api/users/{id}",
         "operationId": "getApiUsersId",
         "responses": {
@@ -2282,9 +2104,7 @@
         "x-required-role": "admin"
       },
       "put": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "PUT /api/users/{id}",
         "operationId": "putApiUsersId",
         "responses": {
@@ -2314,9 +2134,7 @@
         "x-required-role": "admin"
       },
       "patch": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "PATCH /api/users/{id}",
         "operationId": "patchApiUsersId",
         "responses": {
@@ -2346,9 +2164,7 @@
         "x-required-role": "admin"
       },
       "delete": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "DELETE /api/users/{id}",
         "operationId": "deleteApiUsersId",
         "responses": {
@@ -2380,9 +2196,7 @@
     },
     "/api/users/bulk-delete": {
       "post": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "POST /api/users/bulk-delete",
         "operationId": "postApiUsersBulkdelete",
         "responses": {
@@ -2404,9 +2218,7 @@
     },
     "/api/users/invite": {
       "post": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "POST /api/users/invite",
         "operationId": "postApiUsersInvite",
         "responses": {
@@ -2428,9 +2240,7 @@
     },
     "/health": {
       "get": {
-        "tags": [
-          "health"
-        ],
+        "tags": ["health"],
         "summary": "GET /health",
         "operationId": "getHealth",
         "responses": {

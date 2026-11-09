@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { useEffect, useMemo, useState } from "react"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
+import { useEffect, useMemo, useState } from 'react'
 
-import { cn } from "@/lib/utils"
+import { cn } from '@/lib/utils'
 
 type CharacterCountPluginProps = {
   className?: string
@@ -11,7 +11,7 @@ type CharacterCountPluginProps = {
 
 export function CharacterCountPlugin({ className }: CharacterCountPluginProps) {
   const [editor] = useLexicalComposerContext()
-  const [text, setText] = useState("")
+  const [text, setText] = useState('')
 
   useEffect(() => {
     return editor.registerTextContentListener((nextText) => {
@@ -28,11 +28,11 @@ export function CharacterCountPlugin({ className }: CharacterCountPluginProps) {
   }, [text])
 
   return (
-    <div className="pointer-events-none absolute bottom-3 right-4">
+    <div className='pointer-events-none absolute bottom-3 right-4'>
       <div
         className={cn(
-          "rounded bg-muted px-2 py-1 text-xs text-muted-foreground shadow-sm",
-          className,
+          'rounded bg-muted px-2 py-1 text-xs text-muted-foreground shadow-sm',
+          className
         )}
       >
         {wordCount} words • {charCount} characters

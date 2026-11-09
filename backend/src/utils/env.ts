@@ -5,7 +5,10 @@ import { z } from 'zod';
 dotenv.config();
 
 // Treat empty strings as undefined so `.env.example` placeholders don't fail validation.
-const optionalString = z.string().transform((v) => v.trim() || undefined).pipe(z.string().min(1).optional());
+const optionalString = z
+  .string()
+  .transform((v) => v.trim() || undefined)
+  .pipe(z.string().min(1).optional());
 
 export const env = z
   .object({

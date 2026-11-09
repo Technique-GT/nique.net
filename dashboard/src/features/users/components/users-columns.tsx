@@ -1,8 +1,8 @@
 import { ColumnDef } from '@tanstack/react-table'
-import { cn } from '@/lib/utils'
+import LongText from '@/components/long-text'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import LongText from '@/components/long-text'
+import { cn } from '@/lib/utils'
 import { User } from '../data/schema'
 import { DataTableColumnHeader } from './data-table-column-header'
 import { DataTableRowActions } from './data-table-row-actions'
@@ -80,7 +80,9 @@ export const columns: ColumnDef<User>[] = [
         <div className='flex space-x-2'>
           <Badge
             variant='outline'
-            className={cn(isAdmin ? 'border-emerald-200 text-emerald-700' : 'border-muted')}
+            className={cn(
+              isAdmin ? 'border-emerald-200 text-emerald-700' : 'border-muted'
+            )}
           >
             {isAdmin ? 'Admin' : 'User'}
           </Badge>
@@ -98,7 +100,10 @@ export const columns: ColumnDef<User>[] = [
       <DataTableColumnHeader column={column} title='Social Links' />
     ),
     cell: ({ row }) => {
-      const links = row.getValue('socialLinks') as Array<{ platform: string; url: string }>
+      const links = row.getValue('socialLinks') as Array<{
+        platform: string
+        url: string
+      }>
       return <div>{links?.length ? links.length : '—'}</div>
     },
     meta: {

@@ -27,7 +27,10 @@ const slugify = (value) =>
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-');
 
-const normalizeName = (value) => String(value || '').trim().replace(/\s+/g, ' ');
+const normalizeName = (value) =>
+  String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ');
 
 const titleCase = (value) =>
   String(value || '')
@@ -237,7 +240,8 @@ async function main() {
 
     for (const media of normalizedMedia) {
       const legacyId = toObjectId(media._id);
-      const existing = (legacyId && mediaById.get(legacyId.toString())) || (media.url && mediaByUrl.get(media.url));
+      const existing =
+        (legacyId && mediaById.get(legacyId.toString())) || (media.url && mediaByUrl.get(media.url));
       if (existing) {
         mediaIdByLegacy.set(String(media._id), existing._id);
         continue;
@@ -260,7 +264,11 @@ async function main() {
       .find({
         $or: [
           { _id: { $in: normalizedSubcategories.map((sub) => toObjectId(sub._id)).filter(Boolean) } },
-          { slug: { $in: normalizedSubcategories.map((sub) => slugify(sub.slug || sub.name)).filter(Boolean) } },
+          {
+            slug: {
+              $in: normalizedSubcategories.map((sub) => slugify(sub.slug || sub.name)).filter(Boolean),
+            },
+          },
         ],
       })
       .toArray();
@@ -272,7 +280,8 @@ async function main() {
 
     for (const subcategory of normalizedSubcategories) {
       const legacyId = toObjectId(subcategory._id);
-      const categoryId = categoryIdByLegacy.get(String(subcategory.categoryId)) || toObjectId(subcategory.categoryId);
+      const categoryId =
+        categoryIdByLegacy.get(String(subcategory.categoryId)) || toObjectId(subcategory.categoryId);
       const slug = slugify(subcategory.slug || subcategory.name);
       if (!slug || !categoryId) continue;
       const existing =
@@ -301,7 +310,9 @@ async function main() {
       .find({
         $or: [
           { _id: { $in: articles.map((article) => toObjectId(article._id)).filter(Boolean) } },
-          { slug: { $in: articles.map((article) => slugify(article.slug || article.title)).filter(Boolean) } },
+          {
+            slug: { $in: articles.map((article) => slugify(article.slug || article.title)).filter(Boolean) },
+          },
         ],
       })
       .project({ _id: 1, slug: 1 })
@@ -336,9 +347,7 @@ async function main() {
       }
 
       const tagIds = Array.isArray(article.tagIds)
-        ? article.tagIds
-            .map((tagId) => tagIdByLegacy.get(String(tagId)) || toObjectId(tagId))
-            .filter(Boolean)
+        ? article.tagIds.map((tagId) => tagIdByLegacy.get(String(tagId)) || toObjectId(tagId)).filter(Boolean)
         : [];
 
       const record = {
@@ -420,7 +429,10 @@ async function main() {
       const normalized = normalizeName(author);
       if (!normalized) continue;
       if (normalized.includes(',')) {
-        const parts = normalized.split(',').map((part) => normalizeName(part)).filter(Boolean);
+        const parts = normalized
+          .split(',')
+          .map((part) => normalizeName(part))
+          .filter(Boolean);
         parts.forEach((part) => authorNames.add(part));
       } else {
         authorNames.add(normalized);
@@ -506,7 +518,9 @@ async function main() {
       subcategoryIdByKey.set(`${doc.categoryId.toString()}|${doc.slug}`, doc._id);
     }
 
-    const subcategoriesToInsert = subcategoryDocs.filter((doc) => !subcategoryIdByKey.has(`${doc.categoryId.toString()}|${doc.slug}`));
+    const subcategoriesToInsert = subcategoryDocs.filter(
+      (doc) => !subcategoryIdByKey.has(`${doc.categoryId.toString()}|${doc.slug}`),
+    );
     if (!dryRun && subcategoriesToInsert.length > 0) {
       const insertResult = await subcategoriesCol.insertMany(subcategoriesToInsert);
       Object.entries(insertResult.insertedIds).forEach(([_, id], idx) => {
@@ -517,9 +531,7 @@ async function main() {
   }
 
   const authorList = Array.from(authorNames).filter(Boolean);
-  const existingUsers = authorList.length
-    ? await usersCol.find({ name: { $in: authorList } }).toArray()
-    : [];
+  const existingUsers = authorList.length ? await usersCol.find({ name: { $in: authorList } }).toArray() : [];
   const userIdByName = new Map(existingUsers.map((doc) => [doc.name, doc._id]));
   const usersToInsert = authorList
     .filter((name) => !userIdByName.has(name))
@@ -536,7 +548,12 @@ async function main() {
   let fallbackUserId = userIdByName.get(fallbackUserName);
   if (!fallbackUserId) {
     if (!dryRun) {
-      const result = await usersCol.insertOne({ __v: 0, name: fallbackUserName, isAdmin: false, socialLinks: [] });
+      const result = await usersCol.insertOne({
+        __v: 0,
+        name: fallbackUserName,
+        isAdmin: false,
+        socialLinks: [],
+      });
       fallbackUserId = result.insertedId;
       userIdByName.set(fallbackUserName, fallbackUserId);
     }
@@ -613,7 +630,10 @@ async function main() {
       const normalized = normalizeName(authorName);
       if (!normalized) continue;
       const names = normalized.includes(',')
-        ? normalized.split(',').map((part) => normalizeName(part)).filter(Boolean)
+        ? normalized
+            .split(',')
+            .map((part) => normalizeName(part))
+            .filter(Boolean)
         : [normalized];
       for (const name of names) {
         const id = userIdByName.get(name);
@@ -623,11 +643,12 @@ async function main() {
       }
     }
 
-    const authors = authorIds.length > 0
-      ? authorIds.map((id, idx) => ({ authorId: id, order: idx }))
-      : fallbackUserId
-        ? [{ authorId: fallbackUserId, order: 0 }]
-        : [];
+    const authors =
+      authorIds.length > 0
+        ? authorIds.map((id, idx) => ({ authorId: id, order: idx }))
+        : fallbackUserId
+          ? [{ authorId: fallbackUserId, order: 0 }]
+          : [];
 
     if (authors.length === 0) {
       skipped.push({ title, reason: 'missing authors' });
@@ -645,14 +666,17 @@ async function main() {
     const baseSlug = slugify(article.slug || title);
     const uniqueSlug = await ensureUniqueSlug(baseSlug, takenSlugs, articlesCol);
 
-    const published = article.status === 'published' || article.status === 'publish' || article.status === true;
+    const published =
+      article.status === 'published' || article.status === 'publish' || article.status === true;
     const publishedAt = parseDate(article.publishedAt) || (published ? new Date() : null);
     const updatedAt = parseDate(article.updatedAt) || publishedAt || new Date();
 
-    const featuredId = article.featuredImage != null ? mediaIdByLegacyId.get(article.featuredImage) : undefined;
-    const imageCaption = article.featuredImage != null
-      ? normalizeName((attachments.find((att) => att.id === article.featuredImage) || {}).caption)
-      : undefined;
+    const featuredId =
+      article.featuredImage != null ? mediaIdByLegacyId.get(article.featuredImage) : undefined;
+    const imageCaption =
+      article.featuredImage != null
+        ? normalizeName((attachments.find((att) => att.id === article.featuredImage) || {}).caption)
+        : undefined;
 
     const record = {
       __v: 0,

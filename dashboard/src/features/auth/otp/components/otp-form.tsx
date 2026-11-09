@@ -1,10 +1,8 @@
-import { HTMLAttributes, useState } from 'react'
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from '@tanstack/react-router'
-import { cn } from '@/lib/utils'
-import { showSubmittedData } from '@/utils/show-submitted-data'
+import { HTMLAttributes, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -17,9 +15,11 @@ import {
 import {
   InputOTP,
   InputOTPGroup,
-  InputOTPSlot,
   InputOTPSeparator,
+  InputOTPSlot,
 } from '@/components/ui/input-otp'
+import { cn } from '@/lib/utils'
+import { showSubmittedData } from '@/utils/show-submitted-data'
 
 type OtpFormProps = HTMLAttributes<HTMLFormElement>
 

@@ -2,24 +2,23 @@
 //   "migration/Archive 2/normalized-articles.json" \
 //   "migration/Archive 2/normalized-articles.json"
 
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
-const inputPath =
-  process.argv[2] || path.join("migration", "Archive 2", "normalized-articles.json");
+const inputPath = process.argv[2] || path.join('migration', 'Archive 2', 'normalized-articles.json');
 const outputPath = process.argv[3] || inputPath;
 
 const readId = (value) => {
   if (!value) return null;
-  if (typeof value === "string") return value;
-  if (typeof value === "object") {
-    if (typeof value.$oid === "string") return value.$oid;
-    if (typeof value._id === "string") return value._id;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') {
+    if (typeof value.$oid === 'string') return value.$oid;
+    if (typeof value._id === 'string') return value._id;
   }
   return null;
 };
 
-const raw = fs.readFileSync(inputPath, "utf8");
+const raw = fs.readFileSync(inputPath, 'utf8');
 const payload = JSON.parse(raw);
 
 const mediaList = Array.isArray(payload.media) ? payload.media : [];
@@ -50,12 +49,12 @@ const updatedArticles = articleList.map((article) => {
       slug: article?.slug,
       title: article?.title,
     });
-    if (!article || typeof article !== "object") return article;
+    if (!article || typeof article !== 'object') return article;
     const { featuredMediaId: _omit, ...rest } = article;
     return rest;
   }
   const media = mediaById.get(featuredMediaId);
-  if (!media || typeof media.url !== "string" || !media.url.trim()) {
+  if (!media || typeof media.url !== 'string' || !media.url.trim()) {
     missingMedia += 1;
     missingMediaArticles.push({
       _id: readId(article?._id),
@@ -63,7 +62,7 @@ const updatedArticles = articleList.map((article) => {
       title: article?.title,
       featuredMediaId,
     });
-    if (!article || typeof article !== "object") return article;
+    if (!article || typeof article !== 'object') return article;
     const { featuredMediaId: _omit, ...rest } = article;
     return rest;
   }
@@ -86,8 +85,8 @@ console.log(
   `Updated ${updated} articles. Missing featuredMediaId: ${missingId}. Missing media url: ${missingMedia}.`,
 );
 if (missingIdArticles.length) {
-  console.log("Missing featuredMediaId articles:", missingIdArticles);
+  console.log('Missing featuredMediaId articles:', missingIdArticles);
 }
 if (missingMediaArticles.length) {
-  console.log("Missing media url articles:", missingMediaArticles);
+  console.log('Missing media url articles:', missingMediaArticles);
 }

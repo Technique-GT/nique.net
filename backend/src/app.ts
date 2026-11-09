@@ -1,30 +1,27 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
-
-import express from 'express';
-import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import pinoHttp from 'pino-http';
-import helmet from 'helmet';
+import cors from 'cors';
+import express from 'express';
 import rateLimit from 'express-rate-limit';
-
+import helmet from 'helmet';
+import pinoHttp from 'pino-http';
+import { errorHandler, notFoundHandler } from './middleware/error.middleware';
+import adminArticleRoutes from './routes/admin.articles.routes';
 import articleRoutes from './routes/article.routes';
+import authRoutes from './routes/auth.routes';
+import authorRoutes from './routes/author.routes';
 import categoryRoutes from './routes/category.routes';
 import commentRoutes from './routes/comment.routes';
+import mediaRoutes from './routes/media.routes';
+import notificationRoutes from './routes/notification.routes';
 import playlistRoutes from './routes/playlist.routes';
 import publicationRoutes from './routes/publication.routes';
 import sliverRoutes from './routes/sliver.routes';
 import subCategoryRoutes from './routes/subCategory.routes';
 import tagRoutes from './routes/tag.routes';
 import userRoutes from './routes/user.routes';
-import authorRoutes from './routes/author.routes';
-import adminArticleRoutes from './routes/admin.articles.routes';
-import authRoutes from './routes/auth.routes';
-import mediaRoutes from './routes/media.routes';
-import notificationRoutes from './routes/notification.routes';
-
-import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import { env } from './utils/env';
 import { logger } from './utils/logger';
 
@@ -40,22 +37,24 @@ export function createApp() {
   }
 
   // Security: HTTP headers
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'"],
-        fontSrc: ["'self'"],
-        objectSrc: ["'none'"],
-        mediaSrc: ["'self'"],
-        frameSrc: ["'none'"],
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'https:'],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          mediaSrc: ["'self'"],
+          frameSrc: ["'none'"],
+        },
       },
-    },
-    crossOriginEmbedderPolicy: false, // Disable for API compatibility
-  }));
+      crossOriginEmbedderPolicy: false, // Disable for API compatibility
+    }),
+  );
 
   // Search engines should not index API responses.
   app.use((_req, res, next) => {
@@ -165,7 +164,7 @@ export function createApp() {
 
   app.use(express.json({ limit: '10mb' }));
   app.use(cookieParser());
-  
+
   // Double-Submit Cookie CSRF Protection Middleware
   const csrfProtection = (req: express.Request, res: express.Response, next: express.NextFunction) => {
     // Skip safe methods and test environments

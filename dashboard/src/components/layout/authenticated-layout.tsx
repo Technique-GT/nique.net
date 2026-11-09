@@ -1,12 +1,12 @@
 import { Outlet } from '@tanstack/react-router'
-import { cn } from '@/lib/utils'
-import { SearchProvider } from '@/context/search-context'
-import { SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { Header } from '@/components/layout/header'
-import { Search } from '@/components/search'
 import { Notifications } from '@/components/notifications'
+import { Search } from '@/components/search'
 import SkipToMain from '@/components/skip-to-main'
+import { SidebarProvider } from '@/components/ui/sidebar'
+import { SearchProvider } from '@/context/search-context'
+import { cn } from '@/lib/utils'
 
 interface Props {
   children?: React.ReactNode

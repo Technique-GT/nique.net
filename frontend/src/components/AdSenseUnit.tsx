@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { loadAdSenseScript } from "../utils/loadAdSense";
+import { useEffect, useRef, useState } from 'react';
+import { loadAdSenseScript } from '../utils/loadAdSense';
 
 type AdsWindow = Window & { adsbygoogle?: unknown[] };
 
@@ -27,8 +27,8 @@ export function AdsenseUnit({ adSlot, className }: AdsenseUnitProps) {
         }
       },
       {
-        rootMargin: "300px",
-      }
+        rootMargin: '300px',
+      },
     );
 
     observer.observe(node);
@@ -60,13 +60,13 @@ export function AdsenseUnit({ adSlot, className }: AdsenseUnitProps) {
   return (
     <ins
       ref={containerRef}
-      className={className ? `adsbygoogle ${className}` : "adsbygoogle"}
-      style={{ display: "block" }}
-      data-ad-client="ca-pub-9496613824414881"
+      className={className ? `adsbygoogle ${className}` : 'adsbygoogle'}
+      style={{ display: 'block' }}
+      data-ad-client='ca-pub-9496613824414881'
       data-ad-slot={adSlot}
-      data-ad-format="auto"
-      data-full-width-responsive="true"
-      aria-label="Advertisement"
+      data-ad-format='auto'
+      data-full-width-responsive='true'
+      aria-label='Advertisement'
     />
   );
 }

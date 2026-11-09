@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import request from 'supertest';
 import jwt from 'jsonwebtoken';
+import request from 'supertest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app';
 import RevokedToken from '../src/models/RevokedToken';
 import { hashToken } from '../src/utils/security';
@@ -16,7 +16,6 @@ const adminToken = generateToken({ id: '000000000000000000000001', name: 'Admin 
 const userToken = generateToken({ id: '000000000000000000000002', name: 'Regular User', isAdmin: false });
 
 describe('Security: Authorization Boundary Tests', () => {
-  
   describe('User Management Routes (Admin-only)', () => {
     it('GET /api/users returns 401 without auth', async () => {
       const res = await request(app).get('/api/users');
@@ -25,24 +24,18 @@ describe('Security: Authorization Boundary Tests', () => {
     });
 
     it('GET /api/users returns 403 for non-admin', async () => {
-      const res = await request(app)
-        .get('/api/users')
-        .set('Authorization', `Bearer ${userToken}`);
+      const res = await request(app).get('/api/users').set('Authorization', `Bearer ${userToken}`);
       expect(res.status).toBe(403);
       expect(res.body.message).toContain('Admin');
     });
 
     it('GET /api/users returns 200 for admin', async () => {
-      const res = await request(app)
-        .get('/api/users')
-        .set('Authorization', `Bearer ${adminToken}`);
+      const res = await request(app).get('/api/users').set('Authorization', `Bearer ${adminToken}`);
       expect(res.status).toBe(200);
     });
 
     it('POST /api/users returns 401 without auth', async () => {
-      const res = await request(app)
-        .post('/api/users')
-        .send({ name: 'Attacker', isAdmin: true });
+      const res = await request(app).post('/api/users').send({ name: 'Attacker', isAdmin: true });
       expect(res.status).toBe(401);
     });
 
@@ -93,9 +86,7 @@ describe('Security: Authorization Boundary Tests', () => {
     });
 
     it('POST /api/categories returns 401 without auth', async () => {
-      const res = await request(app)
-        .post('/api/categories')
-        .send({ name: 'Hacked Category' });
+      const res = await request(app).post('/api/categories').send({ name: 'Hacked Category' });
       expect(res.status).toBe(401);
     });
 
@@ -125,9 +116,7 @@ describe('Security: Authorization Boundary Tests', () => {
     });
 
     it('POST /api/tags returns 401 without auth', async () => {
-      const res = await request(app)
-        .post('/api/tags')
-        .send({ name: 'Hacked Tag' });
+      const res = await request(app).post('/api/tags').send({ name: 'Hacked Tag' });
       expect(res.status).toBe(401);
     });
 
@@ -219,9 +208,7 @@ describe('Security: Authorization Boundary Tests', () => {
     });
 
     it('POST /api/playlists returns 401 without auth', async () => {
-      const res = await request(app)
-        .post('/api/playlists')
-        .send({ name: 'Hacked Playlist' });
+      const res = await request(app).post('/api/playlists').send({ name: 'Hacked Playlist' });
       expect(res.status).toBe(401);
     });
 
@@ -243,23 +230,17 @@ describe('Security: Authorization Boundary Tests', () => {
     });
 
     it('GET /api/slivers/all returns 403 for non-admin', async () => {
-      const res = await request(app)
-        .get('/api/slivers/all')
-        .set('Authorization', `Bearer ${userToken}`);
+      const res = await request(app).get('/api/slivers/all').set('Authorization', `Bearer ${userToken}`);
       expect(res.status).toBe(403);
     });
 
     it('GET /api/slivers/all returns 200 for admin', async () => {
-      const res = await request(app)
-        .get('/api/slivers/all')
-        .set('Authorization', `Bearer ${adminToken}`);
+      const res = await request(app).get('/api/slivers/all').set('Authorization', `Bearer ${adminToken}`);
       expect(res.status).toBe(200);
     });
 
     it('POST /api/slivers remains public', async () => {
-      const res = await request(app)
-        .post('/api/slivers')
-        .send({ text: 'Hacked Sliver' });
+      const res = await request(app).post('/api/slivers').send({ text: 'Hacked Sliver' });
       expect(res.status).not.toBe(401);
     });
 
@@ -285,7 +266,11 @@ describe('Security: Authorization Boundary Tests', () => {
 
   describe('Token Revocation', () => {
     it('rejects requests with revoked tokens', async () => {
-      const revokedToken = generateToken({ id: '000000000000000000000003', name: 'Revoked Admin', isAdmin: true });
+      const revokedToken = generateToken({
+        id: '000000000000000000000003',
+        name: 'Revoked Admin',
+        isAdmin: true,
+      });
       const tokenHash = hashToken(revokedToken);
 
       await RevokedToken.create({
@@ -293,9 +278,7 @@ describe('Security: Authorization Boundary Tests', () => {
         expiresAt: new Date(Date.now() + 60 * 60 * 1000),
       });
 
-      const res = await request(app)
-        .get('/api/users')
-        .set('Authorization', `Bearer ${revokedToken}`);
+      const res = await request(app).get('/api/users').set('Authorization', `Bearer ${revokedToken}`);
 
       await RevokedToken.deleteOne({ tokenHash });
 
@@ -310,9 +293,9 @@ describe('Security: Input Validation Tests', () => {
     it('handles malicious regex in search params safely', async () => {
       const maliciousInput = '(a+)+$';
       const startTime = Date.now();
-      
+
       const res = await request(app).get(`/api/categories?search=${encodeURIComponent(maliciousInput)}`);
-      
+
       const elapsed = Date.now() - startTime;
       // Should complete in under 1 second, not hang
       expect(elapsed).toBeLessThan(1000);
@@ -322,7 +305,7 @@ describe('Security: Input Validation Tests', () => {
     it('handles special regex chars in article search', async () => {
       const specialChars = '.*+?^${}()|[]\\';
       const res = await request(app).get(`/api/articles/feed?search=${encodeURIComponent(specialChars)}`);
-      
+
       expect(res.status).toBe(200);
     });
   });
@@ -331,7 +314,7 @@ describe('Security: Input Validation Tests', () => {
 describe('Security: Header Tests', () => {
   it('includes security headers from helmet', async () => {
     const res = await request(app).get('/api/health');
-    
+
     // Helmet headers
     expect(res.headers['x-content-type-options']).toBe('nosniff');
     expect(res.headers['x-frame-options']).toBeDefined();

@@ -33,16 +33,10 @@ const purgeCloudflareCache = async (
 
     const payload = (await response.json().catch(() => null)) as PurgeResponsePayload;
 
-    logger.info(
-      { ...context, status: response.status, payload },
-      successMessage,
-    );
+    logger.info({ ...context, status: response.status, payload }, successMessage);
 
     if (!response.ok || !payload?.success) {
-      logger.error(
-        { ...context, status: response.status, response: payload },
-        failureMessage,
-      );
+      logger.error({ ...context, status: response.status, response: payload }, failureMessage);
     }
   } catch (error) {
     logger.error({ error, ...context }, `${failureMessage} request failed`);

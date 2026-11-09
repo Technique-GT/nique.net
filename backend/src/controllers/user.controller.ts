@@ -1,22 +1,20 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import User from '../models/User';
-import { safeRegex, safeErrorResponse } from '../utils/security';
+import { safeErrorResponse, safeRegex } from '../utils/security';
 
-const SOCIAL_PLATFORM_HOSTS: Record<string, string> = {  
+const SOCIAL_PLATFORM_HOSTS: Record<string, string> = {
   instagram: 'instagram.com',
   linkedin: 'linkedin.com',
   github: 'github.com',
   x: 'x.com',
   youtube: 'youtube.com',
-  facebook: 'facebook.com',};
+  facebook: 'facebook.com',
+};
 
-type SocialPlatform = keyof typeof SOCIAL_PLATFORM_HOSTS | 'website';  
+type SocialPlatform = keyof typeof SOCIAL_PLATFORM_HOSTS | 'website';
 
-const isAllowedSocialUrl = (
-  rawUrl: string,
-  platform: SocialPlatform,
-): boolean => {
+const isAllowedSocialUrl = (rawUrl: string, platform: SocialPlatform): boolean => {
   try {
     const parsed = new URL(rawUrl);
 
@@ -44,11 +42,7 @@ const readSocialLinks = (value: any): Array<{ platform: string; url: string }> =
       platform: typeof v?.platform === 'string' ? v.platform.trim().toLowerCase() : '',
       url: typeof v?.url === 'string' ? v.url.trim() : '',
     }))
-    .filter((v) => 
-      v.platform.length > 0 && 
-      v.url.length > 0 && 
-      isAllowedSocialUrl(v.url, v.platform)
-    );
+    .filter((v) => v.platform.length > 0 && v.url.length > 0 && isAllowedSocialUrl(v.url, v.platform));
 };
 
 export const getUsers = async (req: Request, res: Response): Promise<void> => {
@@ -78,14 +72,15 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
       updatedAt: 'updatedAt',
     };
     const sortKey =
-      typeof sortBy === 'string' && allowedSortFields[sortBy]
-        ? allowedSortFields[sortBy]
-        : 'name';
-    const sortDirection =
-      typeof sortDir === 'string' && sortDir.toLowerCase() === 'desc' ? -1 : 1;
+      typeof sortBy === 'string' && allowedSortFields[sortBy] ? allowedSortFields[sortBy] : 'name';
+    const sortDirection = typeof sortDir === 'string' && sortDir.toLowerCase() === 'desc' ? -1 : 1;
 
     const [users, total] = await Promise.all([
-      User.find(filter).sort({ [sortKey]: sortDirection }).skip(skip).limit(limitNum).lean(),
+      User.find(filter)
+        .sort({ [sortKey]: sortDirection })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
       User.countDocuments(filter),
     ]);
 
@@ -149,7 +144,8 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       }
     }
 
-    const profilePictureUrlRaw = typeof req.body?.profilePictureUrl === 'string' ? req.body.profilePictureUrl.trim() : '';
+    const profilePictureUrlRaw =
+      typeof req.body?.profilePictureUrl === 'string' ? req.body.profilePictureUrl.trim() : '';
     const profilePictureUrl = profilePictureUrlRaw.length > 0 ? profilePictureUrlRaw : undefined;
 
     const socialLinks = readSocialLinks(req.body?.socialLinks);
@@ -284,7 +280,13 @@ export const inviteUser = async (_req: Request, res: Response): Promise<void> =>
 export const bulkDeleteUsers = async (req: Request, res: Response): Promise<void> => {
   try {
     const ids = Array.isArray(req.body?.ids) ? req.body.ids : [];
-    const objectIds = ids.map((id: any) => (typeof id === 'string' && mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : null)).filter(Boolean);
+    const objectIds = ids
+      .map((id: any) =>
+        typeof id === 'string' && mongoose.Types.ObjectId.isValid(id)
+          ? new mongoose.Types.ObjectId(id)
+          : null,
+      )
+      .filter(Boolean);
 
     if (objectIds.length === 0) {
       res.status(400).json({ success: false, message: 'No valid user IDs provided' });
@@ -292,7 +294,11 @@ export const bulkDeleteUsers = async (req: Request, res: Response): Promise<void
     }
 
     const result = await User.deleteMany({ _id: { $in: objectIds } });
-    res.status(200).json({ success: true, message: 'Users deleted successfully', data: { deletedCount: result.deletedCount } });
+    res.status(200).json({
+      success: true,
+      message: 'Users deleted successfully',
+      data: { deletedCount: result.deletedCount },
+    });
   } catch (error: any) {
     res.status(500).json(safeErrorResponse('Error deleting users', error));
   }

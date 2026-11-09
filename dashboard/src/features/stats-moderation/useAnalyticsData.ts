@@ -9,7 +9,15 @@ export type AnalyticsData = {
   commentStats: { approved: number; pending: number }
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d', '#ffc658']
+const COLORS = [
+  '#0088FE',
+  '#00C49F',
+  '#FFBB28',
+  '#FF8042',
+  '#8884D8',
+  '#82ca9d',
+  '#ffc658',
+]
 
 export function useAnalyticsData() {
   return useQuery({
@@ -25,7 +33,7 @@ export function useAnalyticsData() {
         .slice()
         .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
         .slice(0, 10)
-        .map(a => ({
+        .map((a) => ({
           title: a.title,
           views: a.viewCount || 0,
           comments: 0, // Backend doesn't give comment count per article in list yet
@@ -33,8 +41,10 @@ export function useAnalyticsData() {
 
       // Views by Category
       const viewsByCatMap = new Map<string, number>()
-      articles.forEach(a => {
-        const catName = (typeof a.categoryId === 'object' && a.categoryId?.name) || 'Uncategorized'
+      articles.forEach((a) => {
+        const catName =
+          (typeof a.categoryId === 'object' && a.categoryId?.name) ||
+          'Uncategorized'
         const views = a.viewCount || 0
         viewsByCatMap.set(catName, (viewsByCatMap.get(catName) || 0) + views)
       })
@@ -42,7 +52,7 @@ export function useAnalyticsData() {
         .map(([name, value], index) => ({
           name,
           value,
-          color: COLORS[index % COLORS.length]
+          color: COLORS[index % COLORS.length],
         }))
         .sort((a, b) => b.value - a.value)
 
@@ -52,10 +62,13 @@ export function useAnalyticsData() {
       for (let i = 5; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
         const monthName = d.toLocaleString('default', { month: 'short' })
-        const count = articles.filter(a => {
+        const count = articles.filter((a) => {
           if (!a.publishedAt) return false
           const pDate = new Date(a.publishedAt)
-          return pDate.getMonth() === d.getMonth() && pDate.getFullYear() === d.getFullYear()
+          return (
+            pDate.getMonth() === d.getMonth() &&
+            pDate.getFullYear() === d.getFullYear()
+          )
         }).length
         trend.push({ date: monthName, articles: count })
       }
@@ -66,8 +79,8 @@ export function useAnalyticsData() {
         publishingTrend: trend,
         commentStats: {
           approved: stats.approvedComments,
-          pending: stats.pendingComments
-        }
+          pending: stats.pendingComments,
+        },
       }
     },
     staleTime: 60 * 1000,

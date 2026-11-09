@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, type UIEvent } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { ImageIcon, Loader2 } from 'lucide-react'
+import { type UIEvent, useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -59,7 +59,9 @@ export function MediaPickerSheet({
       }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>
-      lastPage.pagination.hasMore ? (lastPage.pagination.nextCursor ?? undefined) : undefined,
+      lastPage.pagination.hasMore
+        ? (lastPage.pagination.nextCursor ?? undefined)
+        : undefined,
     staleTime: STALE_TIME_MS,
     gcTime: GC_TIME_MS,
     refetchOnMount: false,
@@ -69,7 +71,7 @@ export function MediaPickerSheet({
 
   const images = useMemo(
     () => query.data?.pages.flatMap((page) => page.data) ?? [],
-    [query.data?.pages],
+    [query.data?.pages]
   )
 
   const handleScroll = (event: UIEvent<HTMLDivElement>) => {
@@ -113,7 +115,10 @@ export function MediaPickerSheet({
           >
             {isInitialLoading ? (
               <div className='grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 lg:grid-cols-3'>
-                {Array.from({ length: SKELETON_TILE_COUNT }, (_, idx) => `skeleton-${idx}`).map((skeletonKey) => (
+                {Array.from(
+                  { length: SKELETON_TILE_COUNT },
+                  (_, idx) => `skeleton-${idx}`
+                ).map((skeletonKey) => (
                   <div
                     key={skeletonKey}
                     className='overflow-hidden rounded-md border'
@@ -147,7 +152,8 @@ export function MediaPickerSheet({
               <div className='space-y-3 p-3'>
                 <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3'>
                   {images.map((image, index) => {
-                    const fileName = image.fileName || image.key.split('/').pop() || image.key
+                    const fileName =
+                      image.fileName || image.key.split('/').pop() || image.key
                     return (
                       <button
                         key={image._id}
@@ -155,7 +161,7 @@ export function MediaPickerSheet({
                         onClick={() => onSelect(image.url)}
                         className={cn(
                           'overflow-hidden rounded-md border text-left transition-colors',
-                          'hover:border-primary focus-visible:border-primary focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:outline-none',
+                          'hover:border-primary focus-visible:border-primary focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:outline-none'
                         )}
                       >
                         <div className='aspect-video overflow-hidden bg-muted/30'>
@@ -165,13 +171,17 @@ export function MediaPickerSheet({
                             className='h-full w-full object-cover'
                             width={640}
                             height={360}
-                            loading={index < FIRST_ROW_EAGER_COUNT ? 'eager' : 'lazy'}
+                            loading={
+                              index < FIRST_ROW_EAGER_COUNT ? 'eager' : 'lazy'
+                            }
                             decoding='async'
                           />
                         </div>
                         <div className='flex items-center gap-2 p-2'>
                           <ImageIcon className='h-4 w-4 shrink-0 text-muted-foreground' />
-                          <p className='truncate text-xs font-medium'>{fileName}</p>
+                          <p className='truncate text-xs font-medium'>
+                            {fileName}
+                          </p>
                         </div>
                       </button>
                     )

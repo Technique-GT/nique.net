@@ -1,5 +1,5 @@
-import { beforeAll, afterAll } from 'vitest';
 import mongoose from 'mongoose';
+import { afterAll, beforeAll } from 'vitest';
 
 // Set test environment
 process.env.NODE_ENV = 'test';

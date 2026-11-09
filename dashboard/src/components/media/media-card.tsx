@@ -28,7 +28,9 @@ export function MediaCard({
   const fileName = image.key.split('/').pop() || image.key
 
   return (
-    <Card className={`overflow-hidden gap-0 py-0 ${selected ? 'ring-2 ring-primary' : ''}`}>
+    <Card
+      className={`overflow-hidden gap-0 py-0 ${selected ? 'ring-2 ring-primary' : ''}`}
+    >
       <button
         type='button'
         className='group/media relative block w-full overflow-hidden text-left'
@@ -47,10 +49,14 @@ export function MediaCard({
         </div>
       </button>
       <CardContent className='space-y-2 px-4 pt-4'>
-        <p className='line-clamp-2 break-all text-xs text-muted-foreground'>{image.key}</p>
+        <p className='line-clamp-2 break-all text-xs text-muted-foreground'>
+          {image.key}
+        </p>
         <div className='flex flex-wrap gap-2 text-xs'>
           <Badge variant='secondary'>{formatBytes(image.size)}</Badge>
-          <Badge variant='secondary'>{formatDate(image.lastModified || image.uploadedAt)}</Badge>
+          <Badge variant='secondary'>
+            {formatDate(image.lastModified || image.uploadedAt)}
+          </Badge>
         </div>
       </CardContent>
       <CardFooter className='flex gap-2 px-4 pb-4 pt-3'>
@@ -58,7 +64,12 @@ export function MediaCard({
           <Copy className='mr-2 h-4 w-4' />
           Copy URL
         </Button>
-        <Button type='button' size='sm' variant='outline' onClick={() => onOpen(image.url)}>
+        <Button
+          type='button'
+          size='sm'
+          variant='outline'
+          onClick={() => onOpen(image.url)}
+        >
           <ExternalLink className='h-4 w-4' />
         </Button>
         {onDelete && (

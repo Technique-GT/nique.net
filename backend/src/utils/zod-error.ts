@@ -21,7 +21,9 @@ const issueKey = (issue: NormalizedZodIssue) => {
 };
 
 const normalizeOne = (issue: ZodIssue): NormalizedZodIssue => {
-  const safePath = issue.path.filter((p): p is string | number => typeof p === 'string' || typeof p === 'number');
+  const safePath = issue.path.filter(
+    (p): p is string | number => typeof p === 'string' || typeof p === 'number',
+  );
 
   const base: NormalizedZodIssue = {
     path: formatPath(safePath),

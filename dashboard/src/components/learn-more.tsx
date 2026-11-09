@@ -1,12 +1,12 @@
-import { Root, Content, Trigger } from '@radix-ui/react-popover'
+import { Content, Root, Trigger } from '@radix-ui/react-popover'
 import { IconQuestionMark } from '@tabler/icons-react'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
 
 interface Props extends React.ComponentProps<typeof Root> {
   contentProps?: React.ComponentProps<typeof Content>

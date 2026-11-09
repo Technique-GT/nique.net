@@ -82,7 +82,10 @@ type LookupMaps = {
 };
 
 async function loadCategorySlugToIdMap(db: any): Promise<Map<string, ObjectId>> {
-  const rows = await db.collection('categories').find({}, { projection: { slug: 1 } }).toArray();
+  const rows = await db
+    .collection('categories')
+    .find({}, { projection: { slug: 1 } })
+    .toArray();
   const map = new Map<string, ObjectId>();
   for (const row of rows) {
     if (typeof row?.slug === 'string' && row._id) {
@@ -92,7 +95,12 @@ async function loadCategorySlugToIdMap(db: any): Promise<Map<string, ObjectId>> 
   return map;
 }
 
-async function ensureSubcategory(params: { db: any; categoryId: ObjectId; name: string; slug: string }): Promise<ObjectId> {
+async function ensureSubcategory(params: {
+  db: any;
+  categoryId: ObjectId;
+  name: string;
+  slug: string;
+}): Promise<ObjectId> {
   const { db, categoryId, name, slug } = params;
 
   const existing = await db.collection('subcategories').findOne(
@@ -148,7 +156,8 @@ async function resolveSubcategoryId(params: {
 }): Promise<{ subcategoryId: ObjectId | null; reason?: string; created?: boolean }> {
   const { legacyEntry, categorySlugToId, lookup, targetDb } = params;
 
-  const legacyCategorySlug = typeof legacyEntry.category === 'string' ? legacyEntry.category.toLowerCase() : '';
+  const legacyCategorySlug =
+    typeof legacyEntry.category === 'string' ? legacyEntry.category.toLowerCase() : '';
   const legacyValue = typeof legacyEntry.value === 'string' ? legacyEntry.value : '';
 
   if (!legacyCategorySlug || !legacyValue) {
@@ -244,13 +253,21 @@ async function main() {
   let missingTarget = 0;
   let missingMapping = 0;
   let multi = 0;
-  const sampleMissing: Array<{ id: string; title?: string | undefined; value?: string | undefined; category?: string | undefined; reason?: string | undefined }> = [];
+  const sampleMissing: Array<{
+    id: string;
+    title?: string | undefined;
+    value?: string | undefined;
+    category?: string | undefined;
+    reason?: string | undefined;
+  }> = [];
 
   for await (const legacy of cursor) {
     processed += 1;
     if (LIMIT > 0 && processed > LIMIT) break;
 
-    const subcats = Array.isArray(legacy.subcategories) ? (legacy.subcategories as LegacySubcategoryEntry[]) : [];
+    const subcats = Array.isArray(legacy.subcategories)
+      ? (legacy.subcategories as LegacySubcategoryEntry[])
+      : [];
     if (subcats.length === 0) continue;
     if (subcats.length > 1) multi += 1;
 
@@ -276,7 +293,9 @@ async function main() {
       continue;
     }
 
-    const existsInTarget = await targetDb.collection('articles').findOne({ _id: legacy._id }, { projection: { _id: 1 } });
+    const existsInTarget = await targetDb
+      .collection('articles')
+      .findOne({ _id: legacy._id }, { projection: { _id: 1 } });
     if (!existsInTarget) {
       missingTarget += 1;
       continue;

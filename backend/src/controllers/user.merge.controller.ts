@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import User from '../models/User';
 import Article from '../models/Article';
+import User from '../models/User';
 import { safeErrorResponse } from '../utils/security';
 
 type FieldChoice = 'source' | 'target';
@@ -84,8 +84,12 @@ async function performMerge(
   const sessionOpt = session ? { session } : {};
 
   const [sourceUser, targetUser] = await Promise.all([
-    User.findById(sourceId).session(session ?? null).lean(),
-    User.findById(targetId).session(session ?? null).lean(),
+    User.findById(sourceId)
+      .session(session ?? null)
+      .lean(),
+    User.findById(targetId)
+      .session(session ?? null)
+      .lean(),
   ]);
 
   if (!sourceUser) throw new Error('Source user not found');
@@ -119,12 +123,16 @@ async function performMerge(
 
   const articlesWithSource = await Article.find({
     'authors.authorId': sourceOid,
-  }).session(session ?? null).select('_id authors');
+  })
+    .session(session ?? null)
+    .select('_id authors');
 
   let articlesUpdated = 0;
 
   for (const article of articlesWithSource) {
-    const authorIds = article.authors.map((a: { authorId: mongoose.Types.ObjectId }) => a.authorId.toString());
+    const authorIds = article.authors.map((a: { authorId: mongoose.Types.ObjectId }) =>
+      a.authorId.toString(),
+    );
     const hasTarget = authorIds.includes(targetId);
 
     if (hasTarget) {
@@ -150,11 +158,7 @@ async function performMerge(
   );
   articlesUpdated = Math.max(articlesUpdated, ownerResult.modifiedCount);
 
-  await Article.updateMany(
-    { reviewedBy: sourceOid },
-    { $set: { reviewedBy: targetOid } },
-    sessionOpt,
-  );
+  await Article.updateMany({ reviewedBy: sourceOid }, { $set: { reviewedBy: targetOid } }, sessionOpt);
 
   await User.deleteOne({ _id: sourceOid }, sessionOpt);
 
@@ -163,11 +167,7 @@ async function performMerge(
   return { mergedUser, articlesUpdated };
 }
 
-async function executeMerge(
-  sourceId: string,
-  targetId: string,
-  keepFields: MergeBody['keepFields'] & {},
-) {
+async function executeMerge(sourceId: string, targetId: string, keepFields: MergeBody['keepFields'] & {}) {
   const session = await mongoose.startSession();
 
   try {
@@ -206,10 +206,7 @@ export const getUserArticleCount = async (req: Request, res: Response): Promise<
   try {
     const userId = new mongoose.Types.ObjectId(id);
     const count = await Article.countDocuments({
-      $or: [
-        { 'authors.authorId': userId },
-        { ownerId: userId },
-      ],
+      $or: [{ 'authors.authorId': userId }, { ownerId: userId }],
     });
 
     res.status(200).json({ success: true, data: { count } });

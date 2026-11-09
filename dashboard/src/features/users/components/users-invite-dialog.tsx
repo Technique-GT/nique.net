@@ -1,8 +1,8 @@
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
 import { IconMailPlus, IconSend } from '@tabler/icons-react'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -23,8 +23,8 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { useUsers } from '../context/users-context'
 import { apiClient } from '@/lib/api-client'
+import { useUsers } from '../context/users-context'
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email.'),
@@ -40,7 +40,7 @@ interface Props {
 export function UsersInviteDialog({ open, onOpenChange }: Props) {
   const { refetchUsers } = useUsers()
   const [submitting, setSubmitting] = useState(false)
-  
+
   const form = useForm<UserInviteForm>({
     resolver: zodResolver(formSchema),
     defaultValues: { email: '', desc: '' },

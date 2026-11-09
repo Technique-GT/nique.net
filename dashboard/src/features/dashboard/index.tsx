@@ -1,12 +1,18 @@
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useRouter } from '@tanstack/react-router'
+import { TriangleAlert } from 'lucide-react'
 import { Main } from '@/components/layout/main'
-import { PageHeader } from "@/components/layout/page-header"
+import { PageHeader } from '@/components/layout/page-header'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Overview } from './components/overview'
 import { RecentSales } from './components/recent-sales'
 import { useDashboardMetrics } from './components/useDashboardMetrics'
-import { useRouter } from '@tanstack/react-router'
-import { TriangleAlert } from 'lucide-react';
 
 export default function Dashboard() {
   const router = useRouter()
@@ -21,21 +27,23 @@ export default function Dashboard() {
   return (
     <Main>
       <PageHeader
-        title="Editorial Dashboard"
-        actions={
-          <Button onClick={handleNewArticle}>New Article</Button>
-        }
+        title='Editorial Dashboard'
+        actions={<Button onClick={handleNewArticle}>New Article</Button>}
       />
 
       <div className='space-y-4'>
         {isError && (
-          <div className='text-muted-foreground text-sm'>Failed to load dashboard metrics.</div>
+          <div className='text-muted-foreground text-sm'>
+            Failed to load dashboard metrics.
+          </div>
         )}
 
         <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>Articles Published (30d)</CardTitle>
+              <CardTitle className='text-sm font-medium'>
+                Articles Published (30d)
+              </CardTitle>
               <svg
                 xmlns='http://www.w3.org/2000/svg'
                 viewBox='0 0 24 24'
@@ -51,8 +59,12 @@ export default function Dashboard() {
               </svg>
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>{isLoading ? '—' : (kpis?.publishedLast30d ?? 0)}</div>
-              <p className='text-muted-foreground text-xs'>Published in the last 30 days</p>
+              <div className='text-2xl font-bold'>
+                {isLoading ? '—' : (kpis?.publishedLast30d ?? 0)}
+              </div>
+              <p className='text-muted-foreground text-xs'>
+                Published in the last 30 days
+              </p>
             </CardContent>
           </Card>
 
@@ -75,8 +87,12 @@ export default function Dashboard() {
               </svg>
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>{isLoading ? '—' : (kpis?.drafts ?? 0)}</div>
-              <p className='text-muted-foreground text-xs'>Currently unpublished articles</p>
+              <div className='text-2xl font-bold'>
+                {isLoading ? '—' : (kpis?.drafts ?? 0)}
+              </div>
+              <p className='text-muted-foreground text-xs'>
+                Currently unpublished articles
+              </p>
             </CardContent>
           </Card>
 
@@ -98,14 +114,25 @@ export default function Dashboard() {
               </svg>
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>{isLoading ? '—' : (kpis?.totalViews ?? 0).toLocaleString('en-US')}</div>
-              <p className='text-muted-foreground text-xs'>Sum of article viewCount</p>
+              <div className='text-2xl font-bold'>
+                {isLoading
+                  ? '—'
+                  : (kpis?.totalViews ?? 0).toLocaleString('en-US')}
+              </div>
+              <p className='text-muted-foreground text-xs'>
+                Sum of article viewCount
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium flex flex-row items-center'>Pending Comments {kpis?.pendingComments !== 0 && <TriangleAlert size={18} className='ml-2 text-destructive'/>}</CardTitle>
+              <CardTitle className='text-sm font-medium flex flex-row items-center'>
+                Pending Comments{' '}
+                {kpis?.pendingComments !== 0 && (
+                  <TriangleAlert size={18} className='ml-2 text-destructive' />
+                )}
+              </CardTitle>
               <svg
                 xmlns='http://www.w3.org/2000/svg'
                 viewBox='0 0 24 24'
@@ -120,7 +147,9 @@ export default function Dashboard() {
               </svg>
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>{isLoading ? '—' : (kpis?.pendingComments ?? 0)}</div>
+              <div className='text-2xl font-bold'>
+                {isLoading ? '—' : (kpis?.pendingComments ?? 0)}
+              </div>
               <p className='text-muted-foreground text-xs'>Awaiting approval</p>
             </CardContent>
           </Card>
@@ -141,7 +170,9 @@ export default function Dashboard() {
           <Card className='col-span-1 lg:col-span-3'>
             <CardHeader>
               <CardTitle>Recent Articles</CardTitle>
-              <CardDescription>Latest published pieces with engagement metrics</CardDescription>
+              <CardDescription>
+                Latest published pieces with engagement metrics
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <RecentSales />

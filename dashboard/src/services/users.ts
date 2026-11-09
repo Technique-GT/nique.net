@@ -33,10 +33,10 @@ const toPaginationMeta = (value: unknown): PaginationMeta | undefined => {
 
   const { total, page, pages, limit } = value
   if (
-    typeof total === 'number'
-    && typeof page === 'number'
-    && typeof pages === 'number'
-    && typeof limit === 'number'
+    typeof total === 'number' &&
+    typeof page === 'number' &&
+    typeof pages === 'number' &&
+    typeof limit === 'number'
   ) {
     return { total, page, pages, limit }
   }

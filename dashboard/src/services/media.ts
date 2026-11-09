@@ -59,7 +59,12 @@ export async function getMediaImages(params?: {
     },
   })
 
-  if (res && typeof res === 'object' && !Array.isArray(res) && 'data' in (res as { data?: unknown; pagination?: unknown })) {
+  if (
+    res &&
+    typeof res === 'object' &&
+    !Array.isArray(res) &&
+    'data' in (res as { data?: unknown; pagination?: unknown })
+  ) {
     const typed = res as { data?: unknown; pagination?: unknown }
     return {
       data: Array.isArray(typed.data) ? (typed.data as MediaImage[]) : [],
@@ -83,7 +88,7 @@ export async function getMediaImages(params?: {
 
 export async function getMediaUsage(
   mediaId: string,
-  params?: { page?: number; limit?: number },
+  params?: { page?: number; limit?: number }
 ): Promise<MediaUsageResponse> {
   const res = await apiClient.get(`/admin/media/${mediaId}/usage`, {
     params: {
@@ -92,10 +97,17 @@ export async function getMediaUsage(
     },
   })
 
-  if (res && typeof res === 'object' && !Array.isArray(res) && 'data' in (res as { data?: unknown; pagination?: unknown })) {
+  if (
+    res &&
+    typeof res === 'object' &&
+    !Array.isArray(res) &&
+    'data' in (res as { data?: unknown; pagination?: unknown })
+  ) {
     const typed = res as { data?: unknown; pagination?: unknown }
     return {
-      data: Array.isArray(typed.data) ? (typed.data as MediaUsageArticle[]) : [],
+      data: Array.isArray(typed.data)
+        ? (typed.data as MediaUsageArticle[])
+        : [],
       pagination: (typed.pagination as MediaUsageResponse['pagination']) ?? {
         total: 0,
         page: params?.page ?? 1,
@@ -118,12 +130,17 @@ export async function getMediaUsage(
 
 export async function deleteMedia(
   mediaId: string,
-  params?: { confirmInUse?: boolean },
+  params?: { confirmInUse?: boolean }
 ): Promise<{ _id: string; key: string; url: string; usageCount: number }> {
   const res = await apiClient.delete(`/admin/media/${mediaId}`, {
     params: {
       ...(params?.confirmInUse ? { confirmInUse: true } : {}),
     },
   })
-  return res as unknown as { _id: string; key: string; url: string; usageCount: number }
+  return res as unknown as {
+    _id: string
+    key: string
+    url: string
+    usageCount: number
+  }
 }

@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Category from '../models/Category';
 import SubCategory from '../models/Subcategory';
-import { escapeRegex, safeRegex, safeErrorResponse } from '../utils/security';
+import { escapeRegex, safeErrorResponse, safeRegex } from '../utils/security';
 
 const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId | null => {
   if (!id || Array.isArray(id) || !mongoose.Types.ObjectId.isValid(id)) return null;
@@ -26,9 +26,14 @@ export const createCategory = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const slug = typeof req.body?.slug === 'string' && req.body.slug.trim().length > 0 ? req.body.slug.trim() : slugify(name);
+    const slug =
+      typeof req.body?.slug === 'string' && req.body.slug.trim().length > 0
+        ? req.body.slug.trim()
+        : slugify(name);
 
-    const existing = await Category.findOne({ $or: [{ slug }, { name: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } }] });
+    const existing = await Category.findOne({
+      $or: [{ slug }, { name: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } }],
+    });
     if (existing) {
       res.status(409).json({ success: false, message: 'Category with this name or slug already exists' });
       return;

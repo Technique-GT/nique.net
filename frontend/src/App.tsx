@@ -1,73 +1,72 @@
-
 // app.tsx
 
-import { Suspense, lazy } from "react";
+import { lazy, Suspense } from 'react';
 // import ReactGA from 'react-ga4';
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import Spinner from "./components/Spinner";
-import HomeSkeleton from "./components/HomeSkeleton";
-import Footer from "./components/Footer";
-import Seo from "./components/Seo";
+import { Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
+import Footer from './components/Footer';
+import HomeSkeleton from './components/HomeSkeleton';
+import Seo from './components/Seo';
+import Spinner from './components/Spinner';
 
-const Home = lazy(() => import("./pages/Home"));
-const Life = lazy(() => import("./pages/Life"));
-const Article = lazy(() => import("./pages/Article"));
-const Sports = lazy(() => import("./pages/Sports"));
-const AuthorPage = lazy(() => import("./pages/Authors"));
+const Home = lazy(() => import('./pages/Home'));
+const Life = lazy(() => import('./pages/Life'));
+const Article = lazy(() => import('./pages/Article'));
+const Sports = lazy(() => import('./pages/Sports'));
+const AuthorPage = lazy(() => import('./pages/Authors'));
 
-const Opinions = lazy(() => import("./pages/Opinions"));
-const SearchPage = lazy(() => import("./pages/SearchPage"));
-const Contact = lazy(() => import("./pages/Contact"));
-const News = lazy(() => import("./pages/News"));
-const Entertainment = lazy(() => import("./pages/Entertainment"));
-const SubmitAd = lazy(() => import("./pages/SubmitAd"));
-const About = lazy(() => import("./pages/About"));
+const Opinions = lazy(() => import('./pages/Opinions'));
+const SearchPage = lazy(() => import('./pages/SearchPage'));
+const Contact = lazy(() => import('./pages/Contact'));
+const News = lazy(() => import('./pages/News'));
+const Entertainment = lazy(() => import('./pages/Entertainment'));
+const SubmitAd = lazy(() => import('./pages/SubmitAd'));
+const About = lazy(() => import('./pages/About'));
 
 function RouteSeo() {
   const location = useLocation();
   const path = location.pathname;
 
   const routeMeta: Record<string, { title: string; description: string }> = {
-    "/": {
+    '/': {
       title: "The South's Liveliest College Newspaper",
       description:
         "Technique is Georgia Tech's independent student newspaper covering campus news, life, sports, entertainment, and opinion.",
     },
-    "/news": {
-      title: "News",
+    '/news': {
+      title: 'News',
       description: "Campus and local coverage from Georgia Tech's student newspaper.",
     },
-    "/life": {
-      title: "Life",
-      description: "Life at Georgia Tech: events, organizations, features, and student stories.",
+    '/life': {
+      title: 'Life',
+      description: 'Life at Georgia Tech: events, organizations, features, and student stories.',
     },
-    "/opinions": {
-      title: "Opinions",
-      description: "Editorials, op-eds, and letters from the Georgia Tech community.",
+    '/opinions': {
+      title: 'Opinions',
+      description: 'Editorials, op-eds, and letters from the Georgia Tech community.',
     },
-    "/entertainment": {
-      title: "Entertainment",
-      description: "Music, film, arts, and entertainment coverage from Technique.",
+    '/entertainment': {
+      title: 'Entertainment',
+      description: 'Music, film, arts, and entertainment coverage from Technique.',
     },
-    "/sports": {
-      title: "Sports",
-      description: "Georgia Tech and Atlanta sports coverage from Technique.",
+    '/sports': {
+      title: 'Sports',
+      description: 'Georgia Tech and Atlanta sports coverage from Technique.',
     },
-    "/about": {
-      title: "About",
+    '/about': {
+      title: 'About',
       description: "Learn about Technique, Georgia Tech's independent student newspaper since 1911.",
     },
-    "/contact": {
-      title: "Contact",
-      description: "Contact editors and staff at Technique.",
+    '/contact': {
+      title: 'Contact',
+      description: 'Contact editors and staff at Technique.',
     },
-    "/submit-ad": {
-      title: "Submit an Ad",
-      description: "Advertising information and media kit for Technique.",
+    '/submit-ad': {
+      title: 'Submit an Ad',
+      description: 'Advertising information and media kit for Technique.',
     },
-    "/search": {
-      title: "Search",
-      description: "Search Technique articles by keyword.",
+    '/search': {
+      title: 'Search',
+      description: 'Search Technique articles by keyword.',
     },
   };
 
@@ -81,7 +80,7 @@ function RouteSeo() {
       title={meta.title}
       description={meta.description}
       canonicalPath={path}
-      noindex={path === "/search"}
+      noindex={path === '/search'}
     />
   );
 }
@@ -89,12 +88,12 @@ function RouteSeo() {
 function RouteFallback() {
   const location = useLocation();
 
-  if (location.pathname === "/") {
+  if (location.pathname === '/') {
     return <HomeSkeleton />;
   }
 
   return (
-    <div className="flex justify-center items-center h-screen">
+    <div className='flex justify-center items-center h-screen'>
       <Spinner />
     </div>
   );
@@ -104,25 +103,25 @@ function App() {
   return (
     <Router>
       <RouteSeo />
-      <div className="App min-h-screen flex flex-col">
-        <div className="flex-1">
+      <div className='App min-h-screen flex flex-col'>
+        <div className='flex-1'>
           <Suspense fallback={<RouteFallback />}>
-              <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Home />} />
-            <Route path="/life" element={<Life />} />
-            <Route path="/author/:authorName" element={<AuthorPage />} />
-            <Route path="/:category/:slug" element={<Article />} />
-            <Route path="/:id" element={<Article />} />
-            <Route path="/sports" element={<Sports />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/news" element={<News />} />
-            <Route path="/entertainment" element={<Entertainment />} />
-            <Route path="/submit-ad" element={<SubmitAd />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/opinions" element={<Opinions />} />
-              </Routes>
+            <Routes>
+              {/* Public routes */}
+              <Route path='/' element={<Home />} />
+              <Route path='/life' element={<Life />} />
+              <Route path='/author/:authorName' element={<AuthorPage />} />
+              <Route path='/:category/:slug' element={<Article />} />
+              <Route path='/:id' element={<Article />} />
+              <Route path='/sports' element={<Sports />} />
+              <Route path='/search' element={<SearchPage />} />
+              <Route path='/news' element={<News />} />
+              <Route path='/entertainment' element={<Entertainment />} />
+              <Route path='/submit-ad' element={<SubmitAd />} />
+              <Route path='/about' element={<About />} />
+              <Route path='/contact' element={<Contact />} />
+              <Route path='/opinions' element={<Opinions />} />
+            </Routes>
           </Suspense>
         </div>
         <Footer />

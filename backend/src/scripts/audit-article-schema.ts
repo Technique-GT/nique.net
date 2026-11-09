@@ -1,6 +1,6 @@
-import dotenv from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
+import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
 /**
@@ -131,12 +131,7 @@ const normalizeExpectedBsonTypes = (expected: string | string[]): string[] => {
   return Array.from(new Set(expanded));
 };
 
-const validateValue = (
-  schema: JsonSchema,
-  value: unknown,
-  fieldPath: string,
-  issues: Issue[],
-): void => {
+const validateValue = (schema: JsonSchema, value: unknown, fieldPath: string, issues: Issue[]): void => {
   if (!schema.bsonType) return;
 
   const actual = bsonTypeOf(value);
@@ -193,7 +188,11 @@ const inc = (map: Record<string, number>, key: string, n = 1) => {
   map[key] = (map[key] ?? 0) + n;
 };
 
-const summarize = (docs: DocSummary[], issueCounts: Record<string, number>, reportLimit: number): Omit<CollectionAudit, 'name'> => {
+const summarize = (
+  docs: DocSummary[],
+  issueCounts: Record<string, number>,
+  reportLimit: number,
+): Omit<CollectionAudit, 'name'> => {
   const total = docs.length;
 
   const issueSummary = Object.entries(issueCounts)
@@ -232,7 +231,11 @@ const getIndexes = async (collection: mongoose.mongo.Collection): Promise<IndexI
   return indexes.map((i: any) => ({ key: i.key, unique: i.unique, name: i.name }));
 };
 
-const hasIndex = (indexes: IndexInfo[], key: Record<string, number>, opts?: { unique?: boolean }): boolean => {
+const hasIndex = (
+  indexes: IndexInfo[],
+  key: Record<string, number>,
+  opts?: { unique?: boolean },
+): boolean => {
   const target = JSON.stringify(key);
   return indexes.some((idx) => {
     if (JSON.stringify(idx.key) !== target) return false;

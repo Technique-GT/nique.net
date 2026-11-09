@@ -1,7 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
-const EDGE_CACHE_CONTROL =
-  'public, max-age=21600, stale-while-revalidate=60, stale-if-error=86400';
+const EDGE_CACHE_CONTROL = 'public, max-age=21600, stale-while-revalidate=60, stale-if-error=86400';
 const NO_STORE = 'no-store';
 
 const setHeaderIfMissing = (res: Response, name: string, value: string) => {

@@ -111,7 +111,6 @@ export type CanonicalSubcategory = {
   slug: string;
 };
 
-
 export type CanonicalSliver = {
   _id: string;
   __v: number;
@@ -238,7 +237,8 @@ const objectIdTimestampIso = (hexId: string | undefined): string | null => {
   return new Date(seconds * 1000).toISOString();
 };
 
-const toBoolWithDefault = (v: unknown, defaultValue: boolean): boolean => (typeof v === 'boolean' ? v : defaultValue);
+const toBoolWithDefault = (v: unknown, defaultValue: boolean): boolean =>
+  typeof v === 'boolean' ? v : defaultValue;
 
 const toNumberWithDefault = (v: unknown, defaultValue: number): number =>
   typeof v === 'number' && !Number.isNaN(v) ? v : defaultValue;
@@ -440,12 +440,14 @@ const toMongoComment = (input: any): TransformResult<MongoComment> => {
   const articleId = toObjectIdOrUndefined(input?.articleId) ?? toObjectIdOrUndefined(input?.article);
   if (!articleId) warnings.push('missing articleId/article');
 
-  const parentCommentId = toObjectIdOrUndefined(input?.parentCommentId) ?? toObjectIdOrUndefined(input?.parentComment);
+  const parentCommentId =
+    toObjectIdOrUndefined(input?.parentCommentId) ?? toObjectIdOrUndefined(input?.parentComment);
 
   const content = readNonEmptyString(input?.content) ?? '';
   if (!content) warnings.push('missing content');
 
-  const username = readNonEmptyString(input?.username) ?? readNonEmptyString(input?.author?.name) ?? 'Anonymous';
+  const username =
+    readNonEmptyString(input?.username) ?? readNonEmptyString(input?.author?.name) ?? 'Anonymous';
 
   const thumbsUp = typeof input?.thumbsUp === 'number' ? toNumberWithDefault(input.thumbsUp, 0) : 0;
   const thumbsDown = typeof input?.thumbsDown === 'number' ? toNumberWithDefault(input.thumbsDown, 0) : 0;
@@ -458,7 +460,10 @@ const toMongoComment = (input: any): TransformResult<MongoComment> => {
     warnings.push('approved/isApproved missing; defaulting to false');
   }
 
-  const createdAt = toDateOrNull(input?.createdAt) ?? objectIdTimestampDate(_id ? _id.toHexString() : undefined) ?? new Date(0);
+  const createdAt =
+    toDateOrNull(input?.createdAt) ??
+    objectIdTimestampDate(_id ? _id.toHexString() : undefined) ??
+    new Date(0);
   const updatedAt = toDateOrNull(input?.updatedAt) ?? createdAt;
 
   const __v = typeof input?.__v === 'number' ? input.__v : 0;
@@ -542,7 +547,11 @@ const toMongoArticle = (input: any): TransformResult<MongoArticle> => {
     toObjectIdOrUndefined(input?.subcategory) ??
     (Array.isArray(input?.subcategories) ? toObjectIdOrUndefined(input.subcategories[0]) : undefined);
 
-  const tagIdsRaw = Array.isArray(input?.tagIds) ? input.tagIds : Array.isArray(input?.tags) ? input.tags : [];
+  const tagIdsRaw = Array.isArray(input?.tagIds)
+    ? input.tagIds
+    : Array.isArray(input?.tags)
+      ? input.tags
+      : [];
   const tagIds = tagIdsRaw
     .map((t: any, idx: number) => {
       const id = toObjectIdOrUndefined(t);
@@ -585,11 +594,11 @@ const toMongoArticle = (input: any): TransformResult<MongoArticle> => {
         ? toNumberWithDefault(input.views, 0)
         : 0;
 
-  const { createdAt: baseCreatedAt, updatedAt: baseUpdatedAt, warnings: timeWarnings } = fillCreatedUpdatedDate(
-    _id ? _id.toHexString() : undefined,
-    input?.createdAt,
-    input?.updatedAt,
-  );
+  const {
+    createdAt: baseCreatedAt,
+    updatedAt: baseUpdatedAt,
+    warnings: timeWarnings,
+  } = fillCreatedUpdatedDate(_id ? _id.toHexString() : undefined, input?.createdAt, input?.updatedAt);
   warnings.push(...timeWarnings);
 
   // Enforce createdAt <= publishedAt (when publishedAt exists)
@@ -646,7 +655,7 @@ const fillCreatedUpdatedIso = (
     readIsoDate(rawUpdatedAt) ??
     new Date(0).toISOString();
 
-  let createdAt = createdCandidate;
+  const createdAt = createdCandidate;
   let updatedAt = readIsoDate(rawUpdatedAt) ?? createdAt;
 
   const createdMs = Date.parse(createdAt);
@@ -667,12 +676,9 @@ const fillCreatedUpdatedDate = (
   const warnings: string[] = [];
 
   const createdCandidate =
-    toDateOrNull(rawCreatedAt) ??
-    objectIdTimestampDate(idHex) ??
-    toDateOrNull(rawUpdatedAt) ??
-    new Date(0);
+    toDateOrNull(rawCreatedAt) ?? objectIdTimestampDate(idHex) ?? toDateOrNull(rawUpdatedAt) ?? new Date(0);
 
-  let createdAt = createdCandidate;
+  const createdAt = createdCandidate;
   let updatedAt = toDateOrNull(rawUpdatedAt) ?? createdAt;
 
   if (updatedAt.getTime() < createdAt.getTime()) {
@@ -752,7 +758,11 @@ export function toCanonicalArticle(input: any): TransformResult<CanonicalArticle
     objectIdToHex(input?.subcategory) ??
     (Array.isArray(input?.subcategories) ? objectIdToHex(input.subcategories[0]) : undefined);
 
-  const tagIdsRaw = Array.isArray(input?.tagIds) ? input.tagIds : Array.isArray(input?.tags) ? input.tags : [];
+  const tagIdsRaw = Array.isArray(input?.tagIds)
+    ? input.tagIds
+    : Array.isArray(input?.tags)
+      ? input.tags
+      : [];
   const tagIds = tagIdsRaw
     .map((t: any, idx: number) => {
       const id = objectIdToHex(t);
@@ -795,11 +805,11 @@ export function toCanonicalArticle(input: any): TransformResult<CanonicalArticle
         ? toNumberWithDefault(input.views, 0)
         : 0;
 
-  const { createdAt: rawCreatedAt, updatedAt: rawUpdatedAt, warnings: timeWarnings } = fillCreatedUpdatedIso(
-    _id,
-    input?.createdAt,
-    input?.updatedAt,
-  );
+  const {
+    createdAt: rawCreatedAt,
+    updatedAt: rawUpdatedAt,
+    warnings: timeWarnings,
+  } = fillCreatedUpdatedIso(_id, input?.createdAt, input?.updatedAt);
   warnings.push(...timeWarnings);
 
   // Enforce createdAt <= publishedAt (when publishedAt exists)
@@ -1073,14 +1083,10 @@ export function toCanonicalComment(input: any): TransformResult<CanonicalComment
   if (!content) warnings.push('missing content');
 
   const username =
-    readNonEmptyString(input?.username) ??
-    readNonEmptyString(input?.author?.name) ??
-    'Anonymous';
+    readNonEmptyString(input?.username) ?? readNonEmptyString(input?.author?.name) ?? 'Anonymous';
 
-  const thumbsUp =
-    typeof input?.thumbsUp === 'number' ? toNumberWithDefault(input.thumbsUp, 0) : 0;
-  const thumbsDown =
-    typeof input?.thumbsDown === 'number' ? toNumberWithDefault(input.thumbsDown, 0) : 0;
+  const thumbsUp = typeof input?.thumbsUp === 'number' ? toNumberWithDefault(input.thumbsUp, 0) : 0;
+  const thumbsDown = typeof input?.thumbsDown === 'number' ? toNumberWithDefault(input.thumbsDown, 0) : 0;
 
   let approved: boolean;
   if (typeof input?.approved === 'boolean') approved = input.approved;
@@ -1090,10 +1096,7 @@ export function toCanonicalComment(input: any): TransformResult<CanonicalComment
     warnings.push('approved/isApproved missing; defaulting to false');
   }
 
-  const createdAt =
-    readIsoDate(input?.createdAt) ??
-    objectIdTimestampIso(_id) ??
-    new Date(0).toISOString();
+  const createdAt = readIsoDate(input?.createdAt) ?? objectIdTimestampIso(_id) ?? new Date(0).toISOString();
 
   const updatedAt = readIsoDate(input?.updatedAt) ?? createdAt;
 
@@ -1156,7 +1159,15 @@ const transformByCollection = (collectionName: string, doc: any): TransformResul
   }
 };
 
-const DEFAULT_COLLECTIONS = ['users', 'comments', 'slivers', 'subcategories', 'categories', 'tags', 'articles'] as const;
+const DEFAULT_COLLECTIONS = [
+  'users',
+  'comments',
+  'slivers',
+  'subcategories',
+  'categories',
+  'tags',
+  'articles',
+] as const;
 
 async function main() {
   const [maybeCollectionName, maybeId] = process.argv.slice(2);

@@ -1,7 +1,12 @@
 import { apiClient } from '@/lib/api-client'
 import { Pagination } from './articles'
 
-export type NotificationType = 'review_requested' | 'changes_requested' | 'published' | 'comment' | 'system'
+export type NotificationType =
+  | 'review_requested'
+  | 'changes_requested'
+  | 'published'
+  | 'comment'
+  | 'system'
 
 export type Notification = {
   _id: string
@@ -23,14 +28,19 @@ export type NotificationsResponse = {
   }
 }
 
-export async function getNotifications(page = 1, limit = 20): Promise<NotificationsResponse> {
+export async function getNotifications(
+  page = 1,
+  limit = 20
+): Promise<NotificationsResponse> {
   const res = await apiClient.get('/notifications', {
     params: { page, limit },
   })
   return res as unknown as NotificationsResponse
 }
 
-export async function markNotificationAsRead(id: string): Promise<Notification> {
+export async function markNotificationAsRead(
+  id: string
+): Promise<Notification> {
   const res = await apiClient.patch(`/notifications/${id}/read`)
   return res as unknown as Notification
 }

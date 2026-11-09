@@ -7,4 +7,7 @@ const baseOptions: pino.LoggerOptions = {
 export const logger =
   process.env.NODE_ENV === 'production'
     ? pino(baseOptions)
-    : pino(baseOptions, pino.transport({ target: 'pino-pretty', options: { colorize: true, translateTime: 'SYS:standard' } }));
+    : pino(
+        baseOptions,
+        pino.transport({ target: 'pino-pretty', options: { colorize: true, translateTime: 'SYS:standard' } }),
+      );

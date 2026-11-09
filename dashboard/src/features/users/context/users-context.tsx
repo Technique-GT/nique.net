@@ -1,11 +1,18 @@
-import React, { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import type {
+  ColumnFiltersState,
+  PaginationState,
+  SortingState,
+} from '@tanstack/react-table'
+import React, { useState } from 'react'
 import useDialogState from '@/hooks/use-dialog-state'
-import { User, userListSchema } from '../data/schema'
-import { getUsersPage, type PaginationMeta, type User as ApiUser } from '@/services/users'
 import { queryKeys } from '@/hooks/use-queries'
-import type { ColumnFiltersState, PaginationState } from '@tanstack/react-table'
-import type { SortingState } from '@tanstack/react-table'
+import {
+  type User as ApiUser,
+  getUsersPage,
+  type PaginationMeta,
+} from '@/services/users'
+import { User, userListSchema } from '../data/schema'
 
 type UsersDialogType = 'invite' | 'add' | 'edit' | 'delete' | 'merge'
 
@@ -55,12 +62,16 @@ export default function UsersProvider({ children }: Props) {
   const limit = pagination.pageSize
   const sortBy = sorting[0]?.id
   const sortDir = sorting[0]?.desc ? 'desc' : 'asc'
-  const nameFilterValue = columnFilters.find((filter) => filter.id === 'name')?.value
+  const nameFilterValue = columnFilters.find(
+    (filter) => filter.id === 'name'
+  )?.value
   const search =
     typeof nameFilterValue === 'string' && nameFilterValue.trim().length > 0
       ? nameFilterValue.trim()
       : undefined
-  const adminFilterValue = columnFilters.find((filter) => filter.id === 'isAdmin')?.value
+  const adminFilterValue = columnFilters.find(
+    (filter) => filter.id === 'isAdmin'
+  )?.value
   const adminFilter = Array.isArray(adminFilterValue)
     ? adminFilterValue[0]
     : adminFilterValue
@@ -69,8 +80,16 @@ export default function UsersProvider({ children }: Props) {
 
   // Use TanStack Query for users (not persisted - contains PII)
   const { data: usersResponse, isLoading } = useQuery({
-    queryKey: queryKeys.users({ page, limit, search, sortBy, sortDir, isAdmin }),
-    queryFn: () => getUsersPage({ page, limit, search, sortBy, sortDir, isAdmin }),
+    queryKey: queryKeys.users({
+      page,
+      limit,
+      search,
+      sortBy,
+      sortDir,
+      isAdmin,
+    }),
+    queryFn: () =>
+      getUsersPage({ page, limit, search, sortBy, sortDir, isAdmin }),
     staleTime: 30 * 1000, // 30 seconds
   })
   const rawUsers = (usersResponse?.data ?? []) as RawUser[]
@@ -78,17 +97,20 @@ export default function UsersProvider({ children }: Props) {
 
   // Map backend users to frontend User schema
   const users: User[] = React.useMemo(() => {
-      const mappedUsers = rawUsers.map((u) => ({
-        _id: u._id,
-        id: u._id,
-        name: typeof u.name === 'string' ? u.name : 'Unknown',
-        bio: typeof u.bio === 'string' ? u.bio : undefined,
-        isAdmin: !!u.isAdmin,
-        email: typeof u.email === 'string' ? u.email : undefined,
-        googleSub: typeof u.googleSub === 'string' ? u.googleSub : undefined,
-        profilePictureUrl: typeof u.profilePictureUrl === 'string' ? u.profilePictureUrl : undefined,
-        socialLinks: Array.isArray(u.socialLinks) ? u.socialLinks : [],
-      }))
+    const mappedUsers = rawUsers.map((u) => ({
+      _id: u._id,
+      id: u._id,
+      name: typeof u.name === 'string' ? u.name : 'Unknown',
+      bio: typeof u.bio === 'string' ? u.bio : undefined,
+      isAdmin: !!u.isAdmin,
+      email: typeof u.email === 'string' ? u.email : undefined,
+      googleSub: typeof u.googleSub === 'string' ? u.googleSub : undefined,
+      profilePictureUrl:
+        typeof u.profilePictureUrl === 'string'
+          ? u.profilePictureUrl
+          : undefined,
+      socialLinks: Array.isArray(u.socialLinks) ? u.socialLinks : [],
+    }))
 
     // Validate against schema to be safe
     try {
@@ -105,23 +127,25 @@ export default function UsersProvider({ children }: Props) {
   const total = paginationMeta?.total ?? rawUsers.length
 
   return (
-    <UsersContext.Provider value={{ 
-      open, 
-      setOpen, 
-      currentRow, 
-      setCurrentRow, 
-      users,
-      loading: isLoading,
-      columnFilters,
-      setColumnFilters,
-      pagination,
-      setPagination,
-      sorting,
-      setSorting,
-      pageCount,
-      total,
-      refetchUsers
-    }}>
+    <UsersContext.Provider
+      value={{
+        open,
+        setOpen,
+        currentRow,
+        setCurrentRow,
+        users,
+        loading: isLoading,
+        columnFilters,
+        setColumnFilters,
+        pagination,
+        setPagination,
+        sorting,
+        setSorting,
+        pageCount,
+        total,
+        refetchUsers,
+      }}
+    >
       {children}
     </UsersContext.Provider>
   )

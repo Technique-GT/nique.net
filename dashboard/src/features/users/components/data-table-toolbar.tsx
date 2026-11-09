@@ -25,9 +25,7 @@ export function DataTableToolbar<TData>({
       <div className='flex flex-1 flex-col gap-y-2 sm:flex-row sm:items-center sm:space-x-2'>
         <Input
           placeholder='Filter users...'
-          value={
-            (table.getColumn('name')?.getFilterValue() as string) ?? ''
-          }
+          value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
           onChange={(event) =>
             table.getColumn('name')?.setFilterValue(event.target.value)
           }
@@ -38,7 +36,9 @@ export function DataTableToolbar<TData>({
             <Select
               value={(adminColumn.getFilterValue() as string[])?.[0] || 'all'}
               onValueChange={(value) => {
-                adminColumn.setFilterValue(value === 'all' ? undefined : [value])
+                adminColumn.setFilterValue(
+                  value === 'all' ? undefined : [value]
+                )
               }}
             >
               <SelectTrigger className='h-8 w-[130px]'>

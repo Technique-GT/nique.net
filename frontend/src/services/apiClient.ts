@@ -31,7 +31,7 @@ apiClient.interceptors.request.use(
             withCredentials: true,
           });
           csrfToken = response.data.csrfToken;
-        } catch{
+        } catch {
           // console.error('Failed to fetch CSRF token:', error);
         }
       }
@@ -44,7 +44,7 @@ apiClient.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 /**
@@ -69,12 +69,7 @@ export interface ApiResponse<T> {
  * Otherwise returns the payload as-is (defensive).
  */
 export function unwrap<T>(payload: ApiResponse<T> | T): T {
-  if (
-    payload !== null &&
-    typeof payload === 'object' &&
-    'success' in payload &&
-    'data' in payload
-  ) {
+  if (payload !== null && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
     return (payload as ApiResponse<T>).data;
   }
   return payload as T;
@@ -84,14 +79,8 @@ export function unwrap<T>(payload: ApiResponse<T> | T): T {
  * Extract pagination from a wrapped API response.
  * Returns undefined if not present.
  */
-export function extractPagination(
-  payload: unknown
-): ApiResponse<unknown>['pagination'] | undefined {
-  if (
-    payload !== null &&
-    typeof payload === 'object' &&
-    'pagination' in payload
-  ) {
+export function extractPagination(payload: unknown): ApiResponse<unknown>['pagination'] | undefined {
+  if (payload !== null && typeof payload === 'object' && 'pagination' in payload) {
     return (payload as ApiResponse<unknown>).pagination;
   }
   return undefined;

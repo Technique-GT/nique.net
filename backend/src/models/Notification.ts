@@ -14,10 +14,10 @@ export interface INotification extends Document {
 const NotificationSchema = new Schema<INotification>(
   {
     recipientId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    type: { 
-      type: String, 
+    type: {
+      type: String,
       enum: ['review_requested', 'changes_requested', 'published', 'comment', 'system'],
-      required: true 
+      required: true,
     },
     title: { type: String, required: true },
     message: { type: String, required: true },
@@ -25,7 +25,7 @@ const NotificationSchema = new Schema<INotification>(
     data: { type: Schema.Types.Mixed },
     read: { type: Boolean, default: false },
   },
-  { timestamps: { createdAt: true, updatedAt: false } }
+  { timestamps: { createdAt: true, updatedAt: false } },
 );
 
 // Index for fetching user's notifications (especially unread ones), sorted by date

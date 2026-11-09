@@ -1,3 +1,4 @@
+import { ChevronDown, ChevronUp, RefreshCw, Search, Trash2 } from 'lucide-react'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Main } from '@/components/layout/main'
@@ -20,7 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ChevronDown, ChevronUp, RefreshCw, Search, Trash2 } from 'lucide-react'
 import { useDeleteSliver, useSlivers } from '@/hooks/use-queries'
 
 export default function SliversManagement() {
@@ -30,7 +30,10 @@ export default function SliversManagement() {
   const [expandedSlivers, setExpandedSlivers] = useState<Set<string>>(new Set())
 
   const query = useMemo(() => {
-    const params: { page: number; limit: number; search?: string } = { page, limit }
+    const params: { page: number; limit: number; search?: string } = {
+      page,
+      limit,
+    }
     if (searchTerm.trim()) params.search = searchTerm.trim()
     return params
   }, [page, limit, searchTerm])
@@ -90,7 +93,9 @@ export default function SliversManagement() {
             onClick={() => refetch()}
             disabled={isLoading}
           >
-            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
+            />
             Refresh
           </Button>
         }
@@ -117,7 +122,10 @@ export default function SliversManagement() {
                 />
                 <Search className='absolute left-3 top-3 h-4 w-4 text-muted-foreground' />
               </div>
-              <Select value={`${limit}`} onValueChange={(value) => setLimit(Number(value))}>
+              <Select
+                value={`${limit}`}
+                onValueChange={(value) => setLimit(Number(value))}
+              >
                 <SelectTrigger className='w-full sm:w-28'>
                   <SelectValue placeholder='Rows' />
                 </SelectTrigger>
@@ -165,13 +173,15 @@ export default function SliversManagement() {
                             </div>
                           </TableCell>
                           <TableCell className='max-w-[320px] font-medium'>
-                              <span
-                                className={`block ${
-                                  isExpanded ? 'whitespace-pre-wrap wrap-break-word' : 'truncate'
-                                }`}
-                              >
-                                {sliver.text}
-                              </span>
+                            <span
+                              className={`block ${
+                                isExpanded
+                                  ? 'whitespace-pre-wrap wrap-break-word'
+                                  : 'truncate'
+                              }`}
+                            >
+                              {sliver.text}
+                            </span>
                           </TableCell>
                           <TableCell>{formatDate(sliver.createdAt)}</TableCell>
                           <TableCell>{formatDate(sliver.expiresAt)}</TableCell>
@@ -192,7 +202,10 @@ export default function SliversManagement() {
                   })}
                   {slivers.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} className='py-8 text-center text-muted-foreground'>
+                      <TableCell
+                        colSpan={4}
+                        className='py-8 text-center text-muted-foreground'
+                      >
                         {isLoading ? 'Loading slivers...' : 'No slivers found.'}
                       </TableCell>
                     </TableRow>
@@ -217,7 +230,9 @@ export default function SliversManagement() {
                 <Button
                   variant='outline'
                   size='sm'
-                  onClick={() => setPage((prev) => Math.min(prev + 1, pageCount))}
+                  onClick={() =>
+                    setPage((prev) => Math.min(prev + 1, pageCount))
+                  }
                   disabled={page >= pageCount || isLoading}
                 >
                   Next

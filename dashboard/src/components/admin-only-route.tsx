@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
 import { Navigate } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { toast } from 'sonner'
-import { useAuthStore } from '@/stores/authStore'
 import { canAccessAnalytics } from '@/lib/permissions'
+import { useAuthStore } from '@/stores/authStore'
 
 interface AdminOnlyRouteProps {
   children: React.ReactNode

@@ -1,12 +1,12 @@
-import { Request, Response } from 'express';
 import crypto from 'crypto';
+import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import mongoose from 'mongoose';
 import _ from 'lodash';
-import User from '../models/User';
+import mongoose from 'mongoose';
 import { AuthRequest, getTokenFromRequest } from '../middleware/auth.middleware';
-import { hashToken, safeErrorResponse } from '../utils/security';
 import RevokedToken from '../models/RevokedToken';
+import User from '../models/User';
+import { hashToken, safeErrorResponse } from '../utils/security';
 
 type GoogleProfile = { name?: string; sub?: string; email?: string; email_verified?: boolean };
 
@@ -269,13 +269,15 @@ export const googleAuthCallback = async (req: Request, res: Response): Promise<v
     }
 
     if (!user) {
-      user = emailUser ?? await AuthUser.create({
-        name: fullName,
-        socialLinks: [],
-        isAdmin: isAllowlistedAdmin,
-        googleSub,
-        ...(isAllowlistedAdmin ? { email } : {}),
-      });
+      user =
+        emailUser ??
+        (await AuthUser.create({
+          name: fullName,
+          socialLinks: [],
+          isAdmin: isAllowlistedAdmin,
+          googleSub,
+          ...(isAllowlistedAdmin ? { email } : {}),
+        }));
     } else if (isAllowlistedAdmin) {
       const updates: Record<string, any> = {};
       if (!user.isAdmin) {

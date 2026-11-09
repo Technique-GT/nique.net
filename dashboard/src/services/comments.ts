@@ -36,15 +36,24 @@ export async function getCommentStats(): Promise<CommentStats> {
   return res as unknown as CommentStats
 }
 
-export async function getComments(query: CommentsQuery = {}): Promise<PaginatedResponse<Comment>> {
-  const params: Record<string, string | number | boolean | undefined> = { ...query }
+export async function getComments(
+  query: CommentsQuery = {}
+): Promise<PaginatedResponse<Comment>> {
+  const params: Record<string, string | number | boolean | undefined> = {
+    ...query,
+  }
   if (typeof query.approved === 'boolean') {
     params.approved = query.approved.toString()
   }
 
   const res = await apiClient.get('/comments', { params })
 
-  if (res && typeof res === 'object' && !Array.isArray(res) && 'data' in (res as { data?: unknown })) {
+  if (
+    res &&
+    typeof res === 'object' &&
+    !Array.isArray(res) &&
+    'data' in (res as { data?: unknown })
+  ) {
     const r = res as { data?: unknown; pagination?: unknown }
     return {
       data: Array.isArray(r.data) ? (r.data as Comment[]) : [],
@@ -59,7 +68,10 @@ export async function getComments(query: CommentsQuery = {}): Promise<PaginatedR
   return { data: [] }
 }
 
-export async function updateCommentStatus(id: string, approved: boolean): Promise<Comment> {
+export async function updateCommentStatus(
+  id: string,
+  approved: boolean
+): Promise<Comment> {
   const res = await apiClient.patch(`/comments/${id}/status`, { approved })
   return res as unknown as Comment
 }

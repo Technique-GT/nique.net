@@ -1,6 +1,6 @@
 //
 //  printPublicationController.ts
-//  
+//
 //
 //  Created by Nha Han Nguyen on 7/1/26.
 //
@@ -25,9 +25,9 @@ export const createPublication = async (req: Request, res: Response): Promise<vo
     const newPublication: IPrintPublication = new PrintPublication({
       issueName,
       issueType,
-      publishDate
+      publishDate,
     });
-    
+
     await newPublication.save();
     res.status(201).json(newPublication);
   } catch (error) {

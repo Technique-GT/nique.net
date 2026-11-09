@@ -1,11 +1,11 @@
 //
 //  PrintPublication.ts
-//  
+//
 //
 //  Created by Nha Han Nguyen on 7/1/26.
 //
 
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
 // interface
 export interface IPrintPublication extends Document {
@@ -15,20 +15,23 @@ export interface IPrintPublication extends Document {
 }
 
 // schema corresponding to the interface
-const PrintPublicationSchema: Schema = new Schema({
-  issueName: {
-    type: String,
-    required: true,
-    trim: true
+const PrintPublicationSchema: Schema = new Schema(
+  {
+    issueName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    issueType: {
+      type: String,
+      required: true,
+    },
+    publishDate: {
+      type: Date,
+      required: true,
+    },
   },
-  issueType: {
-    type: String,
-    required: true
-  },
-  publishDate: {
-    type: Date,
-    required: true
-  }
-}, { timestamps: true });
+  { timestamps: true },
+);
 
 export default mongoose.model<IPrintPublication>('PrintPublication', PrintPublicationSchema);

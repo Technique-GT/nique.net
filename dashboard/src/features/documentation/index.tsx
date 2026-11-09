@@ -1,12 +1,17 @@
 import { Link } from '@tanstack/react-router'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/layout/page-header'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Badge } from '@/components/ui/badge'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
 import {
   Table,
   TableBody,
@@ -15,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import screenshot from '/nique-net-main-page.svg'
 
 const navItems = [
@@ -65,8 +71,8 @@ export default function Documentation() {
           <Alert className='border-muted-foreground/10 bg-muted/50 text-muted-foreground'>
             <AlertTitle>Static reference</AlertTitle>
             <AlertDescription>
-              This page is a static guide. If a workflow changes, update the copy
-              here before shipping.
+              This page is a static guide. If a workflow changes, update the
+              copy here before shipping.
             </AlertDescription>
           </Alert>
         </aside>
@@ -75,7 +81,9 @@ export default function Documentation() {
           <Card>
             <CardHeader>
               <CardTitle id='roles'>Roles & Permissions</CardTitle>
-              <CardDescription>Who can do what in the dashboard.</CardDescription>
+              <CardDescription>
+                Who can do what in the dashboard.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue='user'>
@@ -83,19 +91,39 @@ export default function Documentation() {
                   <TabsTrigger value='user'>User</TabsTrigger>
                   <TabsTrigger value='admin'>Admin</TabsTrigger>
                 </TabsList>
-                <TabsContent value='user' className='space-y-2 text-sm text-muted-foreground dark:text-foreground/80'>
+                <TabsContent
+                  value='user'
+                  className='space-y-2 text-sm text-muted-foreground dark:text-foreground/80'
+                >
                   <ul className='list-disc space-y-2 pl-4'>
                     <li>Create and edit drafts.</li>
-                    <li>Submit for review for admins and make changes on request.</li>
+                    <li>
+                      Submit for review for admins and make changes on request.
+                    </li>
                     <li>View owned (not authored!) content.</li>
                   </ul>
                 </TabsContent>
-                <TabsContent value='admin' className='space-y-2 text-sm text-muted-foreground dark:text-foreground/80'>
+                <TabsContent
+                  value='admin'
+                  className='space-y-2 text-sm text-muted-foreground dark:text-foreground/80'
+                >
                   <ul className='list-disc space-y-2 pl-4'>
-                    <li>Approve and publish/unpublish content. Manage featured or sticky articles.</li>
-                    <li>Manage staff accounts and permissions. Only admins can grant admin-status to other users.</li>
-                    <li>Manage and approve comments, slivers, categories, tags, Spotify playlists, and view analytics on content performance.</li>
-                    <li className='text-destructive font-semibold'>Make sure to review comments on a regular basis.</li>
+                    <li>
+                      Approve and publish/unpublish content. Manage featured or
+                      sticky articles.
+                    </li>
+                    <li>
+                      Manage staff accounts and permissions. Only admins can
+                      grant admin-status to other users.
+                    </li>
+                    <li>
+                      Manage and approve comments, slivers, categories, tags,
+                      Spotify playlists, and view analytics on content
+                      performance.
+                    </li>
+                    <li className='text-destructive font-semibold'>
+                      Make sure to review comments on a regular basis.
+                    </li>
                   </ul>
                 </TabsContent>
               </Tabs>
@@ -104,7 +132,9 @@ export default function Documentation() {
 
           <Card>
             <CardHeader>
-              <CardTitle id='content_organization'>Content Organization</CardTitle>
+              <CardTitle id='content_organization'>
+                Content Organization
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className='grid gap-6 lg:grid-cols-[1.1fr_1fr] items-start'>
@@ -117,38 +147,88 @@ export default function Documentation() {
                 </figure>
                 <div className='space-y-4 text-sm text-muted-foreground dark:text-foreground/80'>
                   <p>
-                    Each page's structure contains a <code>main</code> section, which holds the latest and most important content. Each page's <code>main</code> section is separated from the rest of the page by a divider across the page. <code>FeaturedStory</code> components are given first priority, i.e. pages hydrate the <code>FeaturedStory</code> before any other article if present. If there is no <code>isFeatured</code> article set for that category, the page will display the <b>latest article in that section</b>.
-                  </p><p>
-                    After setting the <code>FeaturedStory</code>, each page then creates a <code>recentArticles</code> array that fetches articles <code>[...sticky, ...nonSticky]</code> in descending order by published date. <code>sticky</code> articles are prioritized first, followed by non-sticky articles to fill the remaining slots.
-                    The <code>JustIn</code> component, if present, takes the first article in the array and other <code>ArticleBlocks</code> in the <code>main</code> section are populated by subsequent articles in the array. 
-                  </p><p>  
-                    Below the divider, articles are organized into their categories/subcategories to help organize content (sorted by published date). Keep in mind that <b>all pages prioritize hydrating the <code>main</code> section of the page before the category/subcategory subsections.</b> A set is used to avoid duplicate articles in the <code>main</code> section and the category/subcategory subsections. The <code>InfiniteScrollModule</code> contains all articles in that category, sorting by descending order of published date, <code>PAGE_SIZE=8</code>.
+                    Each page's structure contains a <code>main</code> section,
+                    which holds the latest and most important content. Each
+                    page's <code>main</code> section is separated from the rest
+                    of the page by a divider across the page.{' '}
+                    <code>FeaturedStory</code> components are given first
+                    priority, i.e. pages hydrate the <code>FeaturedStory</code>{' '}
+                    before any other article if present. If there is no{' '}
+                    <code>isFeatured</code> article set for that category, the
+                    page will display the <b>latest article in that section</b>.
+                  </p>
+                  <p>
+                    After setting the <code>FeaturedStory</code>, each page then
+                    creates a <code>recentArticles</code> array that fetches
+                    articles <code>[...sticky, ...nonSticky]</code> in
+                    descending order by published date. <code>sticky</code>{' '}
+                    articles are prioritized first, followed by non-sticky
+                    articles to fill the remaining slots. The{' '}
+                    <code>JustIn</code> component, if present, takes the first
+                    article in the array and other <code>ArticleBlocks</code> in
+                    the <code>main</code> section are populated by subsequent
+                    articles in the array.
+                  </p>
+                  <p>
+                    Below the divider, articles are organized into their
+                    categories/subcategories to help organize content (sorted by
+                    published date). Keep in mind that{' '}
+                    <b>
+                      all pages prioritize hydrating the <code>main</code>{' '}
+                      section of the page before the category/subcategory
+                      subsections.
+                    </b>{' '}
+                    A set is used to avoid duplicate articles in the{' '}
+                    <code>main</code> section and the category/subcategory
+                    subsections. The <code>InfiniteScrollModule</code> contains
+                    all articles in that category, sorting by descending order
+                    of published date, <code>PAGE_SIZE=8</code>.
                   </p>
                 </div>
               </div>
-          </CardContent>
+            </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle id='caching'>Caching</CardTitle>
             </CardHeader>
             <CardContent>
               <div className='space-y-3 text-sm text-muted-foreground dark:text-foreground/80'>
-                  <h1>Frontend JS Caching</h1>
-                  <p>
-                    The public site now relies on backend responses plus Cloudflare edge caching instead of frontend in-memory article/category caches. Pages fetch directly from the API on mount, and Cloudflare handles shared caching for public article reads.
-                  </p><p>
-                    Browser-facing responses still use <code>Cache-Control: public, max-age=0, must-revalidate</code> so the client does not hold onto long-lived stale copies. Cloudflare applies the longer edge TTL and is invalidated on article mutations, which keeps the frontend correctness model simpler than the old in-memory stale-while-revalidate setup.
-                  </p>
-                  <p>
-                    The practical tradeoff is that same-tab navigation may briefly show loading states instead of instant cached content. In exchange, deleted, unpublished, or republished articles no longer linger in client memory after a mutation, and the frontend no longer needs separate article/category cache coordination logic.
-                  </p><p>
-                    For operations and debugging, the meaningful cache layer is now the Cloudflare-backed API. Public article reads should trend toward <code>CF-Cache-Status: HIT</code>, search routes should remain uncached, and publish-state changes depend on backend purge logic rather than clearing local JS caches.
-                  </p>
-                  <div className='rounded-lg border bg-muted/30 p-3 text-xs leading-5 text-muted-foreground'>
-                    <pre className='whitespace-pre-wrap'>
-{`CACHE FLOW (PUBLIC SITE)
+                <h1>Frontend JS Caching</h1>
+                <p>
+                  The public site now relies on backend responses plus
+                  Cloudflare edge caching instead of frontend in-memory
+                  article/category caches. Pages fetch directly from the API on
+                  mount, and Cloudflare handles shared caching for public
+                  article reads.
+                </p>
+                <p>
+                  Browser-facing responses still use{' '}
+                  <code>Cache-Control: public, max-age=0, must-revalidate</code>{' '}
+                  so the client does not hold onto long-lived stale copies.
+                  Cloudflare applies the longer edge TTL and is invalidated on
+                  article mutations, which keeps the frontend correctness model
+                  simpler than the old in-memory stale-while-revalidate setup.
+                </p>
+                <p>
+                  The practical tradeoff is that same-tab navigation may briefly
+                  show loading states instead of instant cached content. In
+                  exchange, deleted, unpublished, or republished articles no
+                  longer linger in client memory after a mutation, and the
+                  frontend no longer needs separate article/category cache
+                  coordination logic.
+                </p>
+                <p>
+                  For operations and debugging, the meaningful cache layer is
+                  now the Cloudflare-backed API. Public article reads should
+                  trend toward <code>CF-Cache-Status: HIT</code>, search routes
+                  should remain uncached, and publish-state changes depend on
+                  backend purge logic rather than clearing local JS caches.
+                </p>
+                <div className='rounded-lg border bg-muted/30 p-3 text-xs leading-5 text-muted-foreground'>
+                  <pre className='whitespace-pre-wrap'>
+                    {`CACHE FLOW (PUBLIC SITE)
 
 Browser navigation
     |
@@ -164,103 +244,241 @@ Backend origin
 Article mutation ──► backend purge by tag + URL fallback ──► next read refetches fresh state
 
 Legend: no frontend in-memory article/category cache`}
-                    </pre>
-                  </div>
-                    <p>
-                      Cloudflare cache hit rate at February 2026 averages 21.43k cached requests out of 1.72M total requests per month, putting the system at a 1.25% cache hit rate. Long term goal is to improve Cloudflare cache hit rate.
-                    </p>
-                  <Separator />
-                  <p><i>Tip: The free tier of Render spins down after 15 mins of no inbound requests and may experience cold starts if idle for some time. A cron job is setup to ping the <code>/api/health</code> route every 15 minutes, which gives up to 744 hours of uptime per month (31 days). MongoDB's free tier also has limitations: 512MB storage and shared cluster resources, 16MB document size limit. The instance will also go stale if idle for 90 days, requiring a manual restart to regain responsiveness.</i></p>
+                  </pre>
                 </div>
+                <p>
+                  Cloudflare cache hit rate at February 2026 averages 21.43k
+                  cached requests out of 1.72M total requests per month, putting
+                  the system at a 1.25% cache hit rate. Long term goal is to
+                  improve Cloudflare cache hit rate.
+                </p>
+                <Separator />
+                <p>
+                  <i>
+                    Tip: The free tier of Render spins down after 15 mins of no
+                    inbound requests and may experience cold starts if idle for
+                    some time. A cron job is setup to ping the{' '}
+                    <code>/api/health</code> route every 15 minutes, which gives
+                    up to 744 hours of uptime per month (31 days). MongoDB's
+                    free tier also has limitations: 512MB storage and shared
+                    cluster resources, 16MB document size limit. The instance
+                    will also go stale if idle for 90 days, requiring a manual
+                    restart to regain responsiveness.
+                  </i>
+                </p>
+              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle id='staging_branch_protection'>Staging and Branch Protection</CardTitle>
+              <CardTitle id='staging_branch_protection'>
+                Staging and Branch Protection
+              </CardTitle>
             </CardHeader>
             <CardContent className='space-y-3 text-sm text-muted-foreground dark:text-foreground/80'>
               <p>
-                Preview and release environments are split across three staging domains before production:
+                Preview and release environments are split across three staging
+                domains before production:
               </p>
               <ul className='list-disc space-y-2 pl-4'>
-                <li><code><a href='https://staging.nique.net' target='_blank' rel='noopener noreferrer' className='hover:underline'>staging.nique.net</a></code> for the public frontend preview.</li>
-                <li><code><a href='https://dashboard-staging.nique.net' target='_blank' rel='noopener noreferrer' className='hover:underline'>dashboard-staging.nique.net</a></code> for dashboard preview.</li>
-                <li><code><a href='https://api-staging.nique.net' target='_blank' rel='noopener noreferrer' className='hover:underline'>api-staging.nique.net</a></code> for the staging backend API.</li>
+                <li>
+                  <code>
+                    <a
+                      href='https://staging.nique.net'
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='hover:underline'
+                    >
+                      staging.nique.net
+                    </a>
+                  </code>{' '}
+                  for the public frontend preview.
+                </li>
+                <li>
+                  <code>
+                    <a
+                      href='https://dashboard-staging.nique.net'
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='hover:underline'
+                    >
+                      dashboard-staging.nique.net
+                    </a>
+                  </code>{' '}
+                  for dashboard preview.
+                </li>
+                <li>
+                  <code>
+                    <a
+                      href='https://api-staging.nique.net'
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='hover:underline'
+                    >
+                      api-staging.nique.net
+                    </a>
+                  </code>{' '}
+                  for the staging backend API.
+                </li>
               </ul>
 
               <h1>How To Deploy Preview</h1>
               <ol className='list-decimal space-y-2 pl-4'>
-                <li>Merge feature work into <code>staging</code>.</li>
-                <li><code>.github/workflows/staging-smoke-test.yml</code> will wait 5 mins for staging environments to deploy and verify staging health/status checks.</li>
-                <li>Ensure deploy hooks auto-trigger backend/frontend/dashboard staging deploys (hooks are POST-triggered).</li>
-                <li>Validate auth, article creation, moderation, and publishing flow in staging dashboard before promotion.</li>
+                <li>
+                  Merge feature work into <code>staging</code>.
+                </li>
+                <li>
+                  <code>.github/workflows/staging-smoke-test.yml</code> will
+                  wait 5 mins for staging environments to deploy and verify
+                  staging health/status checks.
+                </li>
+                <li>
+                  Ensure deploy hooks auto-trigger backend/frontend/dashboard
+                  staging deploys (hooks are POST-triggered).
+                </li>
+                <li>
+                  Validate auth, article creation, moderation, and publishing
+                  flow in staging dashboard before promotion.
+                </li>
               </ol>
 
               <h1>Staging Configuration</h1>
               <ul className='list-disc space-y-2 pl-4'>
-                <li>Dashboard preview should set <code>VITE_API_BASE_URL=https://api-staging.nique.net</code>.</li>
-                <li>Production dashboard should set <code>VITE_API_BASE_URL=https://api.nique.net</code>.</li>
-                <li>Backend CORS should use <code>CLIENT_URLS</code> (comma-separated origins) including staging frontend and staging dashboard domains.</li>
-                <li>Staging backend should use separate DB/keys when possible (<code>MONGO_DB_NAME</code>, <code>JWT_TOKEN</code>, OAuth redirect URI).</li>
+                <li>
+                  Dashboard preview should set{' '}
+                  <code>VITE_API_BASE_URL=https://api-staging.nique.net</code>.
+                </li>
+                <li>
+                  Production dashboard should set{' '}
+                  <code>VITE_API_BASE_URL=https://api.nique.net</code>.
+                </li>
+                <li>
+                  Backend CORS should use <code>CLIENT_URLS</code>{' '}
+                  (comma-separated origins) including staging frontend and
+                  staging dashboard domains.
+                </li>
+                <li>
+                  Staging backend should use separate DB/keys when possible (
+                  <code>MONGO_DB_NAME</code>, <code>JWT_TOKEN</code>, OAuth
+                  redirect URI).
+                </li>
               </ul>
 
               <h1>Branch And Merge Rules</h1>
               <ul className='list-disc space-y-2 pl-4'>
-                <li><code>deploy</code> is the production source branch. No direct pushes.</li>
+                <li>
+                  <code>deploy</code> is the production source branch. No direct
+                  pushes.
+                </li>
                 <li>
                   Branch rules:
                   <ul className='list-decimal space-y-2 pl-8'>
                     <li>Branch is read-only.</li>
-                    <li>Requires PR and 1 approval before merging into <code>deploy</code>.</li>
-                    <li>Staging environments must deploy successfully before merging.</li>
                     <li>
-                      Status checks must pass before merging. See <code>.github/workflows/pr-checks.yml</code>
+                      Requires PR and 1 approval before merging into{' '}
+                      <code>deploy</code>.
+                    </li>
+                    <li>
+                      Staging environments must deploy successfully before
+                      merging.
+                    </li>
+                    <li>
+                      Status checks must pass before merging. See{' '}
+                      <code>.github/workflows/pr-checks.yml</code>
                       <ul className='list-none space-y-2 pl-8'>
-                        <li><code>npm --prefix backend run lint</code></li>
-                        <li><code>npm --prefix backend run test</code></li>
-                        <li><code>npm --prefix backend run build</code></li>
-                        <li><code>npm --prefix frontend run lint</code></li>
-                        <li><code>npm --prefix frontend run build</code></li>
-                        <li><code>npm --prefix dashboard run lint</code></li>
-                        <li><code>npm --prefix dashboard run build</code></li>
+                        <li>
+                          <code>npm --prefix backend run lint</code>
+                        </li>
+                        <li>
+                          <code>npm --prefix backend run test</code>
+                        </li>
+                        <li>
+                          <code>npm --prefix backend run build</code>
+                        </li>
+                        <li>
+                          <code>npm --prefix frontend run lint</code>
+                        </li>
+                        <li>
+                          <code>npm --prefix frontend run build</code>
+                        </li>
+                        <li>
+                          <code>npm --prefix dashboard run lint</code>
+                        </li>
+                        <li>
+                          <code>npm --prefix dashboard run build</code>
+                        </li>
                       </ul>
                     </li>
                   </ul>
                 </li>
-                <li>Use <code>staging</code> as the integration and QA branch for preview builds/staging environments build/deploy from <code>staging</code> branch.</li>
-                <li>Promotion path: <code>{'feature/* -> staging -> deploy'}</code>.</li>
-                <li>Changes merged only to <code>staging</code> do not affect production services until promoted to <code>deploy</code>.</li>
+                <li>
+                  Use <code>staging</code> as the integration and QA branch for
+                  preview builds/staging environments build/deploy from{' '}
+                  <code>staging</code> branch.
+                </li>
+                <li>
+                  Promotion path:{' '}
+                  <code>{'feature/* -> staging -> deploy'}</code>.
+                </li>
+                <li>
+                  Changes merged only to <code>staging</code> do not affect
+                  production services until promoted to <code>deploy</code>.
+                </li>
               </ul>
               <Separator />
-              <p><i>
-                Tip: Staging API uses a second free service on Render, avoid keeping it warm continuously; use it during QA windows to reduce instance-hour usage. Each account has 750 free instance hours, depending on the month, you will have either 6 or 30 hours QA/testing windows. Watch instance hours in Render closely and plan usage accordingly.
-              </i></p>
+              <p>
+                <i>
+                  Tip: Staging API uses a second free service on Render, avoid
+                  keeping it warm continuously; use it during QA windows to
+                  reduce instance-hour usage. Each account has 750 free instance
+                  hours, depending on the month, you will have either 6 or 30
+                  hours QA/testing windows. Watch instance hours in Render
+                  closely and plan usage accordingly.
+                </i>
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle id='crawling_and_indexing'>Crawling and Indexing</CardTitle>
+              <CardTitle id='crawling_and_indexing'>
+                Crawling and Indexing
+              </CardTitle>
               <CardDescription>
-                This project intentionally keeps only the public news site discoverable in search engines. Dashboard and staging hosts are reachable by URL, but should not be crawled or indexed.
+                This project intentionally keeps only the public news site
+                discoverable in search engines. Dashboard and staging hosts are
+                reachable by URL, but should not be crawled or indexed.
               </CardDescription>
             </CardHeader>
             <CardContent className='space-y-3 text-sm text-muted-foreground dark:text-foreground/80'>
-
               <h1>Crawl Vs Index</h1>
               <ul className='list-disc space-y-2 pl-4'>
-                <li><b>Crawling</b> means a bot discovers and fetches a URL.</li>
-                <li><b>Indexing</b> means a search engine stores that URL/page in its search index.</li>
-                <li><code>robots.txt</code> primarily influences crawling behavior for compliant bots.</li>
-                <li><code>noindex</code> (meta tag or <code>X-Robots-Tag</code> header) is the directive that prevents indexing.</li>
-                <li><code>robots.txt</code> is not a security boundary. Private content still requires authentication/authorization.</li>
+                <li>
+                  <b>Crawling</b> means a bot discovers and fetches a URL.
+                </li>
+                <li>
+                  <b>Indexing</b> means a search engine stores that URL/page in
+                  its search index.
+                </li>
+                <li>
+                  <code>robots.txt</code> primarily influences crawling behavior
+                  for compliant bots.
+                </li>
+                <li>
+                  <code>noindex</code> (meta tag or <code>X-Robots-Tag</code>{' '}
+                  header) is the directive that prevents indexing.
+                </li>
+                <li>
+                  <code>robots.txt</code> is not a security boundary. Private
+                  content still requires authentication/authorization.
+                </li>
               </ul>
 
               <h1>Host Policy</h1>
               <div className='rounded-lg border bg-muted/30 p-3 text-xs leading-5 text-muted-foreground'>
                 <pre className='whitespace-pre-wrap'>
-{`INDEXABLE (public news site only)
+                  {`INDEXABLE (public news site only)
 nique.net
 www.nique.net
 
@@ -276,21 +494,46 @@ api-staging.nique.net
 
               <h1>Required Controls</h1>
               <ul className='list-disc space-y-2 pl-4'>
-                <li>Frontend uses <code>VITE_ALLOW_INDEXING=true</code> only for <code>nique.net</code> and <code>www.nique.net</code> production builds.</li>
-                <li>Dashboard should always emit <code>&lt;meta name='robots' content='noindex, nofollow' /&gt;</code>.</li>
-                <li>Non-public hosts should serve <code>robots.txt</code> with <code>Disallow: /</code>.</li>
-                <li>Non-public hosts should return <code>X-Robots-Tag: noindex, nofollow, noarchive, nosnippet</code>.</li>
+                <li>
+                  Frontend uses <code>VITE_ALLOW_INDEXING=true</code> only for{' '}
+                  <code>nique.net</code> and <code>www.nique.net</code>{' '}
+                  production builds.
+                </li>
+                <li>
+                  Dashboard should always emit{' '}
+                  <code>
+                    &lt;meta name='robots' content='noindex, nofollow' /&gt;
+                  </code>
+                  .
+                </li>
+                <li>
+                  Non-public hosts should serve <code>robots.txt</code> with{' '}
+                  <code>Disallow: /</code>.
+                </li>
+                <li>
+                  Non-public hosts should return{' '}
+                  <code>
+                    X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+                  </code>
+                  .
+                </li>
               </ul>
 
               <h1>Cloudflare Rule Setup</h1>
               <ol className='list-decimal space-y-2 pl-4'>
-                <li>Go to Cloudflare Dashboard → Rules → Overview → Create rule → Response Header Transform Rule.</li>
-                <li>Name the rule clearly (for example: <code>noindex-non-public-hosts</code>).</li>
+                <li>
+                  Go to Cloudflare Dashboard → Rules → Overview → Create rule →
+                  Response Header Transform Rule.
+                </li>
+                <li>
+                  Name the rule clearly (for example:{' '}
+                  <code>noindex-non-public-hosts</code>).
+                </li>
                 <li>Match only non-public hostnames. Example expression:</li>
               </ol>
               <div className='rounded-lg border bg-muted/30 p-3 text-xs leading-5 text-muted-foreground'>
                 <pre className='whitespace-pre-wrap'>
-{`(
+                  {`(
   http.host eq "dashboard.nique.net" or
   http.host eq "dashboard-staging.nique.net" or
   http.host eq "staging.nique.net" or
@@ -301,21 +544,39 @@ api-staging.nique.net
                 </pre>
               </div>
               <ol className='list-decimal space-y-2 pl-4'>
-                <li>Set response header:
-                  <code> X-Robots-Tag = noindex, nofollow, noarchive, nosnippet</code>.
+                <li>
+                  Set response header:
+                  <code>
+                    {' '}
+                    X-Robots-Tag = noindex, nofollow, noarchive, nosnippet
+                  </code>
+                  .
                 </li>
-                <li>Keep <code>nique.net</code> and <code>www.nique.net</code> excluded from this rule.</li>
+                <li>
+                  Keep <code>nique.net</code> and <code>www.nique.net</code>{' '}
+                  excluded from this rule.
+                </li>
               </ol>
 
               <h1>Verification Checklist</h1>
               <ul className='list-disc space-y-2 pl-4'>
-                <li>For non-public hosts, confirm <code>X-Robots-Tag</code> includes <code>noindex</code>.</li>
-                <li>For non-public hosts, confirm <code>robots.txt</code> contains <code>Disallow: /</code>.</li>
-                <li>For <code>nique.net</code> and <code>www.nique.net</code>, confirm no Cloudflare <code>X-Robots-Tag: noindex</code> header is present.</li>
+                <li>
+                  For non-public hosts, confirm <code>X-Robots-Tag</code>{' '}
+                  includes <code>noindex</code>.
+                </li>
+                <li>
+                  For non-public hosts, confirm <code>robots.txt</code> contains{' '}
+                  <code>Disallow: /</code>.
+                </li>
+                <li>
+                  For <code>nique.net</code> and <code>www.nique.net</code>,
+                  confirm no Cloudflare <code>X-Robots-Tag: noindex</code>{' '}
+                  header is present.
+                </li>
               </ul>
               <div className='rounded-lg border bg-muted/30 p-3 text-xs leading-5 text-muted-foreground'>
                 <pre className='whitespace-pre-wrap'>
-{`# Expected: noindex present
+                  {`# Expected: noindex present
 curl -sI https://dashboard.nique.net | grep -i x-robots-tag
 curl -sI https://dashboard-staging.nique.net | grep -i x-robots-tag
 curl -sI https://staging.nique.net | grep -i x-robots-tag
@@ -332,9 +593,19 @@ curl -sI https://www.nique.net | grep -i x-robots-tag`}
 
               <h1>If URLs Were Already Indexed</h1>
               <ol className='list-decimal space-y-2 pl-4'>
-                <li>Use Google Search Console → Indexing → Removals to submit temporary removals for affected prefixes (for example <code>https://dashboard.nique.net/</code>).</li>
-                <li>Keep noindex headers/tags and disallow rules in place so removal becomes durable after recrawl.</li>
-                <li>Use URL Inspection to verify non-public URLs are blocked from indexing and public URLs remain indexable.</li>
+                <li>
+                  Use Google Search Console → Indexing → Removals to submit
+                  temporary removals for affected prefixes (for example{' '}
+                  <code>https://dashboard.nique.net/</code>).
+                </li>
+                <li>
+                  Keep noindex headers/tags and disallow rules in place so
+                  removal becomes durable after recrawl.
+                </li>
+                <li>
+                  Use URL Inspection to verify non-public URLs are blocked from
+                  indexing and public URLs remain indexable.
+                </li>
               </ol>
             </CardContent>
           </Card>
@@ -345,12 +616,34 @@ curl -sI https://www.nique.net | grep -i x-robots-tag`}
             </CardHeader>
             <CardContent className='space-y-3 text-sm text-muted-foreground dark:text-foreground/80'>
               <p>
-                The main flow is creating an article as an admin. Navigate to <Link to='/articles' className='text-primary hover:underline'>Article Library</Link>{' '} to view existing articles. To create a new article, click the <b>New Article</b> button in the top-right and populate the form accordingly. The dashboard is built around this flow, so most actions will center around creating, reviewing, and publishing articles and supporting content. Admins have the ability to publish and unpublish articles. Comments made by readers must be approved by admins before they appear publicly. To maintain engagement, it's recommended to review comments regularly.
+                The main flow is creating an article as an admin. Navigate to{' '}
+                <Link to='/articles' className='text-primary hover:underline'>
+                  Article Library
+                </Link>{' '}
+                to view existing articles. To create a new article, click the{' '}
+                <b>New Article</b> button in the top-right and populate the form
+                accordingly. The dashboard is built around this flow, so most
+                actions will center around creating, reviewing, and publishing
+                articles and supporting content. Admins have the ability to
+                publish and unpublish articles. Comments made by readers must be
+                approved by admins before they appear publicly. To maintain
+                engagement, it's recommended to review comments regularly.
               </p>
               <p>
-                For non-admin users, the flow is similar but without publishing capabilities. Users can create and edit drafts, submit articles for review, and make changes based on admin feedback. Users can view content they <b>own</b> in the <Link to='/articles' className='text-primary hover:underline'>Article Library</Link>. Owners are users who created the article and may not necessarily be the author. If an article is created by an admin on behalf of a user, the user will be the author but not the owner. Non-admin users cannot view or moderate comments, slivers, playlists, content performance or manage categories/tags.
+                For non-admin users, the flow is similar but without publishing
+                capabilities. Users can create and edit drafts, submit articles
+                for review, and make changes based on admin feedback. Users can
+                view content they <b>own</b> in the{' '}
+                <Link to='/articles' className='text-primary hover:underline'>
+                  Article Library
+                </Link>
+                . Owners are users who created the article and may not
+                necessarily be the author. If an article is created by an admin
+                on behalf of a user, the user will be the author but not the
+                owner. Non-admin users cannot view or moderate comments,
+                slivers, playlists, content performance or manage
+                categories/tags.
               </p>
-
             </CardContent>
           </Card>
 
@@ -359,57 +652,87 @@ curl -sI https://www.nique.net | grep -i x-robots-tag`}
               <CardTitle id='misc'>Miscellaneous</CardTitle>
             </CardHeader>
             <CardContent className='space-y-3 text-sm text-muted-foreground dark:text-foreground/80'>
-                  <h1>Staff Management</h1>
-                  <p>
-                    The names/roles in <code>/Contact Us</code> and the footer are managed in a .json array in the codebase. To update, edit the array in <code>frontend/src/types/staff.ts</code> and deploy.
-                  </p>
-                  <Separator />
-                  <h1>Comments & Reactions</h1>
-                  <p>
-                    Comments are associated with articles and can be nested with replies. <code>/frontend</code> fetches approved comments per article and renders them as a threaded tree, so replies appear under their parent comment.
-                  </p>
-                  <p>
-                    Reader reactions (thumbs up/down) are tracked per device. The frontend stores a persistent device ID in local storage and sends it with reaction requests so the backend can remember a reader's reaction and return <code>myReaction</code> in the comment payload. <b>Note:</b> If a user wipes their <code>localStorage</code>, their reaction history is lost, allowing them to react again.
-                  </p>
-                {/* </div> */}
+              <h1>Staff Management</h1>
+              <p>
+                The names/roles in <code>/Contact Us</code> and the footer are
+                managed in a .json array in the codebase. To update, edit the
+                array in <code>frontend/src/types/staff.ts</code> and deploy.
+              </p>
+              <Separator />
+              <h1>Comments & Reactions</h1>
+              <p>
+                Comments are associated with articles and can be nested with
+                replies. <code>/frontend</code> fetches approved comments per
+                article and renders them as a threaded tree, so replies appear
+                under their parent comment.
+              </p>
+              <p>
+                Reader reactions (thumbs up/down) are tracked per device. The
+                frontend stores a persistent device ID in local storage and
+                sends it with reaction requests so the backend can remember a
+                reader's reaction and return <code>myReaction</code> in the
+                comment payload. <b>Note:</b> If a user wipes their{' '}
+                <code>localStorage</code>, their reaction history is lost,
+                allowing them to react again.
+              </p>
+              {/* </div> */}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
               <CardTitle id='schema'>Schema</CardTitle>
-              <CardDescription>MongoDB collection fields at a glance.</CardDescription>
+              <CardDescription>
+                MongoDB collection fields at a glance.
+              </CardDescription>
             </CardHeader>
             <CardContent className='space-y-3 text-sm text-muted-foreground dark:text-foreground/80'>
               <p>
-                <code>Article</code>: title, slug, content, authors (authorId + order), categoryId, subcategoryId, tagIds, featuredMediaUrl, imageCaption, published flags + publishedAt, allowComments, isFeatured, isSticky, ownerId, editorState, reviewStatus (+ reviewedAt/reviewedBy/reviewNotes), viewCount, timestamps.
+                <code>Article</code>: title, slug, content, authors (authorId +
+                order), categoryId, subcategoryId, tagIds, featuredMediaUrl,
+                imageCaption, published flags + publishedAt, allowComments,
+                isFeatured, isSticky, ownerId, editorState, reviewStatus (+
+                reviewedAt/reviewedBy/reviewNotes), viewCount, timestamps.
               </p>
               <p>
-                <code>Category</code> and <code>SubCategory</code>: name + slug. SubCategory also stores categoryId. Slugs are generated from names; timestamps are disabled.
+                <code>Category</code> and <code>SubCategory</code>: name + slug.
+                SubCategory also stores categoryId. Slugs are generated from
+                names; timestamps are disabled.
               </p>
               <p>
-                <code>Tag</code>: name + slug with the same slugify rules as categories; timestamps are disabled.
+                <code>Tag</code>: name + slug with the same slugify rules as
+                categories; timestamps are disabled.
               </p>
               <p>
-                <code>User</code>: name, bio, isAdmin, email (unique + sparse), googleSub (unique + sparse), profilePictureUrl, socialLinks (platform + url). Timestamps are disabled.
+                <code>User</code>: name, bio, isAdmin, email (unique + sparse),
+                googleSub (unique + sparse), profilePictureUrl, socialLinks
+                (platform + url). Timestamps are disabled.
               </p>
               <p>
-                <code>Comment</code>: articleId, parentCommentId, content, username, thumbsUp, thumbsDown, approved, timestamps.
+                <code>Comment</code>: articleId, parentCommentId, content,
+                username, thumbsUp, thumbsDown, approved, timestamps.
               </p>
               <p>
-                <code>CommentReaction</code>: commentId, deviceId, reaction (up/down), timestamps. Enforces uniqueness on (commentId, deviceId).
+                <code>CommentReaction</code>: commentId, deviceId, reaction
+                (up/down), timestamps. Enforces uniqueness on (commentId,
+                deviceId).
               </p>
               <p>
-                <code>Sliver</code>: text, expiresAt, timestamps. Uses a TTL index on expiresAt to auto-expire.
+                <code>Sliver</code>: text, expiresAt, timestamps. Uses a TTL
+                index on expiresAt to auto-expire.
               </p>
               <p>
-                <code>Playlist</code>: name, description, spotifyUrl (validated), isActive, timestamps. Enforces one active playlist on save.
+                <code>Playlist</code>: name, description, spotifyUrl
+                (validated), isActive, timestamps. Enforces one active playlist
+                on save.
               </p>
               <p>
-                <code>Notification</code>: recipientId, type, title, message, link, data, read, createdAt.
+                <code>Notification</code>: recipientId, type, title, message,
+                link, data, read, createdAt.
               </p>
               <p>
-                <code>RevokedToken</code>: tokenHash, userId, expiresAt, timestamps. Uses a TTL index on expiresAt.
+                <code>RevokedToken</code>: tokenHash, userId, expiresAt,
+                timestamps. Uses a TTL index on expiresAt.
               </p>
             </CardContent>
           </Card>
@@ -417,7 +740,9 @@ curl -sI https://www.nique.net | grep -i x-robots-tag`}
           <Card>
             <CardHeader>
               <CardTitle id='statuses'>Status Definitions</CardTitle>
-              <CardDescription>Reference for the article lifecycle.</CardDescription>
+              <CardDescription>
+                Reference for the article lifecycle.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -448,7 +773,10 @@ curl -sI https://www.nique.net | grep -i x-robots-tag`}
                       <Badge variant='outline'>Changes Requested</Badge>
                     </TableCell>
                     <TableCell>Awaiting changes from author.</TableCell>
-                    <TableCell>Author must address changes before requesting another review.</TableCell>
+                    <TableCell>
+                      Author must address changes before requesting another
+                      review.
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell>
@@ -462,8 +790,6 @@ curl -sI https://www.nique.net | grep -i x-robots-tag`}
             </CardContent>
           </Card>
 
-          
-
           <Card>
             <CardHeader>
               <CardTitle id='faq'>FAQ</CardTitle>
@@ -471,18 +797,30 @@ curl -sI https://www.nique.net | grep -i x-robots-tag`}
             </CardHeader>
             <CardContent className='space-y-3 text-sm text-muted-foreground dark:text-foreground/80'>
               <div>
-                <p className='font-medium text-foreground'>Need to create a new article?</p>
-                <p>Head to{' '}
-                <Link to='/articles/new' className='text-primary hover:underline'>
-                  Article Creation
-                </Link>
-                .</p>
+                <p className='font-medium text-foreground'>
+                  Need to create a new article?
+                </p>
+                <p>
+                  Head to{' '}
+                  <Link
+                    to='/articles/new'
+                    className='text-primary hover:underline'
+                  >
+                    Article Creation
+                  </Link>
+                  .
+                </p>
               </div>
               <div>
-                <p className='font-medium text-foreground'>Where do I update my profile?</p>
+                <p className='font-medium text-foreground'>
+                  Where do I update my profile?
+                </p>
                 <p>
                   Visit{' '}
-                  <Link to='/settings/profile' className='text-primary hover:underline'>
+                  <Link
+                    to='/settings/profile'
+                    className='text-primary hover:underline'
+                  >
                     Settings → Profile
                   </Link>
                   .
@@ -493,8 +831,13 @@ curl -sI https://www.nique.net | grep -i x-robots-tag`}
                 <p>Only admins can publish or unpublish content.</p>
               </div>
               <div>
-                <p className='font-medium text-foreground'>How do I request a new tag?</p>
-                <p>Message an admin or add it in the Tags section if you have access.</p>
+                <p className='font-medium text-foreground'>
+                  How do I request a new tag?
+                </p>
+                <p>
+                  Message an admin or add it in the Tags section if you have
+                  access.
+                </p>
               </div>
             </CardContent>
           </Card>

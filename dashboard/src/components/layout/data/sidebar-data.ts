@@ -68,7 +68,7 @@ export const sidebarData: SidebarData = {
               title: 'Media Library',
               url: '/articles/media',
               icon: IconPhoto,
-            }
+            },
           ],
         },
         {

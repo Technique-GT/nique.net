@@ -1,8 +1,7 @@
 const SESSION_KEY = 'nique-media-revalidate-v1';
 const REVALIDATE_PARAM = '__mv';
 
-const createSessionToken = () =>
-  `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+const createSessionToken = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
 const getSessionToken = (): string | null => {
   if (typeof window === 'undefined') return null;
@@ -28,9 +27,7 @@ export const withMediaSessionRevalidation = (rawUrl: string, overrideToken?: str
   const isAbsoluteHttp = /^https?:\/\//i.test(rawUrl);
 
   try {
-    const parsed = typeof window !== 'undefined'
-      ? new URL(rawUrl, window.location.origin)
-      : new URL(rawUrl);
+    const parsed = typeof window !== 'undefined' ? new URL(rawUrl, window.location.origin) : new URL(rawUrl);
 
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       return rawUrl;

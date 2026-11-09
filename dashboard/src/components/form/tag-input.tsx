@@ -1,10 +1,8 @@
-import { useEffect, useRef, useState } from "react"
-
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
-
-import { X } from "lucide-react"
+import { X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 
 type TagInputProps = {
   id?: string
@@ -28,7 +26,7 @@ export function TagInput({
   normalizeTag = (tag: string) => tag.toLowerCase(),
 }: TagInputProps) {
   const inputRef = useRef<HTMLInputElement | null>(null)
-  const [inputValue, setInputValue] = useState("")
+  const [inputValue, setInputValue] = useState('')
 
   useEffect(() => {
     if (!inputRef.current) {
@@ -40,11 +38,11 @@ export function TagInput({
         return
       }
 
-      const mirror = document.createElement("span")
-      mirror.textContent = inputValue || placeholder || ""
-      mirror.style.position = "absolute"
-      mirror.style.visibility = "hidden"
-      mirror.style.whiteSpace = "pre"
+      const mirror = document.createElement('span')
+      mirror.textContent = inputValue || placeholder || ''
+      mirror.style.position = 'absolute'
+      mirror.style.visibility = 'hidden'
+      mirror.style.whiteSpace = 'pre'
       mirror.style.font = window.getComputedStyle(inputRef.current).font
       document.body.append(mirror)
       const width = mirror.offsetWidth + 16
@@ -68,7 +66,7 @@ export function TagInput({
       onChange([...value, normalized])
     }
 
-    setInputValue("")
+    setInputValue('')
   }
 
   const removeTag = (tagToRemove: string) => {
@@ -80,12 +78,12 @@ export function TagInput({
       return
     }
 
-    if (event.key === "Enter" || event.key === "Tab" || event.key === ",") {
+    if (event.key === 'Enter' || event.key === 'Tab' || event.key === ',') {
       event.preventDefault()
       addTag(inputValue)
     }
 
-    if (event.key === "Backspace" && inputValue === "") {
+    if (event.key === 'Backspace' && inputValue === '') {
       const lastTag = value.length > 0 ? value[value.length - 1] : undefined
       if (lastTag) {
         removeTag(lastTag)
@@ -96,23 +94,27 @@ export function TagInput({
   return (
     <div
       className={cn(
-        "flex min-h-10 flex-wrap items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
-        disabled && "cursor-not-allowed opacity-50",
-        className,
+        'flex min-h-10 flex-wrap items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
+        disabled && 'cursor-not-allowed opacity-50',
+        className
       )}
       onClick={() => inputRef.current?.focus()}
     >
       {value.map((tag) => (
-        <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+        <Badge
+          key={tag}
+          variant='secondary'
+          className='flex items-center gap-1'
+        >
           {tag}
           {!disabled && (
             <button
-              type="button"
+              type='button'
               onClick={() => removeTag(tag)}
-              className="ml-1 text-xs text-muted-foreground transition-colors hover:text-destructive duration-300"
+              className='ml-1 text-xs text-muted-foreground transition-colors hover:text-destructive duration-300'
               aria-label={`Remove tag ${tag}`}
             >
-              <X className="size-3" />
+              <X className='size-3' />
             </button>
           )}
         </Badge>
@@ -121,8 +123,8 @@ export function TagInput({
         id={id}
         ref={inputRef}
         className={cn(
-          "h-auto w-16 flex-1 border-none p-0 text-sm shadow-none focus-visible:outline-none focus-visible:ring-0",
-          inputClassName,
+          'h-auto w-16 flex-1 border-none p-0 text-sm shadow-none focus-visible:outline-none focus-visible:ring-0',
+          inputClassName
         )}
         value={inputValue}
         disabled={disabled}

@@ -1,17 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import SuccessTick from "../components/SuccessTick";
-import DOMPurify from "dompurify";
-import Navbar from "../components/Navbar";
-import ArticleBlock from "../components/ArticleBlock";
-import Comment from "../components/Comment";
-import Spinner from "../components/Spinner";
-import articleService from "../services/articleService";
-import commentService from "../services/commentService";
-import { ArticleDocument, User, Comment as CommentType } from "../types/article";
-import Seo from "../components/Seo";
-import { getArticleDescription, getArticleLink } from "../utils/articlePresentation";
-import { withMediaSessionRevalidation } from "../utils/mediaUrl";
+import DOMPurify from 'dompurify';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import ArticleBlock from '../components/ArticleBlock';
+import Comment from '../components/Comment';
+import Navbar from '../components/Navbar';
+import Seo from '../components/Seo';
+import Spinner from '../components/Spinner';
+import SuccessTick from '../components/SuccessTick';
+import articleService from '../services/articleService';
+import commentService from '../services/commentService';
+import { ArticleDocument, Comment as CommentType, User } from '../types/article';
+import { getArticleDescription, getArticleLink } from '../utils/articlePresentation';
+import { withMediaSessionRevalidation } from '../utils/mediaUrl';
 
 type DisplayComment = {
   _id: string;
@@ -20,7 +20,7 @@ type DisplayComment = {
   createdAt: string;
   thumbsUp: number;
   thumbsDown: number;
-  myReaction: "up" | "down" | null;
+  myReaction: 'up' | 'down' | null;
   parentCommentId?: string;
   username: string;
   replies: DisplayComment[];
@@ -35,12 +35,12 @@ const mapApiCommentToDisplay = (comment: CommentType): DisplayComment => {
     _id: comment._id,
     commentId: comment._id,
     content: comment.content,
-    createdAt: typeof comment.createdAt === "string" ? comment.createdAt : String(comment.createdAt),
+    createdAt: typeof comment.createdAt === 'string' ? comment.createdAt : String(comment.createdAt),
     thumbsUp: comment.thumbsUp ?? 0,
     thumbsDown: comment.thumbsDown ?? 0,
     myReaction: comment.myReaction ?? null,
     parentCommentId: comment.parentCommentId,
-    username: comment.username || "Anonymous",
+    username: comment.username || 'Anonymous',
     replies: (comment.replies || []).map(mapApiCommentToDisplay),
   };
 };
@@ -50,28 +50,23 @@ const sortRepliesByOldest = (list: DisplayComment[]): DisplayComment[] => {
     ...comment,
     replies: sortRepliesByOldest(comment.replies || []),
   }));
-  return mapped.sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-  );
+  return mapped.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 };
 
-const sortComments = (
-  list: DisplayComment[],
-  sortMode: "Best" | "Newest" | "Oldest"
-): DisplayComment[] => {
+const sortComments = (list: DisplayComment[], sortMode: 'Best' | 'Newest' | 'Oldest'): DisplayComment[] => {
   const withSortedReplies = list.map((comment) => ({
     ...comment,
     replies: sortRepliesByOldest(comment.replies || []),
   }));
 
   switch (sortMode) {
-    case "Oldest":
+    case 'Oldest':
       return [...withSortedReplies].sort(
-        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       );
-    case "Newest":
+    case 'Newest':
       return [...withSortedReplies].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
     default:
       return [...withSortedReplies].sort((a, b) => (b.thumbsUp || 0) - (a.thumbsUp || 0));
@@ -84,7 +79,7 @@ export default function Article() {
   const normalizedId = useMemo(() => {
     if (slug) return undefined; // prefer slug if available
     if (!id) return undefined;
-    return /^[a-f0-9]{24}:\d+$/i.test(id) ? id.split(":")[0] : id;
+    return /^[a-f0-9]{24}:\d+$/i.test(id) ? id.split(':')[0] : id;
   }, [id, slug]);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -92,10 +87,10 @@ export default function Article() {
   const [relatedArticles, setRelatedArticles] = useState<ArticleDocument[]>([]);
   const [comments, setComments] = useState<DisplayComment[]>([]);
   const [numCommentsToView, setNumCommentsToView] = useState(5);
-  const [commentsSortBy, setCommentsSort] = useState<"Best" | "Newest" | "Oldest">("Best");
+  const [commentsSortBy, setCommentsSort] = useState<'Best' | 'Newest' | 'Oldest'>('Best');
 
-  const [newCommentName, setNewCommentName] = useState("");
-  const [newCommentText, setNewCommentText] = useState("");
+  const [newCommentName, setNewCommentName] = useState('');
+  const [newCommentText, setNewCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [showSubmitMessage, setShowSubmitMessage] = useState(false);
   const [commentSubmitError, setCommentSubmitError] = useState<string | null>(null);
@@ -131,7 +126,7 @@ export default function Article() {
         if (slug) {
           const canonicalLink = getArticleLink(fetchedArticle);
           const fetchedCategorySlug =
-            fetchedArticle.categoryId && typeof fetchedArticle.categoryId === "object"
+            fetchedArticle.categoryId && typeof fetchedArticle.categoryId === 'object'
               ? fetchedArticle.categoryId.slug
               : undefined;
 
@@ -150,18 +145,18 @@ export default function Article() {
             const relatedArticlesResult = await articleService.fetchArticlesByCategory(
               categoryId,
               4,
-              controller.signal
+              controller.signal,
             );
             const relatedArticles = Array.isArray(relatedArticlesResult)
               ? relatedArticlesResult
               : relatedArticlesResult.data;
 
-            const fetchedArticleId = fetchedArticle._id || "";
+            const fetchedArticleId = fetchedArticle._id || '';
 
             const filteredRelated = relatedArticles.filter((item) => item._id !== fetchedArticleId);
             setRelatedArticles(filteredRelated);
           } catch (relatedErr) {
-            console.warn("Unable to load related articles", relatedErr);
+            console.warn('Unable to load related articles', relatedErr);
             setRelatedArticles([]);
           }
         } else {
@@ -172,7 +167,7 @@ export default function Article() {
           try {
             const fetchedComments = await commentService.fetchCommentsByArticle(
               fetchedArticle._id, // use the real ID from the fetched article
-              controller.signal
+              controller.signal,
             );
             const mappedComments = fetchedComments.map(mapApiCommentToDisplay);
             setComments(sortComments(mappedComments, commentsSortRef.current));
@@ -184,12 +179,12 @@ export default function Article() {
         }
       } catch (err) {
         if (
-          (err as { name?: string; code?: string })?.name === "CanceledError" ||
-          (err as { code?: string })?.code === "ERR_CANCELED"
+          (err as { name?: string; code?: string })?.name === 'CanceledError' ||
+          (err as { code?: string })?.code === 'ERR_CANCELED'
         ) {
           return;
         }
-        console.error("Failed to load article", err);
+        console.error('Failed to load article', err);
         setArticle(null);
         setRelatedArticles([]);
         setComments([]);
@@ -215,7 +210,7 @@ export default function Article() {
     if (lastTrackedArticleId.current === articleId) return;
 
     const sessionKey = `viewed:${articleId}`;
-    if (typeof window !== "undefined" && window.sessionStorage.getItem(sessionKey)) {
+    if (typeof window !== 'undefined' && window.sessionStorage.getItem(sessionKey)) {
       lastTrackedArticleId.current = articleId;
       return;
     }
@@ -225,20 +220,20 @@ export default function Article() {
     articleService
       .recordArticleView(articleId)
       .then(() => {
-        if (typeof window !== "undefined") {
-          window.sessionStorage.setItem(sessionKey, "1");
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.setItem(sessionKey, '1');
         }
       })
       .catch((error) => {
-        console.warn("Failed to record article view", error);
+        console.warn('Failed to record article view', error);
         lastTrackedArticleId.current = null;
       });
   }, [article?._id]);
 
-  const articleContent = typeof article?.content === "string" ? article.content : null;
+  const articleContent = typeof article?.content === 'string' ? article.content : null;
 
   const sanitizedContent = useMemo(() => {
-    if (!articleContent) return "";
+    if (!articleContent) return '';
     return DOMPurify.sanitize(articleContent);
   }, [articleContent]);
 
@@ -261,11 +256,11 @@ export default function Article() {
       // setComments((prev) => sortComments([displayComment, ...prev], commentsSortBy));
       setShowSubmitMessage(true);
       setTimeout(() => setShowSubmitMessage(false), 3000);
-      setNewCommentText("");
-      setNewCommentName("");
+      setNewCommentText('');
+      setNewCommentName('');
     } catch (error) {
-      console.error("Error creating comment:", error);
-      setCommentSubmitError("Unable to submit your comment. Please try again.");
+      console.error('Error creating comment:', error);
+      setCommentSubmitError('Unable to submit your comment. Please try again.');
     } finally {
       setIsSubmittingComment(false);
     }
@@ -278,23 +273,21 @@ export default function Article() {
 
   const updateCommentsSort = () => {
     setCommentsSort((prev) => {
-      if (prev === "Best") return "Newest";
-      if (prev === "Newest") return "Oldest";
-      return "Best";
+      if (prev === 'Best') return 'Newest';
+      if (prev === 'Newest') return 'Oldest';
+      return 'Best';
     });
   };
 
   const featuredMediaNonce = useMemo(
     () =>
-      `${article?._id ?? "no-article"}-${Date.now().toString(36)}${Math.random()
-        .toString(36)
-        .slice(2, 8)}`,
-    [article?._id]
+      `${article?._id ?? 'no-article'}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+    [article?._id],
   );
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className='flex justify-center items-center h-screen'>
         <Spinner />
       </div>
     );
@@ -304,8 +297,8 @@ export default function Article() {
     return (
       <>
         <Navbar />
-        <div className="flex justify-center items-center h-screen">
-          <p className="text-lg text-nique-blue">Article not found.</p>
+        <div className='flex justify-center items-center h-screen'>
+          <p className='text-lg text-nique-blue'>Article not found.</p>
         </div>
       </>
     );
@@ -318,7 +311,7 @@ export default function Article() {
         const authorId = authorEntry.authorId;
         if (!authorId) return null;
 
-        if (typeof authorId === "object") {
+        if (typeof authorId === 'object') {
           const user = authorId as User;
           if (!user.name) return null;
           return {
@@ -327,7 +320,7 @@ export default function Article() {
           };
         }
 
-        if (typeof authorId === "string" && authorId.trim().length > 0) {
+        if (typeof authorId === 'string' && authorId.trim().length > 0) {
           return {
             name: authorId,
             href: `/author/${encodeURIComponent(authorId)}`,
@@ -342,21 +335,24 @@ export default function Article() {
   const publishedDate =
     article.publishedAt &&
     new Date(article.publishedAt).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
 
   // backend uses tagIds, not tags
-  const tagsDisplay = article.tagIds?.map((tag) => tag.name).filter(Boolean).join(" • ");
+  const tagsDisplay = article.tagIds
+    ?.map((tag) => tag.name)
+    .filter(Boolean)
+    .join(' • ');
   const featuredMedia =
-    article.featuredMediaUrl && typeof article.featuredMediaUrl === "string"
+    article.featuredMediaUrl && typeof article.featuredMediaUrl === 'string'
       ? withMediaSessionRevalidation(article.featuredMediaUrl, featuredMediaNonce)
       : null;
   const articleDescription = getArticleDescription(article).slice(0, 160);
   const canonicalPath = getArticleLink(article);
   const articleImage =
-    article.featuredMediaUrl && typeof article.featuredMediaUrl === "string"
+    article.featuredMediaUrl && typeof article.featuredMediaUrl === 'string'
       ? article.featuredMediaUrl
       : undefined;
   const toIsoOrUndefined = (value: Date | string | null | undefined) => {
@@ -368,8 +364,8 @@ export default function Article() {
   const publishedTimeIso = toIsoOrUndefined(article.publishedAt);
   const modifiedTimeIso = toIsoOrUndefined(article.updatedAt);
   const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "NewsArticle",
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
     headline: article.title,
     description: articleDescription,
     image: articleImage ? [articleImage] : undefined,
@@ -377,12 +373,12 @@ export default function Article() {
     dateModified: modifiedTimeIso,
     mainEntityOfPage: canonicalPath,
     author: authorNames.length
-      ? authorNames.map((name) => ({ "@type": "Person", name }))
-      : [{ "@type": "Organization", name: "Technique" }],
+      ? authorNames.map((name) => ({ '@type': 'Person', name }))
+      : [{ '@type': 'Organization', name: 'Technique' }],
     publisher: {
-      "@type": "Organization",
-      name: "Technique",
-      url: "https://nique.net",
+      '@type': 'Organization',
+      name: 'Technique',
+      url: 'https://nique.net',
     },
   };
 
@@ -393,21 +389,21 @@ export default function Article() {
         description={articleDescription}
         canonicalPath={canonicalPath}
         image={articleImage}
-        type="article"
+        type='article'
         structuredData={articleJsonLd}
       />
       <Navbar />
-      <div className="max-w-6xl mx-auto p-6 space-y-6">
+      <div className='max-w-6xl mx-auto p-6 space-y-6'>
         {/* Title */}
-        <header className="space-y-2">
-          <h3 className="text-4xl font-bold mt-2 mb-1">{article.title}</h3>
-          <h4 className="flex flex-wrap mb-2 gap-x-4 text-nique-blue text-lg justify-between">
+        <header className='space-y-2'>
+          <h3 className='text-4xl font-bold mt-2 mb-1'>{article.title}</h3>
+          <h4 className='flex flex-wrap mb-2 gap-x-4 text-nique-blue text-lg justify-between'>
             <div>
               {authorEntries.length > 0 ? (
                 authorEntries.map((author, index) => (
-                  <span key={`${author.name}-${index}`} className="inline">
+                  <span key={`${author.name}-${index}`} className='inline'>
                     {index > 0 && <span> • </span>}
-                    <Link to={author.href} className="hover:underline">
+                    <Link to={author.href} className='hover:underline'>
                       {author.name}
                     </Link>
                   </span>
@@ -418,55 +414,44 @@ export default function Article() {
               {publishedDate && <span> • {publishedDate}</span>}
             </div>
             {/* backend uses categoryId (single object), not categories[] */}
-            {article.categoryId && (
-              <span>{article.categoryId.name}</span>
-            )}
+            {article.categoryId && <span>{article.categoryId.name}</span>}
           </h4>
-          {tagsDisplay && <p className="text-xs text-nique-blue">{tagsDisplay}</p>}
-          <hr className="opacity-50" />
+          {tagsDisplay && <p className='text-xs text-nique-blue'>{tagsDisplay}</p>}
+          <hr className='opacity-50' />
         </header>
 
         {/* Featured Image - backend uses featuredMediaUrl, not featuredImage */}
         {featuredMedia && (
-          <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
+          <figure className='my-3 max-w-3xl w-full mx-auto text-sm'>
             <img
-              className="w-full aspect-3/2 object-cover rounded-md"
+              className='w-full aspect-3/2 object-cover rounded-md'
               src={featuredMedia}
-              loading="lazy"
+              loading='lazy'
               alt={article.title}
             />
             {article.imageCaption && (
-              <figcaption className="w-full text-xs text-nique-blue mt-2">
-                {article.imageCaption}
-              </figcaption>
+              <figcaption className='w-full text-xs text-nique-blue mt-2'>{article.imageCaption}</figcaption>
             )}
           </figure>
         )}
 
         {/* Article Content */}
-        <section className="prose prose-lg max-w-3xl mx-auto text-nique-blue article-body">
-          {sanitizedContent ? (
-            <article dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
-          ) : null}
+        <section className='prose prose-lg max-w-3xl mx-auto text-nique-blue article-body'>
+          {sanitizedContent ? <article dangerouslySetInnerHTML={{ __html: sanitizedContent }} /> : null}
         </section>
 
         {/* Comments */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-nique-blue">
-              Comments ({comments.length})
-            </h3>
-            <button
-              onClick={updateCommentsSort}
-              className="text-sm text-nique-blue underline"
-            >
+        <section className='space-y-4'>
+          <div className='flex items-center justify-between'>
+            <h3 className='text-xl font-semibold text-nique-blue'>Comments ({comments.length})</h3>
+            <button onClick={updateCommentsSort} className='text-sm text-nique-blue underline'>
               Sort: {commentsSortBy}
             </button>
           </div>
 
           {article.allowComments ? (
             <>
-              <div className="grid gap-4">
+              <div className='grid gap-4'>
                 {comments.slice(0, numCommentsToView).map((com) => (
                   <Comment
                     key={com.commentId}
@@ -490,41 +475,39 @@ export default function Article() {
               {numCommentsToView < comments.length && (
                 <button
                   onClick={() => setNumCommentsToView((prev) => prev + 5)}
-                  className="text-sm text-nique-blue underline"
+                  className='text-sm text-nique-blue underline'
                 >
                   Load more comments
                 </button>
               )}
 
-              <div className="space-y-2">
-                <h4 className="text-lg font-semibold text-nique-blue">Leave a comment</h4>
+              <div className='space-y-2'>
+                <h4 className='text-lg font-semibold text-nique-blue'>Leave a comment</h4>
                 <input
                   value={newCommentName}
                   onChange={(event) => setNewCommentName(event.target.value)}
-                  placeholder="Name"
-                  className="w-full border border-nique-blue/40 rounded-md px-3 py-2"
+                  placeholder='Name'
+                  className='w-full border border-nique-blue/40 rounded-md px-3 py-2'
                 />
                 <textarea
                   value={newCommentText}
                   onChange={(event) => setNewCommentText(event.target.value)}
-                  placeholder="Comment"
-                  className="w-full border border-nique-blue/40 rounded-md px-3 py-2"
+                  placeholder='Comment'
+                  className='w-full border border-nique-blue/40 rounded-md px-3 py-2'
                   rows={4}
                 />
-                {commentSubmitError && (
-                  <p className="text-sm text-red-600">{commentSubmitError}</p>
-                )}
+                {commentSubmitError && <p className='text-sm text-red-600'>{commentSubmitError}</p>}
                 <div className='flex flex-row'>
                   <button
                     onClick={handleSubmitComment}
                     disabled={!newCommentText.trim() || isSubmittingComment}
-                    className="px-4 py-2 bg-nique-blue text-white rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
+                    className='px-4 py-2 bg-nique-blue text-white rounded-md disabled:opacity-60 disabled:cursor-not-allowed'
                   >
-                    <h4>{isSubmittingComment ? "Submitting..." : "Submit"}</h4>
+                    <h4>{isSubmittingComment ? 'Submitting...' : 'Submit'}</h4>
                   </button>
                   {showSubmitMessage && (
-                    <div className="flex flex-row submit-toast fixed top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 bg-gray-200/70 text-nique-blue backdrop-blur-xs py-2 px-4 gap-2 rounded-md items-center">
-                      <SuccessTick className='text-nique-blue'/>
+                    <div className='flex flex-row submit-toast fixed top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 bg-gray-200/70 text-nique-blue backdrop-blur-xs py-2 px-4 gap-2 rounded-md items-center'>
+                      <SuccessTick className='text-nique-blue' />
                       <p>Your comment has been submitted and is awaiting approval. Check back in a bit!</p>
                     </div>
                   )}
@@ -532,22 +515,21 @@ export default function Article() {
               </div>
             </>
           ) : (
-            <p className="text-sm text-nique-blue">Comments are disabled for this article.</p>
+            <p className='text-sm text-nique-blue'>Comments are disabled for this article.</p>
           )}
         </section>
 
         {/* Related Articles - fetches 4 published articles from the same category */}
         {relatedArticles.length > 0 && (
-          <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-nique-blue">Related Articles</h2>
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+          <section className='space-y-4'>
+            <h2 className='text-2xl font-bold text-nique-blue'>Related Articles</h2>
+            <div className='grid gap-4 grid-cols-1 sm:grid-cols-2'>
               {relatedArticles.map((related) => (
-                <ArticleBlock key={related._id || related.slug} article={related} height="230px" />
+                <ArticleBlock key={related._id || related.slug} article={related} height='230px' />
               ))}
             </div>
           </section>
         )}
-
       </div>
     </>
   );

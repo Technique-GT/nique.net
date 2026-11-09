@@ -13,13 +13,16 @@ const ensureApiBase = (origin: string) => {
   return cleaned.endsWith('/api') ? cleaned : `${cleaned}/api`
 }
 
-const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim()
+const configuredBase = (
+  import.meta.env.VITE_API_BASE_URL as string | undefined
+)?.trim()
 
 const resolveApiOrigin = () => {
   if (configuredBase) return configuredBase
   if (import.meta.env.DEV) return 'http://localhost:5050'
 
-  const hostname = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : ''
+  const hostname =
+    typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : ''
   if (
     hostname === 'dashboard.nique.net' ||
     hostname === 'nique.net' ||

@@ -7,9 +7,9 @@ export const getNotifications = async (req: any, res: Response): Promise<void> =
   try {
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
-    
+
     const { notifications, total, unreadCount } = await NotificationService.list(req.user.id, page, limit);
-    
+
     res.json({
       success: true,
       data: notifications,
@@ -17,11 +17,11 @@ export const getNotifications = async (req: any, res: Response): Promise<void> =
         total,
         page,
         limit,
-        pages: Math.ceil(total / limit)
+        pages: Math.ceil(total / limit),
       },
       metadata: {
-        unreadCount
-      }
+        unreadCount,
+      },
     });
   } catch (error: any) {
     res.status(500).json(safeErrorResponse('Failed to fetch notifications', error));

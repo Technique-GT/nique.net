@@ -1,23 +1,18 @@
 import { Request, Response } from 'express';
-import { NotificationService } from '../services/notification.service';
-import { ArticleCacheInvalidationService } from '../services/article-cache-invalidation.service';
 import mongoose from 'mongoose';
+import { applyNoStoreHeaders } from '../middleware/public-cache.middleware';
 import Article, { IArticle } from '../models/Article';
 import User from '../models/User';
-import { 
-  canEditArticle, 
-  canManageAuthors, 
-  canDeleteArticle, 
-  canPublishArticle 
-} from '../utils/permissions';
+import { ArticleCacheInvalidationService } from '../services/article-cache-invalidation.service';
+import { NotificationService } from '../services/notification.service';
 import {
   articleCacheSnapshotFromDoc,
   buildDetailCacheTags,
   buildListCacheTags,
   setCacheTags,
 } from '../utils/cache-tags';
-import { applyNoStoreHeaders } from '../middleware/public-cache.middleware';
-import { safeRegex, sanitizeHtml, safeErrorResponse } from '../utils/security';
+import { canDeleteArticle, canEditArticle, canManageAuthors, canPublishArticle } from '../utils/permissions';
+import { safeErrorResponse, safeRegex, sanitizeHtml } from '../utils/security';
 
 const slugify = (value: string) =>
   value
@@ -35,7 +30,9 @@ const toObjectId = (id: string | string[] | undefined): mongoose.Types.ObjectId 
 const toObjectIdArray = (ids: any): mongoose.Types.ObjectId[] => {
   if (!Array.isArray(ids)) return [];
   return ids
-    .map((id) => (typeof id === 'string' && mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : null))
+    .map((id) =>
+      typeof id === 'string' && mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : null,
+    )
     .filter((v): v is mongoose.Types.ObjectId => v !== null);
 };
 
@@ -52,9 +49,12 @@ const populateArticleForFeed = (query: any) =>
     .populate('tagIds', 'name slug')
     .populate('authors.authorId', 'name profilePictureUrl');
 
-const snapshotArticle = (article: Partial<IArticle> | null | undefined) => articleCacheSnapshotFromDoc(article as IArticle | null | undefined);
+const snapshotArticle = (article: Partial<IArticle> | null | undefined) =>
+  articleCacheSnapshotFromDoc(article as IArticle | null | undefined);
 
-const invalidatePublicArticleCache = async (params: Parameters<typeof ArticleCacheInvalidationService.invalidatePublicArticleCache>[0]) => {
+const invalidatePublicArticleCache = async (
+  params: Parameters<typeof ArticleCacheInvalidationService.invalidatePublicArticleCache>[0],
+) => {
   await ArticleCacheInvalidationService.invalidatePublicArticleCache(params);
 };
 
@@ -75,7 +75,10 @@ const parsePublishedAt = (body: any, published: boolean, existingPublishedAt?: D
   return null;
 };
 
-const buildArticleUpdate = async (params: { body: any; existing?: IArticle | null }): Promise<Partial<IArticle>> => {
+const buildArticleUpdate = async (params: {
+  body: any;
+  existing?: IArticle | null;
+}): Promise<Partial<IArticle>> => {
   const { body, existing } = params;
 
   const title = typeof body?.title === 'string' ? body.title : undefined;
@@ -95,7 +98,12 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
   let authors: any[] | undefined;
   if (body?.authors !== undefined || body?.authorIds !== undefined) {
     if (Array.isArray(body?.authors)) {
-      if (body.authors.length > 0 && typeof body.authors[0] === 'object' && body.authors[0] !== null && (body.authors[0] as any).authorId) {
+      if (
+        body.authors.length > 0 &&
+        typeof body.authors[0] === 'object' &&
+        body.authors[0] !== null &&
+        (body.authors[0] as any).authorId
+      ) {
         authors = body.authors
           .map((a: any, idx: number) => {
             const authorId = toObjectId(a?.authorId);
@@ -127,7 +135,7 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
   const reviewStatus = body?.reviewStatus;
 
   // Only update publishedAt if published state is explicitly changing to true
-  let publishedAt = undefined;
+  let publishedAt;
   if (published === true) {
     publishedAt = parsePublishedAt(body, true, existing?.publishedAt ?? null);
   }
@@ -165,8 +173,8 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
   // If published is changing to false, force featured/sticky off
   // If published is not present but existing is false, force featured/sticky off if they are being set to true (validation)
   // But simpler: just enforce consistency based on resulting state.
-  
-  const resultingPublished = published !== undefined ? published : existing?.published ?? false;
+
+  const resultingPublished = published !== undefined ? published : (existing?.published ?? false);
 
   if (isFeatured !== undefined) {
     update.isFeatured = resultingPublished ? isFeatured : false;
@@ -179,11 +187,11 @@ const buildArticleUpdate = async (params: { body: any; existing?: IArticle | nul
   } else if (!resultingPublished && existing?.isSticky) {
     update.isSticky = false;
   }
-  
+
   if (!resultingPublished && (update.published === false || existing?.published)) {
-     if (update.publishedAt === undefined) {
-         update.publishedAt = null;
-     }
+    if (update.publishedAt === undefined) {
+      update.publishedAt = null;
+    }
   }
 
   return update;
@@ -213,27 +221,27 @@ const hasArticleChanged = (existing: IArticle, update: Partial<IArticle>): boole
   if (update.tagIds && !arraysAreEqual(update.tagIds, existing.tagIds, idsAreEqual)) return true;
 
   if (update.authors) {
-      // Check if authors array changed. Note: existing.authors contains { authorId, order, _id }.
-      // update.authors contains { authorId, order }.
-      const authorsChanged = !arraysAreEqual(update.authors, existing.authors, (a, b) => {
-          return idsAreEqual(a.authorId, b.authorId) && a.order === b.order;
-      });
-      if (authorsChanged) return true;
+    // Check if authors array changed. Note: existing.authors contains { authorId, order, _id }.
+    // update.authors contains { authorId, order }.
+    const authorsChanged = !arraysAreEqual(update.authors, existing.authors, (a, b) => {
+      return idsAreEqual(a.authorId, b.authorId) && a.order === b.order;
+    });
+    if (authorsChanged) return true;
   }
 
   if (update.editorState) {
-      // Deep compare editorState (JSON)
-      // Note: This relies on key order being deterministic in JSON.stringify which isn't guaranteed,
-      // but for Lexical state produced by same client, it's often consistent enough.
-      // A better approach would be deep object equality, but JSON stringify is a quick proxy.
-      try {
-        if (JSON.stringify(update.editorState) !== JSON.stringify(existing.editorState)) return true;
-      } catch (e) {
-        // If stringify fails or circular, assume changed
-        return true;
-      }
+    // Deep compare editorState (JSON)
+    // Note: This relies on key order being deterministic in JSON.stringify which isn't guaranteed,
+    // but for Lexical state produced by same client, it's often consistent enough.
+    // A better approach would be deep object equality, but JSON stringify is a quick proxy.
+    try {
+      if (JSON.stringify(update.editorState) !== JSON.stringify(existing.editorState)) return true;
+    } catch (e) {
+      // If stringify fails or circular, assume changed
+      return true;
+    }
   }
-  
+
   if (update.imageCaption !== undefined && update.imageCaption !== existing.imageCaption) return true;
 
   return false;
@@ -263,7 +271,10 @@ export const createArticle = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const slug = typeof req.body?.slug === 'string' && req.body.slug.trim().length > 0 ? req.body.slug.trim() : `${slugify(title)}-${Date.now()}`;
+    const slug =
+      typeof req.body?.slug === 'string' && req.body.slug.trim().length > 0
+        ? req.body.slug.trim()
+        : `${slugify(title)}-${Date.now()}`;
 
     const existing = await Article.findOne({ slug });
     if (existing) {
@@ -279,9 +290,10 @@ export const createArticle = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const authors = update.authors && update.authors.length > 0
-      ? update.authors
-      : [{ authorId: new mongoose.Types.ObjectId(ownerId), order: 0 }];
+    const authors =
+      update.authors && update.authors.length > 0
+        ? update.authors
+        : [{ authorId: new mongoose.Types.ObjectId(ownerId), order: 0 }];
     const tagIds = update.tagIds ?? [];
 
     const article = await Article.create({
@@ -314,7 +326,8 @@ export const createArticle = async (req: Request, res: Response): Promise<void> 
 export const getArticles = async (req: any, res: Response): Promise<void> => {
   try {
     // In case validateQuery mutation fails or behaves unexpectedly, allow safe parsing
-    const { page, limit, search, status, categoryId, subcategoryId, isFeatured, isSticky, hideDrafts } = req.query;
+    const { page, limit, search, status, categoryId, subcategoryId, isFeatured, isSticky, hideDrafts } =
+      req.query;
     const andFilters: any[] = [];
     const orFilters: any[] = [];
 
@@ -388,7 +401,9 @@ export const getArticles = async (req: any, res: Response): Promise<void> => {
     const skip = (pageNum - 1) * limitNum;
 
     const [articles, total] = await Promise.all([
-      populateArticle(Article.find(filter).sort({ createdAt: -1 }).sort({ publishedAt: -1 }).skip(skip).limit(limitNum)),
+      populateArticle(
+        Article.find(filter).sort({ createdAt: -1 }).sort({ publishedAt: -1 }).skip(skip).limit(limitNum),
+      ),
       Article.countDocuments(filter),
     ]);
 
@@ -431,12 +446,7 @@ export const getPublishedArticles = async (req: Request, res: Response): Promise
     const skip = (page - 1) * limit;
 
     const [articles, total] = await Promise.all([
-      populateArticle(
-        Article.find(filter)
-          .sort({ isSticky: -1, publishedAt: -1 })
-          .skip(skip)
-          .limit(limit),
-      ),
+      populateArticle(Article.find(filter).sort({ isSticky: -1, publishedAt: -1 }).skip(skip).limit(limit)),
       Article.countDocuments(filter),
     ]);
 
@@ -487,17 +497,10 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
     const skip = (page - 1) * limit;
 
     const sort =
-      isSticky === undefined
-        ? ({ publishedAt: -1 } as const)
-        : ({ isSticky: -1, publishedAt: -1 } as const);
+      isSticky === undefined ? ({ publishedAt: -1 } as const) : ({ isSticky: -1, publishedAt: -1 } as const);
 
     const [articles, total] = await Promise.all([
-      populateArticleForFeed(
-        Article.find(filter)
-          .sort(sort)
-          .skip(skip)
-          .limit(limit),
-      ),
+      populateArticleForFeed(Article.find(filter).sort(sort).skip(skip).limit(limit)),
       Article.countDocuments(filter),
     ]);
 
@@ -847,7 +850,7 @@ export const updateArticleStatus = async (req: any, res: Response): Promise<void
     if (typeof status === 'string') {
       published = status === 'published';
       updateData.published = published;
-      updateData.publishedAt = published ? article.publishedAt ?? new Date() : null;
+      updateData.publishedAt = published ? (article.publishedAt ?? new Date()) : null;
 
       if (published) {
         updateData.reviewStatus = 'published';
@@ -880,13 +883,16 @@ export const updateArticleStatus = async (req: any, res: Response): Promise<void
     }
 
     // Final consistency check: if not published (either by this request or existing state), force flags off
-      // "published" variable holds the *intended* state for this request (or existing if not changing)
+    // "published" variable holds the *intended* state for this request (or existing if not changing)
     if (!published) {
       updateData.isFeatured = false;
       updateData.isSticky = false;
     }
 
-    const updatedArticle = await Article.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+    const updatedArticle = await Article.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
     if (!updatedArticle) {
       res.status(404).json({ success: false, message: 'Article not found' });
       return;
@@ -895,17 +901,17 @@ export const updateArticleStatus = async (req: any, res: Response): Promise<void
     // Check if we just published it, and notify
     // published is the intended state; check if it wasn't published before
     if (published && !article.published) {
-        // Notify owner
-        if (updatedArticle.ownerId.toString() !== req.user.id) {
-          await NotificationService.create(
-            updatedArticle.ownerId,
-            'published',
-            'Article Published',
-            `Your article "${updatedArticle.title}" has been published!`,
-            `/articles/${updatedArticle._id}/edit`,
-            { articleId: updatedArticle._id }
-          );
-        }
+      // Notify owner
+      if (updatedArticle.ownerId.toString() !== req.user.id) {
+        await NotificationService.create(
+          updatedArticle.ownerId,
+          'published',
+          'Article Published',
+          `Your article "${updatedArticle.title}" has been published!`,
+          `/articles/${updatedArticle._id}/edit`,
+          { articleId: updatedArticle._id },
+        );
+      }
     }
 
     const populatedArticle = await populateArticle(Article.findById(updatedArticle._id));
@@ -993,7 +999,7 @@ export const requestReview = async (req: any, res: Response): Promise<void> => {
       'Review Requested',
       `${req.user.name || 'An author'} requested a review for "${article.title}"`,
       `/articles/${article._id}/edit`,
-      { articleId: article._id }
+      { articleId: article._id },
     );
 
     res.json({ success: true, message: 'Review requested', data: article });
@@ -1028,16 +1034,16 @@ export const unrequestReview = async (req: any, res: Response): Promise<void> =>
       // If published, it should go back to 'changes_requested' (if changes exist) or 'published' (if no changes?)
       // But we only allow request review if pending changes exist on published.
       // So let's revert to 'changes_requested' to imply "still working on it".
-    if (article.reviewStatus !== 'in_review') {
-      res.status(400).json({ success: false, message: 'Article is not in review' });
-      return;
-    }
+      if (article.reviewStatus !== 'in_review') {
+        res.status(400).json({ success: false, message: 'Article is not in review' });
+        return;
+      }
 
-    article.reviewStatus = 'changes_requested';
+      article.reviewStatus = 'changes_requested';
     } else {
       article.reviewStatus = 'draft';
     }
-    
+
     await article.save();
 
     res.json({ success: true, message: 'Review cancelled', data: article });
@@ -1075,7 +1081,7 @@ export const adminPublish = async (req: any, res: Response): Promise<void> => {
         'Article Published',
         `Your article "${article.title}" has been published!`,
         `/articles/${article._id}/edit`,
-        { articleId: article._id }
+        { articleId: article._id },
       );
     }
 
@@ -1125,7 +1131,8 @@ export const adminUnpublish = async (req: any, res: Response): Promise<void> => 
 
 export const requestChanges = async (req: any, res: Response): Promise<void> => {
   try {
-    if (!canPublishArticle(req.user)) { // Assume admins/editors can request changes
+    if (!canPublishArticle(req.user)) {
+      // Assume admins/editors can request changes
       res.status(403).json({ success: false, message: 'Only admins can request changes' });
       return;
     }
@@ -1154,7 +1161,7 @@ export const requestChanges = async (req: any, res: Response): Promise<void> => 
       'Changes Requested',
       `Admin requested changes on "${article.title}"`,
       `/articles/${article._id}/edit`,
-      { articleId: article._id, notes: req.body.reviewNotes }
+      { articleId: article._id, notes: req.body.reviewNotes },
     );
 
     res.json({ success: true, message: 'Changes requested', data: article });

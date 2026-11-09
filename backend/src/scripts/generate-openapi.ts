@@ -65,7 +65,8 @@ interface OpenApiDocument {
 const ROUTE_IMPORT_RE = /import\s+(\w+)\s+from\s+['"](\.\/routes\/[^'"]+)['"];/g;
 const APP_USE_RE = /app\.use\(\s*['"]([^'"]+)['"]\s*,\s*(\w+)\s*\);/g;
 const ROUTER_USE_RE = /router\.use\(([\s\S]*?)\);/g;
-const ROUTER_METHOD_RE = /router\.(get|post|put|patch|delete|head|options)\(\s*(['"`])([^'"`]+)\2\s*,([\s\S]*?)\);/g;
+const ROUTER_METHOD_RE =
+  /router\.(get|post|put|patch|delete|head|options)\(\s*(['"`])([^'"`]+)\2\s*,([\s\S]*?)\);/g;
 const PATH_PARAM_RE = /\{([^}]+)\}/g;
 
 const HTTP_METHOD_ORDER: HttpMethod[] = ['get', 'post', 'put', 'patch', 'delete', 'options', 'head'];
@@ -151,10 +152,16 @@ function parseRouteMounts(appFileContent: string, routeFileByVar: Map<string, st
 
 function parseEndpointsFromRouteFile(routeFileContent: string, basePath: string): ParsedEndpoint[] {
   const endpoints: ParsedEndpoint[] = [];
-  const routerMiddlewareSegments = [...routeFileContent.matchAll(ROUTER_USE_RE)].map((match) => match[1] ?? '');
+  const routerMiddlewareSegments = [...routeFileContent.matchAll(ROUTER_USE_RE)].map(
+    (match) => match[1] ?? '',
+  );
 
-  const routeLevelAuthRequired = routerMiddlewareSegments.some((segment) => hasAnyIdentifier(segment, AUTH_IDENTIFIERS));
-  const routeLevelAdminRequired = routerMiddlewareSegments.some((segment) => hasAnyIdentifier(segment, ADMIN_IDENTIFIERS));
+  const routeLevelAuthRequired = routerMiddlewareSegments.some((segment) =>
+    hasAnyIdentifier(segment, AUTH_IDENTIFIERS),
+  );
+  const routeLevelAdminRequired = routerMiddlewareSegments.some((segment) =>
+    hasAnyIdentifier(segment, ADMIN_IDENTIFIERS),
+  );
 
   const routeMethodMatches = routeFileContent.matchAll(ROUTER_METHOD_RE);
   for (const match of routeMethodMatches) {
@@ -163,7 +170,8 @@ function parseEndpointsFromRouteFile(routeFileContent: string, basePath: string)
     const handlersSegment = match[4] ?? '';
     const handlers = splitTopLevelCommas(handlersSegment);
 
-    const endpointAuthRequired = routeLevelAuthRequired || handlers.some((handler) => hasAnyIdentifier(handler, AUTH_IDENTIFIERS));
+    const endpointAuthRequired =
+      routeLevelAuthRequired || handlers.some((handler) => hasAnyIdentifier(handler, AUTH_IDENTIFIERS));
     const endpointAdminRequired =
       routeLevelAdminRequired || handlers.some((handler) => hasAnyIdentifier(handler, ADMIN_IDENTIFIERS));
 
@@ -204,7 +212,7 @@ function splitTopLevelCommas(value: string): string[] {
       continue;
     }
 
-    if (char === '\'' || char === '"' || char === '`') {
+    if (char === "'" || char === '"' || char === '`') {
       quote = char;
       current += char;
       continue;
@@ -310,7 +318,9 @@ function toOperation(endpoint: ParsedEndpoint): OpenApiPathOperation {
 
   if (endpoint.authRequired) {
     operation.security = [{ bearerAuth: [] }, { cookieAuth: [] }];
-    operation.description = endpoint.adminRequired ? 'Requires authenticated admin user.' : 'Requires authenticated user.';
+    operation.description = endpoint.adminRequired
+      ? 'Requires authenticated admin user.'
+      : 'Requires authenticated user.';
   }
 
   if (endpoint.adminRequired) {

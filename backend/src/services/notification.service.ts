@@ -13,7 +13,7 @@ export class NotificationService {
     title: string,
     message: string,
     link?: string,
-    data?: Record<string, any>
+    data?: Record<string, any>,
   ) {
     try {
       return await Notification.create({
@@ -39,19 +39,19 @@ export class NotificationService {
     title: string,
     message: string,
     link?: string,
-    data?: Record<string, any>
+    data?: Record<string, any>,
   ) {
     try {
       const admins = await User.find({ isAdmin: true }).select('_id');
-      const notifications = admins.map(admin => ({
+      const notifications = admins.map((admin) => ({
         recipientId: admin._id,
         type,
         title,
         message,
         link,
-        data
+        data,
       }));
-      
+
       if (notifications.length > 0) {
         await Notification.insertMany(notifications);
       }
@@ -66,15 +66,11 @@ export class NotificationService {
   static async list(userId: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
     const [notifications, total, unreadCount] = await Promise.all([
-      Notification.find({ recipientId: userId })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
+      Notification.find({ recipientId: userId }).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
       Notification.countDocuments({ recipientId: userId }),
-      Notification.countDocuments({ recipientId: userId, read: false })
+      Notification.countDocuments({ recipientId: userId, read: false }),
     ]);
-    
+
     return { notifications, total, unreadCount };
   }
 
@@ -85,7 +81,7 @@ export class NotificationService {
     return Notification.findOneAndUpdate(
       { _id: notificationId, recipientId: userId },
       { read: true },
-      { new: true }
+      { new: true },
     );
   }
 
@@ -93,9 +89,6 @@ export class NotificationService {
    * Mark all as read
    */
   static async markAllAsRead(userId: string) {
-    return Notification.updateMany(
-      { recipientId: userId, read: false },
-      { read: true }
-    );
+    return Notification.updateMany({ recipientId: userId, read: false }, { read: true });
   }
 }

@@ -1,5 +1,5 @@
-import apiClient, { unwrap } from './apiClient';
 import type { AuthorProfile } from '../types/article';
+import apiClient, { unwrap } from './apiClient';
 
 const fetchAuthorByName = async (authorName: string, signal?: AbortSignal): Promise<AuthorProfile> => {
   const response = await apiClient.get(`/authors/${encodeURIComponent(authorName)}`, { signal });

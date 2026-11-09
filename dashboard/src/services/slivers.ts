@@ -28,8 +28,16 @@ export async function getSlivers(
 
   const res = await apiClient.get('/slivers/all', { params })
 
-  if (res && typeof res === 'object' && !Array.isArray(res) && 'data' in (res as { data?: unknown })) {
-    const r = res as { data?: unknown; pagination?: PaginatedResponse<Sliver>['pagination'] }
+  if (
+    res &&
+    typeof res === 'object' &&
+    !Array.isArray(res) &&
+    'data' in (res as { data?: unknown })
+  ) {
+    const r = res as {
+      data?: unknown
+      pagination?: PaginatedResponse<Sliver>['pagination']
+    }
     return {
       data: Array.isArray(r.data) ? (r.data as Sliver[]) : [],
       pagination: r.pagination,

@@ -1,14 +1,14 @@
 'use client'
 
+import {
+  IconAlertTriangle,
+  IconArrowRight,
+  IconCheck,
+  IconGitMerge,
+} from '@tabler/icons-react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import {
-  IconArrowRight,
-  IconGitMerge,
-  IconAlertTriangle,
-  IconCheck,
-} from '@tabler/icons-react'
-import { apiClient } from '@/lib/api-client'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -31,10 +31,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
-import { User } from '../data/schema'
+import { apiClient } from '@/lib/api-client'
 import { useUsers } from '../context/users-context'
+import { User } from '../data/schema'
 
 type FieldChoice = 'source' | 'target'
 type KeepFields = {
@@ -141,9 +141,7 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
       .then((res: unknown) => {
         if (!cancelled) {
           const data = res as { count?: number } | undefined
-          setArticleCount(
-            typeof data?.count === 'number' ? data.count : 0
-          )
+          setArticleCount(typeof data?.count === 'number' ? data.count : 0)
         }
       })
       .catch(() => {
@@ -200,9 +198,12 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
             </Badge>
           </DialogTitle>
           <DialogDescription>
-            {step === 1 && 'Select the user to merge into (the one that will be kept).'}
-            {step === 2 && 'Choose which profile information to keep for each field.'}
-            {step === 3 && 'Review and confirm the merge. This action cannot be undone.'}
+            {step === 1 &&
+              'Select the user to merge into (the one that will be kept).'}
+            {step === 2 &&
+              'Choose which profile information to keep for each field.'}
+            {step === 3 &&
+              'Review and confirm the merge. This action cannot be undone.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -287,10 +288,11 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
                     >
                       <Label
                         htmlFor={`${field}-source`}
-                        className={`flex cursor-pointer items-start gap-2 rounded-md border p-3 transition-colors ${keepFields[field] === 'source'
-                          ? 'border-primary bg-primary/5'
-                          : 'hover:bg-muted/50'
-                          }`}
+                        className={`flex cursor-pointer items-start gap-2 rounded-md border p-3 transition-colors ${
+                          keepFields[field] === 'source'
+                            ? 'border-primary bg-primary/5'
+                            : 'hover:bg-muted/50'
+                        }`}
                       >
                         <RadioGroupItem
                           value='source'
@@ -309,10 +311,11 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
 
                       <Label
                         htmlFor={`${field}-target`}
-                        className={`flex cursor-pointer items-start gap-2 rounded-md border p-3 transition-colors ${keepFields[field] === 'target'
-                          ? 'border-primary bg-primary/5'
-                          : 'hover:bg-muted/50'
-                          }`}
+                        className={`flex cursor-pointer items-start gap-2 rounded-md border p-3 transition-colors ${
+                          keepFields[field] === 'target'
+                            ? 'border-primary bg-primary/5'
+                            : 'hover:bg-muted/50'
+                        }`}
                       >
                         <RadioGroupItem
                           value='target'
@@ -343,8 +346,8 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
               <div className='flex items-center gap-2 text-sm'>
                 <IconCheck size={16} className='text-green-500' />
                 <span>
-                  <strong>{targetUser.name}</strong> will be kept with
-                  the selected profile information.
+                  <strong>{targetUser.name}</strong> will be kept with the
+                  selected profile information.
                 </span>
               </div>
               <div className='flex items-center gap-2 text-sm'>
@@ -362,8 +365,8 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
                   ) : articleCount !== null ? (
                     <>
                       <strong>{articleCount}</strong>{' '}
-                      {articleCount === 1 ? 'article' : 'articles'} will
-                      be transferred.
+                      {articleCount === 1 ? 'article' : 'articles'} will be
+                      transferred.
                     </>
                   ) : (
                     'Article count unavailable.'
@@ -389,8 +392,8 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
               <AlertDescription>
                 <p>
                   This action cannot be undone. All articles from{' '}
-                  <strong>{sourceUser.name}</strong> will be transferred
-                  to <strong>{targetUser.name}</strong>, and{' '}
+                  <strong>{sourceUser.name}</strong> will be transferred to{' '}
+                  <strong>{targetUser.name}</strong>, and{' '}
                   <strong>{sourceUser.name}</strong> will be permanently
                   deleted.
                 </p>
@@ -432,9 +435,7 @@ export function UsersMergeDialog({ open, onOpenChange, currentRow }: Props) {
               type='button'
               variant='destructive'
               onClick={handleMerge}
-              disabled={
-                submitting || confirmValue.trim() !== sourceUser.name
-              }
+              disabled={submitting || confirmValue.trim() !== sourceUser.name}
             >
               {submitting ? 'Merging...' : 'Confirm Merge'}
             </Button>

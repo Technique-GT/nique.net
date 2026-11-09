@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
 import { useRouterState } from '@tanstack/react-router'
+import { useEffect, useRef } from 'react'
 import LoadingBar, { LoadingBarRef } from 'react-top-loading-bar'
 
 export function NavigationProgress() {

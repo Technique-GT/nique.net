@@ -1,9 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import {
-  ChevronsUpDown,
-  LogOut,
-  Settings,
-} from 'lucide-react'
+import { ChevronsUpDown, LogOut, Settings } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -32,7 +28,10 @@ export function NavUser({
   const { isMobile } = useSidebar()
   const { logout } = useAuthStore((state) => state.auth)
   const navigate = useNavigate()
-  const displayName = typeof user.name === 'string' && user.name.trim().length > 0 ? user.name : 'User'
+  const displayName =
+    typeof user.name === 'string' && user.name.trim().length > 0
+      ? user.name
+      : 'User'
   const initials =
     displayName
       .split(' ')
@@ -88,12 +87,15 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate({ to: '/settings' })} className="cursor-pointer">
+            <DropdownMenuItem
+              onClick={() => navigate({ to: '/settings' })}
+              className='cursor-pointer'
+            >
               <Settings />
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+            <DropdownMenuItem onClick={handleLogout} className='cursor-pointer'>
               <LogOut />
               Log out
             </DropdownMenuItem>

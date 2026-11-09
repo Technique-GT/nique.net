@@ -1,20 +1,20 @@
-import { useState } from 'react'
-import type { Dispatch, SetStateAction } from 'react'
 import {
   ColumnDef,
   ColumnFiltersState,
-  RowData,
-  PaginationState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFilteredRowModel,
   getSortedRowModel,
+  PaginationState,
+  RowData,
+  SortingState,
   useReactTable,
+  VisibilityState,
 } from '@tanstack/react-table'
+import type { Dispatch, SetStateAction } from 'react'
+import { useState } from 'react'
 import {
   Table,
   TableBody,

@@ -1,6 +1,11 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { deleteMediaImage, getMediaImageUsage, listMediaImages, uploadMedia } from '../controllers/media.controller';
+import {
+  deleteMediaImage,
+  getMediaImageUsage,
+  listMediaImages,
+  uploadMedia,
+} from '../controllers/media.controller';
 import { adminMiddleware } from '../middleware/admin.middleware';
 import { authMiddleware } from '../middleware/auth.middleware';
 

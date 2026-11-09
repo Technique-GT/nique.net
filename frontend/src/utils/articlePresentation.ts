@@ -2,16 +2,16 @@ import type { ArticleDocument, User } from '../types/article';
 import { withMediaSessionRevalidation } from './mediaUrl';
 
 const stripHtml = (value: string) =>
-  value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  value
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
-export const getArticleId = (article: ArticleDocument) =>
-  article._id || article.slug || '';
+export const getArticleId = (article: ArticleDocument) => article._id || article.slug || '';
 
 export const getArticleLink = (article: ArticleDocument) => {
   const categorySlug =
-    article.categoryId && typeof article.categoryId === 'object'
-      ? article.categoryId.slug
-      : '';
+    article.categoryId && typeof article.categoryId === 'object' ? article.categoryId.slug : '';
   if (categorySlug && article.slug) {
     return `/${categorySlug}/${article.slug}`;
   }
@@ -33,9 +33,7 @@ export const getArticleAuthorName = (article: ArticleDocument) => {
 };
 
 export const getArticleCategoryName = (article: ArticleDocument) =>
-  article.categoryId && typeof article.categoryId === 'object'
-    ? article.categoryId.name
-    : '';
+  article.categoryId && typeof article.categoryId === 'object' ? article.categoryId.name : '';
 
 export const getArticleDescription = (article: ArticleDocument) => {
   const raw = article.content || '';

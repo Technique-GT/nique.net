@@ -3,7 +3,7 @@ import { IArticle } from '../models/Article';
 export const canEditArticle = (user: any, article: IArticle) => {
   if (user.isAdmin) return true;
   if (article.ownerId.toString() === user.id) return true;
-  return article.authors.some(a => a.authorId.toString() === user.id);
+  return article.authors.some((a) => a.authorId.toString() === user.id);
 };
 
 export const canManageAuthors = (user: any, article: IArticle) => {

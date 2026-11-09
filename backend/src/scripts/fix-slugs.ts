@@ -55,7 +55,7 @@ async function main() {
   for await (const doc of cursor) {
     total++;
     const currentSlug = typeof doc.slug === 'string' ? doc.slug : '';
-    
+
     if (!currentSlug) {
       // If slug is missing, generate from title
       const newSlug = slugify(doc.title || `untitled-${doc._id}`);
@@ -88,7 +88,10 @@ async function updateSlug(collection: any, id: ObjectId, baseSlug: string) {
 
   // Ensure uniqueness
   while (true) {
-    const existing = await collection.findOne({ slug: finalSlug, _id: { $ne: id } }, { projection: { _id: 1 } });
+    const existing = await collection.findOne(
+      { slug: finalSlug, _id: { $ne: id } },
+      { projection: { _id: 1 } },
+    );
     if (!existing) break;
     finalSlug = `${baseSlug}-${counter}`;
     counter++;

@@ -1,16 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
-import { AxiosError } from 'axios'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import { AxiosError } from 'axios'
 import { ArrowUpDown, LayoutGrid, List, Loader2, RefreshCw } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/layout/page-header'
 import { MediaCard } from '@/components/media/media-card'
 import { MediaListRow } from '@/components/media/media-list-row'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -20,10 +16,32 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  deleteMedia,
+  getMediaImages,
+  getMediaUsage,
+  type MediaImage,
+  type MediaUsageArticle,
+} from '@/services/media'
 import { useAuthStore } from '@/stores/authStore'
-import { deleteMedia, getMediaImages, getMediaUsage, type MediaImage, type MediaUsageArticle } from '@/services/media'
 
 const PAGE_SIZE = 24
 const SEARCH_DEBOUNCE_MS = 350
@@ -32,7 +50,10 @@ const USAGE_PAGE_LIMIT = 10
 function formatBytes(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) return '0 B'
   const units = ['B', 'KB', 'MB', 'GB']
-  const idx = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
+  const idx = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1
+  )
   const value = bytes / 1024 ** idx
   return `${value.toFixed(value >= 10 || idx === 0 ? 0 : 1)} ${units[idx]}`
 }
@@ -92,7 +113,14 @@ export default function MediaLibrary() {
   }, [searchInput])
 
   const query = useInfiniteQuery({
-    queryKey: ['media-images', PAGE_SIZE, searchQuery, sortBy, sortDir, refreshNonce],
+    queryKey: [
+      'media-images',
+      PAGE_SIZE,
+      searchQuery,
+      sortBy,
+      sortDir,
+      refreshNonce,
+    ],
     queryFn: ({ pageParam }) =>
       getMediaImages({
         cursor: pageParam,
@@ -104,13 +132,15 @@ export default function MediaLibrary() {
       }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>
-      lastPage.pagination.hasMore ? (lastPage.pagination.nextCursor ?? undefined) : undefined,
+      lastPage.pagination.hasMore
+        ? (lastPage.pagination.nextCursor ?? undefined)
+        : undefined,
     staleTime: 15 * 1000,
   })
 
   const images = useMemo(
     () => query.data?.pages.flatMap((page) => page.data) ?? [],
-    [query.data?.pages],
+    [query.data?.pages]
   )
 
   useEffect(() => {
@@ -137,7 +167,9 @@ export default function MediaLibrary() {
         setUsageArticles((prev) => {
           if (usagePage === 1) return response.data
           const existing = new Set(prev.map((article) => article._id))
-          const next = response.data.filter((article) => !existing.has(article._id))
+          const next = response.data.filter(
+            (article) => !existing.has(article._id)
+          )
           return [...prev, ...next]
         })
       } catch (_error) {
@@ -183,12 +215,19 @@ export default function MediaLibrary() {
       if (error instanceof AxiosError && error.response?.status === 409) {
         const body = error.response.data as {
           data?: MediaUsageArticle[]
-          pagination?: { total: number; page: number; pages: number; limit: number }
+          pagination?: {
+            total: number
+            page: number
+            pages: number
+            limit: number
+          }
         }
         setUsageArticles(Array.isArray(body?.data) ? body.data : [])
         setUsagePagination(body?.pagination ?? null)
         setUsagePage(1)
-        toast.error('Image is currently used by articles. Review references and confirm again.')
+        toast.error(
+          'Image is currently used by articles. Review references and confirm again.'
+        )
       } else {
         toast.error('Failed to delete image')
       }
@@ -213,7 +252,10 @@ export default function MediaLibrary() {
                 placeholder='Search by filename...'
                 className='w-full sm:w-60'
               />
-              <Select value={sortBy} onValueChange={(value: 'date' | 'size') => setSortBy(value)}>
+              <Select
+                value={sortBy}
+                onValueChange={(value: 'date' | 'size') => setSortBy(value)}
+              >
                 <SelectTrigger className='w-full sm:w-35'>
                   <SelectValue placeholder='Sort by' />
                 </SelectTrigger>
@@ -226,7 +268,9 @@ export default function MediaLibrary() {
                 type='button'
                 variant='outline'
                 size='sm'
-                onClick={() => setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+                onClick={() =>
+                  setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+                }
               >
                 <ArrowUpDown className='mr-2 h-4 w-4' />
                 {sortDir === 'asc' ? 'Asc' : 'Desc'}
@@ -258,7 +302,9 @@ export default function MediaLibrary() {
                 onClick={() => setRefreshNonce((v) => v + 1)}
                 disabled={query.isFetching}
               >
-                <RefreshCw className={`mr-2 h-4 w-4 ${query.isFetching ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`mr-2 h-4 w-4 ${query.isFetching ? 'animate-spin' : ''}`}
+                />
                 Refresh
               </Button>
             </div>
@@ -278,8 +324,14 @@ export default function MediaLibrary() {
       ) : query.isError ? (
         <Card>
           <CardContent className='flex h-44 flex-col items-center justify-center gap-3 text-center'>
-            <p className='text-sm text-muted-foreground'>Failed to load images from R2.</p>
-            <Button type='button' variant='outline' onClick={() => query.refetch()}>
+            <p className='text-sm text-muted-foreground'>
+              Failed to load images from R2.
+            </p>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={() => query.refetch()}
+            >
               Retry
             </Button>
           </CardContent>
@@ -321,9 +373,15 @@ export default function MediaLibrary() {
                       <TableRow>
                         <TableHead className='w-18 sm:w-23'>File</TableHead>
                         <TableHead></TableHead>
-                        <TableHead className='hidden sm:table-cell sm:w-24 md:w-27.5'>Size</TableHead>
-                        <TableHead className='hidden md:table-cell md:w-47.5 lg:w-55'>Uploaded</TableHead>
-                        <TableHead className='w-33 sm:w-45 md:w-55'>Actions</TableHead>
+                        <TableHead className='hidden sm:table-cell sm:w-24 md:w-27.5'>
+                          Size
+                        </TableHead>
+                        <TableHead className='hidden md:table-cell md:w-47.5 lg:w-55'>
+                          Uploaded
+                        </TableHead>
+                        <TableHead className='w-33 sm:w-45 md:w-55'>
+                          Actions
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -335,7 +393,9 @@ export default function MediaLibrary() {
                           onSelect={setSelectedKey}
                           onCopy={copyToClipboard}
                           onOpen={openInNewTab}
-                          onDelete={canDeleteMedia ? openDeleteDialog : undefined}
+                          onDelete={
+                            canDeleteMedia ? openDeleteDialog : undefined
+                          }
                           formatBytes={formatBytes}
                           formatDate={formatDate}
                         />
@@ -349,7 +409,12 @@ export default function MediaLibrary() {
 
           <div className='flex justify-center'>
             {query.hasNextPage ? (
-              <Button type='button' variant='outline' onClick={() => query.fetchNextPage()} disabled={query.isFetchingNextPage}>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={() => query.fetchNextPage()}
+                disabled={query.isFetchingNextPage}
+              >
                 {query.isFetchingNextPage ? (
                   <>
                     <Loader2 className='mr-2 h-4 w-4 animate-spin' />
@@ -366,7 +431,10 @@ export default function MediaLibrary() {
         </div>
       )}
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={handleDeleteDialogChange}>
+      <AlertDialog
+        open={deleteDialogOpen}
+        onOpenChange={handleDeleteDialogChange}
+      >
         <AlertDialogContent className='max-w-2xl'>
           <AlertDialogHeader className='text-left'>
             <AlertDialogTitle>Delete image?</AlertDialogTitle>
@@ -387,19 +455,32 @@ export default function MediaLibrary() {
                 ) : usageArticles.length > 0 ? (
                   <div className='space-y-2'>
                     <p className='text-sm font-medium text-destructive'>
-                      This image is currently referenced by {usagePagination?.total ?? usageArticles.length} article(s).
+                      This image is currently referenced by{' '}
+                      {usagePagination?.total ?? usageArticles.length}{' '}
+                      article(s).
                     </p>
                     <div className='max-h-56 space-y-2 overflow-y-auto rounded-md border p-2'>
                       {usageArticles.map((article) => (
-                        <div key={article._id} className='rounded-md border p-2'>
+                        <div
+                          key={article._id}
+                          className='rounded-md border p-2'
+                        >
                           <p className='text-sm font-medium'>{article.title}</p>
-                          <p className='text-xs text-muted-foreground'>/{article.slug}</p>
+                          <p className='text-xs text-muted-foreground'>
+                            /{article.slug}
+                          </p>
                           <div className='mt-2 flex flex-wrap gap-2'>
-                            <Badge variant={article.published ? 'default' : 'secondary'}>
+                            <Badge
+                              variant={
+                                article.published ? 'default' : 'secondary'
+                              }
+                            >
                               {article.published ? 'Published' : 'Unpublished'}
                             </Badge>
                             {article.reviewStatus && (
-                              <Badge variant='outline'>{article.reviewStatus}</Badge>
+                              <Badge variant='outline'>
+                                {article.reviewStatus}
+                              </Badge>
                             )}
                           </div>
                         </div>
@@ -426,7 +507,9 @@ export default function MediaLibrary() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteLoading}>
+              Cancel
+            </AlertDialogCancel>
             <Button
               type='button'
               variant='destructive'

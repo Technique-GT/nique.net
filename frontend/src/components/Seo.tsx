@@ -1,32 +1,37 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 type SeoProps = {
   title: string;
   description?: string;
   canonicalPath?: string;
   image?: string;
-  type?: "website" | "article";
+  type?: 'website' | 'article';
   noindex?: boolean;
   structuredData?: Record<string, unknown>;
 };
 
-const SITE_URL = ((import.meta.env.VITE_SITE_URL as string | undefined) || "https://nique.net").replace(/\/+$/, "");
-const INDEXABLE_FRONTEND_HOSTS = new Set(["nique.net", "www.nique.net"]);
-const ALLOW_INDEXING = ((import.meta.env.VITE_ALLOW_INDEXING as string | undefined) || "").toLowerCase() === "true";
+const SITE_URL = ((import.meta.env.VITE_SITE_URL as string | undefined) || 'https://nique.net').replace(
+  /\/+$/,
+  '',
+);
+const INDEXABLE_FRONTEND_HOSTS = new Set(['nique.net', 'www.nique.net']);
+const ALLOW_INDEXING =
+  ((import.meta.env.VITE_ALLOW_INDEXING as string | undefined) || '').toLowerCase() === 'true';
 
-const DEFAULT_DESCRIPTION = "Technique is Georgia Tech's independent student newspaper covering campus news, life, sports, entertainment, and opinion.";
+const DEFAULT_DESCRIPTION =
+  "Technique is Georgia Tech's independent student newspaper covering campus news, life, sports, entertainment, and opinion.";
 
 const toAbsoluteUrl = (value?: string) => {
   if (!value) return undefined;
   if (/^https?:\/\//i.test(value)) return value;
-  if (value.startsWith("/")) return `${SITE_URL}${value}`;
+  if (value.startsWith('/')) return `${SITE_URL}${value}`;
   return `${SITE_URL}/${value}`;
 };
 
-const upsertMeta = (attribute: "name" | "property", key: string, content: string) => {
+const upsertMeta = (attribute: 'name' | 'property', key: string, content: string) => {
   let element = document.head.querySelector(`meta[${attribute}="${key}"]`) as HTMLMetaElement | null;
   if (!element) {
-    element = document.createElement("meta");
+    element = document.createElement('meta');
     element.setAttribute(attribute, key);
     document.head.appendChild(element);
   }
@@ -36,7 +41,7 @@ const upsertMeta = (attribute: "name" | "property", key: string, content: string
 const upsertLink = (rel: string, href: string) => {
   let element = document.head.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
   if (!element) {
-    element = document.createElement("link");
+    element = document.createElement('link');
     element.rel = rel;
     document.head.appendChild(element);
   }
@@ -44,7 +49,7 @@ const upsertLink = (rel: string, href: string) => {
 };
 
 const isIndexableFrontendHost = () => {
-  if (typeof window === "undefined") return false;
+  if (typeof window === 'undefined') return false;
   return INDEXABLE_FRONTEND_HOSTS.has(window.location.hostname.toLowerCase());
 };
 
@@ -53,7 +58,7 @@ function Seo({
   description = DEFAULT_DESCRIPTION,
   canonicalPath = window.location.pathname,
   image,
-  type = "website",
+  type = 'website',
   noindex = false,
   structuredData,
 }: SeoProps) {
@@ -65,38 +70,38 @@ function Seo({
 
     document.title = fullTitle;
 
-    upsertMeta("name", "description", description);
-    upsertMeta("name", "robots", canIndex ? "index, follow" : "noindex, nofollow");
+    upsertMeta('name', 'description', description);
+    upsertMeta('name', 'robots', canIndex ? 'index, follow' : 'noindex, nofollow');
 
-    upsertMeta("property", "og:title", fullTitle);
-    upsertMeta("property", "og:description", description);
-    upsertMeta("property", "og:type", type);
-    upsertMeta("property", "og:url", canonical);
-    upsertMeta("property", "og:site_name", "Technique");
-    if (imageUrl) upsertMeta("property", "og:image", imageUrl);
+    upsertMeta('property', 'og:title', fullTitle);
+    upsertMeta('property', 'og:description', description);
+    upsertMeta('property', 'og:type', type);
+    upsertMeta('property', 'og:url', canonical);
+    upsertMeta('property', 'og:site_name', 'Technique');
+    if (imageUrl) upsertMeta('property', 'og:image', imageUrl);
 
-    upsertMeta("name", "twitter:card", imageUrl ? "summary_large_image" : "summary");
-    upsertMeta("name", "twitter:title", fullTitle);
-    upsertMeta("name", "twitter:description", description);
-    if (imageUrl) upsertMeta("name", "twitter:image", imageUrl);
+    upsertMeta('name', 'twitter:card', imageUrl ? 'summary_large_image' : 'summary');
+    upsertMeta('name', 'twitter:title', fullTitle);
+    upsertMeta('name', 'twitter:description', description);
+    if (imageUrl) upsertMeta('name', 'twitter:image', imageUrl);
 
-    upsertLink("canonical", canonical);
+    upsertLink('canonical', canonical);
 
-    const existingJsonLd = document.head.querySelector("#nique-seo-jsonld");
+    const existingJsonLd = document.head.querySelector('#nique-seo-jsonld');
     if (existingJsonLd) {
       existingJsonLd.remove();
     }
 
     if (structuredData) {
-      const script = document.createElement("script");
-      script.id = "nique-seo-jsonld";
-      script.type = "application/ld+json";
+      const script = document.createElement('script');
+      script.id = 'nique-seo-jsonld';
+      script.type = 'application/ld+json';
       script.text = JSON.stringify(structuredData);
       document.head.appendChild(script);
     }
 
     return () => {
-      const jsonLdScript = document.head.querySelector("#nique-seo-jsonld");
+      const jsonLdScript = document.head.querySelector('#nique-seo-jsonld');
       if (jsonLdScript) {
         jsonLdScript.remove();
       }

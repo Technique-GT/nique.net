@@ -1,6 +1,6 @@
-import { ReactNode } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
+import { ReactNode } from 'react'
 import {
   Collapsible,
   CollapsibleContent,
@@ -26,12 +26,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
-import { NavCollapsible, NavItem, NavLink, type NavGroup } from './types'
+import { NavCollapsible, type NavGroup, NavItem, NavLink } from './types'
 
 export function NavGroup({ title, items }: NavGroup) {
   const { state, isMobile } = useSidebar()
   const href = useLocation({
-    select: (location) => location.href ?? `${location.pathname}${location.search}`,
+    select: (location) =>
+      location.href ?? `${location.pathname}${location.search}`,
   })
   return (
     <SidebarGroup>
@@ -87,11 +88,7 @@ const SidebarMenuCollapsible = ({
 }) => {
   const { setOpenMobile } = useSidebar()
   return (
-    <Collapsible
-      asChild
-      defaultOpen={true}
-      className='group/collapsible'
-    >
+    <Collapsible asChild defaultOpen={true} className='group/collapsible'>
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip={item.title}>
@@ -170,7 +167,11 @@ const SidebarMenuCollapsedDropdown = ({
   )
 }
 
-function checkIsActive(href: string | undefined, item: NavItem, mainNav = false) {
+function checkIsActive(
+  href: string | undefined,
+  item: NavItem,
+  mainNav = false
+) {
   if (!href) return false
   return (
     href === item.url || // /endpint?search=param

@@ -11,10 +11,7 @@ const SOCIAL_PLATFORM_HOSTS = {
 } as const;
 type SocialPlatform = keyof typeof SOCIAL_PLATFORM_HOSTS | 'website';
 
-const isAllowedSocialUrl = (
-  rawUrl: string,
-  platform: SocialPlatform,
-): boolean => {
+const isAllowedSocialUrl = (rawUrl: string, platform: SocialPlatform): boolean => {
   try {
     const parsed = new URL(rawUrl);
 
@@ -34,39 +31,32 @@ const isAllowedSocialUrl = (
     return false;
   }
 };
-export const socialLinkSchema = z.object({
-  platform: z
-    .enum([
-      'instagram',
-      'linkedin',
-      'github',
-      'x',
-      'youtube',
-      'facebook',
-      'website',
-    ])
-    .transform(
-      (value) =>
-        value.toLowerCase() as
-          | 'instagram'
-          | 'linkedin'
-          | 'github'
-          | 'x'
-          | 'youtube'
-          | 'facebook'
-          | 'website',
-    ),
-  url: z.string().trim().url(),
-})
+export const socialLinkSchema = z
+  .object({
+    platform: z
+      .enum(['instagram', 'linkedin', 'github', 'x', 'youtube', 'facebook', 'website'])
+      .transform(
+        (value) =>
+          value.toLowerCase() as
+            | 'instagram'
+            | 'linkedin'
+            | 'github'
+            | 'x'
+            | 'youtube'
+            | 'facebook'
+            | 'website',
+      ),
+    url: z.string().trim().url(),
+  })
   .superRefine((value, ctx) => {
-  if (!isAllowedSocialUrl(value.url, value.platform)) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['url'],
-      message: `URL must be a valid ${value.platform} link`,
-    });
-  }
-});
+    if (!isAllowedSocialUrl(value.url, value.platform)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['url'],
+        message: `URL must be a valid ${value.platform} link`,
+      });
+    }
+  });
 
 export const createUserBodySchema = z.object({
   name: z.string().trim().min(1),

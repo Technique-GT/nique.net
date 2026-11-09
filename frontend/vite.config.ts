@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -13,10 +13,7 @@ export default defineConfig({
     port: 4173,
     strictPort: true,
   },
-  plugins: [
-    tailwindcss(),
-    react()
-  ],
+  plugins: [tailwindcss(), react()],
   optimizeDeps: {
     exclude: ['pdfjs-dist', 'react-pdf'],
   },
@@ -62,8 +59,8 @@ export default defineConfig({
             // Everything else in node_modules goes to vendor
             return 'vendor';
           }
-        }
-      }
-    }
-  }
-})
+        },
+      },
+    },
+  },
+});

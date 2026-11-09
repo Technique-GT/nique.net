@@ -1,7 +1,7 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import request from 'supertest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../src/app';
 import Article from '../src/models/Article';
 import Category from '../src/models/Category';
@@ -23,7 +23,10 @@ const adminToken = generateToken({ id: adminId, name: 'Admin User', isAdmin: tru
 const createPublishedArticleFixture = async () => {
   const suffix = new mongoose.Types.ObjectId().toString().slice(-6);
   const ownerId = new mongoose.Types.ObjectId(adminId);
-  const category = await Category.create({ name: `Cache Category ${suffix}`, slug: `cache-category-${suffix}` });
+  const category = await Category.create({
+    name: `Cache Category ${suffix}`,
+    slug: `cache-category-${suffix}`,
+  });
   const tag = await Tag.create({ name: `Cache Tag ${suffix}`, slug: `cache-tag-${suffix}` });
   await User.create({ _id: ownerId, name: `Cache Author ${suffix}`, isAdmin: true, socialLinks: [] });
 
@@ -107,7 +110,10 @@ describe('Article cache behavior', () => {
 
   it('purges all Cloudflare cache after a public article mutation', async () => {
     const { article } = await createPublishedArticleFixture();
-    const nextCategory = await Category.create({ name: 'Cache Category Updated', slug: 'cache-category-updated' });
+    const nextCategory = await Category.create({
+      name: 'Cache Category Updated',
+      slug: 'cache-category-updated',
+    });
     const nextTag = await Tag.create({ name: 'Cache Tag Updated', slug: 'cache-tag-updated' });
 
     const purgeEverythingSpy = vi.spyOn(CloudflareCacheService, 'purgeEverything').mockResolvedValue();

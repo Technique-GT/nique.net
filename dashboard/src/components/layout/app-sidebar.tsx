@@ -1,20 +1,25 @@
+import { NavGroup } from '@/components/layout/nav-group'
+import { NavUser } from '@/components/layout/nav-user'
+import { CardTitle } from '@/components/ui/card'
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
 } from '@/components/ui/sidebar'
-import { CardTitle } from '@/components/ui/card'
-import { NavGroup } from '@/components/layout/nav-group'
-import { NavUser } from '@/components/layout/nav-user'
-import { sidebarData } from './data/sidebar-data'
-import { useAuthStore } from '@/stores/authStore'
 import { isAdminUser } from '@/lib/permissions'
+import { useAuthStore } from '@/stores/authStore'
+import { sidebarData } from './data/sidebar-data'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuthStore((state) => state.auth)
   const isAdmin = isAdminUser(user)
-  const restrictedUrls = new Set(['/stats', '/comments', '/slivers', '/spotify'])
+  const restrictedUrls = new Set([
+    '/stats',
+    '/comments',
+    '/slivers',
+    '/spotify',
+  ])
 
   const visibleNavGroups = isAdmin
     ? sidebarData.navGroups
@@ -31,7 +36,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 return { ...item, items: filteredItems }
               }
 
-              if (typeof item.url === 'string' && restrictedUrls.has(item.url)) return null
+              if (typeof item.url === 'string' && restrictedUrls.has(item.url))
+                return null
               return item
             })
             .filter(
@@ -47,16 +53,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         )
 
   // Fallback user if auth store is empty (shouldn't happen in protected routes)
-  const displayUser = user ? {
-    name: user.name || 'User',
-    email: user.email || 'No email',
-    avatar: user.avatar || '/avatars/shadcn.jpg',
-  } : sidebarData.user
+  const displayUser = user
+    ? {
+        name: user.name || 'User',
+        email: user.email || 'No email',
+        avatar: user.avatar || '/avatars/shadcn.jpg',
+      }
+    : sidebarData.user
 
   return (
     <Sidebar variant='floating' {...props}>
       <SidebarHeader>
-        <CardTitle className="text-lg p-2 overflow-hidden whitespace-nowrap text-ellipsis">Technique</CardTitle>
+        <CardTitle className='text-lg p-2 overflow-hidden whitespace-nowrap text-ellipsis'>
+          Technique
+        </CardTitle>
       </SidebarHeader>
       <SidebarContent>
         {visibleNavGroups.map((props) => (

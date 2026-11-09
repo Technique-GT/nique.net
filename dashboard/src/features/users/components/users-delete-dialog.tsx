@@ -1,14 +1,14 @@
 'use client'
 
-import { useState } from 'react'
 import { IconAlertTriangle } from '@tabler/icons-react'
+import { useState } from 'react'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ConfirmDialog } from '@/components/confirm-dialog'
 import { apiClient } from '@/lib/api-client'
-import { User } from '../data/schema'
 import { useUsers } from '../context/users-context'
+import { User } from '../data/schema'
 
 interface Props {
   open: boolean
@@ -59,7 +59,8 @@ export function UsersDeleteDialog({ open, onOpenChange, currentRow }: Props) {
             Are you sure you want to delete{' '}
             <span className='font-bold'>{currentRow.name}</span>?
             <br />
-            This action will permanently remove the user from the system. This cannot be undone.
+            This action will permanently remove the user from the system. This
+            cannot be undone.
           </p>
 
           <Label className='my-2'>

@@ -31,12 +31,11 @@ const validate = (target: ValidationTarget, schema: ZodTypeAny) => {
     // For body, we can mutate it directly.
     if (target === 'body') {
       req.body = parsed.data;
-    } 
+    }
     // For query and params in Express 5, we must use defineProperty to override the getter.
     else if (target === 'query') {
       Object.defineProperty(req, 'query', { value: parsed.data, configurable: true });
-    }
-    else if (target === 'params') {
+    } else if (target === 'params') {
       Object.defineProperty(req, 'params', { value: parsed.data, configurable: true });
     }
 
@@ -47,4 +46,3 @@ const validate = (target: ValidationTarget, schema: ZodTypeAny) => {
 export const validateBody = (schema: ZodTypeAny) => validate('body', schema);
 export const validateQuery = (schema: ZodTypeAny) => validate('query', schema);
 export const validateParams = (schema: ZodTypeAny) => validate('params', schema);
-

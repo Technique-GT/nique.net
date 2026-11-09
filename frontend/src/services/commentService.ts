@@ -1,6 +1,6 @@
-import apiClient, { unwrap } from './apiClient';
 import type { Comment } from '../types/article';
 import { getDeviceId } from '../utils/deviceId';
+import apiClient, { unwrap } from './apiClient';
 
 // =============================================================================
 // Comment Endpoints (aligned with backend routes)
@@ -11,10 +11,7 @@ import { getDeviceId } from '../utils/deviceId';
  * backend: GET /comments/article/:articleId
  * Returns approved comments by default, structured as a tree with `replies`.
  */
-const fetchCommentsByArticle = async (
-  articleId: string,
-  signal?: AbortSignal
-): Promise<Comment[]> => {
+const fetchCommentsByArticle = async (articleId: string, signal?: AbortSignal): Promise<Comment[]> => {
   const response = await apiClient.get(`/comments/article/${articleId}`, {
     signal,
     headers: { 'x-device-id': getDeviceId() },
@@ -29,7 +26,7 @@ const fetchCommentsByArticle = async (
  */
 const createComment = async (
   articleId: string,
-  payload: { content: string; username?: string; parentCommentId?: string }
+  payload: { content: string; username?: string; parentCommentId?: string },
 ): Promise<Comment> => {
   const body = {
     articleId,
@@ -45,14 +42,11 @@ const createComment = async (
  * Set comment reaction (persisted per device).
  * backend: PUT /comments/:id/reaction
  */
-const setCommentReaction = async (
-  commentId: string,
-  reaction: 'up' | 'down' | null
-): Promise<Comment> => {
+const setCommentReaction = async (commentId: string, reaction: 'up' | 'down' | null): Promise<Comment> => {
   const response = await apiClient.put(
     `/comments/${commentId}/reaction`,
     { reaction, deviceId: getDeviceId() },
-    { headers: { 'x-device-id': getDeviceId() } }
+    { headers: { 'x-device-id': getDeviceId() } },
   );
   return unwrap(response.data);
 };
