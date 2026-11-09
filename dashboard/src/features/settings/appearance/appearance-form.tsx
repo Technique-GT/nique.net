@@ -42,8 +42,8 @@ export function AppearanceForm() {
   })
 
   function onSubmit(data: AppearanceFormValues) {
-    if (data.font != font) setFont(data.font)
-    if (data.theme != theme) setTheme(data.theme)
+    if (data.font !== font) setFont(data.font)
+    if (data.theme !== theme) setTheme(data.theme)
 
     showSubmittedData(data, 'Appearance updated successfully.')
   }

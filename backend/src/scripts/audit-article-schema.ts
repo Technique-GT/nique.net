@@ -408,14 +408,12 @@ async function main() {
     indexes,
   };
 
-  // eslint-disable-next-line no-console
   console.log(JSON.stringify(result, null, 2));
 
   await mongoose.disconnect();
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error(err);
   process.exitCode = 1;
 });

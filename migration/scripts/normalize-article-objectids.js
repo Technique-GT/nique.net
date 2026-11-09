@@ -77,5 +77,4 @@ const normalized = articles.map((article) => {
 
 fs.writeFileSync(outputPath, JSON.stringify(normalized, null, 2));
 
-// eslint-disable-next-line no-console
 console.log(`Normalized ${updated} articles to ObjectId form.`);

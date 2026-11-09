@@ -44,7 +44,7 @@ cd dashboard && npm run dev          # http://localhost:5174
 ### Testing & Linting
 ```bash
 cd backend && npm test               # API tests
-cd backend && npm run lint           # ESLint
+cd backend && npm run lint           # Biome lint
 cd frontend && npm run lint
 cd dashboard && npm run lint
 npm run typecheck                    # if available

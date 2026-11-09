@@ -82,15 +82,12 @@ const nextPayload = {
 
 fs.writeFileSync(outputPath, JSON.stringify(nextPayload, null, 2));
 
-// eslint-disable-next-line no-console
 console.log(
   `Updated ${updated} articles. Missing featuredMediaId: ${missingId}. Missing media url: ${missingMedia}.`,
 );
 if (missingIdArticles.length) {
-  // eslint-disable-next-line no-console
   console.log("Missing featuredMediaId articles:", missingIdArticles);
 }
 if (missingMediaArticles.length) {
-  // eslint-disable-next-line no-console
   console.log("Missing media url articles:", missingMediaArticles);
 }

@@ -56,9 +56,9 @@ pnpm run test:watch   # Run tests in watch mode
 pnpm run test:coverage # Run tests with coverage report
 
 # Linting & Formatting
-pnpm run lint         # Run ESLint
-pnpm run lint:fix     # Run ESLint with auto-fix
-pnpm run format       # Format with Prettier
+pnpm run lint         # Run Biome lint
+pnpm run lint:fix     # Fix Biome lint issues
+pnpm run format       # Format with Biome
 pnpm run format:check # Check formatting
 ```
 
@@ -410,4 +410,4 @@ describe('My Feature', () => {
 - **Use `test` database** for all development
 - **Run `--check`** periodically to detect schema drift
 - **Run tests before pushing** - `pnpm test`
-- **ESLint warnings are expected** - Configured to warn, not block
+- **Biome linting** is configured to run from the repository root

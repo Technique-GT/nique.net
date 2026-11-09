@@ -1118,7 +1118,6 @@ export function toCanonicalComment(input: any): TransformResult<CanonicalComment
 }
 
 const usage = () => {
-  // eslint-disable-next-line no-console
   console.error(
     [
       'Usage (single document):',
@@ -1183,7 +1182,6 @@ async function main() {
       const docBySlug = await collection.findOne({ slug: maybeId });
       if (docBySlug) {
         const result = transformByCollection(maybeCollectionName, docBySlug);
-        // eslint-disable-next-line no-console
         console.log(JSON.stringify(outputWarnings ? result : result.value, null, 2));
         await mongoose.disconnect();
         return;
@@ -1191,7 +1189,6 @@ async function main() {
     }
 
     if (!doc) {
-      // eslint-disable-next-line no-console
       console.error(`Document not found: ${maybeCollectionName} ${maybeId}`);
       process.exitCode = 1;
       await mongoose.disconnect();
@@ -1200,7 +1197,6 @@ async function main() {
 
     const result = transformByCollection(maybeCollectionName, doc);
 
-    // eslint-disable-next-line no-console
     console.log(JSON.stringify(outputWarnings ? result : result.value, null, 2));
 
     await mongoose.disconnect();
@@ -1249,7 +1245,6 @@ async function main() {
     output,
   };
 
-  // eslint-disable-next-line no-console
   console.log(JSON.stringify(result, null, 2));
 
   await mongoose.disconnect();
@@ -1257,7 +1252,6 @@ async function main() {
 
 if (require.main === module) {
   main().catch((err) => {
-    // eslint-disable-next-line no-console
     console.error(err);
     process.exitCode = 1;
   });

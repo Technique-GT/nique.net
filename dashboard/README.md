@@ -90,7 +90,8 @@ campus-chronicle/
 - `dev` - Start development server  
 - `build` - Create production build  
 - `preview` - Preview production build locally  
-- `lint` - Run ESLint  
+- `lint` - Run Biome
+- `format` - Format with Biome
 - `type-check` - Verify TypeScript types  
 
 ## Deployment
