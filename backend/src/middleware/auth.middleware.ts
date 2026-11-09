@@ -18,7 +18,7 @@ export const getTokenFromRequest = (req: Request): string | null => {
   return null;
 };
 
-export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {  
   const token = getTokenFromRequest(req);
 
   if (!token) {
