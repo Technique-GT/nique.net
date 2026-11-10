@@ -135,7 +135,7 @@ const buildArticleUpdate = async (params: {
   const reviewStatus = body?.reviewStatus;
 
   // Only update publishedAt if published state is explicitly changing to true
-  let publishedAt;
+  let publishedAt: Date | null | undefined;
   if (published === true) {
     publishedAt = parsePublishedAt(body, true, existing?.publishedAt ?? null);
   }
