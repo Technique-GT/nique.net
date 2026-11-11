@@ -3,25 +3,25 @@
 @import "tailwindcss";
 
 @theme {
-  --color-nique-blue: #003057;
-  --color-nique-blue-hover: #0e3682;
-  --color-nique-light-blue: #5c8eb7;
+	--color-nique-blue: #003057;
+	--color-nique-blue-hover: #0e3682;
+	--color-nique-light-blue: #5c8eb7;
 
-  --font-serif: "EB Garamond", Times, serif;
-  --font-sans-serif: "Oswald", sans-serif;
+	--font-serif: "EB Garamond", Times, serif;
+	--font-sans-serif: "Oswald", sans-serif;
 }
 
 h3 {
-  font-family: "Times New Roman", Times, serif;
+	font-family: "Times New Roman", Times, serif;
 }
 
 h4 {
-  font-family: "Oswald", sans-serif;
+	font-family: "Oswald", sans-serif;
 }
 
 figcaption,
 h6 {
-  font-family: "Roboto Condensed", sans-serif;
+	font-family: "Roboto Condensed", sans-serif;
 }
 
 p,
@@ -29,42 +29,42 @@ li,
 blockquote,
 input,
 textarea {
-  font-family: "EB Garamond", Times, serif;
-  /* margin-bottom: 1.1704rem; */
+	font-family: "EB Garamond", Times, serif;
+	/* margin-bottom: 1.1704rem; */
 }
 
 a {
-  transition: all 0.3s ease;
+	transition: all 0.3s ease;
 }
 
 button {
-  transition: all 0.3s ease;
+	transition: all 0.3s ease;
 }
 
 button:hover {
-  cursor: pointer;
+	cursor: pointer;
 }
 
 .title:hover {
-  opacity: 0.7;
+	opacity: 0.7;
 }
 
 h5,
 th,
 td {
-  font-family: "DM Sans", sans-serif;
+	font-family: "DM Sans", sans-serif;
 }
 
 .article-body p {
-  font-family: "EB Garamond", Times, serif;
-  font-weight: 400;
-  font-size: 1.3704rem;
-  /* text-indent: 1.5rem; */
-  margin-top: 1.4704rem;
+	font-family: "EB Garamond", Times, serif;
+	font-weight: 400;
+	font-size: 1.3704rem;
+	/* text-indent: 1.5rem; */
+	margin-top: 1.4704rem;
 }
 
 .article-body p:first-child {
-  margin-top: 0;
+	margin-top: 0;
 }
 
 /* WordPress alignment classes carried over by the content migration
@@ -72,114 +72,114 @@ td {
    <figure class="wp-caption align...">). Tailwind's prose doesn't style
    these, so map them here. */
 .article-body img {
-  max-width: 100%;
-  height: auto;
+	max-width: 100%;
+	height: auto;
 }
 
 .article-body .aligncenter,
 .article-body figure.aligncenter {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 .article-body .alignnone {
-  display: block;
+	display: block;
 }
 
 .article-body .alignleft {
-  float: left;
-  margin: 0.4rem 1.5rem 1rem 0;
-  max-width: 50%;
+	float: left;
+	margin: 0.4rem 1.5rem 1rem 0;
+	max-width: 50%;
 }
 
 .article-body .alignright {
-  float: right;
-  margin: 0.4rem 0 1rem 1.5rem;
-  max-width: 50%;
+	float: right;
+	margin: 0.4rem 0 1rem 1.5rem;
+	max-width: 50%;
 }
 
 /* Captions: <figure class="wp-caption ..."> with a <figcaption>. */
 .article-body figure.wp-caption {
-  max-width: 100%;
+	max-width: 100%;
 }
 
 .article-body figure.alignleft,
 .article-body figure.alignright {
-  max-width: 50%;
+	max-width: 50%;
 }
 
 .article-body figcaption,
 .article-body .wp-caption-text {
-  font-family: "DM Sans", sans-serif;
-  font-size: 0.9rem;
-  line-height: 1.35;
-  text-align: center;
-  opacity: 0.75;
-  margin-top: 0.4rem;
+	font-family: "DM Sans", sans-serif;
+	font-size: 0.9rem;
+	line-height: 1.35;
+	text-align: center;
+	opacity: 0.75;
+	margin-top: 0.4rem;
 }
 
 /* Clear floats so a short article body doesn't collapse around an
    aligned image, and stack left/right images full-width on narrow screens. */
 .article-body::after {
-  content: "";
-  display: block;
-  clear: both;
+	content: "";
+	display: block;
+	clear: both;
 }
 
 @media (max-width: 640px) {
-  .article-body .alignleft,
-  .article-body .alignright,
-  .article-body figure.alignleft,
-  .article-body figure.alignright {
-    float: none;
-    max-width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-  }
+	.article-body .alignleft,
+	.article-body .alignright,
+	.article-body figure.alignleft,
+	.article-body figure.alignright {
+		float: none;
+		max-width: 100%;
+		margin-left: auto;
+		margin-right: auto;
+	}
 }
 
 @keyframes scroll {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
+	from {
+		transform: translateX(0);
+	}
+	to {
+		transform: translateX(-50%);
+	}
 }
 
 @keyframes submit-toast {
-  0% {
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+	0% {
+		opacity: 0;
+	}
+	10% {
+		opacity: 1;
+	}
+	90% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
 }
 
 .submit-toast {
-  animation: submit-toast 3s ease-in-out forwards;
+	animation: submit-toast 3s ease-in-out forwards;
 }
 
 .scroll-container {
-  overflow: hidden;
-  width: 100%;
+	overflow: hidden;
+	width: 100%;
 }
 
 .scroll-content {
-  display: flex;
-  flex: inline;
-  animation: scroll 120s linear infinite;
+	display: flex;
+	flex: inline;
+	animation: scroll 120s linear infinite;
 }
 
 @media (min-width: 768px) {
-  .scroll-content {
-    width: calc(250%);
-  }
+	.scroll-content {
+		width: calc(250%);
+	}
 }

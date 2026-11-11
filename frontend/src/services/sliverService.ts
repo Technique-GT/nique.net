@@ -1,15 +1,15 @@
-import apiClient, { unwrap } from './apiClient';
+import apiClient, { unwrap } from "./apiClient";
 
 // =============================================================================
 // Sliver Endpoints (aligned with backend routes)
 // =============================================================================
 
 interface Sliver {
-  _id: string;
-  text: string;
-  expiresAt: Date | string;
-  createdAt?: Date | string;
-  updatedAt?: Date | string;
+	_id: string;
+	text: string;
+	expiresAt: Date | string;
+	createdAt?: Date | string;
+	updatedAt?: Date | string;
 }
 
 /**
@@ -18,6 +18,6 @@ interface Sliver {
  * Body: { text }
  */
 export const createSliver = async (content: string): Promise<Sliver> => {
-  const response = await apiClient.post('/slivers', { text: content });
-  return unwrap(response.data);
+	const response = await apiClient.post("/slivers", { text: content });
+	return unwrap(response.data);
 };

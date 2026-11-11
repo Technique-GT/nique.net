@@ -1,81 +1,92 @@
-import { z } from 'zod';
-import { objectIdString } from './objectId.schema';
+import { z } from "zod";
+import { objectIdString } from "./objectId.schema";
 
 const SOCIAL_PLATFORM_HOSTS = {
-  instagram: 'instagram.com',
-  linkedin: 'linkedin.com',
-  github: 'github.com',
-  x: 'x.com',
-  youtube: 'youtube.com',
-  facebook: 'facebook.com',
+	instagram: "instagram.com",
+	linkedin: "linkedin.com",
+	github: "github.com",
+	x: "x.com",
+	youtube: "youtube.com",
+	facebook: "facebook.com",
 } as const;
-type SocialPlatform = keyof typeof SOCIAL_PLATFORM_HOSTS | 'website';
+type SocialPlatform = keyof typeof SOCIAL_PLATFORM_HOSTS | "website";
 
-const isAllowedSocialUrl = (rawUrl: string, platform: SocialPlatform): boolean => {
-  try {
-    const parsed = new URL(rawUrl);
+const isAllowedSocialUrl = (
+	rawUrl: string,
+	platform: SocialPlatform,
+): boolean => {
+	try {
+		const parsed = new URL(rawUrl);
 
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      return false;
-    }
+		if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+			return false;
+		}
 
-    if (platform === 'website') {
-      return true;
-    }
+		if (platform === "website") {
+			return true;
+		}
 
-    const hostname = parsed.hostname.toLowerCase();
-    const expected = SOCIAL_PLATFORM_HOSTS[platform];
+		const hostname = parsed.hostname.toLowerCase();
+		const expected = SOCIAL_PLATFORM_HOSTS[platform];
 
-    return hostname === expected || hostname.endsWith(`.${expected}`);
-  } catch {
-    return false;
-  }
+		return hostname === expected || hostname.endsWith(`.${expected}`);
+	} catch {
+		return false;
+	}
 };
 const socialLinkSchema = z
-  .object({
-    platform: z
-      .enum(['instagram', 'linkedin', 'github', 'x', 'youtube', 'facebook', 'website'])
-      .transform(
-        (value) =>
-          value.toLowerCase() as
-            | 'instagram'
-            | 'linkedin'
-            | 'github'
-            | 'x'
-            | 'youtube'
-            | 'facebook'
-            | 'website',
-      ),
-    url: z.string().trim().url(),
-  })
-  .superRefine((value, ctx) => {
-    if (!isAllowedSocialUrl(value.url, value.platform)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['url'],
-        message: `URL must be a valid ${value.platform} link`,
-      });
-    }
-  });
+	.object({
+		platform: z
+			.enum([
+				"instagram",
+				"linkedin",
+				"github",
+				"x",
+				"youtube",
+				"facebook",
+				"website",
+			])
+			.transform(
+				(value) =>
+					value.toLowerCase() as
+						| "instagram"
+						| "linkedin"
+						| "github"
+						| "x"
+						| "youtube"
+						| "facebook"
+						| "website",
+			),
+		url: z.string().trim().url(),
+	})
+	.superRefine((value, ctx) => {
+		if (!isAllowedSocialUrl(value.url, value.platform)) {
+			ctx.addIssue({
+				code: "custom",
+				path: ["url"],
+				message: `URL must be a valid ${value.platform} link`,
+			});
+		}
+	});
 
 export const createUserBodySchema = z.object({
-  name: z.string().trim().min(1),
-  bio: z.string().optional(),
-  isAdmin: z.boolean().optional(),
-  email: z.string().email().optional(),
-  profilePictureUrl: z.string().trim().min(1).optional(),
-  socialLinks: z.array(socialLinkSchema).optional(),
+	name: z.string().trim().min(1),
+	bio: z.string().optional(),
+	isAdmin: z.boolean().optional(),
+	email: z.string().email().optional(),
+	profilePictureUrl: z.string().trim().min(1).optional(),
+	socialLinks: z.array(socialLinkSchema).optional(),
 });
 
 export const updateUserBodySchema = z.object({
-  name: z.string().trim().min(1).optional(),
-  bio: z.string().nullable().optional(),
-  isAdmin: z.boolean().optional(),
-  email: z.string().email().nullable().optional(),
-  profilePictureUrl: z.string().trim().min(1).nullable().optional(),
-  socialLinks: z.array(socialLinkSchema).optional(),
+	name: z.string().trim().min(1).optional(),
+	bio: z.string().nullable().optional(),
+	isAdmin: z.boolean().optional(),
+	email: z.string().email().nullable().optional(),
+	profilePictureUrl: z.string().trim().min(1).nullable().optional(),
+	socialLinks: z.array(socialLinkSchema).optional(),
 });
 
 export const bulkDeleteUsersBodySchema = z.object({
-  ids: z.array(objectIdString).min(1),
+	ids: z.array(objectIdString).min(1),
 });

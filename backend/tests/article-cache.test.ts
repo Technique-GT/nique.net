@@ -1,234 +1,282 @@
-import jwt from 'jsonwebtoken';
-import mongoose from 'mongoose';
-import request from 'supertest';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createApp } from '../src/app';
-import Article from '../src/models/Article';
-import Category from '../src/models/Category';
-import MediaAsset from '../src/models/MediaAsset';
-import Tag from '../src/models/Tag';
-import User from '../src/models/User';
-import { CloudflareCacheService } from '../src/services/cloudflare-cache.service';
-import * as r2Utils from '../src/utils/r2';
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import request from "supertest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { createApp } from "../src/app";
+import Article from "../src/models/Article";
+import Category from "../src/models/Category";
+import MediaAsset from "../src/models/MediaAsset";
+import Tag from "../src/models/Tag";
+import User from "../src/models/User";
+import { CloudflareCacheService } from "../src/services/cloudflare-cache.service";
+import * as r2Utils from "../src/utils/r2";
 
 const app = createApp();
 
-const generateToken = (payload: { id: string; name: string; isAdmin: boolean }) => {
-  return jwt.sign(payload, process.env.JWT_TOKEN || 'test-secret', { expiresIn: '1h' });
+const generateToken = (payload: {
+	id: string;
+	name: string;
+	isAdmin: boolean;
+}) => {
+	return jwt.sign(payload, process.env.JWT_TOKEN || "test-secret", {
+		expiresIn: "1h",
+	});
 };
 
-const adminId = '000000000000000000000001';
-const adminToken = generateToken({ id: adminId, name: 'Admin User', isAdmin: true });
+const adminId = "000000000000000000000001";
+const adminToken = generateToken({
+	id: adminId,
+	name: "Admin User",
+	isAdmin: true,
+});
 
 const createPublishedArticleFixture = async () => {
-  const suffix = new mongoose.Types.ObjectId().toString().slice(-6);
-  const ownerId = new mongoose.Types.ObjectId(adminId);
-  const category = await Category.create({
-    name: `Cache Category ${suffix}`,
-    slug: `cache-category-${suffix}`,
-  });
-  const tag = await Tag.create({ name: `Cache Tag ${suffix}`, slug: `cache-tag-${suffix}` });
-  await User.create({ _id: ownerId, name: `Cache Author ${suffix}`, isAdmin: true, socialLinks: [] });
+	const suffix = new mongoose.Types.ObjectId().toString().slice(-6);
+	const ownerId = new mongoose.Types.ObjectId(adminId);
+	const category = await Category.create({
+		name: `Cache Category ${suffix}`,
+		slug: `cache-category-${suffix}`,
+	});
+	const tag = await Tag.create({
+		name: `Cache Tag ${suffix}`,
+		slug: `cache-tag-${suffix}`,
+	});
+	await User.create({
+		_id: ownerId,
+		name: `Cache Author ${suffix}`,
+		isAdmin: true,
+		socialLinks: [],
+	});
 
-  const article = await Article.create({
-    title: `Cache Test ${suffix}`,
-    slug: `cache-test-${suffix}`,
-    content: '<p>Cacheable article</p>',
-    categoryId: category._id,
-    tagIds: [tag._id],
-    ownerId,
-    authors: [{ authorId: ownerId, order: 0 }],
-    published: true,
-    publishedAt: new Date(),
-    allowComments: true,
-    isFeatured: true,
-    isSticky: true,
-    reviewStatus: 'published',
-    viewCount: 0,
-  });
+	const article = await Article.create({
+		title: `Cache Test ${suffix}`,
+		slug: `cache-test-${suffix}`,
+		content: "<p>Cacheable article</p>",
+		categoryId: category._id,
+		tagIds: [tag._id],
+		ownerId,
+		authors: [{ authorId: ownerId, order: 0 }],
+		published: true,
+		publishedAt: new Date(),
+		allowComments: true,
+		isFeatured: true,
+		isSticky: true,
+		reviewStatus: "published",
+		viewCount: 0,
+	});
 
-  return { article, category, tag, ownerId };
+	return { article, category, tag, ownerId };
 };
 
 afterEach(async () => {
-  vi.restoreAllMocks();
-  await Article.deleteMany({ slug: /^cache-test-/ });
-  await Article.deleteMany({ slug: /^media-delete-test-/ });
-  await Category.deleteMany({ slug: /^cache-category-/ });
-  await Tag.deleteMany({ slug: /^cache-tag-/ });
-  await User.deleteMany({ name: /^Cache Author / });
-  await MediaAsset.deleteMany({ key: /^tests\/media-delete-test-/ });
+	vi.restoreAllMocks();
+	await Article.deleteMany({ slug: /^cache-test-/ });
+	await Article.deleteMany({ slug: /^media-delete-test-/ });
+	await Category.deleteMany({ slug: /^cache-category-/ });
+	await Tag.deleteMany({ slug: /^cache-tag-/ });
+	await User.deleteMany({ name: /^Cache Author / });
+	await MediaAsset.deleteMany({ key: /^tests\/media-delete-test-/ });
 });
 
-describe('Article cache behavior', () => {
-  it('sets cache headers and tags on cacheable article reads without incrementing views', async () => {
-    const { article, category, tag, ownerId } = await createPublishedArticleFixture();
+describe("Article cache behavior", () => {
+	it("sets cache headers and tags on cacheable article reads without incrementing views", async () => {
+		const { article, category, tag, ownerId } =
+			await createPublishedArticleFixture();
 
-    const res = await request(app).get(`/api/articles/${article._id.toString()}`);
+		const res = await request(app).get(
+			`/api/articles/${article._id.toString()}`,
+		);
 
-    expect(res.status).toBe(200);
-    expect(res.headers['cache-control']).toBe('no-store');
-    expect(res.headers['cloudflare-cdn-cache-control']).toBe(
-      'public, max-age=21600, stale-while-revalidate=60, stale-if-error=86400',
-    );
-    expect(res.headers['cache-tag']).toContain('articles');
-    expect(res.headers['cache-tag']).toContain(`article:${article._id.toString()}`);
-    expect(res.headers['cache-tag']).toContain(`article-slug:${article.slug}`);
-    expect(res.headers['cache-tag']).toContain(`category:${category._id.toString()}`);
-    expect(res.headers['cache-tag']).toContain(`tag:${tag._id.toString()}`);
-    expect(res.headers['cache-tag']).toContain(`author:${ownerId.toString()}`);
-    expect(res.headers['cache-tag']).toContain('articles:featured');
-    expect(res.headers['cache-tag']).toContain('articles:sticky');
+		expect(res.status).toBe(200);
+		expect(res.headers["cache-control"]).toBe("no-store");
+		expect(res.headers["cloudflare-cdn-cache-control"]).toBe(
+			"public, max-age=21600, stale-while-revalidate=60, stale-if-error=86400",
+		);
+		expect(res.headers["cache-tag"]).toContain("articles");
+		expect(res.headers["cache-tag"]).toContain(
+			`article:${article._id.toString()}`,
+		);
+		expect(res.headers["cache-tag"]).toContain(`article-slug:${article.slug}`);
+		expect(res.headers["cache-tag"]).toContain(
+			`category:${category._id.toString()}`,
+		);
+		expect(res.headers["cache-tag"]).toContain(`tag:${tag._id.toString()}`);
+		expect(res.headers["cache-tag"]).toContain(`author:${ownerId.toString()}`);
+		expect(res.headers["cache-tag"]).toContain("articles:featured");
+		expect(res.headers["cache-tag"]).toContain("articles:sticky");
 
-    const reloaded = await Article.findById(article._id).lean();
-    expect(reloaded?.viewCount).toBe(0);
-  });
+		const reloaded = await Article.findById(article._id).lean();
+		expect(reloaded?.viewCount).toBe(0);
+	});
 
-  it('marks search responses as no-store and omits cache tags', async () => {
-    await createPublishedArticleFixture();
+	it("marks search responses as no-store and omits cache tags", async () => {
+		await createPublishedArticleFixture();
 
-    const res = await request(app).get('/api/articles/feed?search=cache');
+		const res = await request(app).get("/api/articles/feed?search=cache");
 
-    expect(res.status).toBe(200);
-    expect(res.headers['cache-control']).toBe('no-store');
-    expect(res.headers['cloudflare-cdn-cache-control']).toBe('no-store');
-    expect(res.headers['cache-tag']).toBeUndefined();
-  });
+		expect(res.status).toBe(200);
+		expect(res.headers["cache-control"]).toBe("no-store");
+		expect(res.headers["cloudflare-cdn-cache-control"]).toBe("no-store");
+		expect(res.headers["cache-tag"]).toBeUndefined();
+	});
 
-  it('records article views via the dedicated endpoint', async () => {
-    const { article } = await createPublishedArticleFixture();
+	it("records article views via the dedicated endpoint", async () => {
+		const { article } = await createPublishedArticleFixture();
 
-    const res = await request(app).post(`/api/articles/${article._id.toString()}/view`);
+		const res = await request(app).post(
+			`/api/articles/${article._id.toString()}/view`,
+		);
 
-    expect(res.status).toBe(204);
-    expect(res.headers['cache-control']).toBe('no-store');
-    expect(res.headers['cloudflare-cdn-cache-control']).toBe('no-store');
+		expect(res.status).toBe(204);
+		expect(res.headers["cache-control"]).toBe("no-store");
+		expect(res.headers["cloudflare-cdn-cache-control"]).toBe("no-store");
 
-    const reloaded = await Article.findById(article._id).lean();
-    expect(reloaded?.viewCount).toBe(1);
-  });
+		const reloaded = await Article.findById(article._id).lean();
+		expect(reloaded?.viewCount).toBe(1);
+	});
 
-  it('purges all Cloudflare cache after a public article mutation', async () => {
-    const { article } = await createPublishedArticleFixture();
-    const nextCategory = await Category.create({
-      name: 'Cache Category Updated',
-      slug: 'cache-category-updated',
-    });
-    const nextTag = await Tag.create({ name: 'Cache Tag Updated', slug: 'cache-tag-updated' });
+	it("purges all Cloudflare cache after a public article mutation", async () => {
+		const { article } = await createPublishedArticleFixture();
+		const nextCategory = await Category.create({
+			name: "Cache Category Updated",
+			slug: "cache-category-updated",
+		});
+		const nextTag = await Tag.create({
+			name: "Cache Tag Updated",
+			slug: "cache-tag-updated",
+		});
 
-    const purgeEverythingSpy = vi.spyOn(CloudflareCacheService, 'purgeEverything').mockResolvedValue();
+		const purgeEverythingSpy = vi
+			.spyOn(CloudflareCacheService, "purgeEverything")
+			.mockResolvedValue();
 
-    const res = await request(app)
-      .put(`/api/admin/articles/${article._id.toString()}`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({
-        title: 'Updated cache test title',
-        categoryId: nextCategory._id.toString(),
-        tagIds: [nextTag._id.toString()],
-      });
+		const res = await request(app)
+			.put(`/api/admin/articles/${article._id.toString()}`)
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send({
+				title: "Updated cache test title",
+				categoryId: nextCategory._id.toString(),
+				tagIds: [nextTag._id.toString()],
+			});
 
-    expect(res.status).toBe(200);
-    expect(purgeEverythingSpy).toHaveBeenCalledTimes(1);
-  });
+		expect(res.status).toBe(200);
+		expect(purgeEverythingSpy).toHaveBeenCalledTimes(1);
+	});
 
-  it('purges the deleted media URL from Cloudflare after successful media deletion', async () => {
-    const suffix = new mongoose.Types.ObjectId().toString().slice(-6);
-    const media = await MediaAsset.create({
-      key: `tests/media-delete-test-${suffix}/My Image.png`,
-      fileName: 'My Image.png',
-      fileNameLower: 'my image.png',
-      url: `https://media.nique.net/tests/media-delete-test-${suffix}/My Image.png`,
-      size: 1024,
-      uploadedAt: new Date(),
-    });
+	it("purges the deleted media URL from Cloudflare after successful media deletion", async () => {
+		const suffix = new mongoose.Types.ObjectId().toString().slice(-6);
+		const media = await MediaAsset.create({
+			key: `tests/media-delete-test-${suffix}/My Image.png`,
+			fileName: "My Image.png",
+			fileNameLower: "my image.png",
+			url: `https://media.nique.net/tests/media-delete-test-${suffix}/My Image.png`,
+			size: 1024,
+			uploadedAt: new Date(),
+		});
 
-    const deleteFromR2Spy = vi.spyOn(r2Utils, 'deleteFromR2').mockResolvedValue();
-    const purgeUrlsSpy = vi.spyOn(CloudflareCacheService, 'purgeUrls').mockResolvedValue();
+		const deleteFromR2Spy = vi
+			.spyOn(r2Utils, "deleteFromR2")
+			.mockResolvedValue();
+		const purgeUrlsSpy = vi
+			.spyOn(CloudflareCacheService, "purgeUrls")
+			.mockResolvedValue();
 
-    const res = await request(app)
-      .delete(`/api/admin/media/${media._id.toString()}`)
-      .set('Authorization', `Bearer ${adminToken}`);
+		const res = await request(app)
+			.delete(`/api/admin/media/${media._id.toString()}`)
+			.set("Authorization", `Bearer ${adminToken}`);
 
-    expect(res.status).toBe(200);
-    expect(deleteFromR2Spy).toHaveBeenCalledTimes(1);
-    expect(deleteFromR2Spy).toHaveBeenCalledWith(media.key);
-    expect(purgeUrlsSpy).toHaveBeenCalledTimes(1);
-    expect(purgeUrlsSpy).toHaveBeenCalledWith([
-      `https://media.nique.net/tests/media-delete-test-${suffix}/My%20Image.png`,
-    ]);
+		expect(res.status).toBe(200);
+		expect(deleteFromR2Spy).toHaveBeenCalledTimes(1);
+		expect(deleteFromR2Spy).toHaveBeenCalledWith(media.key);
+		expect(purgeUrlsSpy).toHaveBeenCalledTimes(1);
+		expect(purgeUrlsSpy).toHaveBeenCalledWith([
+			`https://media.nique.net/tests/media-delete-test-${suffix}/My%20Image.png`,
+		]);
 
-    const deleted = await MediaAsset.findById(media._id).lean();
-    expect(deleted).toBeNull();
-  });
+		const deleted = await MediaAsset.findById(media._id).lean();
+		expect(deleted).toBeNull();
+	});
 
-  it('does not purge media URL when delete request has an invalid media id', async () => {
-    const purgeUrlsSpy = vi.spyOn(CloudflareCacheService, 'purgeUrls').mockResolvedValue();
-    const deleteFromR2Spy = vi.spyOn(r2Utils, 'deleteFromR2').mockResolvedValue();
+	it("does not purge media URL when delete request has an invalid media id", async () => {
+		const purgeUrlsSpy = vi
+			.spyOn(CloudflareCacheService, "purgeUrls")
+			.mockResolvedValue();
+		const deleteFromR2Spy = vi
+			.spyOn(r2Utils, "deleteFromR2")
+			.mockResolvedValue();
 
-    const res = await request(app)
-      .delete('/api/admin/media/not-a-valid-id')
-      .set('Authorization', `Bearer ${adminToken}`);
+		const res = await request(app)
+			.delete("/api/admin/media/not-a-valid-id")
+			.set("Authorization", `Bearer ${adminToken}`);
 
-    expect(res.status).toBe(400);
-    expect(purgeUrlsSpy).not.toHaveBeenCalled();
-    expect(deleteFromR2Spy).not.toHaveBeenCalled();
-  });
+		expect(res.status).toBe(400);
+		expect(purgeUrlsSpy).not.toHaveBeenCalled();
+		expect(deleteFromR2Spy).not.toHaveBeenCalled();
+	});
 
-  it('does not purge media URL when image is in use and delete is not confirmed', async () => {
-    const suffix = new mongoose.Types.ObjectId().toString().slice(-6);
-    const ownerId = new mongoose.Types.ObjectId(adminId);
-    const mediaUrl = `https://media.nique.net/tests/media-delete-test-${suffix}/in-use.png`;
-    const media = await MediaAsset.create({
-      key: `tests/media-delete-test-${suffix}/in-use.png`,
-      fileName: 'in-use.png',
-      fileNameLower: 'in-use.png',
-      url: mediaUrl,
-      size: 1024,
-      uploadedAt: new Date(),
-    });
+	it("does not purge media URL when image is in use and delete is not confirmed", async () => {
+		const suffix = new mongoose.Types.ObjectId().toString().slice(-6);
+		const ownerId = new mongoose.Types.ObjectId(adminId);
+		const mediaUrl = `https://media.nique.net/tests/media-delete-test-${suffix}/in-use.png`;
+		const media = await MediaAsset.create({
+			key: `tests/media-delete-test-${suffix}/in-use.png`,
+			fileName: "in-use.png",
+			fileNameLower: "in-use.png",
+			url: mediaUrl,
+			size: 1024,
+			uploadedAt: new Date(),
+		});
 
-    await Article.create({
-      title: `Media delete usage test ${suffix}`,
-      slug: `media-delete-test-${suffix}`,
-      content: '<p>In use</p>',
-      ownerId,
-      authors: [{ authorId: ownerId, order: 0 }],
-      tagIds: [],
-      featuredMediaUrl: mediaUrl,
-      reviewStatus: 'draft',
-      published: false,
-      allowComments: true,
-      isFeatured: false,
-      isSticky: false,
-      viewCount: 0,
-    });
+		await Article.create({
+			title: `Media delete usage test ${suffix}`,
+			slug: `media-delete-test-${suffix}`,
+			content: "<p>In use</p>",
+			ownerId,
+			authors: [{ authorId: ownerId, order: 0 }],
+			tagIds: [],
+			featuredMediaUrl: mediaUrl,
+			reviewStatus: "draft",
+			published: false,
+			allowComments: true,
+			isFeatured: false,
+			isSticky: false,
+			viewCount: 0,
+		});
 
-    const purgeUrlsSpy = vi.spyOn(CloudflareCacheService, 'purgeUrls').mockResolvedValue();
-    const deleteFromR2Spy = vi.spyOn(r2Utils, 'deleteFromR2').mockResolvedValue();
+		const purgeUrlsSpy = vi
+			.spyOn(CloudflareCacheService, "purgeUrls")
+			.mockResolvedValue();
+		const deleteFromR2Spy = vi
+			.spyOn(r2Utils, "deleteFromR2")
+			.mockResolvedValue();
 
-    const res = await request(app)
-      .delete(`/api/admin/media/${media._id.toString()}`)
-      .set('Authorization', `Bearer ${adminToken}`);
+		const res = await request(app)
+			.delete(`/api/admin/media/${media._id.toString()}`)
+			.set("Authorization", `Bearer ${adminToken}`);
 
-    expect(res.status).toBe(409);
-    expect(purgeUrlsSpy).not.toHaveBeenCalled();
-    expect(deleteFromR2Spy).not.toHaveBeenCalled();
+		expect(res.status).toBe(409);
+		expect(purgeUrlsSpy).not.toHaveBeenCalled();
+		expect(deleteFromR2Spy).not.toHaveBeenCalled();
 
-    const stillExists = await MediaAsset.findById(media._id).lean();
-    expect(stillExists).not.toBeNull();
-  });
+		const stillExists = await MediaAsset.findById(media._id).lean();
+		expect(stillExists).not.toBeNull();
+	});
 
-  it('does not purge media URL when image id does not exist', async () => {
-    const missingId = new mongoose.Types.ObjectId();
-    const purgeUrlsSpy = vi.spyOn(CloudflareCacheService, 'purgeUrls').mockResolvedValue();
-    const deleteFromR2Spy = vi.spyOn(r2Utils, 'deleteFromR2').mockResolvedValue();
+	it("does not purge media URL when image id does not exist", async () => {
+		const missingId = new mongoose.Types.ObjectId();
+		const purgeUrlsSpy = vi
+			.spyOn(CloudflareCacheService, "purgeUrls")
+			.mockResolvedValue();
+		const deleteFromR2Spy = vi
+			.spyOn(r2Utils, "deleteFromR2")
+			.mockResolvedValue();
 
-    const res = await request(app)
-      .delete(`/api/admin/media/${missingId.toString()}`)
-      .set('Authorization', `Bearer ${adminToken}`);
+		const res = await request(app)
+			.delete(`/api/admin/media/${missingId.toString()}`)
+			.set("Authorization", `Bearer ${adminToken}`);
 
-    expect(res.status).toBe(404);
-    expect(purgeUrlsSpy).not.toHaveBeenCalled();
-    expect(deleteFromR2Spy).not.toHaveBeenCalled();
-  });
+		expect(res.status).toBe(404);
+		expect(purgeUrlsSpy).not.toHaveBeenCalled();
+		expect(deleteFromR2Spy).not.toHaveBeenCalled();
+	});
 });

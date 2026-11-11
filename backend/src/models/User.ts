@@ -1,47 +1,75 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { type Document, Schema } from "mongoose";
 
 type SocialLink = {
-  platform: 'instagram' | 'linkedin' | 'github' | 'x' | 'youtube' | 'facebook' | 'website';
-  url: string;
+	platform:
+		| "instagram"
+		| "linkedin"
+		| "github"
+		| "x"
+		| "youtube"
+		| "facebook"
+		| "website";
+	url: string;
 };
 
 interface IUser extends Document {
-  name: string;
-  bio?: string;
-  isAdmin: boolean;
-  email?: string;
-  googleSub?: string;
-  profilePictureUrl?: string;
-  socialLinks: SocialLink[];
+	name: string;
+	bio?: string;
+	isAdmin: boolean;
+	email?: string;
+	googleSub?: string;
+	profilePictureUrl?: string;
+	socialLinks: SocialLink[];
 }
 
 const SocialLinkSchema = new Schema<SocialLink>(
-  {
-    platform: {
-      type: String,
-      required: true,
-      trim: true,
-      lowercase: true,
-      enum: ['instagram', 'linkedin', 'github', 'x', 'youtube', 'facebook', 'website'],
-    },
-    url: { type: String, required: true, trim: true },
-  },
-  { _id: false },
+	{
+		platform: {
+			type: String,
+			required: true,
+			trim: true,
+			lowercase: true,
+			enum: [
+				"instagram",
+				"linkedin",
+				"github",
+				"x",
+				"youtube",
+				"facebook",
+				"website",
+			],
+		},
+		url: { type: String, required: true, trim: true },
+	},
+	{ _id: false },
 );
 
 const UserSchema = new Schema<IUser>(
-  {
-    name: { type: String, required: true, trim: true },
-    bio: { type: String, required: false },
-    isAdmin: { type: Boolean, required: true, default: false },
-    email: { type: String, required: false, unique: true, sparse: true, lowercase: true, trim: true },
-    googleSub: { type: String, required: false, unique: true, sparse: true, trim: true },
-    profilePictureUrl: { type: String, required: false, trim: true },
-    socialLinks: { type: [SocialLinkSchema], required: true, default: [] },
-  },
-  {
-    timestamps: false,
-  },
+	{
+		name: { type: String, required: true, trim: true },
+		bio: { type: String, required: false },
+		isAdmin: { type: Boolean, required: true, default: false },
+		email: {
+			type: String,
+			required: false,
+			unique: true,
+			sparse: true,
+			lowercase: true,
+			trim: true,
+		},
+		googleSub: {
+			type: String,
+			required: false,
+			unique: true,
+			sparse: true,
+			trim: true,
+		},
+		profilePictureUrl: { type: String, required: false, trim: true },
+		socialLinks: { type: [SocialLinkSchema], required: true, default: [] },
+	},
+	{
+		timestamps: false,
+	},
 );
 
-export default mongoose.model<IUser>('User', UserSchema);
+export default mongoose.model<IUser>("User", UserSchema);

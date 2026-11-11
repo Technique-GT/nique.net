@@ -1,205 +1,223 @@
-import { useEffect, useState } from 'react';
-import { FaFacebook, FaInstagram, FaLinkedin, FaTiktok, FaXTwitter } from 'react-icons/fa6';
-import { IoCloseSharp, IoMenuSharp } from 'react-icons/io5';
-import { Link } from 'react-router-dom';
-import Masthead from './../assets/masthead.png';
-import MastheadMobile from './../assets/masthead_mobile.png';
-import Search from './Search';
+import { useEffect, useState } from "react";
+import {
+	FaFacebook,
+	FaInstagram,
+	FaLinkedin,
+	FaTiktok,
+	FaXTwitter,
+} from "react-icons/fa6";
+import { IoCloseSharp, IoMenuSharp } from "react-icons/io5";
+import { Link } from "react-router-dom";
+import Masthead from "./../assets/masthead.png";
+import MastheadMobile from "./../assets/masthead_mobile.png";
+import Search from "./Search";
 
 // Styling for each individual link in navbar
 const ReactiveLink = ({ name, path }: { name: string; path: string }) => {
-  return (
-    <Link
-      to={path}
-      className='navbar-link text-black text-[16px] font-normal leading-[23.71px] tracking-[0%] px-4 py-2 hover:text-nique-blue-hover font-oswald text-left flex items-center justify-start'
-      style={{ fontFamily: 'Oswald' }}
-    >
-      {name}
-      <div className='navbar-link-bar' />
-    </Link>
-  );
+	return (
+		<Link
+			to={path}
+			className="navbar-link text-black text-[16px] font-normal leading-[23.71px] tracking-[0%] px-4 py-2 hover:text-nique-blue-hover font-oswald text-left flex items-center justify-start"
+			style={{ fontFamily: "Oswald" }}
+		>
+			{name}
+			<div className="navbar-link-bar" />
+		</Link>
+	);
 };
 
 // All navbar items
 const NavLinks = () => {
-  return (
-    <>
-      <ReactiveLink name='News' path='/news' />
-      <ReactiveLink name='Life' path='/life' />
-      <ReactiveLink name='Opinions' path='/opinions' />
-      <ReactiveLink name='Entertainment' path='/entertainment' />
-      <ReactiveLink name='Sports' path='/sports' />
-      <ReactiveLink name='About' path='/about' />
-      <ReactiveLink name='Submit an Ad' path='/submit-ad' />
-      <ReactiveLink name='Contact Us' path='/contact' />
-    </>
-  );
+	return (
+		<>
+			<ReactiveLink name="News" path="/news" />
+			<ReactiveLink name="Life" path="/life" />
+			<ReactiveLink name="Opinions" path="/opinions" />
+			<ReactiveLink name="Entertainment" path="/entertainment" />
+			<ReactiveLink name="Sports" path="/sports" />
+			<ReactiveLink name="About" path="/about" />
+			<ReactiveLink name="Submit an Ad" path="/submit-ad" />
+			<ReactiveLink name="Contact Us" path="/contact" />
+		</>
+	);
 };
 
 // Main navbar component
 export default function Navbar() {
-  //Current date formatting
-  const date = new Date();
-  const formattedDate = date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+	//Current date formatting
+	const date = new Date();
+	const formattedDate = date.toLocaleDateString("en-US", {
+		weekday: "long",
+		year: "numeric",
+		month: "long",
+		day: "numeric",
+	});
 
-  //Current volume of Technique
-  // const currentVolume = 108;
+	//Current volume of Technique
+	// const currentVolume = 108;
 
-  //Check whether navbar is open
-  const [isOpen, setIsOpen] = useState(false);
-  const toggleNavbar = () => {
-    setIsOpen(!isOpen);
-  };
+	//Check whether navbar is open
+	const [isOpen, setIsOpen] = useState(false);
+	const toggleNavbar = () => {
+		setIsOpen(!isOpen);
+	};
 
-  // If page is scrolled past offset
-  const [scrolled, setScrolled] = useState(false);
-  const scrollThreshold = 95;
+	// If page is scrolled past offset
+	const [scrolled, setScrolled] = useState(false);
+	const scrollThreshold = 95;
 
-  //If nav is at top of page
-  const [navAtTop, setNavAtTop] = useState(true);
+	//If nav is at top of page
+	const [navAtTop, setNavAtTop] = useState(true);
 
-  // Handle scroll event
-  const onScroll = () => {
-    //Check if page scrolled past offset
-    setScrolled(window.scrollY > scrollThreshold);
+	// Handle scroll event
+	const onScroll = () => {
+		//Check if page scrolled past offset
+		setScrolled(window.scrollY > scrollThreshold);
 
-    //Check if nav is at top of page
-    const navbar = document.getElementById('navbar');
-    const navbarTop = navbar ? navbar.getBoundingClientRect().top : 0;
-    if (navbarTop <= 0) {
-      setNavAtTop(true);
-    } else {
-      setNavAtTop(false);
-    }
-  };
+		//Check if nav is at top of page
+		const navbar = document.getElementById("navbar");
+		const navbarTop = navbar ? navbar.getBoundingClientRect().top : 0;
+		if (navbarTop <= 0) {
+			setNavAtTop(true);
+		} else {
+			setNavAtTop(false);
+		}
+	};
 
-  useEffect(() => {
-    // Add scroll event listener
-    window.addEventListener('scroll', onScroll);
+	useEffect(() => {
+		// Add scroll event listener
+		window.addEventListener("scroll", onScroll);
 
-    //Call onScroll on initial page load to set the correct state
-    onScroll();
+		//Call onScroll on initial page load to set the correct state
+		onScroll();
 
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+		return () => window.removeEventListener("scroll", onScroll);
+	}, []);
 
-  return (
-    <>
-      {/* header above navbar */}
-      <div className='max-w-[95%] md:max-w-[80%] gap-8 md:px-5 lg:px-8 hidden md:grid grid-cols-[1fr_600px_1fr] items-end mb-2 m-auto'>
-        {/* large masthead in header */}
-        <Link to='/' className='justify-self-center'>
-          <img src={Masthead} alt='Masthead' className='w-150 -mb-3 mt-4' />
-        </Link>
+	return (
+		<>
+			{/* header above navbar */}
+			<div className="max-w-[95%] md:max-w-[80%] gap-8 md:px-5 lg:px-8 hidden md:grid grid-cols-[1fr_600px_1fr] items-end mb-2 m-auto">
+				{/* large masthead in header */}
+				<Link to="/" className="justify-self-center">
+					<img src={Masthead} alt="Masthead" className="w-150 -mb-3 mt-4" />
+				</Link>
 
-        {/* left of masthead */}
-        <div className='order-first'>
-          {/* social media icons on large screens */}
-          <p className='hidden lg:flex gap-2 justify-start items-center text-nique-blue'>
-            <a
-              className='hover:text-nique-blue-hover'
-              href='https://www.facebook.com/thenique'
-              target='_blank'
-              rel='noopener noreferrer'
-              aria-label='Technique Facebook'
-            >
-              <FaFacebook />
-            </a>
-            <a
-              className='hover:text-nique-blue-hover'
-              href='https://twitter.com/the_nique'
-              target='_blank'
-              rel='noopener noreferrer'
-              aria-label='Technique X'
-            >
-              <FaXTwitter />
-            </a>
-            <a
-              className='hover:text-nique-blue-hover'
-              href='https://www.instagram.com/gt_nique'
-              target='_blank'
-              rel='noopener noreferrer'
-              aria-label='Technique Instagram'
-            >
-              <FaInstagram />
-            </a>
-            <a
-              className='hover:text-nique-blue-hover'
-              href='https://www.tiktok.com/@gt_nique'
-              target='_blank'
-              rel='noopener noreferrer'
-              aria-label='Technique TikTok'
-            >
-              <FaTiktok />
-            </a>
-            <a
-              className='hover:text-nique-blue-hover'
-              href='https://www.linkedin.com/company/technique-newspaper/'
-              target='_blank'
-              rel='noopener noreferrer'
-              aria-label='Technique LinkedIn'
-            >
-              <FaLinkedin />
-            </a>
-          </p>
-          {/* date on medium screens */}
-          <h4 className='text-sm text-nique-blue'>
-            <span className='inline lg:hidden'>{formattedDate}</span>
-          </h4>
-        </div>
+				{/* left of masthead */}
+				<div className="order-first">
+					{/* social media icons on large screens */}
+					<p className="hidden lg:flex gap-2 justify-start items-center text-nique-blue">
+						<a
+							className="hover:text-nique-blue-hover"
+							href="https://www.facebook.com/thenique"
+							target="_blank"
+							rel="noopener noreferrer"
+							aria-label="Technique Facebook"
+						>
+							<FaFacebook />
+						</a>
+						<a
+							className="hover:text-nique-blue-hover"
+							href="https://twitter.com/the_nique"
+							target="_blank"
+							rel="noopener noreferrer"
+							aria-label="Technique X"
+						>
+							<FaXTwitter />
+						</a>
+						<a
+							className="hover:text-nique-blue-hover"
+							href="https://www.instagram.com/gt_nique"
+							target="_blank"
+							rel="noopener noreferrer"
+							aria-label="Technique Instagram"
+						>
+							<FaInstagram />
+						</a>
+						<a
+							className="hover:text-nique-blue-hover"
+							href="https://www.tiktok.com/@gt_nique"
+							target="_blank"
+							rel="noopener noreferrer"
+							aria-label="Technique TikTok"
+						>
+							<FaTiktok />
+						</a>
+						<a
+							className="hover:text-nique-blue-hover"
+							href="https://www.linkedin.com/company/technique-newspaper/"
+							target="_blank"
+							rel="noopener noreferrer"
+							aria-label="Technique LinkedIn"
+						>
+							<FaLinkedin />
+						</a>
+					</p>
+					{/* date on medium screens */}
+					<h4 className="text-sm text-nique-blue">
+						<span className="inline lg:hidden">{formattedDate}</span>
+					</h4>
+				</div>
 
-        {/* right of masthead */}
-        <h4 className='text-right text-sm text-nique-blue'>
-          {/* date and volume on large screens, date on medium screens */}
-          <div className='hidden lg:flex gap-2 justify-end items-center'>
-            <Search />
-          </div>
-          <span className='hidden lg:inline'>{formattedDate}</span>
-        </h4>
-      </div>
+				{/* right of masthead */}
+				<h4 className="text-right text-sm text-nique-blue">
+					{/* date and volume on large screens, date on medium screens */}
+					<div className="hidden lg:flex gap-2 justify-end items-center">
+						<Search />
+					</div>
+					<span className="hidden lg:inline">{formattedDate}</span>
+				</h4>
+			</div>
 
-      {/* navbar section */}
-      <div className='sticky top-0 z-50'>
-        <header
-          id='navbar'
-          className={`${scrolled ? 'scrolled' : ''} ${navAtTop ? 'bg-white' : 'bg-transparent'} md:border-t border-b border-gray-400 md:border-black`}
-        >
-          {/* desktop nav links */}
-          <div className={`hidden md:flex justify-evenly items-center w-full max-w-[80%] m-auto`}>
-            <NavLinks />
-          </div>
+			{/* navbar section */}
+			<div className="sticky top-0 z-50">
+				<header
+					id="navbar"
+					className={`${scrolled ? "scrolled" : ""} ${navAtTop ? "bg-white" : "bg-transparent"} md:border-t border-b border-gray-400 md:border-black`}
+				>
+					{/* desktop nav links */}
+					<div
+						className={`hidden md:flex justify-evenly items-center w-full max-w-[80%] m-auto`}
+					>
+						<NavLinks />
+					</div>
 
-          {/* mobile navbar with logo and burger */}
-          <div className={`flex md:hidden py-1.5 px-4 w-full items-center justify-between `}>
-            <Link to='/'>
-              <img src={MastheadMobile} alt='Technique Logo' className='w-[80%] max-w-75 my-3' />
-            </Link>
-            <button
-              onClick={toggleNavbar}
-              aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
-              aria-expanded={isOpen}
-              aria-controls='mobile-navigation'
-            >
-              {isOpen ? <IoCloseSharp size={25} /> : <IoMenuSharp size={25} />}
-            </button>
-          </div>
-        </header>
-        <h4 className='block md:hidden border-b border-gray-400 bg-white px-4 py-1'>{formattedDate}</h4>
-        {/* mobile navlinks */}
-        {isOpen && (
-          <div id='mobile-navigation' className='md:hidden h-screen bg-white'>
-            <div className='items-center px-4 pt-4'>
-              <Search searchOn={true} />
-            </div>
-            <NavLinks />
-          </div>
-        )}
-      </div>
-    </>
-  );
+					{/* mobile navbar with logo and burger */}
+					<div
+						className={`flex md:hidden py-1.5 px-4 w-full items-center justify-between `}
+					>
+						<Link to="/">
+							<img
+								src={MastheadMobile}
+								alt="Technique Logo"
+								className="w-[80%] max-w-75 my-3"
+							/>
+						</Link>
+						<button
+							onClick={toggleNavbar}
+							aria-label={
+								isOpen ? "Close navigation menu" : "Open navigation menu"
+							}
+							aria-expanded={isOpen}
+							aria-controls="mobile-navigation"
+						>
+							{isOpen ? <IoCloseSharp size={25} /> : <IoMenuSharp size={25} />}
+						</button>
+					</div>
+				</header>
+				<h4 className="block md:hidden border-b border-gray-400 bg-white px-4 py-1">
+					{formattedDate}
+				</h4>
+				{/* mobile navlinks */}
+				{isOpen && (
+					<div id="mobile-navigation" className="md:hidden h-screen bg-white">
+						<div className="items-center px-4 pt-4">
+							<Search searchOn={true} />
+						</div>
+						<NavLinks />
+					</div>
+				)}
+			</div>
+		</>
+	);
 }
