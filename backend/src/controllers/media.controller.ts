@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import mongoose from 'mongoose';
+import sharp from 'sharp';
 import { AuthRequest } from '../middleware/auth.middleware';
 import Article from '../models/Article';
 import MediaAsset from '../models/MediaAsset';
@@ -280,14 +281,6 @@ export const uploadMedia = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    if (file.size > MAX_SIZE) {
-      res.status(400).json({
-        success: false,
-        message: 'File too large. Maximum size is 10 MB.',
-      });
-      return;
-    }
-
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -298,8 +291,32 @@ export const uploadMedia = async (req: AuthRequest, res: Response): Promise<void
       .replace(/_{2,}/g, '_')
       .toLowerCase();
 
+    let masterBuffer = file.buffer;
+    let masterContentType = file.mimetype;
+
+    try {
+      const transformer = sharp(file.buffer).resize(2000, 2000, {
+        fit: 'inside',
+        withoutEnlargement: true,
+      });
+
+      if (file.mimetype === 'image/jpeg') {
+        masterBuffer = await transformer.jpeg({ quality: 85, progressive: true }).toBuffer();
+      } else if (file.mimetype === 'image/png') {
+        masterBuffer = await transformer.png({ quality: 85 }).toBuffer();
+      } else if (file.mimetype === 'image/webp') {
+        masterBuffer = await transformer.webp({ quality: 85 }).toBuffer();
+      } else if (file.mimetype === 'image/avif') {
+        masterBuffer = await transformer.avif({ quality: 65 }).toBuffer();
+      } else {
+        masterBuffer = await transformer.toBuffer();
+      }
+    } catch (compressError) {
+        console.error('Master image compression failed, falling back to raw buffer:', compressError);
+    }
+    
     const masterKey = `${year}/${month}/${uniqueId}/master_${sanitizedName}`;
-    const masterUrl = await uploadToR2(file.buffer, masterKey, file.mimetype);
+    const masterUrl = await uploadToR2(masterBuffer, masterKey, masterContentType);
 
     const processedVariants = await processImageVariants(file.buffer);
     const uploadedVariants = [];
@@ -329,8 +346,8 @@ export const uploadMedia = async (req: AuthRequest, res: Response): Promise<void
           fileName: file.originalname,
           fileNameLower: file.originalname.toLowerCase(),
           url: masterUrl,
-          contentType: file.mimetype,
-          size: file.size,
+          contentType: masterContentType,
+          size: masterBuffer.length,
           variants: uploadedVariants,
           uploadedAt: nowForMeta,
           lastModified: nowForMeta,
