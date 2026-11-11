@@ -1,11 +1,11 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export type SocialLink = {
+type SocialLink = {
   platform: 'instagram' | 'linkedin' | 'github' | 'x' | 'youtube' | 'facebook' | 'website';
   url: string;
 };
 
-export interface IUser extends Document {
+interface IUser extends Document {
   name: string;
   bio?: string;
   isAdmin: boolean;

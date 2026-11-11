@@ -18,19 +18,19 @@ function formatMonthLabel(d: Date) {
   return d.toLocaleString('en-US', { month: 'short' })
 }
 
-export type DashboardKpis = {
+type DashboardKpis = {
   publishedLast30d: number
   drafts: number
   totalViews: number
   pendingComments: number
 }
 
-export type PublishedByMonthPoint = {
+type PublishedByMonthPoint = {
   name: string
   total: number
 }
 
-export type RecentArticle = {
+type RecentArticle = {
   id: string
   title: string
   categoryName: string

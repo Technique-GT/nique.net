@@ -3,7 +3,7 @@ import React from 'react';
 import type { IconType } from 'react-icons';
 import { SiFacebook, SiGithub, SiInstagram, SiLinkedin, SiX, SiYoutube } from 'react-icons/si';
 
-export interface SocialLink {
+interface SocialLink {
   platform: string;
   url: string;
 }

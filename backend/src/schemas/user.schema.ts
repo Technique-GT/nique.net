@@ -31,7 +31,7 @@ const isAllowedSocialUrl = (rawUrl: string, platform: SocialPlatform): boolean =
     return false;
   }
 };
-export const socialLinkSchema = z
+const socialLinkSchema = z
   .object({
     platform: z
       .enum(['instagram', 'linkedin', 'github', 'x', 'youtube', 'facebook', 'website'])

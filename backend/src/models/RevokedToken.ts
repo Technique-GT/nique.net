@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export interface IRevokedToken extends Document {
+interface IRevokedToken extends Document {
   tokenHash: string;
   userId?: mongoose.Types.ObjectId;
   expiresAt: Date;

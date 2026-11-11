@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export interface IMediaAsset extends Document {
+interface IMediaAsset extends Document {
   key: string;
   fileName: string;
   fileNameLower: string;

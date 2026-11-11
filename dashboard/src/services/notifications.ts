@@ -1,7 +1,7 @@
 import { apiClient } from '@/lib/api-client'
 import { Pagination } from './articles'
 
-export type NotificationType =
+type NotificationType =
   | 'review_requested'
   | 'changes_requested'
   | 'published'

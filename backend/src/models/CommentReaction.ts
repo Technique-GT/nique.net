@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export interface ICommentReaction extends Document {
+interface ICommentReaction extends Document {
   commentId: mongoose.Types.ObjectId;
   deviceId: string;
   reaction: 'up' | 'down';

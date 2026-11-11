@@ -21,7 +21,3 @@ export const createSliver = async (content: string): Promise<Sliver> => {
   const response = await apiClient.post('/slivers', { text: content });
   return unwrap(response.data);
 };
-
-export default {
-  createSliver,
-};

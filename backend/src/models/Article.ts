@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export type AuthorRef = {
+type AuthorRef = {
   authorId: mongoose.Types.ObjectId;
   order: number;
 };

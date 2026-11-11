@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 const SLIVER_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-export interface ISliver extends Document {
+interface ISliver extends Document {
   text: string;
   expiresAt: Date | null;
   createdAt: Date;

@@ -13,20 +13,20 @@ export interface Category {
   slug: string;
 }
 
-export interface Tag {
+interface Tag {
   _id: string;
   name: string;
   slug: string;
 }
 
-export interface Subcategory {
+interface Subcategory {
   _id: string;
   name: string;
   slug: string;
   categoryId: string;
 }
 
-export interface Media {
+interface Media {
   _id: string;
   url: string;
   altText: string;
@@ -54,7 +54,7 @@ export interface AuthorProfile {
 // Article Types (aligned with backend)
 // =============================================================================
 
-export interface ArticleAuthor {
+interface ArticleAuthor {
   authorId: User | string;
   order: number;
 }

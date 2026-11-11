@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export interface ITag extends Document {
+interface ITag extends Document {
   name: string;
   slug: string;
 }

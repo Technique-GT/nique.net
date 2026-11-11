@@ -6,7 +6,7 @@ import apiClient, { extractPagination, unwrap } from './apiClient';
 // Types
 // =============================================================================
 
-export interface FetchArticleFeedParams {
+interface FetchArticleFeedParams {
   page?: number;
   limit?: number;
   categoryId?: string;
@@ -16,7 +16,7 @@ export interface FetchArticleFeedParams {
   isSticky?: boolean;
 }
 
-export interface FetchArticlesParams {
+interface FetchArticlesParams {
   categoryId?: string;
   search?: string;
   limit?: number;

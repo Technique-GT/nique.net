@@ -236,7 +236,7 @@ const hasArticleChanged = (existing: IArticle, update: Partial<IArticle>): boole
     // A better approach would be deep object equality, but JSON stringify is a quick proxy.
     try {
       if (JSON.stringify(update.editorState) !== JSON.stringify(existing.editorState)) return true;
-    } catch (e) {
+    } catch {
       // If stringify fails or circular, assume changed
       return true;
     }

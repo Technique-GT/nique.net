@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export interface ISubcategory extends Document {
+interface ISubcategory extends Document {
   categoryId: mongoose.Types.ObjectId;
   name: string;
   slug: string;
