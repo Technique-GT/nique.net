@@ -8,7 +8,6 @@ import {
   getSubCategoryById,
   getSubCategoryBySlug,
   getSubCategoryStats,
-  hardDeleteSubCategory,
   updateSubCategory,
 } from '../controllers/subCategory.controller';
 import { adminMiddleware } from '../middleware/admin.middleware';
@@ -48,7 +47,7 @@ router.delete(
   authMiddleware,
   adminMiddleware,
   validateParams(idParamSchema),
-  hardDeleteSubCategory,
+  deleteSubCategory,
 );
 
 export default router;

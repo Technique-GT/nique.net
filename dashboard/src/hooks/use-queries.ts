@@ -9,13 +9,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
+import { getAdminArticleById } from '@/services/articles'
 import {
-  createAdminArticleDraft,
-  getAdminArticleById,
-} from '@/services/articles'
-import {
-  type Comment,
-  type CommentStats,
   type CommentsQuery,
   deleteComment,
   getCommentStats,
@@ -25,7 +20,6 @@ import {
 import {
   deleteSliver,
   getSlivers,
-  type Sliver,
   type SliversQuery,
 } from '@/services/slivers'
 import {
@@ -36,7 +30,7 @@ import {
   type SubCategory,
   type Tag,
 } from '@/services/taxonomy'
-import { getUsers, type User } from '@/services/users'
+import { getUsers } from '@/services/users'
 
 // ============================================================================
 // Query Keys (centralized for consistency)
@@ -73,12 +67,6 @@ export const queryKeys = {
   // Playlists - persisted (small reference data)
   playlists: ['playlists'] as const,
 
-  // Tags stats - persisted
-  tagStats: ['tag-stats'] as const,
-
-  // Category stats - persisted
-  categoryStats: ['category-stats'] as const,
-  subCategoryStats: ['sub-category-stats'] as const,
 }
 
 // ============================================================================
@@ -315,7 +303,6 @@ export function useCreateTag() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.tags })
-      queryClient.invalidateQueries({ queryKey: queryKeys.tagStats })
     },
   })
 }
@@ -347,20 +334,7 @@ export function useDeleteTag() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.tags })
-      queryClient.invalidateQueries({ queryKey: queryKeys.tagStats })
     },
-  })
-}
-
-export function useTagStats() {
-  return useQuery({
-    queryKey: queryKeys.tagStats,
-    queryFn: async () => {
-      const res = await apiClient.get('/tags/stats')
-      return res as unknown as { totalTags: number }
-    },
-    staleTime: 5 * 60 * 1000,
-    meta: { persist: true },
   })
 }
 
@@ -377,7 +351,6 @@ export function useCreateCategory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categories })
-      queryClient.invalidateQueries({ queryKey: queryKeys.categoryStats })
     },
   })
 }
@@ -409,20 +382,7 @@ export function useDeleteCategory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categories })
-      queryClient.invalidateQueries({ queryKey: queryKeys.categoryStats })
     },
-  })
-}
-
-export function useCategoryStats() {
-  return useQuery({
-    queryKey: queryKeys.categoryStats,
-    queryFn: async () => {
-      const res = await apiClient.get('/categories/stats')
-      return res as unknown as { totalCategories: number }
-    },
-    staleTime: 5 * 60 * 1000,
-    meta: { persist: true },
   })
 }
 
@@ -439,7 +399,6 @@ export function useCreateSubCategory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.subCategories })
-      queryClient.invalidateQueries({ queryKey: queryKeys.subCategoryStats })
     },
   })
 }
@@ -471,20 +430,7 @@ export function useDeleteSubCategory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.subCategories })
-      queryClient.invalidateQueries({ queryKey: queryKeys.subCategoryStats })
     },
-  })
-}
-
-export function useSubCategoryStats() {
-  return useQuery({
-    queryKey: queryKeys.subCategoryStats,
-    queryFn: async () => {
-      const res = await apiClient.get('/sub-categories/stats')
-      return res as unknown as { totalSubCategories: number }
-    },
-    staleTime: 5 * 60 * 1000,
-    meta: { persist: true },
   })
 }
 
@@ -504,24 +450,5 @@ export function useAdminArticle(id: string) {
   })
 }
 
-export function useCreateArticleDraft() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: createAdminArticleDraft,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-articles'] })
-      return data
-    },
-  })
-}
-
 // Re-export types for convenience
-export type {
-  Category,
-  Comment,
-  CommentStats,
-  Sliver,
-  SubCategory,
-  Tag,
-  User,
-}
+export type { Category, SubCategory, Tag }

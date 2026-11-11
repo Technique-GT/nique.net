@@ -1,20 +1,6 @@
 import crypto from 'crypto';
 
 /**
- * Returns a safe error message for API responses.
- * In production, hides internal error details; in development, includes them.
- */
-export const safeErrorMessage = (error: unknown, fallbackMessage: string): string => {
-  if (process.env.NODE_ENV === 'production') {
-    return fallbackMessage;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return fallbackMessage;
-};
-
-/**
  * Creates a safe error response object for API responses.
  * In production, hides the error field; in development, includes it.
  */

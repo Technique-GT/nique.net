@@ -2,13 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { getAdminArticlesAll } from '@/services/articles'
 import { getCommentStats } from '@/services/comments'
 
-export type AnalyticsData = {
-  topArticles: { title: string; views: number; comments: number }[]
-  viewsByCategory: { name: string; value: number; color: string }[]
-  publishingTrend: { date: string; articles: number }[]
-  commentStats: { approved: number; pending: number }
-}
-
 const COLORS = [
   '#0088FE',
   '#00C49F',

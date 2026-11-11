@@ -119,8 +119,3 @@ export async function getUsersPage(params?: {
     },
   }
 }
-
-export async function getMe(): Promise<User> {
-  const res = await apiClient.get('/auth/me')
-  return res as unknown as User
-}

@@ -56,41 +56,6 @@ const getPrimaryClientUrl = () => {
     .find(Boolean);
 };
 
-export const register = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
-
-    if (!name) {
-      res.status(400).json({ message: 'Name is required' });
-      return;
-    }
-
-    const existingUser = await AuthUser.findOne({ name });
-    if (existingUser) {
-      res.status(400).json({ message: 'User already exists' });
-      return;
-    }
-
-    const user = new AuthUser({ name, socialLinks: [], isAdmin: false });
-    await user.save();
-
-    const token = generateToken(user);
-    res.cookie('jwt', token, getCookieOptions());
-
-    res.status(201).json({
-      success: true,
-      data: {
-        _id: user._id,
-        name: user.name,
-        isAdmin: user.isAdmin,
-        token,
-      },
-    });
-  } catch (error: any) {
-    res.status(500).json(safeErrorResponse('Registration failed', error));
-  }
-};
-
 export const logout = async (req: Request, res: Response): Promise<void> => {
   const token = getTokenFromRequest(req);
 

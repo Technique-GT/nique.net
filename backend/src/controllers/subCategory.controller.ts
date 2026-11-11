@@ -219,8 +219,6 @@ export const deleteSubCategory = async (req: Request, res: Response): Promise<vo
   }
 };
 
-export const hardDeleteSubCategory = deleteSubCategory;
-
 export const getSubCategoriesByCategory = async (req: Request, res: Response): Promise<void> => {
   try {
     const categoryObjectId = toObjectId(req.params.categoryId);

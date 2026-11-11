@@ -6,13 +6,6 @@ interface User {
   avatar: string
 }
 
-// Team is exported for potential future use
-export interface Team {
-  name: string
-  logo: React.ElementType
-  plan: string
-}
-
 interface BaseNavItem {
   title: string
   badge?: string

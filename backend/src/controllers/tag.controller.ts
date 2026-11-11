@@ -159,8 +159,6 @@ export const deleteTag = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const hardDeleteTag = deleteTag;
-
 export const getTagStats = async (_req: Request, res: Response): Promise<void> => {
   try {
     const totalTags = await Tag.countDocuments({});

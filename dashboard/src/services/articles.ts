@@ -123,11 +123,6 @@ export async function getAdminArticlesAll(
   return all
 }
 
-export async function createAdminArticleDraft(): Promise<BackendArticle> {
-  const res = await apiClient.post('/admin/articles/draft')
-  return res as unknown as BackendArticle
-}
-
 export type CreateAdminArticlePayload = {
   title: string
   content: string

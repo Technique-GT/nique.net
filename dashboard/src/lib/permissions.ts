@@ -8,8 +8,5 @@ export const canManageStaff = (user?: AuthUser | null): boolean =>
 export const canManageTaxonomy = (user?: AuthUser | null): boolean =>
   isAdminUser(user)
 
-export const canManageMedia = (user?: AuthUser | null): boolean =>
-  isAdminUser(user)
-
 export const canAccessAnalytics = (user?: AuthUser | null): boolean =>
   isAdminUser(user)

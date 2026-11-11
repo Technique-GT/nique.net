@@ -7,7 +7,6 @@ import {
   getTagBySlug,
   getTagStats,
   getTags,
-  hardDeleteTag,
   updateTag,
 } from '../controllers/tag.controller';
 import { adminMiddleware } from '../middleware/admin.middleware';
@@ -43,6 +42,6 @@ router.patch(
   updateTag,
 );
 router.delete('/:id', authMiddleware, adminMiddleware, validateParams(idParamSchema), deleteTag);
-router.delete('/:id/hard', authMiddleware, adminMiddleware, validateParams(idParamSchema), hardDeleteTag);
+router.delete('/:id/hard', authMiddleware, adminMiddleware, validateParams(idParamSchema), deleteTag);
 
 export default router;

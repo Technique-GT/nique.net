@@ -18,8 +18,3 @@ export const adminMiddleware = (req: AuthRequest, res: Response, next: NextFunct
 
   next();
 };
-
-/**
- * Alias for adminMiddleware for readability in routes.
- */
-export const requireAdmin = adminMiddleware;

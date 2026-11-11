@@ -7,7 +7,6 @@ import {
   getCategoryById,
   getCategoryBySlug,
   getCategoryStats,
-  hardDeleteCategory,
   updateCategory,
 } from '../controllers/category.controller';
 import { adminMiddleware } from '../middleware/admin.middleware';
@@ -48,7 +47,7 @@ router.delete(
   authMiddleware,
   adminMiddleware,
   validateParams(idParamSchema),
-  hardDeleteCategory,
+  deleteCategory,
 );
 
 export default router;

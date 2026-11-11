@@ -165,8 +165,6 @@ export const deleteCategory = async (req: Request, res: Response): Promise<void>
   }
 };
 
-export const hardDeleteCategory = deleteCategory;
-
 export const getCategoryStats = async (_req: Request, res: Response): Promise<void> => {
   try {
     const totalCategories = await Category.countDocuments({});

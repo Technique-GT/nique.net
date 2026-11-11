@@ -117,17 +117,6 @@ export interface ArticleListProps {
 // API Response Types
 // =============================================================================
 
-export interface PaginatedResponse<T> {
-  success: boolean;
-  data: T[];
-  pagination: {
-    total: number;
-    page: number;
-    pages: number;
-    limit: number;
-  };
-}
-
 export interface FeedResponse {
   data: ArticleDocument[];
   pagination: {
