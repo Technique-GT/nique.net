@@ -18,7 +18,7 @@ export const processImageVariants = async (inputBuffer: Buffer): Promise<Process
   const formats = ['avif', 'webp', 'jpeg'] as const;
   const variants: ProcessedVariant[] = [];
 
-  const baseImage = sharp(inputBuffer);
+  const baseImage = sharp(inputBuffer).withMetadata();
   
   for (const width of widths) {
     const resized = baseImage.clone().resize(width, null, { 

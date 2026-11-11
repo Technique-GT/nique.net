@@ -295,7 +295,9 @@ export const uploadMedia = async (req: AuthRequest, res: Response): Promise<void
     let masterContentType = file.mimetype;
 
     try {
-      const transformer = sharp(file.buffer).resize(2000, 2000, {
+      const transformer = sharp(file.buffer)
+        .withMetadata()
+        .resize(2000, 2000, {
         fit: 'inside',
         withoutEnlargement: true,
       });
