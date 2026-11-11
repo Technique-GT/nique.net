@@ -66,32 +66,26 @@ export const createSubCategory = async (
 			],
 		});
 		if (existing) {
-			res
-				.status(409)
-				.json({
-					success: false,
-					message: "Sub-category with this name or slug already exists",
-				});
+			res.status(409).json({
+				success: false,
+				message: "Sub-category with this name or slug already exists",
+			});
 			return;
 		}
 
 		const subCategory = await SubCategory.create({ name, slug, categoryId });
 
-		res
-			.status(201)
-			.json({
-				success: true,
-				message: "Sub-category created successfully",
-				data: subCategory,
-			});
+		res.status(201).json({
+			success: true,
+			message: "Sub-category created successfully",
+			data: subCategory,
+		});
 	} catch (error: any) {
 		if (error?.code === 11000) {
-			res
-				.status(409)
-				.json({
-					success: false,
-					message: "Sub-category with this slug already exists",
-				});
+			res.status(409).json({
+				success: false,
+				message: "Sub-category with this slug already exists",
+			});
 			return;
 		}
 		res.status(500).json(safeErrorResponse("Server error", error));
@@ -133,13 +127,11 @@ export const getSubCategories = async (
 			.sort({ name: 1 })
 			.lean();
 
-		res
-			.status(200)
-			.json({
-				success: true,
-				data: subCategories,
-				count: subCategories.length,
-			});
+		res.status(200).json({
+			success: true,
+			data: subCategories,
+			count: subCategories.length,
+		});
 	} catch (error: any) {
 		res
 			.status(500)
@@ -216,12 +208,10 @@ export const updateSubCategory = async (
 		if (typeof req.body?.name === "string") {
 			update.name = req.body.name.trim();
 			if (!update.name) {
-				res
-					.status(400)
-					.json({
-						success: false,
-						message: "Sub-category name cannot be empty",
-					});
+				res.status(400).json({
+					success: false,
+					message: "Sub-category name cannot be empty",
+				});
 				return;
 			}
 		}
@@ -267,21 +257,17 @@ export const updateSubCategory = async (
 			return;
 		}
 
-		res
-			.status(200)
-			.json({
-				success: true,
-				message: "Sub-category updated successfully",
-				data: subCategory,
-			});
+		res.status(200).json({
+			success: true,
+			message: "Sub-category updated successfully",
+			data: subCategory,
+		});
 	} catch (error: any) {
 		if (error?.code === 11000) {
-			res
-				.status(409)
-				.json({
-					success: false,
-					message: "Sub-category with this slug already exists",
-				});
+			res.status(409).json({
+				success: false,
+				message: "Sub-category with this slug already exists",
+			});
 			return;
 		}
 		res
@@ -338,13 +324,11 @@ export const getSubCategoriesByCategory = async (
 			.sort({ name: 1 })
 			.lean();
 
-		res
-			.status(200)
-			.json({
-				success: true,
-				data: subCategories,
-				count: subCategories.length,
-			});
+		res.status(200).json({
+			success: true,
+			data: subCategories,
+			count: subCategories.length,
+		});
 	} catch (error: any) {
 		res
 			.status(500)

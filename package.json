@@ -1,35 +1,35 @@
 {
-	"name": "technique",
-	"private": true,
-	"workspaces": [
-		"backend",
-		"frontend",
-		"dashboard"
-	],
-	"scripts": {
-		"dev": "concurrently --kill-others --names backend,frontend,dashboard \"npm run dev --workspace backend\" \"npm run dev --workspace frontend -- --host 0.0.0.0 --port 5173 --strictPort\" \"npm run dev --workspace dashboard -- --host 0.0.0.0 --port 5174 --strictPort\"",
-		"dev:api": "npm run dev --workspace backend",
-		"dev:web": "npm run dev --workspace frontend -- --host 0.0.0.0 --port 5173 --strictPort",
-		"dev:dash": "npm run dev --workspace dashboard -- --host 0.0.0.0 --port 5174 --strictPort",
-		"build": "npm run build --workspace backend && npm run build --workspace frontend && npm run build --workspace dashboard",
-		"start": "concurrently --kill-others --names backend,frontend,dashboard \"npm run start:api\" \"npm run start:web\" \"npm run start:dash\"",
-		"start:api": "npm run start --workspace backend",
-		"start:web": "npm run preview --workspace frontend",
-		"start:dash": "npm run preview --workspace dashboard",
-		"test": "npm run test --workspace backend",
-		"check": "biome check",
-		"check:fix": "biome check --write",
-		"check:unsafe": "biome check --unsafe",
-		"knip": "knip --max-show-issues 5",
-		"knip:verbose": "knip",
-		"knip:fix": "knip --fix"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.5.13",
-		"concurrently": "^9.2.1",
-		"knip": "^6.45.0"
-	},
-	"overrides": {
-		"esbuild": "0.25.12"
-	}
+  "name": "technique",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend",
+    "dashboard"
+  ],
+  "scripts": {
+    "dev": "concurrently --kill-others --names backend,frontend,dashboard \"npm run dev --workspace backend\" \"npm run dev --workspace frontend -- --host 0.0.0.0 --port 5173 --strictPort\" \"npm run dev --workspace dashboard -- --host 0.0.0.0 --port 5174 --strictPort\"",
+    "dev:api": "npm run dev --workspace backend",
+    "dev:web": "npm run dev --workspace frontend -- --host 0.0.0.0 --port 5173 --strictPort",
+    "dev:dash": "npm run dev --workspace dashboard -- --host 0.0.0.0 --port 5174 --strictPort",
+    "build": "npm run build --workspace backend && npm run build --workspace frontend && npm run build --workspace dashboard",
+    "start": "concurrently --kill-others --names backend,frontend,dashboard \"npm run start:api\" \"npm run start:web\" \"npm run start:dash\"",
+    "start:api": "npm run start --workspace backend",
+    "start:web": "npm run preview --workspace frontend",
+    "start:dash": "npm run preview --workspace dashboard",
+    "test": "npm run test --workspace backend",
+    "check": "biome check",
+    "check:fix": "biome check --write",
+    "check:unsafe": "biome check --write --unsafe",
+    "knip": "knip --max-show-issues 5",
+    "knip:verbose": "knip",
+    "knip:fix": "knip --fix"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.13",
+    "concurrently": "^9.2.1",
+    "knip": "^6.45.0"
+  },
+  "overrides": {
+    "esbuild": "0.25.12"
+  }
 }

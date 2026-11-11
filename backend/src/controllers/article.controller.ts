@@ -352,12 +352,10 @@ export const createArticle = async (
 
 		const existing = await Article.findOne({ slug });
 		if (existing) {
-			res
-				.status(409)
-				.json({
-					success: false,
-					message: "An article with this slug already exists",
-				});
+			res.status(409).json({
+				success: false,
+				message: "An article with this slug already exists",
+			});
 			return;
 		}
 
@@ -398,13 +396,11 @@ export const createArticle = async (
 			mutationType: "create",
 		});
 
-		res
-			.status(201)
-			.json({
-				success: true,
-				message: "Article created successfully",
-				data: populatedArticle,
-			});
+		res.status(201).json({
+			success: true,
+			message: "Article created successfully",
+			data: populatedArticle,
+		});
 	} catch (error: any) {
 		if (error?.code === 11000) {
 			res.status(409).json({ success: false, message: "Duplicate key error" });
@@ -843,12 +839,10 @@ export const updateArticle = async (req: any, res: Response): Promise<void> => {
 		}
 
 		if (!canEditArticle(req.user, existing)) {
-			res
-				.status(403)
-				.json({
-					success: false,
-					message: "Not authorized to edit this article",
-				});
+			res.status(403).json({
+				success: false,
+				message: "Not authorized to edit this article",
+			});
 			return;
 		}
 
@@ -862,12 +856,10 @@ export const updateArticle = async (req: any, res: Response): Promise<void> => {
 
 		// Handle author changes (requires canManageAuthors)
 		if (req.body.authors && !canManageAuthors(req.user, existing)) {
-			res
-				.status(403)
-				.json({
-					success: false,
-					message: "Only owner or admin can manage authors",
-				});
+			res.status(403).json({
+				success: false,
+				message: "Only owner or admin can manage authors",
+			});
 			return;
 		}
 
@@ -928,12 +920,10 @@ export const deleteArticle = async (req: any, res: Response): Promise<void> => {
 		}
 
 		if (!canDeleteArticle(req.user, article)) {
-			res
-				.status(403)
-				.json({
-					success: false,
-					message: "Not authorized to delete this article",
-				});
+			res.status(403).json({
+				success: false,
+				message: "Not authorized to delete this article",
+			});
 			return;
 		}
 
@@ -971,12 +961,10 @@ export const toggleFeatured = async (
 		}
 
 		if (!article.published) {
-			res
-				.status(400)
-				.json({
-					success: false,
-					message: "Only published articles can be featured",
-				});
+			res.status(400).json({
+				success: false,
+				message: "Only published articles can be featured",
+			});
 			return;
 		}
 
@@ -1022,12 +1010,10 @@ export const toggleSticky = async (req: any, res: Response): Promise<void> => {
 		}
 
 		if (!article.published) {
-			res
-				.status(400)
-				.json({
-					success: false,
-					message: "Only published articles can be sticky",
-				});
+			res.status(400).json({
+				success: false,
+				message: "Only published articles can be sticky",
+			});
 			return;
 		}
 
@@ -1063,12 +1049,10 @@ export const updateArticleStatus = async (
 ): Promise<void> => {
 	try {
 		if (!canPublishArticle(req.user)) {
-			res
-				.status(403)
-				.json({
-					success: false,
-					message: "Only admins can update article status",
-				});
+			res.status(403).json({
+				success: false,
+				message: "Only admins can update article status",
+			});
 			return;
 		}
 
@@ -1108,12 +1092,10 @@ export const updateArticleStatus = async (
 
 		if (typeof isFeatured === "boolean") {
 			if (!published && !article.published) {
-				res
-					.status(400)
-					.json({
-						success: false,
-						message: "Only published articles can be featured",
-					});
+				res.status(400).json({
+					success: false,
+					message: "Only published articles can be featured",
+				});
 				return;
 			}
 			updateData.isFeatured = isFeatured;
@@ -1121,12 +1103,10 @@ export const updateArticleStatus = async (
 
 		if (typeof isSticky === "boolean") {
 			if (!published && !article.published) {
-				res
-					.status(400)
-					.json({
-						success: false,
-						message: "Only published articles can be sticky",
-					});
+				res.status(400).json({
+					success: false,
+					message: "Only published articles can be sticky",
+				});
 				return;
 			}
 			updateData.isSticky = isSticky;
@@ -1223,12 +1203,10 @@ export const getAdminArticleById = async (
 		}
 
 		if (!canEditArticle(req.user, article)) {
-			res
-				.status(403)
-				.json({
-					success: false,
-					message: "Not authorized to edit this article",
-				});
+			res.status(403).json({
+				success: false,
+				message: "Not authorized to edit this article",
+			});
 			return;
 		}
 
@@ -1250,12 +1228,10 @@ export const requestReview = async (req: any, res: Response): Promise<void> => {
 			article.reviewStatus !== "draft" &&
 			article.reviewStatus !== "changes_requested"
 		) {
-			res
-				.status(400)
-				.json({
-					success: false,
-					message: "Article is already in review or published",
-				});
+			res.status(400).json({
+				success: false,
+				message: "Article is already in review or published",
+			});
 			return;
 		}
 
@@ -1303,12 +1279,10 @@ export const unrequestReview = async (
 		}
 
 		if (article.ownerId.toString() !== req.user.id && !req.user.isAdmin) {
-			res
-				.status(403)
-				.json({
-					success: false,
-					message: "Only the owner can unrequest review",
-				});
+			res.status(403).json({
+				success: false,
+				message: "Only the owner can unrequest review",
+			});
 			return;
 		}
 
@@ -1480,12 +1454,10 @@ export const transferOwnership = async (
 ): Promise<void> => {
 	try {
 		if (!req.user.isAdmin) {
-			res
-				.status(403)
-				.json({
-					success: false,
-					message: "Only admins can transfer ownership",
-				});
+			res.status(403).json({
+				success: false,
+				message: "Only admins can transfer ownership",
+			});
 			return;
 		}
 

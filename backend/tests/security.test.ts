@@ -167,12 +167,10 @@ describe("Security: Authorization Boundary Tests", () => {
 		});
 
 		it("POST /api/sub-categories returns 401 without auth", async () => {
-			const res = await request(app)
-				.post("/api/sub-categories")
-				.send({
-					name: "Hacked SubCategory",
-					categoryId: "000000000000000000000001",
-				});
+			const res = await request(app).post("/api/sub-categories").send({
+				name: "Hacked SubCategory",
+				categoryId: "000000000000000000000001",
+			});
 			expect(res.status).toBe(401);
 		});
 
@@ -316,13 +314,11 @@ describe("Security: Authorization Boundary Tests", () => {
 		});
 
 		it("POST /api/admin/articles returns 401 without auth", async () => {
-			const res = await request(app)
-				.post("/api/admin/articles")
-				.send({
-					title: "Test",
-					content: "Test",
-					categoryId: "000000000000000000000001",
-				});
+			const res = await request(app).post("/api/admin/articles").send({
+				title: "Test",
+				content: "Test",
+				categoryId: "000000000000000000000001",
+			});
 			expect(res.status).toBe(401);
 		});
 	});

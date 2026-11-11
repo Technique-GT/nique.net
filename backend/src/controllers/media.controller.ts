@@ -355,12 +355,10 @@ export const listMediaImages = async (
 			cursor &&
 			(cursor.sortBy !== sortBy || cursor.sortDir !== sortDir || cursor.q !== q)
 		) {
-			res
-				.status(400)
-				.json({
-					success: false,
-					message: "Cursor does not match current search/sort",
-				});
+			res.status(400).json({
+				success: false,
+				message: "Cursor does not match current search/sort",
+			});
 			return;
 		}
 

@@ -80,12 +80,10 @@ export const createComment = async (
 				return;
 			}
 			if (String(parent.articleId) !== String(articleId)) {
-				res
-					.status(400)
-					.json({
-						success: false,
-						message: "Parent comment does not match article",
-					});
+				res.status(400).json({
+					success: false,
+					message: "Parent comment does not match article",
+				});
 				return;
 			}
 			if (!parent.approved) {
@@ -330,13 +328,11 @@ export const updateComment = async (
 			return;
 		}
 
-		res
-			.status(200)
-			.json({
-				success: true,
-				message: "Comment updated successfully",
-				data: comment,
-			});
+		res.status(200).json({
+			success: true,
+			message: "Comment updated successfully",
+			data: comment,
+		});
 	} catch (error: any) {
 		res.status(500).json(safeErrorResponse("Error updating comment", error));
 	}
@@ -400,13 +396,11 @@ export const updateCommentStatus = async (
 			return;
 		}
 
-		res
-			.status(200)
-			.json({
-				success: true,
-				message: "Comment status updated successfully",
-				data: comment,
-			});
+		res.status(200).json({
+			success: true,
+			message: "Comment status updated successfully",
+			data: comment,
+		});
 	} catch (error: any) {
 		res
 			.status(500)
@@ -497,12 +491,10 @@ export const setCommentReaction = async (
 						.json({ success: false, message: "Comment not found" });
 					return;
 				}
-				res
-					.status(200)
-					.json({
-						success: true,
-						data: { ...comment.toObject(), myReaction: null },
-					});
+				res.status(200).json({
+					success: true,
+					data: { ...comment.toObject(), myReaction: null },
+				});
 				return;
 			}
 
@@ -539,12 +531,10 @@ export const setCommentReaction = async (
 			return;
 		}
 
-		res
-			.status(200)
-			.json({
-				success: true,
-				data: { ...comment.toObject(), myReaction: nextReaction },
-			});
+		res.status(200).json({
+			success: true,
+			data: { ...comment.toObject(), myReaction: nextReaction },
+		});
 	} catch (error: any) {
 		res
 			.status(500)

@@ -40,12 +40,10 @@ export const createTag = async (req: Request, res: Response): Promise<void> => {
 			],
 		});
 		if (existing) {
-			res
-				.status(409)
-				.json({
-					success: false,
-					message: "Tag with this name or slug already exists",
-				});
+			res.status(409).json({
+				success: false,
+				message: "Tag with this name or slug already exists",
+			});
 			return;
 		}
 

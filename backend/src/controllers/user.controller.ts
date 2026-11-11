@@ -197,13 +197,11 @@ export const createUser = async (
 			socialLinks,
 		});
 
-		res
-			.status(201)
-			.json({
-				success: true,
-				message: "User created successfully",
-				data: user,
-			});
+		res.status(201).json({
+			success: true,
+			message: "User created successfully",
+			data: user,
+		});
 	} catch (error: any) {
 		res.status(500).json(safeErrorResponse("Error creating user", error));
 	}
@@ -327,13 +325,11 @@ export const updateUser = async (
 			return;
 		}
 
-		res
-			.status(200)
-			.json({
-				success: true,
-				message: "User updated successfully",
-				data: user,
-			});
+		res.status(200).json({
+			success: true,
+			message: "User updated successfully",
+			data: user,
+		});
 	} catch (error: any) {
 		res.status(500).json(safeErrorResponse("Error updating user", error));
 	}
@@ -362,12 +358,10 @@ export const inviteUser = async (
 	_req: Request,
 	res: Response,
 ): Promise<void> => {
-	res
-		.status(501)
-		.json({
-			success: false,
-			message: "inviteUser not implemented in canonical user model",
-		});
+	res.status(501).json({
+		success: false,
+		message: "inviteUser not implemented in canonical user model",
+	});
 };
 
 export const bulkDeleteUsers = async (

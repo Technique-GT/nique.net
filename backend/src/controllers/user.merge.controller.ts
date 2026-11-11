@@ -46,22 +46,18 @@ export const mergeUsers = async (
 			: null;
 
 	if (!sourceId || !targetId) {
-		res
-			.status(400)
-			.json({
-				success: false,
-				message: "Valid sourceId and targetId are required",
-			});
+		res.status(400).json({
+			success: false,
+			message: "Valid sourceId and targetId are required",
+		});
 		return;
 	}
 
 	if (sourceId === targetId) {
-		res
-			.status(400)
-			.json({
-				success: false,
-				message: "sourceId and targetId must be different",
-			});
+		res.status(400).json({
+			success: false,
+			message: "sourceId and targetId must be different",
+		});
 		return;
 	}
 

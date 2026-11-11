@@ -46,32 +46,26 @@ export const createCategory = async (
 			],
 		});
 		if (existing) {
-			res
-				.status(409)
-				.json({
-					success: false,
-					message: "Category with this name or slug already exists",
-				});
+			res.status(409).json({
+				success: false,
+				message: "Category with this name or slug already exists",
+			});
 			return;
 		}
 
 		const category = await Category.create({ name, slug });
 
-		res
-			.status(201)
-			.json({
-				success: true,
-				message: "Category created successfully",
-				data: category,
-			});
+		res.status(201).json({
+			success: true,
+			message: "Category created successfully",
+			data: category,
+		});
 	} catch (error: any) {
 		if (error?.code === 11000) {
-			res
-				.status(409)
-				.json({
-					success: false,
-					message: "Category with this slug already exists",
-				});
+			res.status(409).json({
+				success: false,
+				message: "Category with this slug already exists",
+			});
 			return;
 		}
 		res.status(500).json(safeErrorResponse("Server error", error));
@@ -179,21 +173,17 @@ export const updateCategory = async (
 			return;
 		}
 
-		res
-			.status(200)
-			.json({
-				success: true,
-				message: "Category updated successfully",
-				data: category,
-			});
+		res.status(200).json({
+			success: true,
+			message: "Category updated successfully",
+			data: category,
+		});
 	} catch (error: any) {
 		if (error?.code === 11000) {
-			res
-				.status(409)
-				.json({
-					success: false,
-					message: "Category with this slug already exists",
-				});
+			res.status(409).json({
+				success: false,
+				message: "Category with this slug already exists",
+			});
 			return;
 		}
 		res.status(500).json(safeErrorResponse("Error updating category", error));
