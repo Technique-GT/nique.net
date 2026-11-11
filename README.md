@@ -42,3 +42,34 @@ Build all apps with `npm run build`; run backend tests with `npm test`. For depl
 use the repository root as the install context and select the target workspace's build
 and start scripts. The workspace package manifest keeps each app's deploy dependencies
 separate while the root lockfile keeps installs reproducible.
+
+## Linting, formatting, and unused-code checks
+
+Run these commands from the repository root. The tools and scripts are defined in the
+root package, so they check the monorepo rather than requiring you to enter each
+workspace.
+
+[Biome](https://biomejs.dev/) is the shared linter and formatter. It checks code for
+common problems and applies consistent formatting and import organization:
+
+```sh
+npm run check        # report lint, formatting, and import-organization issues
+npm run check:fix    # apply safe fixes and formatting
+npm run check:unsafe # also enable Biome's potentially unsafe fixes
+```
+
+Review the changes from either fix command before committing, especially after using
+`check:unsafe`.
+
+[Knip](https://knip.dev/) finds unused files, exports, and dependencies across the
+workspaces. Removing genuinely unused code and packages keeps the project easier to
+maintain and avoids carrying unnecessary dependencies:
+
+```sh
+npm run knip         # show up to five issues
+npm run knip:verbose # show the full issue list
+npm run knip:fix     # let Knip automatically fix supported findings
+```
+
+Review Knip's findings before removing code or dependencies; some files or exports may
+be used indirectly and need to be retained or configured as entry points.
