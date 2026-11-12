@@ -21,8 +21,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1010.0",
-    "@types/mongoose": "^5.11.96",
+    "@aws-sdk/client-s3": "3.999.0",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -31,6 +30,7 @@
     "express-rate-limit": "^8.2.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.20.0",
     "mongoose": "^8.19.4",
     "multer": "^2.0.2",
     "pino": "^10.2.0",

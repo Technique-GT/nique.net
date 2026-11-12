@@ -1,0 +1,28 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const article_controller_1 = require("../controllers/article.controller");
+const validate_middleware_1 = require("../middleware/validate.middleware");
+const article_mutate_schema_1 = require("../schemas/article.mutate.schema");
+const article_query_schema_1 = require("../schemas/article.query.schema");
+const params_schema_1 = require("../schemas/params.schema");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const router = (0, express_1.Router)();
+// Apply auth to all admin article routes
+router.use(auth_middleware_1.authMiddleware);
+router.get('/articles', (0, validate_middleware_1.validateQuery)(article_query_schema_1.listArticlesQuerySchema), article_controller_1.getArticles);
+router.post('/articles', (0, validate_middleware_1.validateBody)(article_mutate_schema_1.createArticleBodySchema), article_controller_1.createArticle);
+router.post('/articles/draft', article_controller_1.createDraft);
+router.get('/articles/:id', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), article_controller_1.getAdminArticleById);
+router.put('/articles/:id', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), (0, validate_middleware_1.validateBody)(article_mutate_schema_1.updateArticleBodySchema), article_controller_1.updateArticle);
+router.post('/articles/:id/request-review', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), article_controller_1.requestReview);
+router.post('/articles/:id/request-changes', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), article_controller_1.requestChanges);
+router.post('/articles/:id/unrequest-review', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), article_controller_1.unrequestReview);
+router.post('/articles/:id/publish', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), article_controller_1.adminPublish);
+router.post('/articles/:id/unpublish', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), article_controller_1.adminUnpublish);
+router.post('/articles/:id/transfer-ownership', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), article_controller_1.transferOwnership);
+router.patch('/articles/:id/status', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), (0, validate_middleware_1.validateBody)(article_mutate_schema_1.updateArticleStatusBodySchema), article_controller_1.updateArticleStatus);
+router.patch('/articles/:id/featured', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), article_controller_1.toggleFeatured);
+router.patch('/articles/:id/sticky', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), article_controller_1.toggleSticky);
+router.delete('/articles/:id', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), article_controller_1.deleteArticle);
+exports.default = router;

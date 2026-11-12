@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "@types/mongodb": "^4.0.6"
+  }
+}

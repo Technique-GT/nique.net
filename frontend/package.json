@@ -18,7 +18,7 @@
     "dompurify": "^3.3.0",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.476.0",
-    "pdfjs-dist": "^4.8.69",
+    "pdfjs-dist": "4.8.69",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.8",

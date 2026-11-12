@@ -1,0 +1,27 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const user_controller_1 = require("../controllers/user.controller");
+const user_merge_controller_1 = require("../controllers/user.merge.controller");
+const validate_middleware_1 = require("../middleware/validate.middleware");
+const user_schema_1 = require("../schemas/user.schema");
+const params_schema_1 = require("../schemas/params.schema");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const admin_middleware_1 = require("../middleware/admin.middleware");
+const router = express_1.default.Router();
+router.use(auth_middleware_1.authMiddleware);
+router.use(admin_middleware_1.adminMiddleware);
+router.get('/', user_controller_1.getUsers);
+router.post('/', (0, validate_middleware_1.validateBody)(user_schema_1.createUserBodySchema), user_controller_1.createUser);
+router.post('/invite', user_controller_1.inviteUser);
+router.post('/bulk-delete', (0, validate_middleware_1.validateBody)(user_schema_1.bulkDeleteUsersBodySchema), user_controller_1.bulkDeleteUsers);
+router.post('/merge', user_merge_controller_1.mergeUsers);
+router.get('/:id/article-count', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), user_merge_controller_1.getUserArticleCount);
+router.get('/:id', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), user_controller_1.getUserById);
+router.put('/:id', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), (0, validate_middleware_1.validateBody)(user_schema_1.updateUserBodySchema), user_controller_1.updateUser);
+router.patch('/:id', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), (0, validate_middleware_1.validateBody)(user_schema_1.updateUserBodySchema), user_controller_1.updateUser);
+router.delete('/:id', (0, validate_middleware_1.validateParams)(params_schema_1.idParamSchema), user_controller_1.deleteUser);
+exports.default = router;
