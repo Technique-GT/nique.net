@@ -1,35 +1,39 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.5.13/schema.json",
-	"vcs": {
-		"enabled": true,
-		"clientKind": "git",
-		"useIgnoreFile": true
-	},
-	"css": {
-		"parser": {
-			"tailwindDirectives": true
-		}
-	},
-	"linter": {
-		"enabled": true,
-		"rules": {
-			"a11y": {
-				"noAmbiguousAnchorText": "off",
-				"noLabelWithoutControl": "off",
-				"noStaticElementInteractions": "off",
-				"noSvgWithoutTitle": "off",
-				"useAltText": "off",
-				"useAriaPropsSupportedByRole": "off",
-				"useKeyWithClickEvents": "off",
-				"useButtonType": "off",
-				"useSemanticElements": "off",
-				"useValidAnchor": "off"
-			},
-			"suspicious": {
-				"noDuplicateProperties": "off",
-				"noRedeclare": "off",
-				"useIterableCallbackReturn": "off"
-			}
-		}
-	}
+    "$schema": "https://biomejs.dev/schemas/2.5.13/schema.json",
+    "formatter": {
+        "indentStyle": "space",
+        "indentWidth": 4
+    },
+    "vcs": {
+        "enabled": true,
+        "clientKind": "git",
+        "useIgnoreFile": true
+    },
+    "css": {
+        "parser": {
+            "tailwindDirectives": true
+        }
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "a11y": {
+                "noAmbiguousAnchorText": "off",
+                "noLabelWithoutControl": "off",
+                "noStaticElementInteractions": "off",
+                "noSvgWithoutTitle": "off",
+                "useAltText": "off",
+                "useAriaPropsSupportedByRole": "off",
+                "useKeyWithClickEvents": "off",
+                "useButtonType": "off",
+                "useSemanticElements": "off",
+                "useValidAnchor": "off"
+            },
+            "suspicious": {
+                "noDuplicateProperties": "off",
+                "noRedeclare": "off",
+                "useIterableCallbackReturn": "off"
+            }
+        }
+    }
 }

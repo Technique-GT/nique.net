@@ -12,360 +12,391 @@ import spotifyService from "../services/spotifyService";
 import type { ArticleDocument } from "../types/article";
 import { Categories } from "../types/categories";
 import {
-	getArticleId,
-	getArticleTimestamp,
+    getArticleId,
+    getArticleTimestamp,
 } from "../utils/articlePresentation";
 import { toSpotifyEmbedUrl } from "../utils/spotify";
 
 const INITIAL_CATEGORY_PAGE_SIZE = 20;
 
 function Home() {
-	const fetchCategoryInitialPage = async (
-		categoryId: string | null,
-		signal?: AbortSignal,
-	): Promise<ArticleDocument[]> => {
-		if (!categoryId) return [];
+    const fetchCategoryInitialPage = async (
+        categoryId: string | null,
+        signal?: AbortSignal,
+    ): Promise<ArticleDocument[]> => {
+        if (!categoryId) return [];
 
-		const result = await articleService.fetchArticlesByCategory(
-			categoryId,
-			{ page: 1, limit: INITIAL_CATEGORY_PAGE_SIZE },
-			signal,
-		);
+        const result = await articleService.fetchArticlesByCategory(
+            categoryId,
+            { page: 1, limit: INITIAL_CATEGORY_PAGE_SIZE },
+            signal,
+        );
 
-		return Array.isArray(result) ? result : result.data;
-	};
+        return Array.isArray(result) ? result : result.data;
+    };
 
-	const computeDerivedState = (
-		stickyArticles: ArticleDocument[],
-		featuredArticles: ArticleDocument[],
-		recentArticlesData: ArticleDocument[],
-		lifeData: ArticleDocument[],
-		newsData: ArticleDocument[],
-		entertainmentData: ArticleDocument[],
-		opinionData: ArticleDocument[],
-		sportsData: ArticleDocument[],
-	) => {
-		const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
-			getArticleTimestamp(b) - getArticleTimestamp(a);
+    const computeDerivedState = (
+        stickyArticles: ArticleDocument[],
+        featuredArticles: ArticleDocument[],
+        recentArticlesData: ArticleDocument[],
+        lifeData: ArticleDocument[],
+        newsData: ArticleDocument[],
+        entertainmentData: ArticleDocument[],
+        opinionData: ArticleDocument[],
+        sportsData: ArticleDocument[],
+    ) => {
+        const sortByPublishedDesc = (a: ArticleDocument, b: ArticleDocument) =>
+            getArticleTimestamp(b) - getArticleTimestamp(a);
 
-		const stickySorted = stickyArticles
-			.filter((article) => article.isSticky)
-			.sort(sortByPublishedDesc);
-		const featuredSorted = featuredArticles
-			.filter((article) => article.isFeatured)
-			.sort(sortByPublishedDesc);
-		const latestFeatured = featuredSorted[0] ?? null;
-		const featuredId = latestFeatured ? getArticleId(latestFeatured) : null;
-		const mainSet = new Set(stickySorted.map(getArticleId));
-		if (featuredId) {
-			mainSet.add(featuredId);
-		}
-		const nonStickyRecent = recentArticlesData
-			.filter((article) => !mainSet.has(getArticleId(article)))
-			.sort(sortByPublishedDesc);
-		const sortedRecent = [...stickySorted, ...nonStickyRecent].filter(
-			(article) => getArticleId(article) !== featuredId,
-		);
-		const recentIds = new Set([
-			...stickySorted.slice(0, 5).map(getArticleId),
-			...sortedRecent.slice(0, 5).map(getArticleId),
-			...(featuredId ? [featuredId] : []),
-		]);
+        const stickySorted = stickyArticles
+            .filter((article) => article.isSticky)
+            .sort(sortByPublishedDesc);
+        const featuredSorted = featuredArticles
+            .filter((article) => article.isFeatured)
+            .sort(sortByPublishedDesc);
+        const latestFeatured = featuredSorted[0] ?? null;
+        const featuredId = latestFeatured ? getArticleId(latestFeatured) : null;
+        const mainSet = new Set(stickySorted.map(getArticleId));
+        if (featuredId) {
+            mainSet.add(featuredId);
+        }
+        const nonStickyRecent = recentArticlesData
+            .filter((article) => !mainSet.has(getArticleId(article)))
+            .sort(sortByPublishedDesc);
+        const sortedRecent = [...stickySorted, ...nonStickyRecent].filter(
+            (article) => getArticleId(article) !== featuredId,
+        );
+        const recentIds = new Set([
+            ...stickySorted.slice(0, 5).map(getArticleId),
+            ...sortedRecent.slice(0, 5).map(getArticleId),
+            ...(featuredId ? [featuredId] : []),
+        ]);
 
-		const filterAndSort = (articles: ArticleDocument[]) => {
-			const sorted = articles.sort(sortByPublishedDesc);
+        const filterAndSort = (articles: ArticleDocument[]) => {
+            const sorted = articles.sort(sortByPublishedDesc);
 
-			// Prefer articles that aren't already featured on the homepage.
-			const unique = sorted.filter(
-				(article) => !recentIds.has(getArticleId(article)),
-			);
+            // Prefer articles that aren't already featured on the homepage.
+            const unique = sorted.filter(
+                (article) => !recentIds.has(getArticleId(article)),
+            );
 
-			// If there aren't enough unique articles, use duplicates
-			// rather than leave the section empty.
-			return unique.length >= 8
-				? unique
-				: [
-						...unique,
-						...sorted.filter((article) => recentIds.has(getArticleId(article))),
-					];
-		};
+            // If there aren't enough unique articles, use duplicates
+            // rather than leave the section empty.
+            return unique.length >= 8
+                ? unique
+                : [
+                      ...unique,
+                      ...sorted.filter((article) =>
+                          recentIds.has(getArticleId(article)),
+                      ),
+                  ];
+        };
 
-		return {
-			recentArticles: sortedRecent,
-			featuredArticle: latestFeatured,
-			lifeArticles: filterAndSort(lifeData),
-			newsArticles: filterAndSort(newsData),
-			entertainmentArticles: filterAndSort(entertainmentData),
-			opinionArticles: filterAndSort(opinionData),
-			sportsArticles: filterAndSort(sportsData),
-		};
-	};
+        return {
+            recentArticles: sortedRecent,
+            featuredArticle: latestFeatured,
+            lifeArticles: filterAndSort(lifeData),
+            newsArticles: filterAndSort(newsData),
+            entertainmentArticles: filterAndSort(entertainmentData),
+            opinionArticles: filterAndSort(opinionData),
+            sportsArticles: filterAndSort(sportsData),
+        };
+    };
 
-	const [isLoading, setIsLoading] = useState<boolean>(true);
-	const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>([]);
-	const [featuredArticle, setFeaturedArticle] =
-		useState<ArticleDocument | null>(null);
-	const [lifeArticles, setLifeArticles] = useState<ArticleDocument[]>([]);
-	const [newsArticles, setNewsArticles] = useState<ArticleDocument[]>([]);
-	const [entertainmentArticles, setEntertainmentArticles] = useState<
-		ArticleDocument[]
-	>([]);
-	const [opinionArticles, setOpinionArticles] = useState<ArticleDocument[]>([]);
-	const [sportsArticles, setSportsArticles] = useState<ArticleDocument[]>([]);
-	const [error, setError] = useState<string | null>(null);
-	const [activePlaylistEmbedUrl, setActivePlaylistEmbedUrl] = useState<
-		string | null
-	>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [recentArticles, setRecentArticles] = useState<ArticleDocument[]>([]);
+    const [featuredArticle, setFeaturedArticle] =
+        useState<ArticleDocument | null>(null);
+    const [lifeArticles, setLifeArticles] = useState<ArticleDocument[]>([]);
+    const [newsArticles, setNewsArticles] = useState<ArticleDocument[]>([]);
+    const [entertainmentArticles, setEntertainmentArticles] = useState<
+        ArticleDocument[]
+    >([]);
+    const [opinionArticles, setOpinionArticles] = useState<ArticleDocument[]>(
+        [],
+    );
+    const [sportsArticles, setSportsArticles] = useState<ArticleDocument[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const [activePlaylistEmbedUrl, setActivePlaylistEmbedUrl] = useState<
+        string | null
+    >(null);
 
-	useEffect(() => {
-		let isMounted = true;
-		const controller = new AbortController();
+    useEffect(() => {
+        let isMounted = true;
+        const controller = new AbortController();
 
-		const loadArticles = async () => {
-			setIsLoading(true);
-			setError(null);
+        const loadArticles = async () => {
+            setIsLoading(true);
+            setError(null);
 
-			try {
-				const categories = await articleService.fetchCategories(
-					50,
-					controller.signal,
-				);
+            try {
+                const categories = await articleService.fetchCategories(
+                    50,
+                    controller.signal,
+                );
 
-				const findCategoryId = (name: string) => {
-					const match = categories.find(
-						(category) => category.name?.toLowerCase() === name.toLowerCase(),
-					);
-					return match?._id || null;
-				};
+                const findCategoryId = (name: string) => {
+                    const match = categories.find(
+                        (category) =>
+                            category.name?.toLowerCase() === name.toLowerCase(),
+                    );
+                    return match?._id || null;
+                };
 
-				const lifeCategoryId = findCategoryId(Categories.LIFE);
-				const newsCategoryId = findCategoryId(Categories.NEWS);
-				const entertainmentCategoryId = findCategoryId(
-					Categories.ENTERTAINMENT,
-				);
-				const opinionCategoryId = findCategoryId(Categories.OPINION);
-				const sportsCategoryId = findCategoryId(Categories.SPORTS);
+                const lifeCategoryId = findCategoryId(Categories.LIFE);
+                const newsCategoryId = findCategoryId(Categories.NEWS);
+                const entertainmentCategoryId = findCategoryId(
+                    Categories.ENTERTAINMENT,
+                );
+                const opinionCategoryId = findCategoryId(Categories.OPINION);
+                const sportsCategoryId = findCategoryId(Categories.SPORTS);
 
-				const [
-					stickyArticles,
-					featuredArticles,
-					recentArticlesData,
-					lifeArticlesData,
-					newsArticlesData,
-					entertainmentArticlesData,
-					opinionArticlesData,
-					sportsArticlesData,
-				] = await Promise.all([
-					articleService.fetchStickyArticles(undefined, controller.signal),
-					articleService.fetchFeaturedArticles(controller.signal),
-					articleService.fetchRecentArticles(5, "published", controller.signal),
-					fetchCategoryInitialPage(lifeCategoryId, controller.signal),
-					fetchCategoryInitialPage(newsCategoryId, controller.signal),
-					fetchCategoryInitialPage(entertainmentCategoryId, controller.signal),
-					fetchCategoryInitialPage(opinionCategoryId, controller.signal),
-					fetchCategoryInitialPage(sportsCategoryId, controller.signal),
-				]);
+                const [
+                    stickyArticles,
+                    featuredArticles,
+                    recentArticlesData,
+                    lifeArticlesData,
+                    newsArticlesData,
+                    entertainmentArticlesData,
+                    opinionArticlesData,
+                    sportsArticlesData,
+                ] = await Promise.all([
+                    articleService.fetchStickyArticles(
+                        undefined,
+                        controller.signal,
+                    ),
+                    articleService.fetchFeaturedArticles(controller.signal),
+                    articleService.fetchRecentArticles(
+                        5,
+                        "published",
+                        controller.signal,
+                    ),
+                    fetchCategoryInitialPage(lifeCategoryId, controller.signal),
+                    fetchCategoryInitialPage(newsCategoryId, controller.signal),
+                    fetchCategoryInitialPage(
+                        entertainmentCategoryId,
+                        controller.signal,
+                    ),
+                    fetchCategoryInitialPage(
+                        opinionCategoryId,
+                        controller.signal,
+                    ),
+                    fetchCategoryInitialPage(
+                        sportsCategoryId,
+                        controller.signal,
+                    ),
+                ]);
 
-				if (!isMounted) {
-					return;
-				}
+                if (!isMounted) {
+                    return;
+                }
 
-				// Compute derived state
-				const derived = computeDerivedState(
-					stickyArticles || [],
-					featuredArticles || [],
-					recentArticlesData || [],
-					lifeArticlesData || [],
-					newsArticlesData || [],
-					entertainmentArticlesData || [],
-					opinionArticlesData || [],
-					sportsArticlesData || [],
-				);
+                // Compute derived state
+                const derived = computeDerivedState(
+                    stickyArticles || [],
+                    featuredArticles || [],
+                    recentArticlesData || [],
+                    lifeArticlesData || [],
+                    newsArticlesData || [],
+                    entertainmentArticlesData || [],
+                    opinionArticlesData || [],
+                    sportsArticlesData || [],
+                );
 
-				setRecentArticles(derived.recentArticles);
-				setFeaturedArticle(derived.featuredArticle);
-				setLifeArticles(derived.lifeArticles);
-				setNewsArticles(derived.newsArticles);
-				setEntertainmentArticles(derived.entertainmentArticles);
-				setOpinionArticles(derived.opinionArticles);
-				setSportsArticles(derived.sportsArticles);
-			} catch {
-				if (!isMounted) {
-					return;
-				}
-				setError("Unable to load articles. Please try again later.");
-			} finally {
-				if (isMounted) {
-					setIsLoading(false);
-				}
-			}
-		};
+                setRecentArticles(derived.recentArticles);
+                setFeaturedArticle(derived.featuredArticle);
+                setLifeArticles(derived.lifeArticles);
+                setNewsArticles(derived.newsArticles);
+                setEntertainmentArticles(derived.entertainmentArticles);
+                setOpinionArticles(derived.opinionArticles);
+                setSportsArticles(derived.sportsArticles);
+            } catch {
+                if (!isMounted) {
+                    return;
+                }
+                setError("Unable to load articles. Please try again later.");
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                }
+            }
+        };
 
-		loadArticles();
+        loadArticles();
 
-		return () => {
-			isMounted = false;
-			controller.abort();
-		};
-	}, []);
+        return () => {
+            isMounted = false;
+            controller.abort();
+        };
+    }, []);
 
-	useEffect(() => {
-		const controller = new AbortController();
-		const loadActivePlaylist = async () => {
-			try {
-				const playlist = await spotifyService.fetchActivePlaylist(
-					controller.signal,
-				);
-				setActivePlaylistEmbedUrl(
-					playlist ? toSpotifyEmbedUrl(playlist.spotifyUrl) : null,
-				);
-			} catch {
-				setActivePlaylistEmbedUrl(null);
-			}
-		};
+    useEffect(() => {
+        const controller = new AbortController();
+        const loadActivePlaylist = async () => {
+            try {
+                const playlist = await spotifyService.fetchActivePlaylist(
+                    controller.signal,
+                );
+                setActivePlaylistEmbedUrl(
+                    playlist ? toSpotifyEmbedUrl(playlist.spotifyUrl) : null,
+                );
+            } catch {
+                setActivePlaylistEmbedUrl(null);
+            }
+        };
 
-		loadActivePlaylist();
+        loadActivePlaylist();
 
-		return () => {
-			controller.abort();
-		};
-	}, []);
+        return () => {
+            controller.abort();
+        };
+    }, []);
 
-	const sideArticles = useMemo(() => {
-		return opinionArticles.slice(0, 4);
-	}, [opinionArticles]);
+    const sideArticles = useMemo(() => {
+        return opinionArticles.slice(0, 4);
+    }, [opinionArticles]);
 
-	if (isLoading) {
-		return <HomeSkeleton />;
-	}
+    if (isLoading) {
+        return <HomeSkeleton />;
+    }
 
-	if (error) {
-		return (
-			<>
-				<Navbar />
-				<div className="flex justify-center items-center h-screen">
-					<p className="text-center text-lg text-red-600">{error}</p>
-				</div>
-			</>
-		);
-	}
+    if (error) {
+        return (
+            <>
+                <Navbar />
+                <div className="flex justify-center items-center h-screen">
+                    <p className="text-center text-lg text-red-600">{error}</p>
+                </div>
+            </>
+        );
+    }
 
-	return (
-		<>
-			<Navbar />
-			<div className="max-w-[95%] md:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5">
-				<div className="w-full">
-					{/* Main */}
-					<div className="grid gap-5 grid-cols-1 lg:grid-cols-[30%_auto] lg:grid-rows-4 w-full h-[80vh]">
-						<div className="flex flex-col gap-4 order-last lg:order-first lg:row-span-4">
-							{recentArticles.slice(1, 5).map((article) => (
-								<ArticleBlock
-									key={article._id || article.slug}
-									article={article}
-									height="100%"
-								/>
-							))}
-						</div>
-						<div className="flex flex-col gap-4 row-span-4 h-full">
-							{recentArticles[0] && <JustInBlock article={recentArticles[0]} />}
-							{featuredArticle && <FeaturedStory article={featuredArticle} />}
-						</div>
-					</div>
+    return (
+        <>
+            <Navbar />
+            <div className="max-w-[95%] md:max-w-[80%] m-auto p-5 grid grid-cols-1 md:grid-cols-[auto_30%] lg:grid-cols-[auto_25%] gap-5">
+                <div className="w-full">
+                    {/* Main */}
+                    <div className="grid gap-5 grid-cols-1 lg:grid-cols-[30%_auto] lg:grid-rows-4 w-full h-[80vh]">
+                        <div className="flex flex-col gap-4 order-last lg:order-first lg:row-span-4">
+                            {recentArticles.slice(1, 5).map((article) => (
+                                <ArticleBlock
+                                    key={article._id || article.slug}
+                                    article={article}
+                                    height="100%"
+                                />
+                            ))}
+                        </div>
+                        <div className="flex flex-col gap-4 row-span-4 h-full">
+                            {recentArticles[0] && (
+                                <JustInBlock article={recentArticles[0]} />
+                            )}
+                            {featuredArticle && (
+                                <FeaturedStory article={featuredArticle} />
+                            )}
+                        </div>
+                    </div>
 
-					<hr className="my-3" />
+                    <hr className="my-3" />
 
-					{/* Categories */}
-					<h4 className="font-bold mb-2 text-2xl text-nique-blue">
-						{Categories.LIFE}
-					</h4>
-					<div className="grid grid-cols-2 md:grid-cols-[48%_auto] gap-4">
-						<div className="w-full">
-							{lifeArticles[0] && (
-								<ArticleBlock article={lifeArticles[0]} height="396px" />
-							)}
-						</div>
-						<div className="flex flex-col gap-4 w-full">
-							{lifeArticles.slice(1, 3).map((article) => (
-								<ArticleBlock
-									key={article._id || article.slug}
-									article={article}
-									height="190px"
-								/>
-							))}
-						</div>
-					</div>
+                    {/* Categories */}
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">
+                        {Categories.LIFE}
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-[48%_auto] gap-4">
+                        <div className="w-full">
+                            {lifeArticles[0] && (
+                                <ArticleBlock
+                                    article={lifeArticles[0]}
+                                    height="396px"
+                                />
+                            )}
+                        </div>
+                        <div className="flex flex-col gap-4 w-full">
+                            {lifeArticles.slice(1, 3).map((article) => (
+                                <ArticleBlock
+                                    key={article._id || article.slug}
+                                    article={article}
+                                    height="190px"
+                                />
+                            ))}
+                        </div>
+                    </div>
 
-					<hr className="my-3" />
+                    <hr className="my-3" />
 
-					<h4 className="font-bold mb-2 text-2xl text-nique-blue">
-						{Categories.NEWS}
-					</h4>
-					<div className="grid grid-cols-3 sm:flex-row gap-4">
-						{newsArticles.slice(0, 3).map((article) => (
-							<ArticleBlock
-								key={article._id || article.slug}
-								article={article}
-								height="200px"
-							/>
-						))}
-					</div>
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">
+                        {Categories.NEWS}
+                    </h4>
+                    <div className="grid grid-cols-3 sm:flex-row gap-4">
+                        {newsArticles.slice(0, 3).map((article) => (
+                            <ArticleBlock
+                                key={article._id || article.slug}
+                                article={article}
+                                height="200px"
+                            />
+                        ))}
+                    </div>
 
-					<hr className="my-3" />
+                    <hr className="my-3" />
 
-					<h4 className="font-bold mb-2 text-2xl text-nique-blue">
-						{Categories.ENTERTAINMENT}
-					</h4>
-					<div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-						{entertainmentArticles.slice(0, 8).map((article) => (
-							<ArticleBlock
-								key={article._id || article.slug}
-								article={article}
-								height="230px"
-							/>
-						))}
-					</div>
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">
+                        {Categories.ENTERTAINMENT}
+                    </h4>
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                        {entertainmentArticles.slice(0, 8).map((article) => (
+                            <ArticleBlock
+                                key={article._id || article.slug}
+                                article={article}
+                                height="230px"
+                            />
+                        ))}
+                    </div>
 
-					<hr className="my-3" />
+                    <hr className="my-3" />
 
-					<h4 className="font-bold mb-2 text-2xl text-nique-blue">
-						{Categories.SPORTS}
-					</h4>
-					<div className="grid gap-4 grid-cols-1 sm:grid-cols-4">
-						<div className="sm:col-span-2">
-							{sportsArticles[0] && (
-								<ArticleBlock article={sportsArticles[0]} height="396px" />
-							)}
-						</div>
-						<div className="sm:col-span-2 grid gap-4 grid-cols-1 md:grid-cols-2">
-							{sportsArticles.slice(1, 5).map((article) => (
-								<ArticleBlock
-									key={article._id || article.slug}
-									article={article}
-									height="190px"
-								/>
-							))}
-						</div>
-					</div>
+                    <h4 className="font-bold mb-2 text-2xl text-nique-blue">
+                        {Categories.SPORTS}
+                    </h4>
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-4">
+                        <div className="sm:col-span-2">
+                            {sportsArticles[0] && (
+                                <ArticleBlock
+                                    article={sportsArticles[0]}
+                                    height="396px"
+                                />
+                            )}
+                        </div>
+                        <div className="sm:col-span-2 grid gap-4 grid-cols-1 md:grid-cols-2">
+                            {sportsArticles.slice(1, 5).map((article) => (
+                                <ArticleBlock
+                                    key={article._id || article.slug}
+                                    article={article}
+                                    height="190px"
+                                />
+                            ))}
+                        </div>
+                    </div>
 
-					<InfiniteScrollModule />
-				</div>
+                    <InfiniteScrollModule />
+                </div>
 
-				<div className="flex flex-col gap-4">
-					<SideWidget />
-					<SideArticle articles={sideArticles} />
-					{activePlaylistEmbedUrl && (
-						<iframe
-							className="rounded-md w-full h-137.5"
-							src={activePlaylistEmbedUrl}
-							allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-							loading="lazy"
-							title="Active Spotify playlist"
-						/>
-					)}
-				</div>
-			</div>
-		</>
-	);
+                <div className="flex flex-col gap-4">
+                    <SideWidget />
+                    <SideArticle articles={sideArticles} />
+                    {activePlaylistEmbedUrl && (
+                        <iframe
+                            className="rounded-md w-full h-137.5"
+                            src={activePlaylistEmbedUrl}
+                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                            loading="lazy"
+                            title="Active Spotify playlist"
+                        />
+                    )}
+                </div>
+            </div>
+        </>
+    );
 }
 
 export default Home;

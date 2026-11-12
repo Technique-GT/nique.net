@@ -4,63 +4,71 @@ import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-	server: {
-		host: "0.0.0.0",
-		port: 5173,
-		strictPort: true,
-	},
-	preview: {
-		port: 4173,
-		strictPort: true,
-	},
-	plugins: [tailwindcss(), react()],
-	optimizeDeps: {
-		exclude: ["pdfjs-dist", "react-pdf"],
-	},
-	build: {
-		rollupOptions: {
-			output: {
-				manualChunks(id) {
-					if (id.includes("node_modules")) {
-						// Specific Heavy Libraries - Match these FIRST to prevent them being caught by generic 'react' check
+    server: {
+        host: "0.0.0.0",
+        port: 5173,
+        strictPort: true,
+    },
+    preview: {
+        port: 4173,
+        strictPort: true,
+    },
+    plugins: [tailwindcss(), react()],
+    optimizeDeps: {
+        exclude: ["pdfjs-dist", "react-pdf"],
+    },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes("node_modules")) {
+                        // Specific Heavy Libraries - Match these FIRST to prevent them being caught by generic 'react' check
 
-						// PDF libraries
-						if (id.includes("pdfjs-dist") || id.includes("react-pdf")) {
-							return "pdf-vendor";
-						}
+                        // PDF libraries
+                        if (
+                            id.includes("pdfjs-dist") ||
+                            id.includes("react-pdf")
+                        ) {
+                            return "pdf-vendor";
+                        }
 
-						// Rich Text Editor
-						if (id.includes("react-quill-new")) {
-							return "editor-vendor";
-						}
+                        // Rich Text Editor
+                        if (id.includes("react-quill-new")) {
+                            return "editor-vendor";
+                        }
 
-						// UI Libraries
-						if (id.includes("swiper")) return "swiper-vendor";
-						if (id.includes("react-select")) return "react-select-vendor";
-						if (id.includes("react-dropzone")) return "dropzone-vendor";
+                        // UI Libraries
+                        if (id.includes("swiper")) return "swiper-vendor";
+                        if (id.includes("react-select"))
+                            return "react-select-vendor";
+                        if (id.includes("react-dropzone"))
+                            return "dropzone-vendor";
 
-						// Icon libraries
-						if (id.includes("lucide-react") || id.includes("react-icons")) {
-							return "icons-vendor";
-						}
+                        // Icon libraries
+                        if (
+                            id.includes("lucide-react") ||
+                            id.includes("react-icons")
+                        ) {
+                            return "icons-vendor";
+                        }
 
-						// Core React Framework - grouping subpaths like react/jsx-runtime, react-dom/client
-						// Check for exact package names to avoid catching 'react-pdf', 'react-icons', etc.
-						if (
-							id.includes("/node_modules/react/") ||
-							id.includes("/node_modules/react-dom/") ||
-							id.includes("/node_modules/react-router-dom/") ||
-							id.includes("/node_modules/scheduler/") ||
-							id.includes("/node_modules/react-router/")
-						) {
-							return "framework";
-						}
+                        // Core React Framework - grouping subpaths like react/jsx-runtime, react-dom/client
+                        // Check for exact package names to avoid catching 'react-pdf', 'react-icons', etc.
+                        if (
+                            id.includes("/node_modules/react/") ||
+                            id.includes("/node_modules/react-dom/") ||
+                            id.includes("/node_modules/react-router-dom/") ||
+                            id.includes("/node_modules/scheduler/") ||
+                            id.includes("/node_modules/react-router/")
+                        ) {
+                            return "framework";
+                        }
 
-						// Everything else in node_modules goes to vendor
-						return "vendor";
-					}
-				},
-			},
-		},
-	},
+                        // Everything else in node_modules goes to vendor
+                        return "vendor";
+                    }
+                },
+            },
+        },
+    },
 });

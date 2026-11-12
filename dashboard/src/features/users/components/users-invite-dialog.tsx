@@ -5,21 +5,21 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
-	Dialog,
-	DialogClose,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
 import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,111 +27,117 @@ import { apiClient } from "@/lib/api-client";
 import { useUsers } from "../context/users-context";
 
 const formSchema = z.object({
-	email: z.string().email("Please enter a valid email."),
-	desc: z.string().optional(),
+    email: z.string().email("Please enter a valid email."),
+    desc: z.string().optional(),
 });
 type UserInviteForm = z.infer<typeof formSchema>;
 
 interface Props {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
 }
 
 export function UsersInviteDialog({ open, onOpenChange }: Props) {
-	const { refetchUsers } = useUsers();
-	const [submitting, setSubmitting] = useState(false);
+    const { refetchUsers } = useUsers();
+    const [submitting, setSubmitting] = useState(false);
 
-	const form = useForm<UserInviteForm>({
-		resolver: zodResolver(formSchema),
-		defaultValues: { email: "", desc: "" },
-	});
+    const form = useForm<UserInviteForm>({
+        resolver: zodResolver(formSchema),
+        defaultValues: { email: "", desc: "" },
+    });
 
-	const onSubmit = async (values: UserInviteForm) => {
-		setSubmitting(true);
-		try {
-			await apiClient.post("/users/invite", {
-				email: values.email,
-			});
+    const onSubmit = async (values: UserInviteForm) => {
+        setSubmitting(true);
+        try {
+            await apiClient.post("/users/invite", {
+                email: values.email,
+            });
 
-			await refetchUsers();
-			form.reset();
-			onOpenChange(false);
-		} catch (_error) {
-			// You might want to show an error toast here
-		} finally {
-			setSubmitting(false);
-		}
-	};
+            await refetchUsers();
+            form.reset();
+            onOpenChange(false);
+        } catch (_error) {
+            // You might want to show an error toast here
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
-	return (
-		<Dialog
-			open={open}
-			onOpenChange={(state) => {
-				form.reset();
-				onOpenChange(state);
-			}}
-		>
-			<DialogContent className="sm:max-w-md">
-				<DialogHeader className="text-left">
-					<DialogTitle className="flex items-center gap-2">
-						<IconMailPlus /> Invite User
-					</DialogTitle>
-					<DialogDescription>
-						Invite new user to join your team by sending them an email
-						invitation.
-					</DialogDescription>
-				</DialogHeader>
-				<Form {...form}>
-					<form
-						id="user-invite-form"
-						onSubmit={form.handleSubmit(onSubmit)}
-						className="space-y-4"
-					>
-						<FormField
-							control={form.control}
-							name="email"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Email</FormLabel>
-									<FormControl>
-										<Input
-											type="email"
-											placeholder="eg: john.doe@gmail.com"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="desc"
-							render={({ field }) => (
-								<FormItem className="">
-									<FormLabel>Description (optional)</FormLabel>
-									<FormControl>
-										<Textarea
-											className="resize-none"
-											placeholder="Add a personal note to your invitation (optional)"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-					</form>
-				</Form>
-				<DialogFooter className="gap-y-2">
-					<DialogClose asChild>
-						<Button variant="outline">Cancel</Button>
-					</DialogClose>
-					<Button type="submit" form="user-invite-form" disabled={submitting}>
-						{submitting ? "Inviting..." : "Invite"} <IconSend />
-					</Button>
-				</DialogFooter>
-			</DialogContent>
-		</Dialog>
-	);
+    return (
+        <Dialog
+            open={open}
+            onOpenChange={(state) => {
+                form.reset();
+                onOpenChange(state);
+            }}
+        >
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader className="text-left">
+                    <DialogTitle className="flex items-center gap-2">
+                        <IconMailPlus /> Invite User
+                    </DialogTitle>
+                    <DialogDescription>
+                        Invite new user to join your team by sending them an
+                        email invitation.
+                    </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                    <form
+                        id="user-invite-form"
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="space-y-4"
+                    >
+                        <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="email"
+                                            placeholder="eg: john.doe@gmail.com"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="desc"
+                            render={({ field }) => (
+                                <FormItem className="">
+                                    <FormLabel>
+                                        Description (optional)
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            className="resize-none"
+                                            placeholder="Add a personal note to your invitation (optional)"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </form>
+                </Form>
+                <DialogFooter className="gap-y-2">
+                    <DialogClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button
+                        type="submit"
+                        form="user-invite-form"
+                        disabled={submitting}
+                    >
+                        {submitting ? "Inviting..." : "Invite"} <IconSend />
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
 }

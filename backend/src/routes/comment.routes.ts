@@ -1,32 +1,32 @@
 import express from "express";
 
 import {
-	createComment,
-	deleteComment,
-	dislikeComment,
-	getAllComments,
-	getCommentById,
-	getCommentStats,
-	getCommentsByArticle,
-	likeComment,
-	setCommentReaction,
-	updateComment,
-	updateCommentStatus,
+    createComment,
+    deleteComment,
+    dislikeComment,
+    getAllComments,
+    getCommentById,
+    getCommentStats,
+    getCommentsByArticle,
+    likeComment,
+    setCommentReaction,
+    updateComment,
+    updateCommentStatus,
 } from "../controllers/comment.controller";
 import { adminMiddleware } from "../middleware/admin.middleware";
 import { authMiddleware } from "../middleware/auth.middleware";
 import {
-	validateBody,
-	validateParams,
-	validateQuery,
+    validateBody,
+    validateParams,
+    validateQuery,
 } from "../middleware/validate.middleware";
 import { listCommentsQuerySchema } from "../schemas/comment.admin.query.schema";
 import { listCommentsQuerySchema as listCommentsByQuerySchema } from "../schemas/comment.list.query.schema";
 import { commentsByArticleQuerySchema } from "../schemas/comment.query.schema";
 import {
-	createCommentBodySchema,
-	updateCommentBodySchema,
-	updateCommentStatusBodySchema,
+    createCommentBodySchema,
+    updateCommentBodySchema,
+    updateCommentStatusBodySchema,
 } from "../schemas/comment.schema";
 import { articleIdParamSchema, idParamSchema } from "../schemas/params.schema";
 
@@ -41,15 +41,15 @@ router.post("/", validateBody(createCommentBodySchema), createComment);
 
 // Get approved comments for an article (public)
 router.get(
-	"/by-article",
-	validateQuery(listCommentsByQuerySchema),
-	getCommentsByArticle,
+    "/by-article",
+    validateQuery(listCommentsByQuerySchema),
+    getCommentsByArticle,
 );
 router.get(
-	"/article/:articleId",
-	validateParams(articleIdParamSchema),
-	validateQuery(commentsByArticleQuerySchema),
-	getCommentsByArticle,
+    "/article/:articleId",
+    validateParams(articleIdParamSchema),
+    validateQuery(commentsByArticleQuerySchema),
+    getCommentsByArticle,
 );
 
 // Reaction endpoints (public - uses device ID for tracking)
@@ -63,11 +63,11 @@ router.put("/:id/reaction", validateParams(idParamSchema), setCommentReaction);
 
 // List all comments (admin only - includes pending)
 router.get(
-	"/",
-	authMiddleware,
-	adminMiddleware,
-	validateQuery(listCommentsQuerySchema),
-	getAllComments,
+    "/",
+    authMiddleware,
+    adminMiddleware,
+    validateQuery(listCommentsQuerySchema),
+    getAllComments,
 );
 
 // Comment stats (admin only)
@@ -75,40 +75,40 @@ router.get("/stats", authMiddleware, adminMiddleware, getCommentStats);
 
 // Get single comment (admin only - may include unapproved)
 router.get(
-	"/:id",
-	authMiddleware,
-	adminMiddleware,
-	validateParams(idParamSchema),
-	getCommentById,
+    "/:id",
+    authMiddleware,
+    adminMiddleware,
+    validateParams(idParamSchema),
+    getCommentById,
 );
 
 // Update comment content (admin only)
 router.put(
-	"/:id",
-	authMiddleware,
-	adminMiddleware,
-	validateParams(idParamSchema),
-	validateBody(updateCommentBodySchema),
-	updateComment,
+    "/:id",
+    authMiddleware,
+    adminMiddleware,
+    validateParams(idParamSchema),
+    validateBody(updateCommentBodySchema),
+    updateComment,
 );
 
 // Delete comment (admin only)
 router.delete(
-	"/:id",
-	authMiddleware,
-	adminMiddleware,
-	validateParams(idParamSchema),
-	deleteComment,
+    "/:id",
+    authMiddleware,
+    adminMiddleware,
+    validateParams(idParamSchema),
+    deleteComment,
 );
 
 // Approve/reject comment (admin only)
 router.patch(
-	"/:id/status",
-	authMiddleware,
-	adminMiddleware,
-	validateParams(idParamSchema),
-	validateBody(updateCommentStatusBodySchema),
-	updateCommentStatus,
+    "/:id/status",
+    authMiddleware,
+    adminMiddleware,
+    validateParams(idParamSchema),
+    validateBody(updateCommentStatusBodySchema),
+    updateCommentStatus,
 );
 
 export default router;

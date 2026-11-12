@@ -8,9 +8,9 @@ const router = Router();
 
 // Public route (read-only)
 router.get(
-	"/:authorName",
-	validateParams(authorNameParamSchema),
-	getAuthorByName,
+    "/:authorName",
+    validateParams(authorNameParamSchema),
+    getAuthorByName,
 );
 
 export default router;

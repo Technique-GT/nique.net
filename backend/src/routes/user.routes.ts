@@ -1,29 +1,29 @@
 import express from "express";
 
 import {
-	bulkDeleteUsers,
-	createUser,
-	deleteUser,
-	getUserById,
-	getUsers,
-	inviteUser,
-	updateUser,
+    bulkDeleteUsers,
+    createUser,
+    deleteUser,
+    getUserById,
+    getUsers,
+    inviteUser,
+    updateUser,
 } from "../controllers/user.controller";
 import {
-	getUserArticleCount,
-	mergeUsers,
+    getUserArticleCount,
+    mergeUsers,
 } from "../controllers/user.merge.controller";
 import { adminMiddleware } from "../middleware/admin.middleware";
 import { authMiddleware } from "../middleware/auth.middleware";
 import {
-	validateBody,
-	validateParams,
+    validateBody,
+    validateParams,
 } from "../middleware/validate.middleware";
 import { idParamSchema } from "../schemas/params.schema";
 import {
-	bulkDeleteUsersBodySchema,
-	createUserBodySchema,
-	updateUserBodySchema,
+    bulkDeleteUsersBodySchema,
+    createUserBodySchema,
+    updateUserBodySchema,
 } from "../schemas/user.schema";
 
 const router = express.Router();
@@ -35,30 +35,30 @@ router.get("/", getUsers);
 router.post("/", validateBody(createUserBodySchema), createUser);
 router.post("/invite", inviteUser);
 router.post(
-	"/bulk-delete",
-	validateBody(bulkDeleteUsersBodySchema),
-	bulkDeleteUsers,
+    "/bulk-delete",
+    validateBody(bulkDeleteUsersBodySchema),
+    bulkDeleteUsers,
 );
 router.post("/merge", mergeUsers);
 
 router.get(
-	"/:id/article-count",
-	validateParams(idParamSchema),
-	getUserArticleCount,
+    "/:id/article-count",
+    validateParams(idParamSchema),
+    getUserArticleCount,
 );
 router.get("/:id", validateParams(idParamSchema), getUserById);
 
 router.put(
-	"/:id",
-	validateParams(idParamSchema),
-	validateBody(updateUserBodySchema),
-	updateUser,
+    "/:id",
+    validateParams(idParamSchema),
+    validateBody(updateUserBodySchema),
+    updateUser,
 );
 router.patch(
-	"/:id",
-	validateParams(idParamSchema),
-	validateBody(updateUserBodySchema),
-	updateUser,
+    "/:id",
+    validateParams(idParamSchema),
+    validateBody(updateUserBodySchema),
+    updateUser,
 );
 
 router.delete("/:id", validateParams(idParamSchema), deleteUser);

@@ -1,19 +1,19 @@
 import { Router } from "express";
 
 import {
-	getArticleById,
-	getArticleBySlug,
-	getArticlesByCategory,
-	getFeaturedArticles,
-	getFeed,
-	getPublishedArticles,
-	getStickyArticles,
-	incrementArticleView,
+    getArticleById,
+    getArticleBySlug,
+    getArticlesByCategory,
+    getFeaturedArticles,
+    getFeed,
+    getPublishedArticles,
+    getStickyArticles,
+    incrementArticleView,
 } from "../controllers/article.controller";
 import { applyPublicReadCacheHeaders } from "../middleware/public-cache.middleware";
 import {
-	validateParams,
-	validateQuery,
+    validateParams,
+    validateQuery,
 } from "../middleware/validate.middleware";
 import { feedQuerySchema } from "../schemas/article.feed.schema";
 import { publishedArticlesQuerySchema } from "../schemas/article.query.schema";
@@ -25,38 +25,38 @@ const router = Router();
 
 // Fast public feed (paginated, no content)
 router.get(
-	"/feed",
-	applyPublicReadCacheHeaders,
-	validateQuery(feedQuerySchema),
-	getFeed,
+    "/feed",
+    applyPublicReadCacheHeaders,
+    validateQuery(feedQuerySchema),
+    getFeed,
 );
 
 router.get(
-	"/published",
-	applyPublicReadCacheHeaders,
-	validateQuery(publishedArticlesQuerySchema),
-	getPublishedArticles,
+    "/published",
+    applyPublicReadCacheHeaders,
+    validateQuery(publishedArticlesQuerySchema),
+    getPublishedArticles,
 );
 router.get("/featured", applyPublicReadCacheHeaders, getFeaturedArticles);
 router.get("/sticky", applyPublicReadCacheHeaders, getStickyArticles);
 
 router.get(
-	"/category/:category",
-	applyPublicReadCacheHeaders,
-	getArticlesByCategory,
+    "/category/:category",
+    applyPublicReadCacheHeaders,
+    getArticlesByCategory,
 );
 
 router.get(
-	"/slug/:slug",
-	applyPublicReadCacheHeaders,
-	validateParams(slugParamSchema),
-	getArticleBySlug,
+    "/slug/:slug",
+    applyPublicReadCacheHeaders,
+    validateParams(slugParamSchema),
+    getArticleBySlug,
 );
 router.get(
-	"/:id",
-	applyPublicReadCacheHeaders,
-	validateParams(idParamSchema),
-	getArticleById,
+    "/:id",
+    applyPublicReadCacheHeaders,
+    validateParams(idParamSchema),
+    getArticleById,
 );
 router.post("/:id/view", validateParams(idParamSchema), incrementArticleView);
 

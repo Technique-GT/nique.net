@@ -7,32 +7,32 @@
 const stripTrailingSlash = (url: string) => url.replace(/\/+$/, "");
 
 const ensureApiBase = (origin: string) => {
-	const cleaned = stripTrailingSlash(origin);
-	return cleaned.endsWith("/api") ? cleaned : `${cleaned}/api`;
+    const cleaned = stripTrailingSlash(origin);
+    return cleaned.endsWith("/api") ? cleaned : `${cleaned}/api`;
 };
 
 const configuredBase = (
-	import.meta.env.VITE_API_BASE_URL as string | undefined
+    import.meta.env.VITE_API_BASE_URL as string | undefined
 )?.trim();
 
 const resolveApiOrigin = () => {
-	if (configuredBase) {
-		return configuredBase;
-	}
+    if (configuredBase) {
+        return configuredBase;
+    }
 
-	if (import.meta.env.DEV) {
-		return "http://localhost:5050";
-	}
+    if (import.meta.env.DEV) {
+        return "http://localhost:5050";
+    }
 
-	const hostname =
-		typeof window !== "undefined" ? window.location.hostname : "";
-	if (hostname === "nique.net" || hostname === "www.nique.net") {
-		return "https://api.nique.net";
-	}
+    const hostname =
+        typeof window !== "undefined" ? window.location.hostname : "";
+    if (hostname === "nique.net" || hostname === "www.nique.net") {
+        return "https://api.nique.net";
+    }
 
-	return typeof window !== "undefined"
-		? window.location.origin
-		: "https://api.nique.net";
+    return typeof window !== "undefined"
+        ? window.location.origin
+        : "https://api.nique.net";
 };
 
 export const API_BASE_URL = ensureApiBase(resolveApiOrigin());

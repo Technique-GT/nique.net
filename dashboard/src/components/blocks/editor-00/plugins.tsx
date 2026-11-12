@@ -9,24 +9,24 @@ import { CharacterCountPlugin } from "@/components/editor/plugins/character-coun
 import { ToolbarPlugin } from "./toolbar";
 
 export function Plugins() {
-	return (
-		<div className="relative">
-			<ToolbarPlugin />
-			<RichTextPlugin
-				contentEditable={
-					<div>
-						<ContentEditable
-							placeholder={"Enter content body..."}
-							className="ContentEditable__root relative block h-96 overflow-auto px-8 py-4 focus:outline-none"
-						/>
-					</div>
-				}
-				ErrorBoundary={LexicalErrorBoundary}
-			/>
-			<HistoryPlugin />
-			<ListPlugin />
-			<LinkPlugin />
-			<CharacterCountPlugin />
-		</div>
-	);
+    return (
+        <div className="relative">
+            <ToolbarPlugin />
+            <RichTextPlugin
+                contentEditable={
+                    <div>
+                        <ContentEditable
+                            placeholder={"Enter content body..."}
+                            className="ContentEditable__root relative block h-96 overflow-auto px-8 py-4 focus:outline-none"
+                        />
+                    </div>
+                }
+                ErrorBoundary={LexicalErrorBoundary}
+            />
+            <HistoryPlugin />
+            <ListPlugin />
+            <LinkPlugin />
+            <CharacterCountPlugin />
+        </div>
+    );
 }

@@ -3,16 +3,16 @@ import type { Publication } from "../services/publicationService";
 export type { Publication };
 
 export const formatPublicationDate = (pub: Publication): string => {
-	const date = new Date(pub.publishDate);
+    const date = new Date(pub.publishDate);
 
-	const month = date.toLocaleDateString("en-US", {
-		month: "long",
-		timeZone: "UTC",
-	});
-	const day = date.toLocaleDateString("en-US", {
-		day: "numeric",
-		timeZone: "UTC",
-	});
+    const month = date.toLocaleDateString("en-US", {
+        month: "long",
+        timeZone: "UTC",
+    });
+    const day = date.toLocaleDateString("en-US", {
+        day: "numeric",
+        timeZone: "UTC",
+    });
 
-	return `${month}, ${day} (${pub.issueName})`;
+    return `${month}, ${day} (${pub.issueName})`;
 };

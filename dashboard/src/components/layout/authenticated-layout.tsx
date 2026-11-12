@@ -9,34 +9,34 @@ import { SearchProvider } from "@/context/search-context";
 import { cn } from "@/lib/utils";
 
 interface Props {
-	children?: React.ReactNode;
+    children?: React.ReactNode;
 }
 
 export function AuthenticatedLayout({ children }: Props) {
-	return (
-		<SearchProvider>
-			<SidebarProvider defaultOpen={true}>
-				<SkipToMain />
-				<AppSidebar />
-				<div
-					id="content"
-					className={cn(
-						"ml-auto w-full max-w-full",
-						"md:w-[calc(100%-var(--sidebar-width))]",
-						"flex h-svh flex-col",
-						"group-data-[scroll-locked=1]/body:h-full",
-						"has-[main.fixed-main]:group-data-[scroll-locked=1]/body:h-svh",
-					)}
-				>
-					<Header>
-						<div className="ml-auto flex items-center space-x-2 sm:space-x-4">
-							<Search />
-							<Notifications />
-						</div>
-					</Header>
-					{children ? children : <Outlet />}
-				</div>
-			</SidebarProvider>
-		</SearchProvider>
-	);
+    return (
+        <SearchProvider>
+            <SidebarProvider defaultOpen={true}>
+                <SkipToMain />
+                <AppSidebar />
+                <div
+                    id="content"
+                    className={cn(
+                        "ml-auto w-full max-w-full",
+                        "md:w-[calc(100%-var(--sidebar-width))]",
+                        "flex h-svh flex-col",
+                        "group-data-[scroll-locked=1]/body:h-full",
+                        "has-[main.fixed-main]:group-data-[scroll-locked=1]/body:h-svh",
+                    )}
+                >
+                    <Header>
+                        <div className="ml-auto flex items-center space-x-2 sm:space-x-4">
+                            <Search />
+                            <Notifications />
+                        </div>
+                    </Header>
+                    {children ? children : <Outlet />}
+                </div>
+            </SidebarProvider>
+        </SearchProvider>
+    );
 }

@@ -12,14 +12,14 @@ import apiClient, { unwrap } from "./apiClient";
  * Returns approved comments by default, structured as a tree with `replies`.
  */
 const fetchCommentsByArticle = async (
-	articleId: string,
-	signal?: AbortSignal,
+    articleId: string,
+    signal?: AbortSignal,
 ): Promise<Comment[]> => {
-	const response = await apiClient.get(`/comments/article/${articleId}`, {
-		signal,
-		headers: { "x-device-id": getDeviceId() },
-	});
-	return unwrap(response.data);
+    const response = await apiClient.get(`/comments/article/${articleId}`, {
+        signal,
+        headers: { "x-device-id": getDeviceId() },
+    });
+    return unwrap(response.data);
 };
 
 /**
@@ -28,19 +28,19 @@ const fetchCommentsByArticle = async (
  * Body: { articleId, content, username }
  */
 const createComment = async (
-	articleId: string,
-	payload: { content: string; username?: string; parentCommentId?: string },
+    articleId: string,
+    payload: { content: string; username?: string; parentCommentId?: string },
 ): Promise<Comment> => {
-	const body = {
-		articleId,
-		content: payload.content,
-		username: payload.username || "Anonymous",
-		...(payload.parentCommentId
-			? { parentCommentId: payload.parentCommentId }
-			: {}),
-	};
-	const response = await apiClient.post("/comments", body);
-	return unwrap(response.data);
+    const body = {
+        articleId,
+        content: payload.content,
+        username: payload.username || "Anonymous",
+        ...(payload.parentCommentId
+            ? { parentCommentId: payload.parentCommentId }
+            : {}),
+    };
+    const response = await apiClient.post("/comments", body);
+    return unwrap(response.data);
 };
 
 /**
@@ -48,19 +48,19 @@ const createComment = async (
  * backend: PUT /comments/:id/reaction
  */
 const setCommentReaction = async (
-	commentId: string,
-	reaction: "up" | "down" | null,
+    commentId: string,
+    reaction: "up" | "down" | null,
 ): Promise<Comment> => {
-	const response = await apiClient.put(
-		`/comments/${commentId}/reaction`,
-		{ reaction, deviceId: getDeviceId() },
-		{ headers: { "x-device-id": getDeviceId() } },
-	);
-	return unwrap(response.data);
+    const response = await apiClient.put(
+        `/comments/${commentId}/reaction`,
+        { reaction, deviceId: getDeviceId() },
+        { headers: { "x-device-id": getDeviceId() } },
+    );
+    return unwrap(response.data);
 };
 
 export default {
-	fetchCommentsByArticle,
-	createComment,
-	setCommentReaction,
+    fetchCommentsByArticle,
+    createComment,
+    setCommentReaction,
 };

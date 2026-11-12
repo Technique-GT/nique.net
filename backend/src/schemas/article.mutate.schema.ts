@@ -2,45 +2,45 @@ import { z } from "zod";
 import { objectIdString } from "./objectId.schema";
 
 export const createArticleBodySchema = z.object({
-	title: z.string().trim().min(1),
-	slug: z.string().trim().min(1).optional(),
-	content: z.string().min(1),
+    title: z.string().trim().min(1),
+    slug: z.string().trim().min(1).optional(),
+    content: z.string().min(1),
 
-	categoryId: objectIdString,
-	subcategoryId: objectIdString.optional(),
-	tagIds: z.array(objectIdString).optional(),
+    categoryId: objectIdString,
+    subcategoryId: objectIdString.optional(),
+    tagIds: z.array(objectIdString).optional(),
 
-	// Accept either canonical authors or legacy string[]
-	authors: z
-		.array(
-			z.union([
-				objectIdString,
-				z.object({
-					authorId: objectIdString,
-					order: z.coerce.number().int().min(0).optional(),
-				}),
-			]),
-		)
-		.optional(),
+    // Accept either canonical authors or legacy string[]
+    authors: z
+        .array(
+            z.union([
+                objectIdString,
+                z.object({
+                    authorId: objectIdString,
+                    order: z.coerce.number().int().min(0).optional(),
+                }),
+            ]),
+        )
+        .optional(),
 
-	featuredMediaUrl: z.string().trim().min(1).optional(),
-	imageCaption: z.string().optional(),
+    featuredMediaUrl: z.string().trim().min(1).optional(),
+    imageCaption: z.string().optional(),
 
-	editorState: z.any().optional(),
-	reviewStatus: z
-		.enum(["draft", "in_review", "changes_requested", "published"])
-		.optional(),
+    editorState: z.any().optional(),
+    reviewStatus: z
+        .enum(["draft", "in_review", "changes_requested", "published"])
+        .optional(),
 
-	published: z.boolean().optional(),
-	allowComments: z.boolean().optional(),
-	isFeatured: z.boolean().optional(),
-	isSticky: z.boolean().optional(),
+    published: z.boolean().optional(),
+    allowComments: z.boolean().optional(),
+    isFeatured: z.boolean().optional(),
+    isSticky: z.boolean().optional(),
 });
 
 export const updateArticleBodySchema = createArticleBodySchema.partial();
 
 export const updateArticleStatusBodySchema = z.object({
-	status: z.enum(["draft", "published"]).optional(),
-	isFeatured: z.boolean().optional(),
-	isSticky: z.boolean().optional(),
+    status: z.enum(["draft", "published"]).optional(),
+    isFeatured: z.boolean().optional(),
+    isSticky: z.boolean().optional(),
 });

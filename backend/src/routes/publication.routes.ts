@@ -1,7 +1,7 @@
 import express from "express";
 import {
-	createPublication,
-	getPublications,
+    createPublication,
+    getPublications,
 } from "../controllers/publication.controller";
 import { adminMiddleware } from "../middleware/admin.middleware";
 import { authMiddleware } from "../middleware/auth.middleware";
