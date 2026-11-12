@@ -4,6 +4,4 @@ export enum Categories {
     OPINION = "Opinion",
     ENTERTAINMENT = "Entertainment",
     SPORTS = "Sports",
-    ABOUT = "About",
-    AD = "Submit an Ad"
 }

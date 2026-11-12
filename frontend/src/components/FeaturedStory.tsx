@@ -1,12 +1,12 @@
-import { useNavigate } from 'react-router-dom'
-import { ArticleBlockProps } from '../types/article'
+import { useNavigate } from "react-router-dom";
+import type { ArticleBlockProps } from "../types/article";
 import {
     getArticleAuthorName,
     getArticleCategoryName,
     getArticleDescription,
     getArticleImage,
     getArticleLink,
-} from '../utils/articlePresentation'
+} from "../utils/articlePresentation";
 
 interface FeaturedStoryProps extends ArticleBlockProps {
     priority?: boolean;
@@ -21,12 +21,13 @@ function FeaturedStory({ article, priority = false }: FeaturedStoryProps) {
     const desc = getArticleDescription(article);
     return (
         <div className="flex flex-col flex-1 min-h-0">
-            <div className="relative cursor-pointer rounded-md w-full flex p-4 flex-1 min-h-0 overflow-hidden group"
+            <div
+                className="relative cursor-pointer rounded-md w-full flex p-4 flex-1 min-h-0 overflow-hidden group"
                 onClick={() => navigate(link)}
             >
                 {image && (
-                    <img 
-                        src={image} 
+                    <img
+                        src={image}
                         alt={article.title}
                         loading={priority ? "eager" : "lazy"}
                         decoding={priority ? "auto" : "async"}
@@ -35,35 +36,50 @@ function FeaturedStory({ article, priority = false }: FeaturedStoryProps) {
                     />
                 )}
 
-                <div 
+                <div
                     className="absolute inset-0 pointer-events-none"
                     style={{
-                        backgroundImage: `linear-gradient(to top, transparent 70%, rgba(229, 229, 229) 90%)`
+                        backgroundImage: `linear-gradient(to top, transparent 70%, rgba(229, 229, 229) 90%)`,
                     }}
                 />
 
                 <div className="relative z-10 pointer-events-none">
-                    <h4 className="text-[#1A1E47] font-bold text-xl mb-1">Featured Story</h4>
-                    <h3 className="title text-black font-bold text-3xl/7 mb-2">{article.title}</h3>
-                    <h6 className="text-[#1A1E47] text-sm"><span className="uppercase">{category}</span> &#8226; {author}</h6>
+                    <h4 className="text-[#1A1E47] font-bold text-xl mb-1">
+                        Featured Story
+                    </h4>
+                    <h3 className="title text-black font-bold text-3xl/7 mb-2">
+                        {article.title}
+                    </h3>
+                    <h6 className="text-[#1A1E47] text-sm">
+                        <span className="uppercase">{category}</span> &#8226;{" "}
+                        {author}
+                    </h6>
                 </div>
             </div>
 
-            <h6 className="text-nique-blue text-xs mt-1">{article.imageCaption}</h6>
+            <h6 className="text-nique-blue text-xs mt-1">
+                {article.imageCaption}
+            </h6>
             <p
                 className="mt-2 overflow-hidden"
                 style={{
-                    display: '-webkit-box',
+                    display: "-webkit-box",
                     WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    }}
+                    WebkitBoxOrient: "vertical",
+                }}
             >
                 {desc}
             </p>
-            <p><a className='text-nique-blue-hover underline cursor-pointer' onClick={() => navigate(link)}>[Read more...]</a></p>
+            <p>
+                <a
+                    className="text-nique-blue-hover underline cursor-pointer"
+                    onClick={() => navigate(link)}
+                >
+                    [Read more...]
+                </a>
+            </p>
         </div>
-    )
+    );
 }
 
-
-export default FeaturedStory
+export default FeaturedStory;

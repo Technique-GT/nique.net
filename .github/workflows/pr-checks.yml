@@ -40,8 +40,11 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Backend Lint
-        run: npm --prefix backend run lint
+      - name: Lint
+        run: npm run check
+
+      - name: Knip
+        run: npm run knip
 
       - name: Backend Test
         run: npm --prefix backend run test
@@ -49,14 +52,8 @@ jobs:
       - name: Backend Build
         run: npm --prefix backend run build
 
-      - name: Frontend Lint
-        run: npm --prefix frontend run lint
-
       - name: Frontend Build
         run: npm --prefix frontend run build
-
-      - name: Dashboard Lint
-        run: npm --prefix dashboard run lint
 
       - name: Dashboard Build
         run: npm --prefix dashboard run build

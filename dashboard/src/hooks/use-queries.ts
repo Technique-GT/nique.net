@@ -7,133 +7,117 @@
  * - Do NOT persist: auth, large/fast-changing lists (articles, comments, users).
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import { getAdminArticleById } from "@/services/articles";
 import {
-  getCategories,
-  getSubCategories,
-  getTags,
-  type Category,
-  type SubCategory,
-  type Tag,
-} from '@/services/taxonomy'
+    type CommentsQuery,
+    deleteComment,
+    getCommentStats,
+    getComments,
+    updateCommentStatus,
+} from "@/services/comments";
 import {
-  getUsers,
-  type User,
-} from '@/services/users'
+    deleteSliver,
+    getSlivers,
+    type SliversQuery,
+} from "@/services/slivers";
 import {
-  getComments,
-  getCommentStats,
-  updateCommentStatus,
-  deleteComment,
-  type Comment,
-  type CommentsQuery,
-  type CommentStats,
-} from '@/services/comments'
-import {
-  getSlivers,
-  deleteSliver,
-  type Sliver,
-  type SliversQuery,
-} from '@/services/slivers'
-import {
-  getAdminArticleById,
-  createAdminArticleDraft,
-} from '@/services/articles'
-import { apiClient } from '@/lib/api-client'
+    type Category,
+    getCategories,
+    getSubCategories,
+    getTags,
+    type SubCategory,
+    type Tag,
+} from "@/services/taxonomy";
+import { getUsers } from "@/services/users";
 
 // ============================================================================
 // Query Keys (centralized for consistency)
 // ============================================================================
 
 export const queryKeys = {
-  // Articles
-  adminArticle: (id: string) => ['admin-article', id] as const,
+    // Articles
+    adminArticle: (id: string) => ["admin-article", id] as const,
 
-  // Taxonomy - persisted
-  categories: ['categories'] as const,
-  subCategories: ['sub-categories'] as const,
-  tags: ['tags'] as const,
+    // Taxonomy - persisted
+    categories: ["categories"] as const,
+    subCategories: ["sub-categories"] as const,
+    tags: ["tags"] as const,
 
-  // Users - NOT persisted (PII)
-  users: (params?: {
-    page?: number
-    limit?: number
-    search?: string
-    sortBy?: string
-    sortDir?: 'asc' | 'desc'
-    isAdmin?: boolean
-  }) =>
-    ['users', params] as const,
-  usersList: (page: number, limit: number) => ['users-list', page, limit] as const,
+    // Users - NOT persisted (PII)
+    users: (params?: {
+        page?: number;
+        limit?: number;
+        search?: string;
+        sortBy?: string;
+        sortDir?: "asc" | "desc";
+        isAdmin?: boolean;
+    }) => ["users", params] as const,
+    usersList: (page: number, limit: number) =>
+        ["users-list", page, limit] as const,
 
+    // Comments - NOT persisted (fast-changing)
+    comments: (query?: CommentsQuery) => ["comments", query] as const,
+    commentStats: ["comment-stats"] as const,
 
-  // Comments - NOT persisted (fast-changing)
-  comments: (query?: CommentsQuery) => ['comments', query] as const,
-  commentStats: ['comment-stats'] as const,
+    // Slivers - NOT persisted (fast-changing)
+    slivers: (query?: SliversQuery) => ["slivers", query] as const,
 
-  // Slivers - NOT persisted (fast-changing)
-  slivers: (query?: SliversQuery) => ['slivers', query] as const,
-
-  // Playlists - persisted (small reference data)
-  playlists: ['playlists'] as const,
-
-  // Tags stats - persisted
-  tagStats: ['tag-stats'] as const,
-
-  // Category stats - persisted
-  categoryStats: ['category-stats'] as const,
-  subCategoryStats: ['sub-category-stats'] as const,
-}
+    // Playlists - persisted (small reference data)
+    playlists: ["playlists"] as const,
+};
 
 // ============================================================================
 // Taxonomy Hooks (PERSISTED)
 // ============================================================================
 
 export function useCategories() {
-  return useQuery({
-    queryKey: queryKeys.categories,
-    queryFn: getCategories,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    meta: { persist: true },
-  })
+    return useQuery({
+        queryKey: queryKeys.categories,
+        queryFn: getCategories,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        meta: { persist: true },
+    });
 }
 
 export function useSubCategories() {
-  return useQuery({
-    queryKey: queryKeys.subCategories,
-    queryFn: getSubCategories,
-    staleTime: 5 * 60 * 1000,
-    meta: { persist: true },
-  })
+    return useQuery({
+        queryKey: queryKeys.subCategories,
+        queryFn: getSubCategories,
+        staleTime: 5 * 60 * 1000,
+        meta: { persist: true },
+    });
 }
 
 export function useTags() {
-  return useQuery({
-    queryKey: queryKeys.tags,
-    queryFn: getTags,
-    staleTime: 5 * 60 * 1000,
-    meta: { persist: true },
-  })
+    return useQuery({
+        queryKey: queryKeys.tags,
+        queryFn: getTags,
+        staleTime: 5 * 60 * 1000,
+        meta: { persist: true },
+    });
 }
 
 // Combined taxonomy fetch for forms
 export function useTaxonomy() {
-  const categories = useCategories()
-  const subCategories = useSubCategories()
-  const tags = useTags()
+    const categories = useCategories();
+    const subCategories = useSubCategories();
+    const tags = useTags();
 
-  return {
-    categories: categories.data ?? [],
-    subCategories: subCategories.data ?? [],
-    tags: tags.data ?? [],
-    isLoading: categories.isLoading || subCategories.isLoading || tags.isLoading,
-    isError: categories.isError || subCategories.isError || tags.isError,
-    refetch: () => {
-      categories.refetch()
-      subCategories.refetch()
-      tags.refetch()
-    },
-  }
+    return {
+        categories: categories.data ?? [],
+        subCategories: subCategories.data ?? [],
+        tags: tags.data ?? [],
+        isLoading:
+            categories.isLoading || subCategories.isLoading || tags.isLoading,
+        isError: categories.isError || subCategories.isError || tags.isError,
+        refetch: () => {
+            categories.refetch();
+            subCategories.refetch();
+            tags.refetch();
+        },
+    };
 }
 
 // ============================================================================
@@ -141,18 +125,18 @@ export function useTaxonomy() {
 // ============================================================================
 
 export function useUsers(params?: {
-  page?: number
-  limit?: number
-  search?: string
-  sortBy?: string
-  sortDir?: 'asc' | 'desc'
+    page?: number;
+    limit?: number;
+    search?: string;
+    sortBy?: string;
+    sortDir?: "asc" | "desc";
 }) {
-  return useQuery({
-    queryKey: queryKeys.users(params),
-    queryFn: () => getUsers(params),
-    staleTime: 30 * 1000, // 30 seconds
-    // No meta.persist - users contain PII
-  })
+    return useQuery({
+        queryKey: queryKeys.users(params),
+        queryFn: () => getUsers(params),
+        staleTime: 30 * 1000, // 30 seconds
+        // No meta.persist - users contain PII
+    });
 }
 
 // ============================================================================
@@ -160,44 +144,44 @@ export function useUsers(params?: {
 // ============================================================================
 
 export function useComments(query?: CommentsQuery) {
-  return useQuery({
-    queryKey: queryKeys.comments(query),
-    queryFn: () => getComments(query),
-    staleTime: 15 * 1000, // 15 seconds
-    // No meta.persist
-  })
+    return useQuery({
+        queryKey: queryKeys.comments(query),
+        queryFn: () => getComments(query),
+        staleTime: 15 * 1000, // 15 seconds
+        // No meta.persist
+    });
 }
 
 export function useCommentStats() {
-  return useQuery({
-    queryKey: queryKeys.commentStats,
-    queryFn: getCommentStats,
-    staleTime: 30 * 1000,
-    meta: { persist: true }, // Stats are small, OK to persist
-  })
+    return useQuery({
+        queryKey: queryKeys.commentStats,
+        queryFn: getCommentStats,
+        staleTime: 30 * 1000,
+        meta: { persist: true }, // Stats are small, OK to persist
+    });
 }
 
 export function useUpdateCommentStatus() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, approved }: { id: string; approved: boolean }) =>
-      updateCommentStatus(id, approved),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['comments'] })
-      queryClient.invalidateQueries({ queryKey: queryKeys.commentStats })
-    },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, approved }: { id: string; approved: boolean }) =>
+            updateCommentStatus(id, approved),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["comments"] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.commentStats });
+        },
+    });
 }
 
 export function useDeleteComment() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: deleteComment,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['comments'] })
-      queryClient.invalidateQueries({ queryKey: queryKeys.commentStats })
-    },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: deleteComment,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["comments"] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.commentStats });
+        },
+    });
 }
 
 // ============================================================================
@@ -205,21 +189,21 @@ export function useDeleteComment() {
 // ============================================================================
 
 export function useSlivers(query?: SliversQuery) {
-  return useQuery({
-    queryKey: queryKeys.slivers(query),
-    queryFn: () => getSlivers(query),
-    staleTime: 30 * 1000,
-  })
+    return useQuery({
+        queryKey: queryKeys.slivers(query),
+        queryFn: () => getSlivers(query),
+        staleTime: 30 * 1000,
+    });
 }
 
 export function useDeleteSliver() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: deleteSliver,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['slivers'] })
-    },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: deleteSliver,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["slivers"] });
+        },
+    });
 }
 
 // ============================================================================
@@ -227,76 +211,82 @@ export function useDeleteSliver() {
 // ============================================================================
 
 export type Playlist = {
-  _id: string
-  name: string
-  description: string
-  spotifyUrl: string
-  isActive: boolean
-  createdAt: string
-  updatedAt: string
-}
+    _id: string;
+    name: string;
+    description: string;
+    spotifyUrl: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+};
 
 export function usePlaylists() {
-  return useQuery({
-    queryKey: queryKeys.playlists,
-    queryFn: async () => {
-      const res = await apiClient.get('/playlists')
-      return res as unknown as Playlist[]
-    },
-    staleTime: 5 * 60 * 1000,
-    meta: { persist: true },
-  })
+    return useQuery({
+        queryKey: queryKeys.playlists,
+        queryFn: async () => {
+            const res = await apiClient.get("/playlists");
+            return res as unknown as Playlist[];
+        },
+        staleTime: 5 * 60 * 1000,
+        meta: { persist: true },
+    });
 }
 
 export function useCreatePlaylist() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (data: Partial<Playlist>) => {
-      const res = await apiClient.post('/playlists', data)
-      return res as unknown as Playlist
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.playlists })
-    },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (data: Partial<Playlist>) => {
+            const res = await apiClient.post("/playlists", data);
+            return res as unknown as Playlist;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.playlists });
+        },
+    });
 }
 
 export function useUpdatePlaylist() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<Playlist> }) => {
-      const res = await apiClient.put(`/playlists/${id}`, data)
-      return res as unknown as Playlist
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.playlists })
-    },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({
+            id,
+            data,
+        }: {
+            id: string;
+            data: Partial<Playlist>;
+        }) => {
+            const res = await apiClient.put(`/playlists/${id}`, data);
+            return res as unknown as Playlist;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.playlists });
+        },
+    });
 }
 
 export function useDeletePlaylist() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await apiClient.delete(`/playlists/${id}`)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.playlists })
-    },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: string) => {
+            await apiClient.delete(`/playlists/${id}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.playlists });
+        },
+    });
 }
 
 export function useSetActivePlaylist() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const res = await apiClient.put(`/playlists/${id}/set-active`)
-      return res as unknown as Playlist
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.playlists })
-    },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: string) => {
+            const res = await apiClient.put(`/playlists/${id}/set-active`);
+            return res as unknown as Playlist;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.playlists });
+        },
+    });
 }
 
 // ============================================================================
@@ -304,55 +294,47 @@ export function useSetActivePlaylist() {
 // ============================================================================
 
 export function useCreateTag() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (data: { name: string }) => {
-      const res = await apiClient.post('/tags', data)
-      return res as unknown as Tag
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tags })
-      queryClient.invalidateQueries({ queryKey: queryKeys.tagStats })
-    },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (data: { name: string }) => {
+            const res = await apiClient.post("/tags", data);
+            return res as unknown as Tag;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.tags });
+        },
+    });
 }
 
 export function useUpdateTag() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: { name: string } }) => {
-      const res = await apiClient.put(`/tags/${id}`, data)
-      return res as unknown as Tag
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tags })
-    },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({
+            id,
+            data,
+        }: {
+            id: string;
+            data: { name: string };
+        }) => {
+            const res = await apiClient.put(`/tags/${id}`, data);
+            return res as unknown as Tag;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.tags });
+        },
+    });
 }
 
 export function useDeleteTag() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await apiClient.delete(`/tags/${id}`)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tags })
-      queryClient.invalidateQueries({ queryKey: queryKeys.tagStats })
-    },
-  })
-}
-
-export function useTagStats() {
-  return useQuery({
-    queryKey: queryKeys.tagStats,
-    queryFn: async () => {
-      const res = await apiClient.get('/tags/stats')
-      return res as unknown as { totalTags: number }
-    },
-    staleTime: 5 * 60 * 1000,
-    meta: { persist: true },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: string) => {
+            await apiClient.delete(`/tags/${id}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.tags });
+        },
+    });
 }
 
 // ============================================================================
@@ -360,55 +342,47 @@ export function useTagStats() {
 // ============================================================================
 
 export function useCreateCategory() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (data: { name: string }) => {
-      const res = await apiClient.post('/categories', data)
-      return res as unknown as Category
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.categories })
-      queryClient.invalidateQueries({ queryKey: queryKeys.categoryStats })
-    },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (data: { name: string }) => {
+            const res = await apiClient.post("/categories", data);
+            return res as unknown as Category;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+        },
+    });
 }
 
 export function useUpdateCategory() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: { name: string } }) => {
-      const res = await apiClient.put(`/categories/${id}`, data)
-      return res as unknown as Category
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.categories })
-    },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({
+            id,
+            data,
+        }: {
+            id: string;
+            data: { name: string };
+        }) => {
+            const res = await apiClient.put(`/categories/${id}`, data);
+            return res as unknown as Category;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+        },
+    });
 }
 
 export function useDeleteCategory() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await apiClient.delete(`/categories/${id}`)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.categories })
-      queryClient.invalidateQueries({ queryKey: queryKeys.categoryStats })
-    },
-  })
-}
-
-export function useCategoryStats() {
-  return useQuery({
-    queryKey: queryKeys.categoryStats,
-    queryFn: async () => {
-      const res = await apiClient.get('/categories/stats')
-      return res as unknown as { totalCategories: number }
-    },
-    staleTime: 5 * 60 * 1000,
-    meta: { persist: true },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: string) => {
+            await apiClient.delete(`/categories/${id}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+        },
+    });
 }
 
 // ============================================================================
@@ -416,55 +390,53 @@ export function useCategoryStats() {
 // ============================================================================
 
 export function useCreateSubCategory() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (data: { name: string; categoryId: string }) => {
-      const res = await apiClient.post('/sub-categories', data)
-      return res as unknown as SubCategory
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.subCategories })
-      queryClient.invalidateQueries({ queryKey: queryKeys.subCategoryStats })
-    },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (data: { name: string; categoryId: string }) => {
+            const res = await apiClient.post("/sub-categories", data);
+            return res as unknown as SubCategory;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.subCategories,
+            });
+        },
+    });
 }
 
 export function useUpdateSubCategory() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: { name: string; categoryId?: string } }) => {
-      const res = await apiClient.put(`/sub-categories/${id}`, data)
-      return res as unknown as SubCategory
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.subCategories })
-    },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({
+            id,
+            data,
+        }: {
+            id: string;
+            data: { name: string; categoryId?: string };
+        }) => {
+            const res = await apiClient.put(`/sub-categories/${id}`, data);
+            return res as unknown as SubCategory;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.subCategories,
+            });
+        },
+    });
 }
 
 export function useDeleteSubCategory() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await apiClient.delete(`/sub-categories/${id}`)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.subCategories })
-      queryClient.invalidateQueries({ queryKey: queryKeys.subCategoryStats })
-    },
-  })
-}
-
-export function useSubCategoryStats() {
-  return useQuery({
-    queryKey: queryKeys.subCategoryStats,
-    queryFn: async () => {
-      const res = await apiClient.get('/sub-categories/stats')
-      return res as unknown as { totalSubCategories: number }
-    },
-    staleTime: 5 * 60 * 1000,
-    meta: { persist: true },
-  })
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: string) => {
+            await apiClient.delete(`/sub-categories/${id}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.subCategories,
+            });
+        },
+    });
 }
 
 // ============================================================================
@@ -472,27 +444,16 @@ export function useSubCategoryStats() {
 // ============================================================================
 
 export function useAdminArticle(id: string) {
-  return useQuery({
-    queryKey: queryKeys.adminArticle(id),
-    queryFn: () => getAdminArticleById(id),
-    enabled: !!id,
-    // We want the editor to always reflect current server state (review lock, latest content)
-    staleTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-  })
-}
-
-export function useCreateArticleDraft() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: createAdminArticleDraft,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-articles'] })
-      return data
-    },
-  })
+    return useQuery({
+        queryKey: queryKeys.adminArticle(id),
+        queryFn: () => getAdminArticleById(id),
+        enabled: !!id,
+        // We want the editor to always reflect current server state (review lock, latest content)
+        staleTime: 0,
+        refetchOnMount: "always",
+        refetchOnWindowFocus: true,
+    });
 }
 
 // Re-export types for convenience
-export type { Category, SubCategory, Tag, User, Comment, CommentStats, Sliver }
+export type { Category, SubCategory, Tag };
