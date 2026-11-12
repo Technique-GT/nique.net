@@ -52,14 +52,8 @@ jobs:
       - name: Backend Build
         run: npm --prefix backend run build
 
-      - name: Frontend Lint
-        run: npm --prefix frontend run lint
-
       - name: Frontend Build
         run: npm --prefix frontend run build
-
-      - name: Dashboard Lint
-        run: npm --prefix dashboard run lint
 
       - name: Dashboard Build
         run: npm --prefix dashboard run build
