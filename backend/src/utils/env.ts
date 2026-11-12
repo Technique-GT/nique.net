@@ -4,11 +4,11 @@ import { z } from "zod";
 // Load variables from `server/.env` for local dev.
 dotenv.config();
 
-// Treat empty strings as undefined so `.env.example` placeholders don't fail validation.
+// Treat missing and empty optional values as undefined.
 const optionalString = z
     .string()
-    .transform((v) => v.trim() || undefined)
-    .pipe(z.string().min(1).optional());
+    .optional()
+    .transform((v) => v?.trim() || undefined);
 
 export const env = z
     .object({
