@@ -175,87 +175,81 @@ export default function Tags() {
                     ) : null
                 }
                 actions={
-                    <>
-                        {isAdmin && (
-                            <Dialog
-                                open={isDialogOpen}
-                                onOpenChange={setIsDialogOpen}
-                            >
-                                <DialogTrigger asChild>
-                                    <Button onClick={openCreateDialog}>
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        Add Tag
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>
-                                            {editingTag
-                                                ? "Edit Tag"
-                                                : "Add New Tag"}
-                                        </DialogTitle>
-                                        <DialogDescription>
-                                            {editingTag
-                                                ? "Update your tag information."
-                                                : "Create a new tag to organize your content."}
-                                        </DialogDescription>
-                                    </DialogHeader>
+                    isAdmin && (
+                        <Dialog
+                            open={isDialogOpen}
+                            onOpenChange={setIsDialogOpen}
+                        >
+                            <DialogTrigger asChild>
+                                <Button onClick={openCreateDialog}>
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Add Tag
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>
+                                        {editingTag
+                                            ? "Edit Tag"
+                                            : "Add New Tag"}
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                        {editingTag
+                                            ? "Update your tag information."
+                                            : "Create a new tag to organize your content."}
+                                    </DialogDescription>
+                                </DialogHeader>
 
-                                    {/* Show error in dialog if any */}
-                                    {error && (
-                                        <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
-                                            {error}
-                                        </div>
-                                    )}
-
-                                    <div className="grid gap-4 py-4">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="name">
-                                                Tag Name *
-                                            </Label>
-                                            <Input
-                                                id="name"
-                                                value={formData.name}
-                                                onChange={(e) =>
-                                                    setFormData({
-                                                        ...formData,
-                                                        name: e.target.value,
-                                                    })
-                                                }
-                                                placeholder="Enter tag name"
-                                                required
-                                            />
-                                        </div>
+                                {/* Show error in dialog if any */}
+                                {error && (
+                                    <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
+                                        {error}
                                     </div>
-                                    <DialogFooter>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() =>
-                                                setIsDialogOpen(false)
+                                )}
+
+                                <div className="grid gap-4 py-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="name">Tag Name *</Label>
+                                        <Input
+                                            id="name"
+                                            value={formData.name}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    name: e.target.value,
+                                                })
                                             }
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            onClick={handleAddTag}
-                                            disabled={
-                                                createTag.isPending ||
-                                                updateTag.isPending
-                                            }
-                                        >
-                                            {createTag.isPending ||
+                                            placeholder="Enter tag name"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setIsDialogOpen(false)}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        onClick={handleAddTag}
+                                        disabled={
+                                            createTag.isPending ||
                                             updateTag.isPending
-                                                ? "Saving..."
-                                                : editingTag
-                                                  ? "Update Tag"
-                                                  : "Create Tag"}
-                                        </Button>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
-                        )}
-                    </>
+                                        }
+                                    >
+                                        {createTag.isPending ||
+                                        updateTag.isPending
+                                            ? "Saving..."
+                                            : editingTag
+                                              ? "Update Tag"
+                                              : "Create Tag"}
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    )
                 }
             />
 

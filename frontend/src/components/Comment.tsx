@@ -45,7 +45,7 @@ const Comment = (data: CommentProps) => {
 
     useEffect(() => {
         const seconds = Math.floor(
-            (new Date().getTime() - new Date(data.createdAt).getTime()) / 1000,
+            (Date.now() - new Date(data.createdAt).getTime()) / 1000,
         );
 
         let interval = seconds / 31536000;

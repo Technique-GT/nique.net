@@ -12,9 +12,7 @@ export const apiClient = axios.create({
 
 // Helper to read client-side cookies
 function getCookie(name: string): string | null {
-    const match = document.cookie.match(
-        new RegExp("(^| )" + name + "=([^;]+)"),
-    );
+    const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
     return match ? decodeURIComponent(match[2]) : null;
 }
 

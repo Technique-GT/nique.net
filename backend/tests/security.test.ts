@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import request from "supertest";
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { createApp } from "../src/app";
 import RevokedToken from "../src/models/RevokedToken";
 import { hashToken } from "../src/utils/security";

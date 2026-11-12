@@ -19,7 +19,7 @@ export const getPublications = async (
         const publications: IPrintPublication[] =
             await PrintPublication.find().sort({ publishDate: -1 });
         res.status(200).json(publications);
-    } catch (error) {
+    } catch (_error) {
         res.status(500).json({ error: "Failed to fetch publication dates." });
     }
 };
@@ -39,7 +39,7 @@ export const createPublication = async (
 
         await newPublication.save();
         res.status(201).json(newPublication);
-    } catch (error) {
+    } catch (_error) {
         res.status(500).json({ error: "Failed to create publication date." });
     }
 };

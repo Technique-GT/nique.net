@@ -37,7 +37,7 @@ export function UserAuthForm({ className }: UserAuthFormProps) {
         <div className={`space-y-4 ${className}`}>
             <Button className="w-full" asChild>
                 <a
-                    href={`${API_BASE_URL}/auth/google?redirect=${encodeURIComponent(window.location.origin + "/dash")}`}
+                    href={`${API_BASE_URL}/auth/google?redirect=${encodeURIComponent(`${window.location.origin}/dash`)}`}
                     className="inline-flex items-center gap-2"
                 >
                     <img

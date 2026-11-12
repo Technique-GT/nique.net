@@ -267,7 +267,7 @@ export default function ArticleList() {
             >(`/admin/articles/${currentArticle._id}`);
 
             // deleteArticle returns { success: true, message: ... }
-            if (result && result.success) {
+            if (result?.success) {
                 setMessage({
                     type: "success",
                     text: "Article deleted successfully!",
@@ -343,12 +343,10 @@ export default function ArticleList() {
                     ) : null
                 }
                 actions={
-                    <>
-                        <Button onClick={handleNewArticle}>
-                            <Plus className="w-4 h-4 mr-2" />
-                            New Article
-                        </Button>
-                    </>
+                    <Button onClick={handleNewArticle}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        New Article
+                    </Button>
                 }
             />
 
