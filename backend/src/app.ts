@@ -180,6 +180,7 @@ export function createApp() {
                 "Authorization",
                 "Cookie",
                 "x-device-id",
+                "x-csrf-token",
             ],
         }),
     );
