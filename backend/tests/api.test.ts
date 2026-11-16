@@ -34,6 +34,24 @@ describe("Health Endpoint", () => {
     });
 });
 
+describe("CORS", () => {
+    it("allows the dashboard CSRF header on mutation preflights", async () => {
+        const res = await request(app)
+            .options("/api/auth/login")
+            .set("Origin", "http://localhost:5174")
+            .set("Access-Control-Request-Method", "POST")
+            .set("Access-Control-Request-Headers", "content-type,x-csrf-token");
+
+        expect(res.status).toBe(204);
+        expect(res.headers["access-control-allow-origin"]).toBe(
+            "http://localhost:5174",
+        );
+        expect(res.headers["access-control-allow-headers"]).toContain(
+            "x-csrf-token",
+        );
+    });
+});
+
 describe("Articles Endpoints", () => {
     describe("GET /api/articles/feed", () => {
         it("returns paginated articles", async () => {
