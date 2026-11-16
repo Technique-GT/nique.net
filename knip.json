@@ -1,0 +1,6 @@
+{
+    "ignoreIssues": {
+        "dashboard/src/components/ui/**": ["exports"],
+        "backend/src/middleware/auth.middleware.ts": ["duplicates"]
+    }
+}
