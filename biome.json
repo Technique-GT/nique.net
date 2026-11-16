@@ -1,5 +1,8 @@
 {
     "$schema": "https://biomejs.dev/schemas/2.5.13/schema.json",
+    "files": {
+        "includes": ["**/*", "!dashboard/src/routeTree.gen.ts"]
+    },
     "formatter": {
         "indentStyle": "space",
         "indentWidth": 4

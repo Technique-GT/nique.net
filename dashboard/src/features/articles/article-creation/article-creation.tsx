@@ -194,6 +194,7 @@ export default function ArticleCreation() {
                 typeof backendArticle.featuredMediaUrl === "string"
                     ? backendArticle.featuredMediaUrl
                     : undefined,
+            youtubeVideoId: backendArticle.youtubeVideoId ?? null,
             isPublished: backendArticle.published,
             isFeatured: backendArticle.isFeatured ?? false,
             isSticky: backendArticle.isSticky ?? false,

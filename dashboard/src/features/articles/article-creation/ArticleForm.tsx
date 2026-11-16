@@ -61,6 +61,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
     Tooltip,
     TooltipContent,
@@ -70,6 +71,7 @@ import { apiClient } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { createAdminArticle } from "@/services/articles";
 import { useAuthStore } from "@/stores/authStore";
+import { MediaPickerSheet } from "./MediaPickerSheet";
 import type {
     Article,
     Author,
@@ -80,6 +82,7 @@ import type {
     SubCategory,
     Tag,
 } from "./types";
+import { parseYouTubeVideoInput } from "./youtube";
 
 interface ArticleFormProps {
     categories: Category[];
@@ -95,7 +98,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/hooks/use-queries";
 import { withMediaSessionRevalidation } from "@/lib/media-url";
 import { getMediaImages, type MediaImagesResponse } from "@/services/media";
-import { MediaPickerSheet } from "./MediaPickerSheet";
 
 const MEDIA_PICKER_PAGE_SIZE = 12;
 const MEDIA_PICKER_STALE_TIME_MS = 5 * 60 * 1000;
@@ -148,6 +150,11 @@ export default function ArticleForm({
     const [featuredMediaUrl, setFeaturedMediaUrl] = useState<string>(
         initialArticle?.featuredMediaUrl || "",
     );
+    const [youtubeVideoInput, setYoutubeVideoInput] = useState(
+        initialArticle?.youtubeVideoId
+            ? `https://youtu.be/${initialArticle.youtubeVideoId}`
+            : "",
+    );
     const [isPublished, setIsPublished] = useState(
         initialArticle?.isPublished || false,
     );
@@ -177,6 +184,7 @@ export default function ArticleForm({
             ? withMediaSessionRevalidation(trimmed, mediaPreviewNonce)
             : "";
     }, [featuredMediaUrl, mediaPreviewNonce]);
+    const parsedYoutubeVideoId = parseYouTubeVideoInput(youtubeVideoInput);
 
     const isOwner = me?.id === initialArticle?.ownerId;
     const isAdmin = !!me?.isAdmin;
@@ -259,6 +267,11 @@ export default function ArticleForm({
             setSelectedTags(initialArticle.tags?.map((t) => t._id) || []);
             setSelectedAuthors(initialArticle.authors || []);
             setFeaturedMediaUrl(initialArticle.featuredMediaUrl || "");
+            setYoutubeVideoInput(
+                initialArticle.youtubeVideoId
+                    ? `https://youtu.be/${initialArticle.youtubeVideoId}`
+                    : "",
+            );
             setIsPublished(initialArticle.isPublished || false);
             setAllowComments(initialArticle.allowComments ?? true);
             setIsFeatured(initialArticle.isFeatured || false);
@@ -1143,6 +1156,11 @@ export default function ArticleForm({
             errors.category = "Category is required.";
         }
 
+        if (youtubeVideoInput.trim() && !parsedYoutubeVideoId) {
+            errors.youtubeVideo =
+                "Enter a valid YouTube URL or iframe embed snippet.";
+        }
+
         return errors;
     };
 
@@ -1172,6 +1190,7 @@ export default function ArticleForm({
                 title: title.trim(),
                 content: htmlContent,
                 editorState: content,
+                youtubeVideoId: parsedYoutubeVideoId,
                 ...(imageCaption.trim()
                     ? { imageCaption: imageCaption.trim() }
                     : {}),
@@ -1247,6 +1266,7 @@ export default function ArticleForm({
                 title: title.trim(),
                 content: htmlContent,
                 editorState: content,
+                youtubeVideoId: parsedYoutubeVideoId,
                 ...(imageCaption.trim()
                     ? { imageCaption: imageCaption.trim() }
                     : {}),
@@ -1303,6 +1323,7 @@ export default function ArticleForm({
                 title: title.trim(),
                 content: htmlContent,
                 editorState: content,
+                youtubeVideoId: parsedYoutubeVideoId,
                 ...(imageCaption.trim()
                     ? { imageCaption: imageCaption.trim() }
                     : {}),
@@ -1556,6 +1577,45 @@ export default function ArticleForm({
                                     />
                                 </div>
 
+                                <div className="space-y-2">
+                                    <Label htmlFor="youtube-video">
+                                        YouTube video
+                                    </Label>
+                                    <Textarea
+                                        id="youtube-video"
+                                        value={youtubeVideoInput}
+                                        disabled={isLocked}
+                                        onChange={(event) => {
+                                            const value = event.target.value;
+                                            setYoutubeVideoInput(value);
+                                            if (
+                                                !value.trim() ||
+                                                parseYouTubeVideoInput(value)
+                                            ) {
+                                                clearFieldError("youtubeVideo");
+                                            }
+                                        }}
+                                        placeholder="Paste a YouTube URL or iframe embed snippet"
+                                        aria-invalid={Boolean(
+                                            formErrors.youtubeVideo,
+                                        )}
+                                        className={
+                                            formErrors.youtubeVideo
+                                                ? "border-destructive"
+                                                : ""
+                                        }
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        We save only the YouTube video ID, not
+                                        the pasted HTML.
+                                    </p>
+                                    {formErrors.youtubeVideo && (
+                                        <p className="text-xs text-destructive">
+                                            {formErrors.youtubeVideo}
+                                        </p>
+                                    )}
+                                </div>
+
                                 {/* Image Caption */}
                                 <div className="space-y-2">
                                     <Label
@@ -1597,8 +1657,18 @@ export default function ArticleForm({
                                             ratio={16 / 9}
                                             className="bg-muted/50 rounded-md overflow-hidden"
                                         >
-                                            {featuredMediaPreviewUrl &&
-                                            !mediaPreviewFailed ? (
+                                            {parsedYoutubeVideoId ? (
+                                                <iframe
+                                                    src={`https://www.youtube-nocookie.com/embed/${parsedYoutubeVideoId}`}
+                                                    title="YouTube video preview"
+                                                    className="h-full w-full"
+                                                    loading="lazy"
+                                                    referrerPolicy="strict-origin-when-cross-origin"
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                    allowFullScreen
+                                                />
+                                            ) : featuredMediaPreviewUrl &&
+                                              !mediaPreviewFailed ? (
                                                 <img
                                                     src={
                                                         featuredMediaPreviewUrl

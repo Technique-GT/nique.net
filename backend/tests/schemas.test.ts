@@ -145,6 +145,28 @@ describe("Zod Schemas", () => {
 
             expect(result.success).toBe(true);
         });
+
+        it("accepts a YouTube video ID", () => {
+            const result = createArticleBodySchema.safeParse({
+                title: "Test Article",
+                content: "<p>Test content</p>",
+                categoryId: "65f0a305095c8b6a0b100004",
+                youtubeVideoId: "dQw4w9WgXcQ",
+            });
+
+            expect(result.success).toBe(true);
+        });
+
+        it("rejects a YouTube URL instead of a video ID", () => {
+            const result = createArticleBodySchema.safeParse({
+                title: "Test Article",
+                content: "<p>Test content</p>",
+                categoryId: "65f0a305095c8b6a0b100004",
+                youtubeVideoId: "https://youtube.com/watch?v=dQw4w9WgXcQ",
+            });
+
+            expect(result.success).toBe(false);
+        });
     });
 
     describe("updateArticleBodySchema", () => {
@@ -158,6 +180,14 @@ describe("Zod Schemas", () => {
 
         it("accepts empty body", () => {
             const result = updateArticleBodySchema.safeParse({});
+
+            expect(result.success).toBe(true);
+        });
+
+        it("accepts null to clear a YouTube video", () => {
+            const result = updateArticleBodySchema.safeParse({
+                youtubeVideoId: null,
+            });
 
             expect(result.success).toBe(true);
         });
