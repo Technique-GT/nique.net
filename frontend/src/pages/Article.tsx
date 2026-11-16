@@ -17,6 +17,8 @@ import type {
 import {
     getArticleDescription,
     getArticleLink,
+    getYoutubeEmbedUrl,
+    getYoutubeThumbnailUrl,
 } from "../utils/articlePresentation";
 import { withMediaSessionRevalidation } from "../utils/mediaUrl";
 
@@ -414,8 +416,11 @@ export default function Article() {
         ?.map((tag) => tag.name)
         .filter(Boolean)
         .join(" • ");
+    const featuredVideo = getYoutubeEmbedUrl(article.youtubeVideoId);
     const featuredMedia =
-        article.featuredMediaUrl && typeof article.featuredMediaUrl === "string"
+        !featuredVideo &&
+        article.featuredMediaUrl &&
+        typeof article.featuredMediaUrl === "string"
             ? withMediaSessionRevalidation(
                   article.featuredMediaUrl,
                   featuredMediaNonce,
@@ -426,7 +431,7 @@ export default function Article() {
     const articleImage =
         article.featuredMediaUrl && typeof article.featuredMediaUrl === "string"
             ? article.featuredMediaUrl
-            : undefined;
+            : (getYoutubeThumbnailUrl(article.youtubeVideoId) ?? undefined);
     const toIsoOrUndefined = (value: Date | string | null | undefined) => {
         if (!value) return undefined;
         const date = new Date(value);
@@ -504,16 +509,30 @@ export default function Article() {
                     <hr className="opacity-50" />
                 </header>
 
-                {/* Featured Image - backend uses featuredMediaUrl, not featuredImage */}
-                {featuredMedia && (
+                {/* YouTube videos take precedence over the optional card image. */}
+                {(featuredVideo || featuredMedia) && (
                     <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
-                        <img
-                            className="w-full aspect-3/2 object-cover rounded-md"
-                            src={featuredMedia}
-                            loading="lazy"
-                            alt={article.title}
-                        />
-                        {article.imageCaption && (
+                        {featuredVideo ? (
+                            <div className="aspect-video w-full overflow-hidden rounded-md">
+                                <iframe
+                                    className="h-full w-full"
+                                    src={featuredVideo}
+                                    title={`${article.title} - YouTube video`}
+                                    loading="lazy"
+                                    referrerPolicy="strict-origin-when-cross-origin"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    allowFullScreen
+                                />
+                            </div>
+                        ) : (
+                            <img
+                                className="w-full aspect-3/2 object-cover rounded-md"
+                                src={featuredMedia ?? undefined}
+                                loading="lazy"
+                                alt={article.title}
+                            />
+                        )}
+                        {!featuredVideo && article.imageCaption && (
                             <figcaption className="w-full text-xs text-nique-blue mt-2">
                                 {article.imageCaption}
                             </figcaption>

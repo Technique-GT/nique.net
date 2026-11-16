@@ -193,6 +193,7 @@
                         "items": { "bsonType": "objectId" }
                     },
                     "featuredMediaUrl": { "bsonType": "string" },
+                    "youtubeVideoId": { "bsonType": ["string", "null"] },
                     "imageCaption": { "bsonType": "string" },
                     "published": { "bsonType": "bool" },
                     "publishedAt": { "bsonType": ["date", "null"] },

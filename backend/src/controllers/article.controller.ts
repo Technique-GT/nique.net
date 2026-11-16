@@ -153,6 +153,11 @@ const buildArticleUpdate = async (params: {
             : "";
     const featuredMediaUrl =
         featuredMediaUrlRaw.length > 0 ? featuredMediaUrlRaw : undefined;
+    const youtubeVideoId =
+        typeof body?.youtubeVideoId === "string" ||
+        body?.youtubeVideoId === null
+            ? body.youtubeVideoId
+            : undefined;
     const imageCaption =
         typeof body?.imageCaption === "string" ? body.imageCaption : undefined;
 
@@ -192,6 +197,7 @@ const buildArticleUpdate = async (params: {
 
     if (featuredMediaUrl !== undefined)
         update.featuredMediaUrl = featuredMediaUrl;
+    if (youtubeVideoId !== undefined) update.youtubeVideoId = youtubeVideoId;
     if (imageCaption !== undefined) update.imageCaption = imageCaption;
 
     if (editorState !== undefined) update.editorState = editorState;
@@ -281,6 +287,11 @@ const hasArticleChanged = (
     if (
         "featuredMediaUrl" in update &&
         update.featuredMediaUrl !== existing.featuredMediaUrl
+    )
+        return true;
+    if (
+        "youtubeVideoId" in update &&
+        update.youtubeVideoId !== existing.youtubeVideoId
     )
         return true;
 

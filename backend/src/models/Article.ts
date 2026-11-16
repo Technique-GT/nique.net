@@ -16,6 +16,7 @@ export interface IArticle extends Document {
     tagIds: mongoose.Types.ObjectId[];
 
     featuredMediaUrl?: string;
+    youtubeVideoId?: string | null;
     imageCaption?: string;
 
     published: boolean;
@@ -72,6 +73,7 @@ const ArticleSchema = new Schema<IArticle>(
         },
 
         featuredMediaUrl: { type: String, required: false, trim: true },
+        youtubeVideoId: { type: String, required: false, trim: true },
         imageCaption: { type: String, required: false },
 
         published: { type: Boolean, required: true, default: false },
