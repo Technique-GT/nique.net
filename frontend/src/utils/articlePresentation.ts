@@ -60,11 +60,6 @@ export const getArticleImage = (article: ArticleDocument) => {
     if (media && typeof media === "string") {
         return withMediaSessionRevalidation(media);
     }
-    return null;
-    const media = article.featuredMediaUrl;
-    if (media && typeof media === "string") {
-        return withMediaSessionRevalidation(media);
-    }
     return getYoutubeThumbnailUrl(article.youtubeVideoId);
 };
 
