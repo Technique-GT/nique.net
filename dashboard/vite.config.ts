@@ -1,35 +1,36 @@
-import path from 'path'
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
-import tailwindcss from '@tailwindcss/vite'
-import { tanstackRouter } from '@tanstack/router-plugin/vite'
+import path from "node:path";
+import tailwindcss from "@tailwindcss/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
+import react from "@vitejs/plugin-react-swc";
+import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  server: {
-    host: '0.0.0.0',
-    port: 5174,
-    strictPort: true,
-  },
-  preview: {
-    port: 4174,
-    strictPort: true,
-  },
-  plugins: [
-    tanstackRouter({
-      target: 'react',
-      autoCodeSplitting: true,
-    }),
-    react(),
-    tailwindcss(),
-  ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-
-      // fix loading all icon chunks in dev mode
-      // https://github.com/tabler/tabler-icons/issues/1233
-      '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs',
+    server: {
+        host: "0.0.0.0",
+        port: 5174,
+        strictPort: true,
     },
-  },
-})
+    preview: {
+        port: 4174,
+        strictPort: true,
+    },
+    plugins: [
+        tanstackRouter({
+            target: "react",
+            autoCodeSplitting: true,
+        }),
+        react(),
+        tailwindcss(),
+    ],
+    resolve: {
+        alias: {
+            "@": path.resolve(__dirname, "./src"),
+
+            // fix loading all icon chunks in dev mode
+            // https://github.com/tabler/tabler-icons/issues/1233
+            "@tabler/icons-react":
+                "@tabler/icons-react/dist/esm/icons/index.mjs",
+        },
+    },
+});

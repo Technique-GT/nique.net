@@ -19,11 +19,8 @@ The backend serves BOTH the unauthenticated public frontend AND the authenticate
 
 ### Setup
 ```bash
-# Install all dependencies
-npm install                          # root
-cd frontend && npm install
-cd dashboard && npm install  
-cd backend && npm install
+# Install all workspace dependencies once from the root
+npm ci
 
 # Environment
 cp backend/.env.example backend/.env # then fill in values
@@ -31,23 +28,20 @@ cp backend/.env.example backend/.env # then fill in values
 
 ### Development
 ```bash
-# Backend (must run first)
-cd backend && npm run dev            # http://localhost:5050
+# Start all three workspaces from the root
+npm run dev
 
-# Frontend (public site)
-cd frontend && npm run dev           # http://localhost:5173
-
-# Dashboard (CMS)
-cd dashboard && npm run dev          # http://localhost:5174
+# Or start individual workspaces from the root
+npm run dev:api                      # http://localhost:5050
+npm run dev:web                      # http://localhost:5173
+npm run dev:dash                     # http://localhost:5174
 ```
 
 ### Testing & Linting
 ```bash
-cd backend && npm test               # API tests
-cd backend && npm run lint           # ESLint
-cd frontend && npm run lint
-cd dashboard && npm run lint
-npm run typecheck                    # if available
+npm test                             # backend API tests
+npm run lint                         # all workspaces
+npm run build                        # typecheck and build all workspaces
 ```
 
 ## API Conventions
