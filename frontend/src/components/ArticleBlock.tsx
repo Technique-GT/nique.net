@@ -3,15 +3,39 @@ import { ArticleBlockProps } from '../types/article'
 import {
   getArticleAuthorName,
   getArticleCategoryName,
-  getArticleImage,
   getArticleLink,
 } from '../utils/articlePresentation'
 
 function ArticleBlock({ article, height }: ArticleBlockProps) {
     const link = getArticleLink(article);
-    const image = getArticleImage(article);
     const category = getArticleCategoryName(article);
     const author = getArticleAuthorName(article);
+
+    const artAny = article as any;
+    const media = artAny.featuredMedia;
+    const rawUrl = typeof media === 'string' ? media : media?.url || artAny.featuredMediaUrl;
+
+    // generates variant URLs for older uploaded images
+    const getFallbackUrl = (width: number, format: string) => {
+        if (!rawUrl) return '';
+        return rawUrl.replace(/\/master_[^/]+$/, `/variants/${width}w.${format}`);
+    };
+
+    const avifVariants = media?.variants?.filter((v: any) => v.format?.trim() === 'avif') && media.variants.length > 0 
+        ? media.variants.filter((v: any) => v.format?.trim() === 'avif') 
+        : [
+            { width: 400, url: getFallbackUrl(400, 'avif') },
+            { width: 800, url: getFallbackUrl(800, 'avif') },
+            { width: 1600, url: getFallbackUrl(1600, 'avif') },
+          ];
+
+    const webpVariants = media?.variants?.filter((v: any) => v.format?.trim() === 'webp') && media.variants.length > 0 
+        ? media.variants.filter((v: any) => v.format?.trim() === 'webp') 
+        : [
+            { width: 400, url: getFallbackUrl(400, 'webp') },
+            { width: 800, url: getFallbackUrl(800, 'webp') },
+            { width: 1600, url: getFallbackUrl(1600, 'webp') },
+          ];
 
     return (
         <Link
@@ -19,14 +43,24 @@ function ArticleBlock({ article, height }: ArticleBlockProps) {
             className='relative cursor-pointer rounded-md max-h-[50vh] md:max-h-none w-full flex items-end p-3 overflow-hidden group'
             style={{ height: `${height}` }}
         >
-            {image && (
-                <img 
-                    src={image} 
-                    alt={article.title}
-                    loading="lazy"
-                    decoding="async"
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 will-change-transform"
-                />
+            {rawUrl && (
+                <picture className="absolute inset-0 w-full h-full">
+                    <source
+                        srcSet={avifVariants.map((v: any) => `${v.url} ${v.width}w`).join(', ')}
+                        type="image/avif"
+                    />
+                    <source
+                        srcSet={webpVariants.map((v: any) => `${v.url} ${v.width}w`).join(', ')}
+                        type="image/webp"
+                    />
+                    <img 
+                        src={rawUrl} 
+                        alt={article.title}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 will-change-transform"
+                    />
+                </picture>
             )}
             
             <div 

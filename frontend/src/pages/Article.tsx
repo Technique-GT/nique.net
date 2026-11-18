@@ -349,10 +349,6 @@ export default function Article() {
 
   // backend uses tagIds, not tags
   const tagsDisplay = article.tagIds?.map((tag) => tag.name).filter(Boolean).join(" • ");
-  const featuredMedia =
-    article.featuredMediaUrl && typeof article.featuredMediaUrl === "string"
-      ? withMediaSessionRevalidation(article.featuredMediaUrl, featuredMediaNonce)
-      : null;
   const articleDescription = getArticleDescription(article).slice(0, 160);
   const canonicalPath = getArticleLink(article);
   const articleImage =
@@ -385,6 +381,8 @@ export default function Article() {
       url: "https://nique.net",
     },
   };
+
+  console.log("Article Featured Media Object:", (article as any).featuredMedia);
 
   return (
     <>
@@ -427,21 +425,55 @@ export default function Article() {
         </header>
 
         {/* Featured Image - backend uses featuredMediaUrl, not featuredImage */}
-        {featuredMedia && (
-          <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
-            <img
-              className="w-full aspect-3/2 object-cover rounded-md"
-              src={featuredMedia}
-              loading="lazy"
-              alt={article.title}
-            />
-            {article.imageCaption && (
-              <figcaption className="w-full text-xs text-nique-blue mt-2">
-                {article.imageCaption}
-              </figcaption>
-            )}
-          </figure>
-        )}
+        {/* Update: Featured Image with AVIF/WebP Variants */}
+        {/* Featured Image with AVIF/WebP Variants */}
+        {(() => {
+          const rawUrl = article.featuredMediaUrl;
+          if (!rawUrl || typeof rawUrl !== "string") return null;
+
+          const variants = [
+            { width: 400, format: "avif", url: rawUrl.replace("master_tree.png", "variants/400w.avif") },
+            { width: 800, format: "avif", url: rawUrl.replace("master_tree.png", "variants/800w.avif") },
+            { width: 1600, format: "avif", url: rawUrl.replace("master_tree.png", "variants/1600w.avif") },
+            { width: 400, format: "webp", url: rawUrl.replace("master_tree.png", "variants/400w.webp") },
+            { width: 800, format: "webp", url: rawUrl.replace("master_tree.png", "variants/800w.webp") },
+            { width: 1600, format: "webp", url: rawUrl.replace("master_tree.png", "variants/1600w.webp") },
+          ];
+
+          const validatedMasterUrl = withMediaSessionRevalidation(rawUrl, featuredMediaNonce);
+
+          return (
+            <figure className="my-3 max-w-3xl w-full mx-auto text-sm">
+              <picture>
+                <source
+                  srcSet={variants
+                    .filter((v) => v.format === "avif")
+                    .map((v) => `${withMediaSessionRevalidation(v.url, featuredMediaNonce)} ${v.width}w`)
+                    .join(", ")}
+                  type="image/avif"
+                />
+                <source
+                  srcSet={variants
+                    .filter((v) => v.format === "webp")
+                    .map((v) => `${withMediaSessionRevalidation(v.url, featuredMediaNonce)} ${v.width}w`)
+                    .join(", ")}
+                  type="image/webp"
+                />
+                <img
+                  className="w-full aspect-3/2 object-cover rounded-md"
+                  src={validatedMasterUrl}
+                  loading="lazy"
+                  alt={article.title}
+                />
+              </picture>
+              {article.imageCaption && (
+                <figcaption className="w-full text-xs text-nique-blue mt-2">
+                  {article.imageCaption}
+                </figcaption>
+              )}
+            </figure>
+          );
+        })()}
 
         {/* Article Content */}
         <section className="prose prose-lg max-w-3xl mx-auto text-nique-blue article-body">

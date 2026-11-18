@@ -19,6 +19,46 @@ import {
 import { applyNoStoreHeaders } from '../middleware/public-cache.middleware';
 import { safeRegex, sanitizeHtml, safeErrorResponse } from '../utils/security';
 
+
+const attachVirtualMediaVariants = (articleDoc: any) => {
+  const obj = articleDoc.toObject ? articleDoc.toObject() : articleDoc;
+  
+  if (obj.featuredMedia && typeof obj.featuredMedia === 'object') {
+    if (!obj.featuredMedia.variants || obj.featuredMedia.variants.length === 0) {
+      const imageUrl = obj.featuredMedia.url || obj.featuredMediaUrl;
+      if (imageUrl) {
+        const basePath = imageUrl.substring(0, imageUrl.lastIndexOf('/') + 1);
+        
+        obj.featuredMedia.variants = [
+          { width: 400, format: "avif", url: `${basePath}variants/400w.avif` },
+          { width: 800, format: "avif", url: `${basePath}variants/800w.avif` },
+          { width: 1600, format: "avif", url: `${basePath}variants/1600w.avif` },
+          { width: 400, format: "webp", url: `${basePath}variants/400w.webp` },
+          { width: 800, format: "webp", url: `${basePath}variants/800w.webp` },
+          { width: 1600, format: "webp", url: `${basePath}variants/1600w.webp` },
+        ];
+      }
+    }
+  } else {
+    let imageUrl = obj.featuredMediaUrl;
+    if (imageUrl) {
+      const basePath = imageUrl.substring(0, imageUrl.lastIndexOf('/') + 1);
+      obj.featuredMedia = {
+        url: imageUrl,
+        variants: [
+          { width: 400, format: "avif", url: `${basePath}variants/400w.avif` },
+          { width: 800, format: "avif", url: `${basePath}variants/800w.avif` },
+          { width: 1600, format: "avif", url: `${basePath}variants/1600w.avif` },
+          { width: 400, format: "webp", url: `${basePath}variants/400w.webp` },
+          { width: 800, format: "webp", url: `${basePath}variants/800w.webp` },
+          { width: 1600, format: "webp", url: `${basePath}variants/1600w.webp` },
+        ]
+      };
+    }
+  }
+  return obj;
+};
+
 const slugify = (value: string) =>
   value
     .toLowerCase()
@@ -44,13 +84,22 @@ const populateArticle = (query: any) =>
     .populate('categoryId', 'name slug')
     .populate('subcategoryId', 'name slug categoryId')
     .populate('tagIds', 'name slug')
-    .populate('authors.authorId', 'name isAdmin profilePictureUrl');
+    .populate('authors.authorId', 'name isAdmin profilePictureUrl')
+    .populate({
+      path: 'featuredMedia', 
+      // no error if the referenced mediaasset was deleted from the DB
+      strictPopulate: false, 
+    });
 
 const populateArticleForFeed = (query: any) =>
   query
     .populate('categoryId', 'name slug')
     .populate('tagIds', 'name slug')
-    .populate('authors.authorId', 'name profilePictureUrl');
+    .populate('authors.authorId', 'name profilePictureUrl')
+    .populate({
+      path: 'featuredMedia',
+      strictPopulate: false,
+    });
 
 const snapshotArticle = (article: Partial<IArticle> | null | undefined) => articleCacheSnapshotFromDoc(article as IArticle | null | undefined);
 
@@ -392,9 +441,11 @@ export const getArticles = async (req: any, res: Response): Promise<void> => {
       Article.countDocuments(filter),
     ]);
 
+    const enrichedArticles = articles.map((art) => attachVirtualMediaVariants(art));
+
     res.json({
       success: true,
-      data: articles,
+      data: enrichedArticles,
       pagination: { total, page: pageNum, pages: Math.ceil(total / limitNum), limit: limitNum },
     });
   } catch (error: any) {
@@ -440,6 +491,8 @@ export const getPublishedArticles = async (req: Request, res: Response): Promise
       Article.countDocuments(filter),
     ]);
 
+    const enrichedArticles = articles.map((art) => attachVirtualMediaVariants(art));
+
     if (!search) {
       setCacheTags(
         res,
@@ -452,7 +505,7 @@ export const getPublishedArticles = async (req: Request, res: Response): Promise
 
     res.json({
       success: true,
-      data: articles,
+      data: enrichedArticles,
       pagination: { total, page, pages: Math.ceil(total / limit), limit },
     });
   } catch (error: any) {
@@ -501,6 +554,8 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
       Article.countDocuments(filter),
     ]);
 
+    const enrichedArticles = articles.map((art) => attachVirtualMediaVariants(art));
+
     if (!search) {
       setCacheTags(
         res,
@@ -515,7 +570,7 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
 
     res.json({
       success: true,
-      data: articles,
+      data: enrichedArticles,
       pagination: { total, page, pages: Math.ceil(total / limit), limit },
     });
   } catch (error: any) {
@@ -525,9 +580,10 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
 
 export const getFeaturedArticles = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const articles = await populateArticle(
+    const rawArticles = await populateArticle(
       Article.find({ published: true, isFeatured: true }).sort({ publishedAt: -1 }).limit(10),
     );
+    const articles = rawArticles.map((art) => attachVirtualMediaVariants(art)); // 👈 Add this
 
     setCacheTags(res, buildListCacheTags(articles, { routeTag: 'articles:featured' }));
 
@@ -539,9 +595,10 @@ export const getFeaturedArticles = async (_req: Request, res: Response): Promise
 
 export const getStickyArticles = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const articles = await populateArticle(
+    const rawArticles = await populateArticle(
       Article.find({ published: true, isSticky: true }).sort({ publishedAt: -1 }),
     );
+    const articles = rawArticles.map((art) => attachVirtualMediaVariants(art)); // 👈 Add this
 
     setCacheTags(res, buildListCacheTags(articles, { routeTag: 'articles:sticky' }));
 
@@ -564,7 +621,7 @@ export const getArticlesByCategory = async (req: Request, res: Response): Promis
     const limitNum = Math.max(Number(limit) || 20, 1);
     const skip = (pageNum - 1) * limitNum;
 
-    const [articles, total] = await Promise.all([
+    const [rawArticles, total] = await Promise.all([
       populateArticle(
         Article.find({ categoryId, published: true })
           .sort({ isSticky: -1, publishedAt: -1 })
@@ -573,6 +630,8 @@ export const getArticlesByCategory = async (req: Request, res: Response): Promis
       ),
       Article.countDocuments({ categoryId, published: true }),
     ]);
+
+    const articles = rawArticles.map((art) => attachVirtualMediaVariants(art)); // 👈 Add this
 
     setCacheTags(
       res,
@@ -601,9 +660,11 @@ export const getArticleById = async (req: Request, res: Response): Promise<void>
       return;
     }
 
+    const enrichedArticle = attachVirtualMediaVariants(article); // 👈 Add this
+
     setCacheTags(res, buildDetailCacheTags(article));
 
-    res.json({ success: true, data: article });
+    res.json({ success: true, data: enrichedArticle }); // 👈 Use enrichedArticle here
   } catch (error: any) {
     res.status(500).json(safeErrorResponse('Failed to fetch article', error));
   }
@@ -614,16 +675,18 @@ export const getArticleBySlug = async (req: Request, res: Response): Promise<voi
     const { slug } = req.params;
 
     const article = await populateArticle(Article.findOne({ slug, published: true }));
-
+    
     if (!article) {
       applyNoStoreHeaders(res);
       res.status(404).json({ success: false, message: 'Article not found' });
       return;
     }
 
+    const enrichedArticle = attachVirtualMediaVariants(article); // 👈 Add this
+
     setCacheTags(res, buildDetailCacheTags(article));
 
-    res.json({ success: true, data: article });
+    res.json({ success: true, data: enrichedArticle }); // 👈 Use enrichedArticle here
   } catch (error: any) {
     res.status(500).json(safeErrorResponse('Failed to fetch article', error));
   }

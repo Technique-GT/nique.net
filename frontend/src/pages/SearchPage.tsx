@@ -20,6 +20,11 @@ const buildPreview = (primary?: string | null) => {
   return snippet.length === 200 ? `${snippet}...` : snippet;
 };
 
+const getFallbackUrl = (width: number, format: string, rawUrl?: string | null) => {
+  if (!rawUrl) return "";
+  return rawUrl.replace(/\/master_[^/]+$/, `/variants/${width}w.${format}`);
+};
+
 const SearchPage = () => {
   const [text, setText] = useState("");
   const [results, setResults] = useState<ArticleDocument[]>([]);
@@ -61,7 +66,6 @@ const SearchPage = () => {
           return;
         }
 
-        // Services now return unwrapped data directly
         setResults(response || []);
       } catch (err: unknown) {
         const isCanceledError =
@@ -204,6 +208,27 @@ const SearchPage = () => {
               const category = getArticleCategoryName(article);
               const author = getArticleAuthorName(article);
               const desc = getArticleDescription(article);
+
+              const media = (article as any).media;
+              const avifList = media?.variants?.filter((v: any) => v.format?.trim() === 'avif') ?? [];
+              const avifVariants = avifList.length > 0
+                ? avifList
+                : [
+                    { width: 400, url: getFallbackUrl(400, 'avif', imageUrl) },
+                    { width: 800, url: getFallbackUrl(800, 'avif', imageUrl) },
+                  ];
+
+              const webpList = media?.variants?.filter((v: any) => v.format?.trim() === 'webp') ?? [];
+              const webpVariants = webpList.length > 0
+                ? webpList
+                : [
+                    { width: 400, url: getFallbackUrl(400, 'webp', imageUrl) },
+                    { width: 800, url: getFallbackUrl(800, 'webp', imageUrl) },
+                  ];
+
+              const avifSrcSet = avifVariants.map((v: any) => `${v.url} ${v.width}w`).join(', ');
+              const webpSrcSet = webpVariants.map((v: any) => `${v.url} ${v.width}w`).join(', ');
+
               return (
                 <article
                   key={article._id || article.slug}
@@ -215,12 +240,16 @@ const SearchPage = () => {
                     className="text-left flex flex-row gap-4 w-full"
                   >
                     {imageUrl && (
+                      <picture className="shrink-0">
+                        {avifSrcSet && <source srcSet={avifSrcSet} type="image/avif" />}
+                        {webpSrcSet && <source srcSet={webpSrcSet} type="image/webp" />}
                         <img
                           src={imageUrl}
                           alt={article.title}
                           loading="lazy"
                           className="size-48 object-cover rounded-xl transition-transform duration-200 hover:scale-105"
                         />
+                      </picture>
                     )}
 
                     <div className="flex flex-1 flex-col gap-3">

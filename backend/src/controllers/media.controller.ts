@@ -18,7 +18,6 @@ const ALLOWED_TYPES = new Set([
   'image/svg+xml',
 ]);
 
-const MAX_SIZE = 10 * 1024 * 1024;
 const MAX_LIST_LIMIT = 100;
 const DEFAULT_LIST_LIMIT = 24;
 const SYNC_BATCH_SIZE = 1000;
