@@ -1,5 +1,5 @@
 {
-    "ignoreDependencies": ["@vitest/coverage-v8"],
+    "ignoreDependencies": ["@vitest/coverage-v8", "pino-pretty"],
     "ignoreIssues": {
         "dashboard/src/components/ui/**": ["exports"],
         "backend/src/middleware/auth.middleware.ts": ["duplicates"]
