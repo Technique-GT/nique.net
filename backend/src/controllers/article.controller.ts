@@ -89,7 +89,6 @@ const populateArticle = (query: any) =>
         .populate("authors.authorId", "name isAdmin profilePictureUrl")
         .populate({
             path: "featuredMedia",
-            // no error if the referenced mediaasset was deleted from the DB
             strictPopulate: false,
         });
 
@@ -139,7 +138,6 @@ const buildArticleUpdate = async (params: {
     const { body, existing } = params;
 
     const title = typeof body?.title === "string" ? body.title : undefined;
-    // Sanitize HTML content to prevent XSS
     const content =
         typeof body?.content === "string"
             ? sanitizeHtml(body.content)
@@ -602,7 +600,6 @@ export const getPublishedArticles = async (
     res: Response,
 ): Promise<void> => {
     try {
-        // This endpoint intentionally stays simple; the richer public feed is `getFeed`.
         const { page, limit, search, categoryId } = req.query as unknown as {
             page: number;
             limit: number;
@@ -610,8 +607,8 @@ export const getPublishedArticles = async (
             categoryId?: string;
         };
 
-        const filter: any = { published: true };
-        if (search?.trim()) {
+        const filter: Record<string, unknown> = { published: true };
+        if (typeof search === "string" && search.trim().length > 0) {
             const rx = safeRegex(search.trim());
             const orFilters: any[] = [{ title: rx }, { excerpt: rx }];
 
@@ -624,8 +621,9 @@ export const getPublishedArticles = async (
 
             filter.$or = orFilters;
         }
-        if (categoryId) {
-            filter.categoryId = new mongoose.Types.ObjectId(categoryId);
+        const validCategoryId = toObjectId(categoryId);
+        if (validCategoryId) {
+            filter.categoryId = validCategoryId;
         }
 
         const pageNum = Math.max(Number(page) || 1, 1);
@@ -646,12 +644,12 @@ export const getPublishedArticles = async (
             attachVirtualMediaVariants(art),
         );
 
-        if (!search) {
+        if (typeof search !== "string" || search.trim().length === 0) {
             setCacheTags(
                 res,
                 buildListCacheTags(articles, {
                     routeTag: "articles:published",
-                    categoryId,
+                    categoryId: validCategoryId?.toString(),
                 }),
             );
         }
@@ -683,29 +681,41 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
                 categoryId?: string;
                 tagId?: string;
                 authorId?: string;
-                isSticky?: boolean;
+                isSticky?: boolean | string;
             };
 
-        const filter: any = { published: true };
+        const filter: Record<string, unknown> = { published: true };
 
-        if (search) {
-            const rx = safeRegex(search);
+        if (typeof search === "string" && search.trim().length > 0) {
+            const rx = safeRegex(search.trim());
             filter.$or = [{ title: rx }, { excerpt: rx }];
         }
 
-        if (categoryId)
-            filter.categoryId = new mongoose.Types.ObjectId(categoryId);
-        if (tagId) filter.tagIds = new mongoose.Types.ObjectId(tagId);
-        if (authorId)
-            filter["authors.authorId"] = new mongoose.Types.ObjectId(authorId);
-        if (isSticky !== undefined) filter.isSticky = isSticky;
+        const validCategoryId = toObjectId(categoryId);
+        if (validCategoryId) filter.categoryId = validCategoryId;
+
+        const validTagId = toObjectId(tagId);
+        if (validTagId) filter.tagIds = validTagId;
+
+        const validAuthorId = toObjectId(authorId);
+        if (validAuthorId) filter["authors.authorId"] = validAuthorId;
+
+        let stickyFilter: boolean | undefined;
+        if (typeof isSticky === "boolean") {
+            stickyFilter = isSticky;
+        } else if (isSticky === "true" || isSticky === "false") {
+            stickyFilter = isSticky === "true";
+        }
+        if (stickyFilter !== undefined) {
+            filter.isSticky = stickyFilter;
+        }
 
         const pageNum = Math.max(Number(page) || 1, 1);
         const limitNum = Math.max(Number(limit) || 20, 1);
         const skip = (pageNum - 1) * limitNum;
 
         const sort =
-            isSticky === undefined
+            stickyFilter === undefined
                 ? ({ publishedAt: -1 } as const)
                 : ({ isSticky: -1, publishedAt: -1 } as const);
 
@@ -720,14 +730,14 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
             attachVirtualMediaVariants(art),
         );
 
-        if (!search) {
+        if (typeof search !== "string" || search.trim().length === 0) {
             setCacheTags(
                 res,
                 buildListCacheTags(articles, {
                     routeTag: "articles:feed",
-                    categoryId,
-                    tagId,
-                    authorId,
+                    categoryId: validCategoryId?.toString(),
+                    tagId: validTagId?.toString(),
+                    authorId: validAuthorId?.toString(),
                 }),
             );
         }
