@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import type { ArticleBlockProps } from "../types/article";
 import {
-  getArticleAuthorName,
-  getArticleCategoryName,
-  getArticleLink,
-} from '../utils/articlePresentation'
+    getArticleAuthorName,
+    getArticleCategoryName,
+    getArticleLink,
+} from "../utils/articlePresentation";
 
 function ArticleBlock({ article, height }: ArticleBlockProps) {
     const link = getArticleLink(article);
@@ -13,12 +13,18 @@ function ArticleBlock({ article, height }: ArticleBlockProps) {
 
     const artAny = article as any;
     const media = artAny.featuredMedia;
-    const rawUrl = typeof media === 'string' ? media : media?.url || artAny.featuredMediaUrl;
+    const rawUrl =
+        typeof media === "string"
+            ? media
+            : media?.url || artAny.featuredMediaUrl;
 
     // generates variant URLs for older uploaded images
     const getFallbackUrl = (width: number, format: string) => {
-        if (!rawUrl) return '';
-        return rawUrl.replace(/\/master_[^/]+$/, `/variants/${width}w.${format}`);
+        if (!rawUrl) return "";
+        return rawUrl.replace(
+            /\/master_[^/]+$/,
+            `/variants/${width}w.${format}`,
+        );
     };
 
     const getVariantsForFormat = (format: "avif" | "webp") => {
@@ -46,15 +52,19 @@ function ArticleBlock({ article, height }: ArticleBlockProps) {
             {rawUrl && (
                 <picture className="absolute inset-0 w-full h-full">
                     <source
-                        srcSet={avifVariants.map((v: any) => `${v.url} ${v.width}w`).join(', ')}
+                        srcSet={avifVariants
+                            .map((v: any) => `${v.url} ${v.width}w`)
+                            .join(", ")}
                         type="image/avif"
                     />
                     <source
-                        srcSet={webpVariants.map((v: any) => `${v.url} ${v.width}w`).join(', ')}
+                        srcSet={webpVariants
+                            .map((v: any) => `${v.url} ${v.width}w`)
+                            .join(", ")}
                         type="image/webp"
                     />
-                    <img 
-                        src={rawUrl} 
+                    <img
+                        src={rawUrl}
                         alt={article.title}
                         loading="lazy"
                         decoding="async"

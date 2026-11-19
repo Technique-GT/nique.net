@@ -33,17 +33,26 @@ const attachVirtualMediaVariants = (articleDoc: any) => {
     if (!obj) return obj;
 
     if (obj.featuredMedia && typeof obj.featuredMedia === "object") {
-        if (!obj.featuredMedia.variants || obj.featuredMedia.variants.length === 0) {
+        if (
+            !obj.featuredMedia.variants ||
+            obj.featuredMedia.variants.length === 0
+        ) {
             const imageUrl = obj.featuredMedia.url || obj.featuredMediaUrl;
             if (imageUrl) {
-                const basePath = imageUrl.substring(0, imageUrl.lastIndexOf("/") + 1);
+                const basePath = imageUrl.substring(
+                    0,
+                    imageUrl.lastIndexOf("/") + 1,
+                );
                 obj.featuredMedia.variants = buildMediaVariants(basePath);
             }
         }
     } else {
         const imageUrl = obj.featuredMediaUrl;
         if (imageUrl) {
-            const basePath = imageUrl.substring(0, imageUrl.lastIndexOf("/") + 1);
+            const basePath = imageUrl.substring(
+                0,
+                imageUrl.lastIndexOf("/") + 1,
+            );
             obj.featuredMedia = {
                 url: imageUrl,
                 variants: buildMediaVariants(basePath),
@@ -574,7 +583,7 @@ export const getArticles = async (req: any, res: Response): Promise<void> => {
             Article.countDocuments(filter),
         ]);
 
-        const enrichedArticles = articles.map((art) =>
+        const enrichedArticles = articles.map((art: IArticle) =>
             attachVirtualMediaVariants(art),
         );
 
@@ -640,7 +649,7 @@ export const getPublishedArticles = async (
             Article.countDocuments(filter),
         ]);
 
-        const enrichedArticles = articles.map((art) =>
+        const enrichedArticles = articles.map((art: IArticle) =>
             attachVirtualMediaVariants(art),
         );
 
@@ -726,7 +735,7 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
             Article.countDocuments(filter),
         ]);
 
-        const enrichedArticles = articles.map((art) =>
+        const enrichedArticles = articles.map((art: IArticle) =>
             attachVirtualMediaVariants(art),
         );
 
@@ -767,7 +776,7 @@ export const getFeaturedArticles = async (
                 .sort({ publishedAt: -1 })
                 .limit(10),
         );
-        const articles = rawArticles.map((art) =>
+        const articles = rawArticles.map((art: IArticle) =>
             attachVirtualMediaVariants(art),
         );
 
@@ -794,7 +803,7 @@ export const getStickyArticles = async (
                 publishedAt: -1,
             }),
         );
-        const articles = rawArticles.map((art) =>
+        const articles = rawArticles.map((art: IArticle) =>
             attachVirtualMediaVariants(art),
         );
 
@@ -840,7 +849,7 @@ export const getArticlesByCategory = async (
             Article.countDocuments({ categoryId, published: true }),
         ]);
 
-        const articles = rawArticles.map((art) =>
+        const articles = rawArticles.map((art: IArticle) =>
             attachVirtualMediaVariants(art),
         );
 

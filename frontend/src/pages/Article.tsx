@@ -467,12 +467,12 @@ export default function Article() {
     return (
         <>
             <Seo
-              title={article.title}
-              description={articleDescription}
-              canonicalPath={canonicalPath}
-              image={articleImage}
-              type="article"
-              structuredData={articleJsonLd}
+                title={article.title}
+                description={articleDescription}
+                canonicalPath={canonicalPath}
+                image={articleImage}
+                type="article"
+                structuredData={articleJsonLd}
             />
             <Navbar />
             <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
@@ -529,66 +529,75 @@ export default function Article() {
                                     allowFullScreen
                                 />
                             </div>
-                        ) : (() => {
-                            const rawUrl = article.featuredMediaUrl;
-                            if (!rawUrl || typeof rawUrl !== "string") return null;
+                        ) : (
+                            (() => {
+                                const rawUrl = article.featuredMediaUrl;
+                                if (!rawUrl || typeof rawUrl !== "string")
+                                    return null;
 
-                            const variants = [400, 800, 1600].flatMap((width) => [
-                                {
-                                    width,
-                                    format: "avif",
-                                    url: rawUrl.replace(
-                                        /master_[^/]+/,
-                                        `variants/${width}w.avif`,
-                                    ),
-                                },
-                                {
-                                    width,
-                                    format: "webp",
-                                    url: rawUrl.replace(
-                                        /master_[^/]+/,
-                                        `variants/${width}w.webp`,
-                                    ),
-                                },
-                            ]);
-
-                            const validatedMasterUrl =
-                                withMediaSessionRevalidation(
-                                    rawUrl,
-                                    featuredMediaNonce,
+                                const variants = [400, 800, 1600].flatMap(
+                                    (width) => [
+                                        {
+                                            width,
+                                            format: "avif",
+                                            url: rawUrl.replace(
+                                                /master_[^/]+/,
+                                                `variants/${width}w.avif`,
+                                            ),
+                                        },
+                                        {
+                                            width,
+                                            format: "webp",
+                                            url: rawUrl.replace(
+                                                /master_[^/]+/,
+                                                `variants/${width}w.webp`,
+                                            ),
+                                        },
+                                    ],
                                 );
 
-                            return (
-                                <picture>
-                                    <source
-                                        srcSet={variants
-                                            .filter((v) => v.format === "avif")
-                                            .map(
-                                                (v) =>
-                                                    `${withMediaSessionRevalidation(v.url, featuredMediaNonce)} ${v.width}w`,
-                                            )
-                                            .join(", ")}
-                                        type="image/avif"
-                                    />
-                                    <source
-                                        srcSet={variants
-                                            .filter((v) => v.format === "webp")
-                                            .map(
-                                                (v) =>
-                                                    `${withMediaSessionRevalidation(v.url, featuredMediaNonce)} ${v.width}w`,
-                                            )
-                                            .join(", ")}
-                                        type="image/webp"
-                                    />
-                                    <img
-                                        className="w-full aspect-3/2 object-cover rounded-md"
-                                        src={validatedMasterUrl}
-                                        loading="lazy"
-                                        alt={article.title}
-                                    />
-                                </picture>
-                            );
-                        })()}
+                                const validatedMasterUrl =
+                                    withMediaSessionRevalidation(
+                                        rawUrl,
+                                        featuredMediaNonce,
+                                    );
+
+                                return (
+                                    <picture>
+                                        <source
+                                            srcSet={variants
+                                                .filter(
+                                                    (v) => v.format === "avif",
+                                                )
+                                                .map(
+                                                    (v) =>
+                                                        `${withMediaSessionRevalidation(v.url, featuredMediaNonce)} ${v.width}w`,
+                                                )
+                                                .join(", ")}
+                                            type="image/avif"
+                                        />
+                                        <source
+                                            srcSet={variants
+                                                .filter(
+                                                    (v) => v.format === "webp",
+                                                )
+                                                .map(
+                                                    (v) =>
+                                                        `${withMediaSessionRevalidation(v.url, featuredMediaNonce)} ${v.width}w`,
+                                                )
+                                                .join(", ")}
+                                            type="image/webp"
+                                        />
+                                        <img
+                                            className="w-full aspect-3/2 object-cover rounded-md"
+                                            src={validatedMasterUrl}
+                                            loading="lazy"
+                                            alt={article.title}
+                                        />
+                                    </picture>
+                                );
+                            })()
+                        )}
                         {!featuredVideo && article.imageCaption && (
                             <figcaption className="w-full text-xs text-nique-blue mt-2">
                                 {article.imageCaption}

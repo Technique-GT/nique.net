@@ -316,7 +316,7 @@ export const uploadMedia = async (
             .toLowerCase();
 
         let masterBuffer = file.buffer;
-        let masterContentType = file.mimetype;
+        const masterContentType = file.mimetype;
 
         try {
             const transformer = sharp(file.buffer)
@@ -331,11 +331,17 @@ export const uploadMedia = async (
                     .jpeg({ quality: 85, progressive: true })
                     .toBuffer();
             } else if (file.mimetype === "image/png") {
-                masterBuffer = await transformer.png({ quality: 85 }).toBuffer();
+                masterBuffer = await transformer
+                    .png({ quality: 85 })
+                    .toBuffer();
             } else if (file.mimetype === "image/webp") {
-                masterBuffer = await transformer.webp({ quality: 85 }).toBuffer();
+                masterBuffer = await transformer
+                    .webp({ quality: 85 })
+                    .toBuffer();
             } else if (file.mimetype === "image/avif") {
-                masterBuffer = await transformer.avif({ quality: 65 }).toBuffer();
+                masterBuffer = await transformer
+                    .avif({ quality: 65 })
+                    .toBuffer();
             } else {
                 masterBuffer = await transformer.toBuffer();
             }
@@ -397,7 +403,11 @@ export const uploadMedia = async (
 
         res.json({
             success: true,
-            data: { url: masterUrl, key: masterKey, variants: uploadedVariants },
+            data: {
+                url: masterUrl,
+                key: masterKey,
+                variants: uploadedVariants,
+            },
         });
     } catch (error: any) {
         console.error("Media upload failed:", error);
