@@ -1,10 +1,13 @@
 import type { Response } from "express";
 import mongoose from "mongoose";
+import sharp from "sharp";
+import { v4 as uuidv4 } from "uuid";
 import type { AuthRequest } from "../middleware/auth.middleware";
 import Article from "../models/Article";
 import MediaAsset from "../models/MediaAsset";
 import { CloudflareCacheService } from "../services/cloudflare-cache.service";
 import { env } from "../utils/env";
+import { processImageVariants } from "../utils/image-processing";
 import { deleteFromR2, listR2Objects, uploadToR2 } from "../utils/r2";
 
 const ALLOWED_TYPES = new Set([
@@ -161,7 +164,11 @@ async function syncMediaIndexFromR2(): Promise<void> {
             limit: SYNC_BATCH_SIZE,
             ...(cursor ? { cursor } : {}),
         });
-        const imageObjects = page.items.filter((item) => isImageKey(item.key));
+
+        // explicitly ignore the '/variants/' folder
+        const imageObjects = page.items.filter(
+            (item) => isImageKey(item.key) && !item.key.includes("/variants/"),
+        );
 
         if (imageObjects.length > 0) {
             const now = new Date();
@@ -176,8 +183,9 @@ async function syncMediaIndexFromR2(): Promise<void> {
                         uploadedAt: item.lastModified ?? now,
                     };
                     if (item.etag !== undefined) setPayload.etag = item.etag;
-                    if (item.lastModified !== undefined)
+                    if (item.lastModified !== undefined) {
                         setPayload.lastModified = item.lastModified;
+                    }
 
                     return {
                         updateOne: {
@@ -300,24 +308,92 @@ export const uploadMedia = async (
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, "0");
-        const sanitized = file.originalname
+        const uniqueId = uuidv4();
+
+        const sanitizedName = file.originalname
             .replace(/[^a-zA-Z0-9._-]/g, "_")
             .replace(/_{2,}/g, "_")
             .toLowerCase();
-        const key = `${year}/${month}/${sanitized}`;
-        const url = await uploadToR2(file.buffer, key, file.mimetype);
+
+        let masterBuffer = file.buffer;
+        const masterContentType = file.mimetype;
+
+        try {
+            const transformer = sharp(file.buffer)
+                .withMetadata()
+                .resize(2000, 2000, {
+                    fit: "inside",
+                    withoutEnlargement: true,
+                });
+
+            if (file.mimetype === "image/jpeg") {
+                masterBuffer = await transformer
+                    .jpeg({ quality: 85, progressive: true })
+                    .toBuffer();
+            } else if (file.mimetype === "image/png") {
+                masterBuffer = await transformer
+                    .png({ quality: 85 })
+                    .toBuffer();
+            } else if (file.mimetype === "image/webp") {
+                masterBuffer = await transformer
+                    .webp({ quality: 85 })
+                    .toBuffer();
+            } else if (file.mimetype === "image/avif") {
+                masterBuffer = await transformer
+                    .avif({ quality: 65 })
+                    .toBuffer();
+            } else {
+                masterBuffer = await transformer.toBuffer();
+            }
+        } catch (compressError) {
+            console.error(
+                "Master image compression failed, falling back to raw buffer:",
+                compressError,
+            );
+        }
+
+        const masterKey = `${year}/${month}/${uniqueId}/master_${sanitizedName}`;
+        const masterUrl = await uploadToR2(
+            masterBuffer,
+            masterKey,
+            masterContentType,
+        );
+
+        const processedVariants = await processImageVariants(file.buffer);
+        const uploadedVariants = [];
+
+        // using sequential looping because `Promise.all` would attempt to upload
+        // all 9 images to Cloudflare at the same time
+        for (const variant of processedVariants) {
+            const variantKey = `${year}/${month}/${uniqueId}/variants/${variant.width}w.${variant.format}`;
+            const variantUrl = await uploadToR2(
+                variant.buffer,
+                variantKey,
+                variant.mimeType,
+            );
+
+            uploadedVariants.push({
+                width: variant.width,
+                format: variant.format,
+                key: variantKey,
+                url: variantUrl,
+                size: variant.size,
+            });
+        }
+
         const nowForMeta = new Date();
 
         await MediaAsset.updateOne(
-            { key },
+            { key: masterKey },
             {
                 $set: {
-                    key,
-                    fileName: getBaseFileName(key),
-                    fileNameLower: getBaseFileName(key).toLowerCase(),
-                    url,
-                    contentType: file.mimetype,
-                    size: file.size,
+                    key: masterKey,
+                    fileName: file.originalname,
+                    fileNameLower: file.originalname.toLowerCase(),
+                    url: masterUrl,
+                    contentType: masterContentType,
+                    size: masterBuffer.length,
+                    variants: uploadedVariants,
                     uploadedAt: nowForMeta,
                     lastModified: nowForMeta,
                 },
@@ -325,7 +401,14 @@ export const uploadMedia = async (
             { upsert: true },
         );
 
-        res.json({ success: true, data: { url, key } });
+        res.json({
+            success: true,
+            data: {
+                url: masterUrl,
+                key: masterKey,
+                variants: uploadedVariants,
+            },
+        });
     } catch (error: any) {
         console.error("Media upload failed:", error);
         res.status(500).json({ success: false, message: "Upload failed" });
@@ -453,6 +536,7 @@ export const listMediaImages = async (
             etag: item.etag,
             uploadedAt: item.uploadedAt,
             lastModified: item.lastModified ?? item.uploadedAt,
+            variants: item.variants || [],
         }));
 
         res.json({
@@ -562,12 +646,26 @@ export const deleteMediaImage = async (
             return;
         }
 
+        // delete the master image
         await deleteFromR2(media.key);
+
+        // go over the variants array and tell Cloudflare R2 to delete those too
+        if (media.variants && media.variants.length > 0) {
+            await Promise.all(
+                media.variants.map((variant) => deleteFromR2(variant.key)),
+            );
+        }
+
         await MediaAsset.deleteOne({ _id: mediaId });
         try {
-            await CloudflareCacheService.purgeUrls([
+            // ping the Cloudflare API to purge the master URL and all variant URLs from the cache
+            const urlsToPurge = [
                 normalizePurgeUrl(media.url),
-            ]);
+                ...(media.variants
+                    ? media.variants.map((v) => normalizePurgeUrl(v.url))
+                    : []),
+            ];
+            await CloudflareCacheService.purgeUrls(urlsToPurge);
         } catch (purgeError) {
             console.error(
                 "Cloudflare media purge failed after delete:",

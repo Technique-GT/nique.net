@@ -459,6 +459,11 @@ export default function Article() {
         },
     };
 
+    const categoryObj =
+        article.categoryId && typeof article.categoryId === "object"
+            ? article.categoryId
+            : null;
+
     return (
         <>
             <Seo
@@ -470,43 +475,43 @@ export default function Article() {
                 structuredData={articleJsonLd}
             />
             <Navbar />
-            <div className="max-w-6xl mx-auto p-6 space-y-6">
-                {/* Title */}
-                <header className="space-y-2">
-                    <h3 className="text-4xl font-bold mt-2 mb-1">
+            <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+                <header className="space-y-3">
+                    {categoryObj && (
+                        <Link
+                            to={`/category/${encodeURIComponent(categoryObj.slug || categoryObj._id)}`}
+                            className="inline-block text-sm font-semibold uppercase tracking-wide text-nique-blue hover:underline"
+                        >
+                            {categoryObj.name}
+                        </Link>
+                    )}
+                    <h1 className="text-3xl sm:text-4xl font-bold text-nique-blue">
                         {article.title}
-                    </h3>
-                    <h4 className="flex flex-wrap mb-2 gap-x-4 text-nique-blue text-lg justify-between">
-                        <div>
-                            {authorEntries.length > 0 ? (
-                                authorEntries.map((author, index) => (
-                                    <span
-                                        key={`${author.name}-${index}`}
-                                        className="inline"
-                                    >
-                                        {index > 0 && <span> • </span>}
+                    </h1>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-nique-blue/80">
+                        {authorEntries.length > 0 && (
+                            <span>
+                                By{" "}
+                                {authorEntries.map((author, idx) => (
+                                    <span key={author.href}>
+                                        {idx > 0 && ", "}
                                         <Link
                                             to={author.href}
-                                            className="hover:underline"
+                                            className="underline hover:text-nique-blue"
                                         >
                                             {author.name}
                                         </Link>
                                     </span>
-                                ))
-                            ) : (
-                                <span>Technique Staff</span>
-                            )}
-                            {publishedDate && <span> • {publishedDate}</span>}
-                        </div>
-                        {/* backend uses categoryId (single object), not categories[] */}
-                        {article.categoryId && (
-                            <span>{article.categoryId.name}</span>
+                                ))}
+                            </span>
                         )}
-                    </h4>
+                        {publishedDate && <span>• {publishedDate}</span>}
+                    </div>
                     {tagsDisplay && (
-                        <p className="text-xs text-nique-blue">{tagsDisplay}</p>
+                        <p className="text-xs text-nique-blue/70">
+                            {tagsDisplay}
+                        </p>
                     )}
-                    <hr className="opacity-50" />
                 </header>
 
                 {/* YouTube videos take precedence over the optional card image. */}
@@ -525,12 +530,73 @@ export default function Article() {
                                 />
                             </div>
                         ) : (
-                            <img
-                                className="w-full aspect-3/2 object-cover rounded-md"
-                                src={featuredMedia ?? undefined}
-                                loading="lazy"
-                                alt={article.title}
-                            />
+                            (() => {
+                                const rawUrl = article.featuredMediaUrl;
+                                if (!rawUrl || typeof rawUrl !== "string")
+                                    return null;
+
+                                const variants = [400, 800, 1600].flatMap(
+                                    (width) => [
+                                        {
+                                            width,
+                                            format: "avif",
+                                            url: rawUrl.replace(
+                                                /master_[^/]+/,
+                                                `variants/${width}w.avif`,
+                                            ),
+                                        },
+                                        {
+                                            width,
+                                            format: "webp",
+                                            url: rawUrl.replace(
+                                                /master_[^/]+/,
+                                                `variants/${width}w.webp`,
+                                            ),
+                                        },
+                                    ],
+                                );
+
+                                const validatedMasterUrl =
+                                    withMediaSessionRevalidation(
+                                        rawUrl,
+                                        featuredMediaNonce,
+                                    );
+
+                                return (
+                                    <picture>
+                                        <source
+                                            srcSet={variants
+                                                .filter(
+                                                    (v) => v.format === "avif",
+                                                )
+                                                .map(
+                                                    (v) =>
+                                                        `${withMediaSessionRevalidation(v.url, featuredMediaNonce)} ${v.width}w`,
+                                                )
+                                                .join(", ")}
+                                            type="image/avif"
+                                        />
+                                        <source
+                                            srcSet={variants
+                                                .filter(
+                                                    (v) => v.format === "webp",
+                                                )
+                                                .map(
+                                                    (v) =>
+                                                        `${withMediaSessionRevalidation(v.url, featuredMediaNonce)} ${v.width}w`,
+                                                )
+                                                .join(", ")}
+                                            type="image/webp"
+                                        />
+                                        <img
+                                            className="w-full aspect-3/2 object-cover rounded-md"
+                                            src={validatedMasterUrl}
+                                            loading="lazy"
+                                            alt={article.title}
+                                        />
+                                    </picture>
+                                );
+                            })()
                         )}
                         {!featuredVideo && article.imageCaption && (
                             <figcaption className="w-full text-xs text-nique-blue mt-2">

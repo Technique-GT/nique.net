@@ -1,6 +1,6 @@
 import type { ZodError, ZodIssue } from "zod";
 
-export type NormalizedZodIssue = {
+type NormalizedZodIssue = {
     path: string;
     message: string;
     code: string;

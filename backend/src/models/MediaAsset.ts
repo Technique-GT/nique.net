@@ -1,5 +1,13 @@
 import mongoose, { type Document, Schema } from "mongoose";
 
+interface IMediaVariant {
+    width: number;
+    format: string;
+    key: string;
+    url: string;
+    size: number;
+}
+
 interface IMediaAsset extends Document {
     key: string;
     fileName: string;
@@ -12,7 +20,19 @@ interface IMediaAsset extends Document {
     uploadedAt: Date;
     createdAt: Date;
     updatedAt: Date;
+    variants: IMediaVariant[];
 }
+
+const MediaVariantSchema = new Schema<IMediaVariant>(
+    {
+        width: { type: Number, required: true },
+        format: { type: String, required: true },
+        key: { type: String, required: true },
+        url: { type: String, required: true },
+        size: { type: Number, required: true },
+    },
+    { _id: false },
+);
 
 const MediaAssetSchema = new Schema<IMediaAsset>(
     {
@@ -25,6 +45,7 @@ const MediaAssetSchema = new Schema<IMediaAsset>(
         etag: { type: String, required: false, trim: true },
         lastModified: { type: Date, required: false },
         uploadedAt: { type: Date, required: true, default: Date.now },
+        variants: { type: [MediaVariantSchema], default: [] },
     },
     {
         timestamps: true,

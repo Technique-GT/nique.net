@@ -19,6 +19,50 @@ import {
 } from "../utils/permissions";
 import { safeErrorResponse, safeRegex, sanitizeHtml } from "../utils/security";
 
+const buildMediaVariants = (basePath: string) => [
+    { width: 400, format: "avif", url: `${basePath}variants/400w.avif` },
+    { width: 800, format: "avif", url: `${basePath}variants/800w.avif` },
+    { width: 1600, format: "avif", url: `${basePath}variants/1600w.avif` },
+    { width: 400, format: "webp", url: `${basePath}variants/400w.webp` },
+    { width: 800, format: "webp", url: `${basePath}variants/800w.webp` },
+    { width: 1600, format: "webp", url: `${basePath}variants/1600w.webp` },
+];
+
+const attachVirtualMediaVariants = (articleDoc: any) => {
+    const obj = articleDoc?.toObject ? articleDoc.toObject() : articleDoc;
+    if (!obj) return obj;
+
+    if (obj.featuredMedia && typeof obj.featuredMedia === "object") {
+        if (
+            !obj.featuredMedia.variants ||
+            obj.featuredMedia.variants.length === 0
+        ) {
+            const imageUrl = obj.featuredMedia.url || obj.featuredMediaUrl;
+            if (imageUrl) {
+                const basePath = imageUrl.substring(
+                    0,
+                    imageUrl.lastIndexOf("/") + 1,
+                );
+                obj.featuredMedia.variants = buildMediaVariants(basePath);
+            }
+        }
+    } else {
+        const imageUrl = obj.featuredMediaUrl;
+        if (imageUrl) {
+            const basePath = imageUrl.substring(
+                0,
+                imageUrl.lastIndexOf("/") + 1,
+            );
+            obj.featuredMedia = {
+                url: imageUrl,
+                variants: buildMediaVariants(basePath),
+            };
+        }
+    }
+
+    return obj;
+};
+
 const slugify = (value: string) =>
     value
         .toLowerCase()
@@ -51,13 +95,21 @@ const populateArticle = (query: any) =>
         .populate("categoryId", "name slug")
         .populate("subcategoryId", "name slug categoryId")
         .populate("tagIds", "name slug")
-        .populate("authors.authorId", "name isAdmin profilePictureUrl");
+        .populate("authors.authorId", "name isAdmin profilePictureUrl")
+        .populate({
+            path: "featuredMedia",
+            strictPopulate: false,
+        });
 
 const populateArticleForFeed = (query: any) =>
     query
         .populate("categoryId", "name slug")
         .populate("tagIds", "name slug")
-        .populate("authors.authorId", "name profilePictureUrl");
+        .populate("authors.authorId", "name profilePictureUrl")
+        .populate({
+            path: "featuredMedia",
+            strictPopulate: false,
+        });
 
 const snapshotArticle = (article: Partial<IArticle> | null | undefined) =>
     articleCacheSnapshotFromDoc(article as IArticle | null | undefined);
@@ -69,9 +121,6 @@ const invalidatePublicArticleCache = async (
 ) => {
     await ArticleCacheInvalidationService.invalidatePublicArticleCache(params);
 };
-
-// parsePublished is removed or commented out as it's no longer used in the new buildArticleUpdate logic (we check typeof directly)
-// const parsePublished = (body: any): boolean => { ... };
 
 const parsePublishedAt = (
     body: any,
@@ -98,7 +147,6 @@ const buildArticleUpdate = async (params: {
     const { body, existing } = params;
 
     const title = typeof body?.title === "string" ? body.title : undefined;
-    // Sanitize HTML content to prevent XSS
     const content =
         typeof body?.content === "string"
             ? sanitizeHtml(body.content)
@@ -109,13 +157,11 @@ const buildArticleUpdate = async (params: {
     const subcategoryId =
         toObjectId(body?.subcategoryId ?? body?.subcategory) ?? undefined;
 
-    // Only update tagIds if present in body
     let tagIds: mongoose.Types.ObjectId[] | undefined;
     if (body?.tagIds !== undefined || body?.tags !== undefined) {
         tagIds = toObjectIdArray(body?.tagIds ?? body?.tags);
     }
 
-    // Authors can come as string[] or [{authorId, order}]
     let authors: any[] | undefined;
     if (body?.authors !== undefined || body?.authorIds !== undefined) {
         if (Array.isArray(body?.authors)) {
@@ -175,7 +221,6 @@ const buildArticleUpdate = async (params: {
     const editorState = body?.editorState;
     const reviewStatus = body?.reviewStatus;
 
-    // Only update publishedAt if published state is explicitly changing to true
     let publishedAt: Date | null | undefined;
     if (published === true) {
         publishedAt = parsePublishedAt(
@@ -208,18 +253,11 @@ const buildArticleUpdate = async (params: {
         if (publishedAt !== undefined) {
             update.publishedAt = publishedAt;
         } else if (published === false) {
-            // Keep publishedAt if unpublishing? Usually null it out or keep as "last published"
-            // Current logic was: update.publishedAt = null
             update.publishedAt = null;
         }
     }
 
     if (allowComments !== undefined) update.allowComments = allowComments;
-
-    // Featured/sticky rules: only published articles can be featured/sticky
-    // If published is changing to false, force featured/sticky off
-    // If published is not present but existing is false, force featured/sticky off if they are being set to true (validation)
-    // But simpler: just enforce consistency based on resulting state.
 
     const resultingPublished =
         published !== undefined ? published : (existing?.published ?? false);
@@ -271,7 +309,6 @@ const hasArticleChanged = (
 ): boolean => {
     if (update.title !== undefined && update.title !== existing.title)
         return true;
-    // Content can be large, but string comparison is efficient enough
     if (update.content !== undefined && update.content !== existing.content)
         return true;
     if (
@@ -302,25 +339,16 @@ const hasArticleChanged = (
         return true;
 
     if (update.authors) {
-        // Check if authors array changed. Note: existing.authors contains { authorId, order, _id }.
-        // update.authors contains { authorId, order }.
         const authorsChanged = !arraysAreEqual(
             update.authors,
             existing.authors,
-            (a, b) => {
-                return (
-                    idsAreEqual(a.authorId, b.authorId) && a.order === b.order
-                );
-            },
+            (a, b) =>
+                idsAreEqual(a.authorId, b.authorId) && a.order === b.order,
         );
         if (authorsChanged) return true;
     }
 
     if (update.editorState) {
-        // Deep compare editorState (JSON)
-        // Note: This relies on key order being deterministic in JSON.stringify which isn't guaranteed,
-        // but for Lexical state produced by same client, it's often consistent enough.
-        // A better approach would be deep object equality, but JSON stringify is a quick proxy.
         try {
             if (
                 JSON.stringify(update.editorState) !==
@@ -328,7 +356,6 @@ const hasArticleChanged = (
             )
                 return true;
         } catch {
-            // If stringify fails or circular, assume changed
             return true;
         }
     }
@@ -456,7 +483,6 @@ export const createArticle = async (
 
 export const getArticles = async (req: any, res: Response): Promise<void> => {
     try {
-        // In case validateQuery mutation fails or behaves unexpectedly, allow safe parsing
         const {
             page,
             limit,
@@ -529,8 +555,7 @@ export const getArticles = async (req: any, res: Response): Promise<void> => {
             andFilters.push({ isSticky: isSticky === "true" });
         }
 
-        // Filter for non-admins: only show owned or authored articles
-        if (!req.user.isAdmin) {
+        if (req.user && !req.user.isAdmin) {
             const userId = new mongoose.Types.ObjectId(req.user.id);
             andFilters.push({
                 $or: [{ ownerId: userId }, { "authors.authorId": userId }],
@@ -558,9 +583,13 @@ export const getArticles = async (req: any, res: Response): Promise<void> => {
             Article.countDocuments(filter),
         ]);
 
+        const enrichedArticles = articles.map((art: IArticle) =>
+            attachVirtualMediaVariants(art),
+        );
+
         res.json({
             success: true,
-            data: articles,
+            data: enrichedArticles,
             pagination: {
                 total,
                 page: pageNum,
@@ -580,7 +609,6 @@ export const getPublishedArticles = async (
     res: Response,
 ): Promise<void> => {
     try {
-        // This endpoint intentionally stays simple; the richer public feed is `getFeed`.
         const { page, limit, search, categoryId } = req.query as unknown as {
             page: number;
             limit: number;
@@ -588,8 +616,8 @@ export const getPublishedArticles = async (
             categoryId?: string;
         };
 
-        const filter: any = { published: true };
-        if (search?.trim()) {
+        const filter: Record<string, unknown> = { published: true };
+        if (typeof search === "string" && search.trim().length > 0) {
             const rx = safeRegex(search.trim());
             const orFilters: any[] = [{ title: rx }, { excerpt: rx }];
 
@@ -602,36 +630,48 @@ export const getPublishedArticles = async (
 
             filter.$or = orFilters;
         }
-        if (categoryId) {
-            filter.categoryId = new mongoose.Types.ObjectId(categoryId);
+        const validCategoryId = toObjectId(categoryId);
+        if (validCategoryId) {
+            filter.categoryId = validCategoryId;
         }
 
-        const skip = (page - 1) * limit;
+        const pageNum = Math.max(Number(page) || 1, 1);
+        const limitNum = Math.max(Number(limit) || 20, 1);
+        const skip = (pageNum - 1) * limitNum;
 
         const [articles, total] = await Promise.all([
             populateArticle(
                 Article.find(filter)
                     .sort({ isSticky: -1, publishedAt: -1 })
                     .skip(skip)
-                    .limit(limit),
+                    .limit(limitNum),
             ),
             Article.countDocuments(filter),
         ]);
 
-        if (!search) {
+        const enrichedArticles = articles.map((art: IArticle) =>
+            attachVirtualMediaVariants(art),
+        );
+
+        if (typeof search !== "string" || search.trim().length === 0) {
             setCacheTags(
                 res,
                 buildListCacheTags(articles, {
                     routeTag: "articles:published",
-                    categoryId,
+                    categoryId: validCategoryId?.toString(),
                 }),
             );
         }
 
         res.json({
             success: true,
-            data: articles,
-            pagination: { total, page, pages: Math.ceil(total / limit), limit },
+            data: enrichedArticles,
+            pagination: {
+                total,
+                page: pageNum,
+                pages: Math.ceil(total / limitNum),
+                limit: limitNum,
+            },
         });
     } catch (error: any) {
         res.status(500).json(
@@ -650,53 +690,76 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
                 categoryId?: string;
                 tagId?: string;
                 authorId?: string;
-                isSticky?: boolean;
+                isSticky?: boolean | string;
             };
 
-        const filter: any = { published: true };
+        const filter: Record<string, unknown> = { published: true };
 
-        if (search) {
-            const rx = safeRegex(search);
+        if (typeof search === "string" && search.trim().length > 0) {
+            const rx = safeRegex(search.trim());
             filter.$or = [{ title: rx }, { excerpt: rx }];
         }
 
-        if (categoryId)
-            filter.categoryId = new mongoose.Types.ObjectId(categoryId);
-        if (tagId) filter.tagIds = new mongoose.Types.ObjectId(tagId);
-        if (authorId)
-            filter["authors.authorId"] = new mongoose.Types.ObjectId(authorId);
-        if (isSticky !== undefined) filter.isSticky = isSticky;
+        const validCategoryId = toObjectId(categoryId);
+        if (validCategoryId) filter.categoryId = validCategoryId;
 
-        const skip = (page - 1) * limit;
+        const validTagId = toObjectId(tagId);
+        if (validTagId) filter.tagIds = validTagId;
+
+        const validAuthorId = toObjectId(authorId);
+        if (validAuthorId) filter["authors.authorId"] = validAuthorId;
+
+        let stickyFilter: boolean | undefined;
+        if (typeof isSticky === "boolean") {
+            stickyFilter = isSticky;
+        } else if (isSticky === "true" || isSticky === "false") {
+            stickyFilter = isSticky === "true";
+        }
+        if (stickyFilter !== undefined) {
+            filter.isSticky = stickyFilter;
+        }
+
+        const pageNum = Math.max(Number(page) || 1, 1);
+        const limitNum = Math.max(Number(limit) || 20, 1);
+        const skip = (pageNum - 1) * limitNum;
 
         const sort =
-            isSticky === undefined
+            stickyFilter === undefined
                 ? ({ publishedAt: -1 } as const)
                 : ({ isSticky: -1, publishedAt: -1 } as const);
 
         const [articles, total] = await Promise.all([
             populateArticleForFeed(
-                Article.find(filter).sort(sort).skip(skip).limit(limit),
+                Article.find(filter).sort(sort).skip(skip).limit(limitNum),
             ),
             Article.countDocuments(filter),
         ]);
 
-        if (!search) {
+        const enrichedArticles = articles.map((art: IArticle) =>
+            attachVirtualMediaVariants(art),
+        );
+
+        if (typeof search !== "string" || search.trim().length === 0) {
             setCacheTags(
                 res,
                 buildListCacheTags(articles, {
                     routeTag: "articles:feed",
-                    categoryId,
-                    tagId,
-                    authorId,
+                    categoryId: validCategoryId?.toString(),
+                    tagId: validTagId?.toString(),
+                    authorId: validAuthorId?.toString(),
                 }),
             );
         }
 
         res.json({
             success: true,
-            data: articles,
-            pagination: { total, page, pages: Math.ceil(total / limit), limit },
+            data: enrichedArticles,
+            pagination: {
+                total,
+                page: pageNum,
+                pages: Math.ceil(total / limitNum),
+                limit: limitNum,
+            },
         });
     } catch (error: any) {
         res.status(500).json(safeErrorResponse("Failed to fetch feed", error));
@@ -708,10 +771,13 @@ export const getFeaturedArticles = async (
     res: Response,
 ): Promise<void> => {
     try {
-        const articles = await populateArticle(
+        const rawArticles = await populateArticle(
             Article.find({ published: true, isFeatured: true })
                 .sort({ publishedAt: -1 })
                 .limit(10),
+        );
+        const articles = rawArticles.map((art: IArticle) =>
+            attachVirtualMediaVariants(art),
         );
 
         setCacheTags(
@@ -732,10 +798,13 @@ export const getStickyArticles = async (
     res: Response,
 ): Promise<void> => {
     try {
-        const articles = await populateArticle(
+        const rawArticles = await populateArticle(
             Article.find({ published: true, isSticky: true }).sort({
                 publishedAt: -1,
             }),
+        );
+        const articles = rawArticles.map((art: IArticle) =>
+            attachVirtualMediaVariants(art),
         );
 
         setCacheTags(
@@ -770,7 +839,7 @@ export const getArticlesByCategory = async (
         const limitNum = Math.max(Number(limit) || 20, 1);
         const skip = (pageNum - 1) * limitNum;
 
-        const [articles, total] = await Promise.all([
+        const [rawArticles, total] = await Promise.all([
             populateArticle(
                 Article.find({ categoryId, published: true })
                     .sort({ isSticky: -1, publishedAt: -1 })
@@ -779,6 +848,10 @@ export const getArticlesByCategory = async (
             ),
             Article.countDocuments({ categoryId, published: true }),
         ]);
+
+        const articles = rawArticles.map((art: IArticle) =>
+            attachVirtualMediaVariants(art),
+        );
 
         setCacheTags(
             res,
@@ -822,9 +895,11 @@ export const getArticleById = async (
             return;
         }
 
+        const enrichedArticle = attachVirtualMediaVariants(article);
+
         setCacheTags(res, buildDetailCacheTags(article));
 
-        res.json({ success: true, data: article });
+        res.json({ success: true, data: enrichedArticle });
     } catch (error: any) {
         res.status(500).json(
             safeErrorResponse("Failed to fetch article", error),
@@ -852,9 +927,11 @@ export const getArticleBySlug = async (
             return;
         }
 
+        const enrichedArticle = attachVirtualMediaVariants(article);
+
         setCacheTags(res, buildDetailCacheTags(article));
 
-        res.json({ success: true, data: article });
+        res.json({ success: true, data: enrichedArticle });
     } catch (error: any) {
         res.status(500).json(
             safeErrorResponse("Failed to fetch article", error),
@@ -912,7 +989,6 @@ export const updateArticle = async (req: any, res: Response): Promise<void> => {
             return;
         }
 
-        // Check lock state
         if (existing.reviewStatus === "in_review" && !req.user.isAdmin) {
             res.status(403).json({
                 success: false,
@@ -921,7 +997,6 @@ export const updateArticle = async (req: any, res: Response): Promise<void> => {
             return;
         }
 
-        // Handle author changes (requires canManageAuthors)
         if (req.body.authors && !canManageAuthors(req.user, existing)) {
             res.status(403).json({
                 success: false,
@@ -933,15 +1008,13 @@ export const updateArticle = async (req: any, res: Response): Promise<void> => {
         const beforeSnapshot = snapshotArticle(existing);
         const update = await buildArticleUpdate({ body: req.body, existing });
 
-        // Prevent non-admin from publishing directly via updateArticle
         if (!req.user.isAdmin) {
             delete update.published;
             delete update.isFeatured;
             delete update.isSticky;
-            delete update.reviewStatus; // Ensure non-admins use transitions
+            delete update.reviewStatus;
         }
 
-        // If a non-admin updates a published article with actual changes, require re-review.
         if (existing.published && !req.user.isAdmin) {
             const hasChanges = hasArticleChanged(existing, update);
             if (hasChanges) {
@@ -1200,8 +1273,6 @@ export const updateArticleStatus = async (
             updateData.isSticky = isSticky;
         }
 
-        // Final consistency check: if not published (either by this request or existing state), force flags off
-        // "published" variable holds the *intended* state for this request (or existing if not changing)
         if (!published) {
             updateData.isFeatured = false;
             updateData.isSticky = false;
@@ -1219,10 +1290,7 @@ export const updateArticleStatus = async (
             return;
         }
 
-        // Check if we just published it, and notify
-        // published is the intended state; check if it wasn't published before
         if (published && !article.published) {
-            // Notify owner
             if (updatedArticle.ownerId.toString() !== req.user.id) {
                 await NotificationService.create(
                     updatedArticle.ownerId,
@@ -1272,7 +1340,6 @@ export const createDraft = async (req: any, res: Response): Promise<void> => {
             published: false,
             reviewStatus: "draft",
             viewCount: 0,
-            // categoryId will be undefined/null, which is allowed now
         });
 
         res.status(201).json({ success: true, data: article });
@@ -1347,7 +1414,6 @@ export const requestReview = async (req: any, res: Response): Promise<void> => {
         article.reviewStatus = "in_review";
         await article.save();
 
-        // Notify admins
         await NotificationService.notifyAdmins(
             "review_requested",
             "Review Requested",
@@ -1395,21 +1461,6 @@ export const unrequestReview = async (
         }
 
         if (article.published) {
-            // If it was published but in review (e.g. pending changes), revert to published
-            // Wait, if it has pending changes, "unrequest review" means "keep pending changes but stop reviewing"
-            // or "discard pending changes"?
-            // Usually "Withdraw review request" -> returns to "In Progress" (Changes Requested / Draft).
-            // If published, it should go back to 'changes_requested' (if changes exist) or 'published' (if no changes?)
-            // But we only allow request review if pending changes exist on published.
-            // So let's revert to 'changes_requested' to imply "still working on it".
-            if (article.reviewStatus !== "in_review") {
-                res.status(400).json({
-                    success: false,
-                    message: "Article is not in review",
-                });
-                return;
-            }
-
             article.reviewStatus = "changes_requested";
         } else {
             article.reviewStatus = "draft";
@@ -1452,7 +1503,6 @@ export const adminPublish = async (req: any, res: Response): Promise<void> => {
         article.reviewedBy = req.user.id;
         await article.save();
 
-        // Notify owner
         if (article.ownerId.toString() !== req.user.id) {
             await NotificationService.create(
                 article.ownerId,
@@ -1535,7 +1585,6 @@ export const requestChanges = async (
 ): Promise<void> => {
     try {
         if (!canPublishArticle(req.user)) {
-            // Assume admins/editors can request changes
             res.status(403).json({
                 success: false,
                 message: "Only admins can request changes",
@@ -1566,7 +1615,6 @@ export const requestChanges = async (
         }
         await article.save();
 
-        // Notify owner
         await NotificationService.create(
             article.ownerId,
             "changes_requested",
