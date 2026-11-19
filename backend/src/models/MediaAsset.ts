@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { type Document, Schema } from "mongoose";
 
 export interface IMediaVariant {
   width: number;
@@ -54,4 +54,4 @@ MediaAssetSchema.index({ lastModified: -1, _id: -1 });
 MediaAssetSchema.index({ size: -1, _id: -1 });
 MediaAssetSchema.index({ fileNameLower: 1 });
 
-export default mongoose.model<IMediaAsset>('MediaAsset', MediaAssetSchema);
+export default mongoose.model<IMediaAsset>("MediaAsset", MediaAssetSchema);

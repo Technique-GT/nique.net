@@ -1,127 +1,125 @@
-import { StrictMode } from 'react'
-import ReactDOM from 'react-dom/client'
-import { AxiosError } from 'axios'
-import {
-  QueryCache,
-  QueryClient,
-} from '@tanstack/react-query'
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
-import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
-import { RouterProvider, createRouter } from '@tanstack/react-router'
-import { toast } from 'sonner'
-import { useAuthStore } from '@/stores/authStore'
-import { handleServerError } from '@/utils/handle-server-error'
-import { FontProvider } from './context/font-context'
-import { ThemeProvider } from './context/theme-context'
-import './index.css'
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { QueryCache, QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { AxiosError } from "axios";
+import { StrictMode } from "react";
+import ReactDOM from "react-dom/client";
+import { toast } from "sonner";
+import { useAuthStore } from "@/stores/authStore";
+import { handleServerError } from "@/utils/handle-server-error";
+import { FontProvider } from "./context/font-context";
+import { ThemeProvider } from "./context/theme-context";
+import "./index.css";
 // Generated Routes
-import { routeTree } from './routeTree.gen'
+import { routeTree } from "./routeTree.gen";
 
 // Cache buster: increment or tie to package version on deploy to invalidate old caches
-const CACHE_BUSTER = '1.0.0'
+const CACHE_BUSTER = "1.0.0";
 
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: (failureCount, error) => {
-        if (failureCount >= 0 && import.meta.env.DEV) return false
-        if (failureCount > 3 && import.meta.env.PROD) return false
+    defaultOptions: {
+        queries: {
+            retry: (failureCount, error) => {
+                if (failureCount >= 0 && import.meta.env.DEV) return false;
+                if (failureCount > 3 && import.meta.env.PROD) return false;
 
-        if (!(error instanceof AxiosError)) return true
+                if (!(error instanceof AxiosError)) return true;
 
-        const status = error.response?.status ?? 0
-        if ([401, 403, 429].includes(status)) return false
+                const status = error.response?.status ?? 0;
+                if ([401, 403, 429].includes(status)) return false;
 
-        return true
-      },
-      refetchOnWindowFocus: import.meta.env.PROD,
-      staleTime: 10 * 1000, // 10s
+                return true;
+            },
+            refetchOnWindowFocus: import.meta.env.PROD,
+            staleTime: 10 * 1000, // 10s
+        },
+        mutations: {
+            onError: (error) => {
+                handleServerError(error);
+
+                if (error instanceof AxiosError) {
+                    if (error.response?.status === 304) {
+                        toast.error("Content not modified!");
+                    }
+                }
+            },
+        },
     },
-    mutations: {
-      onError: (error) => {
-        handleServerError(error)
-
-        if (error instanceof AxiosError) {
-          if (error.response?.status === 304) {
-            toast.error('Content not modified!')
-          }
-        }
-      },
-    },
-  },
-  queryCache: new QueryCache({
-    onError: (error) => {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === 401) {
-          const isOnLogin = router.state.location.pathname.startsWith('/login')
-          if (!isOnLogin) {
-            toast.error('Session expired!')
-            useAuthStore.getState().auth.setUser(null)
-            router.navigate({ to: '/login' })
-          }
-        }
-        if (error.response?.status === 500) {
-          toast.error('Internal Server Error!')
-          router.navigate({ to: '/500' })
-        }
-        if (error.response?.status === 403) {
-          // router.navigate("/forbidden", { replace: true });
-        }
-      }
-    },
-  }),
-})
+    queryCache: new QueryCache({
+        onError: (error) => {
+            if (error instanceof AxiosError) {
+                if (error.response?.status === 401) {
+                    const isOnLogin =
+                        router.state.location.pathname.startsWith("/login");
+                    if (!isOnLogin) {
+                        toast.error("Session expired!");
+                        useAuthStore.getState().auth.setUser(null);
+                        router.navigate({ to: "/login" });
+                    }
+                }
+                if (error.response?.status === 500) {
+                    toast.error("Internal Server Error!");
+                    router.navigate({ to: "/500" });
+                }
+                if (error.response?.status === 403) {
+                    // router.navigate("/forbidden", { replace: true });
+                }
+            }
+        },
+    }),
+});
 
 // Create persister for localStorage
 const persister = createSyncStoragePersister({
-  storage: window.localStorage,
-  key: 'dashboard-rq-cache',
-})
+    storage: window.localStorage,
+    key: "dashboard-rq-cache",
+});
 
 // Persist options
 const persistOptions = {
-  persister,
-  maxAge: 1000 * 60 * 15, // 15 minutes
-  buster: CACHE_BUSTER,
-  dehydrateOptions: {
-    // Only persist queries that explicitly opt-in via meta.persist
-    shouldDehydrateQuery: (query: { meta?: { persist?: boolean } }) => {
-      return query.meta?.persist === true
+    persister,
+    maxAge: 1000 * 60 * 15, // 15 minutes
+    buster: CACHE_BUSTER,
+    dehydrateOptions: {
+        // Only persist queries that explicitly opt-in via meta.persist
+        shouldDehydrateQuery: (query: { meta?: { persist?: boolean } }) => {
+            return query.meta?.persist === true;
+        },
     },
-  },
-}
+};
 
 // Create a new router instance
 const router = createRouter({
-  routeTree,
-  context: { queryClient },
-  defaultPreload: 'intent',
-  defaultPreloadStaleTime: 0,
-})
+    routeTree,
+    context: { queryClient },
+    defaultPreload: "intent",
+    defaultPreloadStaleTime: 0,
+});
 
 // Register the router instance for type safety
-declare module '@tanstack/react-router' {
-  interface Register {
-    router: typeof router
-  }
+declare module "@tanstack/react-router" {
+    interface Register {
+        router: typeof router;
+    }
 }
 
 // Render the app
-const rootElement = document.getElementById('root')!
+const rootElement = document.getElementById("root")!;
 if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement)
-  root.render(
-    <StrictMode>
-      <PersistQueryClientProvider
-        client={queryClient}
-        persistOptions={persistOptions}
-      >
-        <ThemeProvider defaultTheme='light' storageKey='vite-ui-theme'>
-          <FontProvider>
-            <RouterProvider router={router} />
-          </FontProvider>
-        </ThemeProvider>
-      </PersistQueryClientProvider>
-    </StrictMode>
-  )
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(
+        <StrictMode>
+            <PersistQueryClientProvider
+                client={queryClient}
+                persistOptions={persistOptions}
+            >
+                <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+                    <FontProvider>
+                        <RouterProvider router={router} />
+                    </FontProvider>
+                </ThemeProvider>
+            </PersistQueryClientProvider>
+        </StrictMode>,
+    );
 }

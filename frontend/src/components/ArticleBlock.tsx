@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom'
-import { ArticleBlockProps } from '../types/article'
+import { Link } from "react-router-dom";
+import type { ArticleBlockProps } from "../types/article";
 import {
   getArticleAuthorName,
   getArticleCategoryName,
@@ -21,26 +21,26 @@ function ArticleBlock({ article, height }: ArticleBlockProps) {
         return rawUrl.replace(/\/master_[^/]+$/, `/variants/${width}w.${format}`);
     };
 
-    const avifVariants = media?.variants?.filter((v: any) => v.format?.trim() === 'avif') && media.variants.length > 0 
-        ? media.variants.filter((v: any) => v.format?.trim() === 'avif') 
-        : [
-            { width: 400, url: getFallbackUrl(400, 'avif') },
-            { width: 800, url: getFallbackUrl(800, 'avif') },
-            { width: 1600, url: getFallbackUrl(1600, 'avif') },
-          ];
+    const getVariantsForFormat = (format: "avif" | "webp") => {
+        const matched = media?.variants?.filter(
+            (v: any) => v.format?.trim() === format && v.url,
+        );
+        if (matched && matched.length > 0) {
+            return matched;
+        }
+        return [400, 800, 1600].map((width) => ({
+            width,
+            url: getFallbackUrl(width, format),
+        }));
+    };
 
-    const webpVariants = media?.variants?.filter((v: any) => v.format?.trim() === 'webp') && media.variants.length > 0 
-        ? media.variants.filter((v: any) => v.format?.trim() === 'webp') 
-        : [
-            { width: 400, url: getFallbackUrl(400, 'webp') },
-            { width: 800, url: getFallbackUrl(800, 'webp') },
-            { width: 1600, url: getFallbackUrl(1600, 'webp') },
-          ];
+    const avifVariants = getVariantsForFormat("avif");
+    const webpVariants = getVariantsForFormat("webp");
 
     return (
         <Link
             to={link}
-            className='relative cursor-pointer rounded-md max-h-[50vh] md:max-h-none w-full flex items-end p-3 overflow-hidden group'
+            className="relative cursor-pointer rounded-md max-h-[50vh] md:max-h-none w-full flex items-end p-3 overflow-hidden group"
             style={{ height: `${height}` }}
         >
             {rawUrl && (
@@ -62,11 +62,12 @@ function ArticleBlock({ article, height }: ArticleBlockProps) {
                     />
                 </picture>
             )}
-            
-            <div 
+
+            <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                    background: 'linear-gradient(to bottom, rgba(26, 30, 71, 0.15), rgba(26, 30, 71, 1) 85%)'
+                    background:
+                        "linear-gradient(to bottom, rgba(26, 30, 71, 0.15), rgba(26, 30, 71, 1) 85%)",
                 }}
             />
 
@@ -74,17 +75,20 @@ function ArticleBlock({ article, height }: ArticleBlockProps) {
                 <h3
                     className="title text-white font-bold text-2xl/7 mb-2 overflow-hidden"
                     style={{
-                        display: '-webkit-box',
+                        display: "-webkit-box",
                         WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
+                        WebkitBoxOrient: "vertical",
                     }}
                 >
                     {article.title}
                 </h3>
-                <h6 className="text-[#BAC0FF] text-sm"><span className="uppercase">{category}</span> &#8226; {author}</h6>
+                <h6 className="text-[#BAC0FF] text-sm">
+                    <span className="uppercase">{category}</span> &#8226;{" "}
+                    {author}
+                </h6>
             </div>
         </Link>
-    )
+    );
 }
 
-export default ArticleBlock
+export default ArticleBlock;

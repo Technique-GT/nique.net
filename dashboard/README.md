@@ -15,47 +15,22 @@ A digital-first student news platform built by students, for students. Featuring
 
 ## Getting Started
 
-### Prerequisites
+Install dependencies from the repository root so npm uses the shared workspace
+lockfile and development configuration:
 
-- Node.js v18+ (recommended v20)  
-- npm v9+ or pnpm v8+  
-- Git  
-
-### Installation
-
-1. **Clone the repository**  
-   ```bash
-   git clone https://github.com/campus-chronicle/web-app.git
-   cd web-app
-   ```
-
-2. **Install dependencies**  
-   ```bash
-   npm install
-   ```
-   or  
-   ```bash
-   pnpm install
-   ```
-
-3. **Configure environment**  
-   ```bash
-   cp .env.example .env
-   ```
-   Edit the `.env` file with your CMS and API keys.
+```bash
+npm ci
+npm run dev:dash
+```
 
 ### Running the Development Server
 
 ```bash
-npm run dev
-```
-or  
-```bash
-pnpm dev
+npm run dev:dash
 ```
 
-The application will be available at:  
-[http://localhost:5173](http://localhost:5173)
+The application will be available at:
+[http://localhost:5174](http://localhost:5174)
 
 ## Project Structure
 
@@ -90,7 +65,8 @@ campus-chronicle/
 - `dev` - Start development server  
 - `build` - Create production build  
 - `preview` - Preview production build locally  
-- `lint` - Run ESLint  
+- `lint` - Run Biome
+- `format` - Format with Biome
 - `type-check` - Verify TypeScript types  
 
 ## Deployment

@@ -5,15 +5,15 @@ Modern Express + TypeScript backend for the Technique publication platform.
 ## Quick Start
 
 ```bash
-# Install dependencies
-pnpm install
+# From the repository root, install all workspace dependencies once
+npm ci
 
 # Set up environment
-cp .env.example .env
+cp backend/.env.example backend/.env
 # Edit .env with your values
 
-# Start development server
-pnpm run dev
+# Start the backend from the repository root
+npm run dev:api
 ```
 
 The server runs on `http://localhost:5050` by default.
@@ -41,25 +41,25 @@ The server **refuses to start** if `MONGO_DB_NAME=technique`. This prevents acci
 
 ```bash
 # Development
-pnpm run dev          # Start with hot reload (tsx watch)
+npm run dev:api        # Start with hot reload (tsx watch), from repository root
 
 # Build
-pnpm run build        # Compile TypeScript to dist/
-pnpm run start        # Run compiled output
+npm run build --workspace backend  # Compile TypeScript to dist/
+npm run start:api                  # Run compiled output, from repository root
 
 # OpenAPI export (for Postman import)
-pnpm run openapi:generate # Generate backend/openapi.json from route files
+npm run openapi:generate --workspace backend # Generate backend/openapi.json from route files
 
 # Testing
-pnpm run test         # Run all tests once
-pnpm run test:watch   # Run tests in watch mode
-pnpm run test:coverage # Run tests with coverage report
+npm test                            # Run backend tests once, from repository root
+npm run test:watch --workspace backend
+npm run test:coverage --workspace backend
 
 # Linting & Formatting
-pnpm run lint         # Run ESLint
-pnpm run lint:fix     # Run ESLint with auto-fix
-pnpm run format       # Format with Prettier
-pnpm run format:check # Check formatting
+npm run lint --workspace backend         # Run shared Biome lint
+npm run lint:fix --workspace backend     # Fix Biome lint issues
+npm run format --workspace backend      # Format with shared Biome config
+npm run format:check --workspace backend # Check formatting
 ```
 
 ## Project Structure
@@ -93,7 +93,7 @@ server/
 Generate the file before requesting it from the API:
 
 ```bash
-pnpm run openapi:generate
+npm run openapi:generate --workspace backend
 ```
 
 Postman setup:
@@ -410,4 +410,4 @@ describe('My Feature', () => {
 - **Use `test` database** for all development
 - **Run `--check`** periodically to detect schema drift
 - **Run tests before pushing** - `pnpm test`
-- **ESLint warnings are expected** - Configured to warn, not block
+- **Biome linting** is configured to run from the repository root

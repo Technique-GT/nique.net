@@ -2,8 +2,8 @@
   "name": "technique",
   "private": true,
   "workspaces": [
-    "frontend",
     "backend",
+    "frontend",
     "dashboard"
   ],
   "scripts": {
@@ -13,22 +13,30 @@
     "dev:dash": "npm --prefix dashboard run dev -- --host 0.0.0.0 --port 5174 --strictPort",
     "build": "npm --prefix backend run build && npm --prefix frontend run build && npm --prefix dashboard run build",
     "start": "concurrently \"npm run start:api\" \"npm run start:web\" \"npm run start:dash\"",
-    "start:api": "npm --prefix backend run start",
-    "start:web": "npm --prefix frontend run preview",
-    "start:dash": "npm --prefix dashboard run preview"
+    "start:api": "npm run start --workspace backend",
+    "start:web": "npm run preview --workspace frontend",
+    "start:dash": "npm run preview --workspace dashboard",
+    "test": "npm run test --workspace backend",
+    "check": "biome check",
+    "check:fix": "biome check --write",
+    "check:unsafe": "biome check --write --unsafe",
+    "knip": "knip --max-show-issues 5",
+    "knip:verbose": "knip",
+    "knip:fix": "knip --fix"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.13",
     "@types/lodash": "^4.17.25",
     "@types/sharp": "^0.31.1",
     "@types/uuid": "^10.0.0",
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "knip": "^6.45.0"
   },
   "overrides": {
     "esbuild": "0.25.12"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1009.0",
-    "@biomejs/biome": "^2.5.13",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.562.0",
